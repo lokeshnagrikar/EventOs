@@ -74,7 +74,8 @@ jobs:
       - name: Build & Push API Gateway
         uses: docker/build-push-action@v5
         with:
-          context: ./backend/api-gateway
+          context: ./backend
+          file: ./backend/api-gateway/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/api-gateway:latest
 
@@ -82,7 +83,8 @@ jobs:
       - name: Build & Push Auth Service
         uses: docker/build-push-action@v5
         with:
-          context: ./backend/auth-service
+          context: ./backend
+          file: ./backend/auth-service/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/auth-service:latest
 
@@ -90,7 +92,8 @@ jobs:
       - name: Build & Push CRM Service
         uses: docker/build-push-action@v5
         with:
-          context: ./backend/crm-service
+          context: ./backend
+          file: ./backend/crm-service/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/crm-service:latest
 
@@ -98,7 +101,8 @@ jobs:
       - name: Build & Push Event Service
         uses: docker/build-push-action@v5
         with:
-          context: ./backend/event-service
+          context: ./backend
+          file: ./backend/event-service/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/event-service:latest
 
@@ -106,7 +110,8 @@ jobs:
       - name: Build & Push Gallery Service
         uses: docker/build-push-action@v5
         with:
-          context: ./backend/gallery-service
+          context: ./backend
+          file: ./backend/gallery-service/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/gallery-service:latest
 

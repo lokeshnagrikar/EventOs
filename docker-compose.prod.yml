@@ -60,8 +60,8 @@ services:
 
   auth-service:
     build:
-      context: ./backend/auth-service
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: auth-service/Dockerfile
     container_name: eventos-auth-service
     ports:
       - "8081:8081"
@@ -81,8 +81,8 @@ services:
 
   crm-service:
     build:
-      context: ./backend/crm-service
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: crm-service/Dockerfile
     container_name: eventos-crm-service
     ports:
       - "8082:8082"
@@ -102,8 +102,8 @@ services:
 
   event-service:
     build:
-      context: ./backend/event-service
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: event-service/Dockerfile
     container_name: eventos-event-service
     ports:
       - "8083:8083"
@@ -123,8 +123,8 @@ services:
 
   gallery-service:
     build:
-      context: ./backend/gallery-service
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: gallery-service/Dockerfile
     container_name: eventos-gallery-service
     ports:
       - "8084:8084"
@@ -144,8 +144,8 @@ services:
 
   api-gateway:
     build:
-      context: ./backend/api-gateway
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: api-gateway/Dockerfile
     container_name: eventos-api-gateway
     ports:
       - "8080:8080"

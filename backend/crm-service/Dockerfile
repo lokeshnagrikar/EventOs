@@ -2,14 +2,15 @@
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
-COPY src ./src
-RUN mvn package -DskipTests
+COPY crm-service/pom.xml ./crm-service/
+RUN mvn -pl crm-service dependency:go-offline -B
+COPY crm-service/src ./crm-service/src
+RUN mvn -pl crm-service package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/crm-service/target/*.jar app.jar
 EXPOSE 8082
 # Hardened JRE production execution
 ENTRYPOINT ["java", "-XX:+UseG1GC", "-Xms256m", "-Xmx512m", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]
