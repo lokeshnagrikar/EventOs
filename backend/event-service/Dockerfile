@@ -3,9 +3,9 @@ FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 COPY pom.xml .
 COPY event-service/pom.xml ./event-service/
-RUN mvn -pl event-service dependency:go-offline -B
+RUN mvn -f event-service/pom.xml dependency:go-offline -B
 COPY event-service/src ./event-service/src
-RUN mvn -pl event-service package -DskipTests
+RUN mvn -f event-service/pom.xml package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine

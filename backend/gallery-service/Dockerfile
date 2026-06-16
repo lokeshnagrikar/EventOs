@@ -3,9 +3,9 @@ FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 COPY pom.xml .
 COPY gallery-service/pom.xml ./gallery-service/
-RUN mvn -pl gallery-service dependency:go-offline -B
+RUN mvn -f gallery-service/pom.xml dependency:go-offline -B
 COPY gallery-service/src ./gallery-service/src
-RUN mvn -pl gallery-service package -DskipTests
+RUN mvn -f gallery-service/pom.xml package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine

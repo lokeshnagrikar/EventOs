@@ -3,9 +3,9 @@ FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 COPY pom.xml .
 COPY crm-service/pom.xml ./crm-service/
-RUN mvn -pl crm-service dependency:go-offline -B
+RUN mvn -f crm-service/pom.xml dependency:go-offline -B
 COPY crm-service/src ./crm-service/src
-RUN mvn -pl crm-service package -DskipTests
+RUN mvn -f crm-service/pom.xml package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine
