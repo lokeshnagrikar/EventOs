@@ -7,6 +7,11 @@ import com.eventos.event.entity.*;
 import com.eventos.event.repository.EventAssignmentRepository;
 import com.eventos.event.repository.EventRepository;
 import com.eventos.event.repository.EventTimelineItemRepository;
+import com.eventos.event.repository.BookingRepository;
+import com.eventos.event.repository.InvoiceRepository;
+import com.eventos.event.repository.EventTaskRepository;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +47,15 @@ public class EventServiceTest {
 
         @Mock
         private InvoiceRepository invoiceRepository;
+
+        @Mock
+        private EventTaskRepository eventTaskRepository;
+
+        @Mock
+        private StringRedisTemplate redisTemplate;
+
+        @Mock
+        private ObjectMapper objectMapper;
 
         @InjectMocks
         private EventService eventService;
@@ -220,7 +234,7 @@ public class EventServiceTest {
 
                 when(eventAssignmentRepository.save(any(EventAssignment.class))).thenReturn(savedAssignment);
 
-                EventAssignment result = eventService.assignTeamMember(eventId, dto, tenantId);
+                EventAssignment result = eventService.assignTeamMember(eventId, dto, tenantId, null);
 
                 assertNotNull(result);
                 assertEquals("Aditya Sen", result.getUserName());

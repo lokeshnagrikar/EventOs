@@ -80,11 +80,13 @@ public class EventDashboardController {
                 .distinct()
                 .collect(Collectors.toList());
         
-        Map<UUID, String> eventNameMap = new HashMap<>();
+        final Map<UUID, String> eventNameMap;
         if (!eventIds.isEmpty()) {
             List<Event> eventsForTasks = eventRepository.findAllByIdInAndTenantId(eventIds, tenantId);
             eventNameMap = eventsForTasks.stream()
                     .collect(Collectors.toMap(Event::getId, Event::getName, (a, b) -> a));
+        } else {
+            eventNameMap = new HashMap<>();
         }
 
         List<EventDashboardMetricsDto.TaskSummaryDto> taskSummaries = tasks.stream()
