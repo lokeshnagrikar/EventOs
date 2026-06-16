@@ -2,6 +2,7 @@
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 COPY pom.xml .
+RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY auth-service/pom.xml ./auth-service/
 RUN mvn -f auth-service/pom.xml dependency:go-offline -B
 COPY auth-service/src ./auth-service/src

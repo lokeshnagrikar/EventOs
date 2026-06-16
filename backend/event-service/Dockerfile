@@ -2,6 +2,7 @@
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 COPY pom.xml .
+RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY event-service/pom.xml ./event-service/
 RUN mvn -f event-service/pom.xml dependency:go-offline -B
 COPY event-service/src ./event-service/src

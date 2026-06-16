@@ -2,6 +2,7 @@
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 COPY pom.xml .
+RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY api-gateway/pom.xml ./api-gateway/
 RUN mvn -f api-gateway/pom.xml dependency:go-offline -B
 COPY api-gateway/src ./api-gateway/src
