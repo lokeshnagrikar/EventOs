@@ -1,0 +1,47 @@
+# Node / Next.js / frontend
+node_modules/
+.next/
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+
+# Java / Maven / backend
+**/target/
+**/bin/
+*.class
+.metadata
+.classpath
+.project
+.settings/
+.factorypath
+
+# Secrets and configuration
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+web/.env
+web/.env.local
+
+# Logs and temporary files
+*.log
+hs_err_pid*
+replay_pid*
+.npm
+/npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDEs and system files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db

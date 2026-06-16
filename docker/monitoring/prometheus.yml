@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['api-gateway:8080']
+
+  - job_name: 'auth-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['auth-service:8081']
+
+  - job_name: 'crm-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['crm-service:8082']
+
+  - job_name: 'event-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['event-service:8083']
+
+  - job_name: 'gallery-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gallery-service:8084']

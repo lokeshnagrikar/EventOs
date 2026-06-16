@@ -1,0 +1,26 @@
+package com.eventos.event.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AssignTeamMemberDto {
+
+    @NotNull(message = "User ID is required")
+    private UUID userId;
+
+    @NotBlank(message = "User name is required")
+    private String userName;
+
+    @NotBlank(message = "Role is required")
+    private String role;
+}

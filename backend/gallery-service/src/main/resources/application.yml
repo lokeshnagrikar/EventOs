@@ -1,0 +1,38 @@
+server:
+  port: 8084
+  servlet:
+    context-path: /api/v1/gallery
+
+spring:
+  application:
+    name: gallery-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/gallery_db
+    username: ${POSTGRES_USER:eventos_admin}
+    password: ${POSTGRES_PASSWORD:eventos_secure_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:demo}
+  api-key: ${CLOUDINARY_API_KEY:demo_key}
+  api-secret: ${CLOUDINARY_API_SECRET:demo_secret}
+
+# Security & JWT configurations
+app:
+  jwt:
+    secret: ${JWT_SECRET_KEY:9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d}

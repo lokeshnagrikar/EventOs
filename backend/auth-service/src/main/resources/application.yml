@@ -1,0 +1,31 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /api/v1/auth
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/auth_db
+    username: ${POSTGRES_USER:eventos_admin}
+    password: ${POSTGRES_PASSWORD:eventos_secure_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+# Security & JWT configurations
+app:
+  jwt:
+    secret: ${JWT_SECRET_KEY:9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d}
+    expiration-ms: ${JWT_EXPIRATION_MS:900000}          # 15 mins
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
