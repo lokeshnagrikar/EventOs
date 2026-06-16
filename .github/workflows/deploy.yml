@@ -22,10 +22,12 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'maven'
+          cache-dependency-path: backend/pom.xml
 
       # Compile and Test Backend microservices
       - name: Build and Test Backend Microservices
         run: |
+          cd backend
           mvn clean package -DskipTests
 
       # Setup Node environment for Next.js frontend
