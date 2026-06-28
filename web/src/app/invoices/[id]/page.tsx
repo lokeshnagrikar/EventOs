@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   ArrowLeft,
@@ -56,7 +56,9 @@ export default function InvoiceDetailPage() {
   const params = useParams();
   const invoiceId = params.id as string;
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [errorText, setErrorText] = useState("");
+  const [toastMsg, setToastMsg] = useState("");
 
   // 1. Fetch Invoice details
   const { data: invoiceResponse, isLoading: invoiceLoading, error: invoiceError } = useQuery<{ data: Invoice }>({
@@ -103,7 +105,7 @@ export default function InvoiceDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
-      alert("Payment reminder notification generated and logged!");
+      setToastMsg("Payment reminder notification generated and logged!");
     },
     onError: (err: any) => {
       setErrorText(err.response?.data?.error?.message || "Failed to trigger payment reminder.");
@@ -134,7 +136,7 @@ export default function InvoiceDetailPage() {
         <h2 className="text-lg font-bold">Invoice not found</h2>
         <p className="text-zinc-500 text-xs">Verify that the invoice exists and backend microservices are running.</p>
         <button
-          onClick={() => (window.location.href = "/invoices")}
+          onClick={() => router.push("/invoices")}
           className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-semibold"
         >
           <ArrowLeft size={14} />
@@ -149,13 +151,18 @@ export default function InvoiceDetailPage() {
   const statusStyle = STATUS_COLORS[displayedStatus] || "border-zinc-800 text-zinc-400";
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0 print:hidden">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/invoices")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => router.push("/invoices")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to invoices"
           >
             <ArrowLeft size={16} />
@@ -214,7 +221,7 @@ export default function InvoiceDetailPage() {
               <button
                 onClick={() => handleUpdateStatus("PAID")}
                 disabled={updateStatusMutation.isPending}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-all shadow-md"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
               >
                 <Check size={12} />
                 Mark as Paid
@@ -226,6 +233,16 @@ export default function InvoiceDetailPage() {
 
       {/* Main Container */}
       <main className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-6 print:p-0 print:max-w-full">
+        {toastMsg && (
+          <div className="p-3 bg-emerald-550/15 border border-emerald-500/35 text-emerald-400 rounded-lg flex items-center justify-between gap-2 print:hidden">
+            <div className="flex items-center gap-2">
+              <Check size={14} />
+              <span>{toastMsg}</span>
+            </div>
+            <button onClick={() => setToastMsg("")} className="text-emerald-500 hover:text-emerald-350" aria-label="Dismiss message">✕</button>
+          </div>
+        )}
+
         {errorText && (
           <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg flex items-center gap-2 print:hidden">
             <AlertCircle size={14} />

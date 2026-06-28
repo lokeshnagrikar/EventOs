@@ -23,7 +23,7 @@ interface Payment {
   amount: number;
   paymentMethod: string;
   transactionReference?: string;
-  status: string;
+  status: "PENDING" | "PENDING_VERIFICATION" | "COMPLETED" | "REFUNDED" | "FAILED";
   paymentDate: string;
   notes?: string;
 }
@@ -134,19 +134,26 @@ export default function PaymentsPage() {
     });
   };
 
-  // Metric Computations
-  const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+  // Metric Computations — only count fully COMPLETED payments as revenue
+  const totalRevenue = payments
+    .filter(p => p.status === "COMPLETED")
+    .reduce((sum, p) => sum + p.amount, 0);
   const totalBookedAmount = bookings.reduce((sum, b) => sum + b.totalAmount, 0);
   const totalOutstanding = Math.max(0, totalBookedAmount - totalRevenue);
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => (window.location.href = "/dashboard")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to dashboard"
           >
             <ArrowLeft size={16} />
@@ -162,7 +169,7 @@ export default function PaymentsPage() {
             resetForm();
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition-all shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
         >
           <Plus size={16} />
           Record Payment
@@ -419,18 +426,18 @@ export default function PaymentsPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-2 text-xs">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-750 text-zinc-300 rounded-lg font-semibold transition-colors"
+                  className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl font-bold transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={savePaymentMutation.isPending}
-                  className="flex-1 py-2 bg-purple-600 hover:bg-purple-750 text-white rounded-lg font-semibold transition-colors"
+                  className="flex-1 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
                 >
                   {savePaymentMutation.isPending ? "Logging..." : "Log Payment"}
                 </button>

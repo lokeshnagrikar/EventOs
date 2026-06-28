@@ -54,11 +54,11 @@ export default function PortalTimelinePage() {
           </div>
         </div>
       ) : (
-        <div className="relative border-l border-zinc-850 pl-6 space-y-8 ml-3 py-2">
+        <div className="relative border-l border-zinc-850 pl-8 ml-4 sm:ml-6 space-y-8 py-2">
           {clientTimeline.map((item) => (
             <div key={item.id} className="relative group">
               {/* Timeline dot */}
-              <div className={`absolute -left-[30px] top-0.5 h-4 w-4 rounded-full border border-zinc-800 flex items-center justify-center ring-4 ring-[#09090B] transition-colors ${
+              <div className={`absolute -left-[9px] top-1 h-4 w-4 rounded-full border border-zinc-800 flex items-center justify-center ring-4 ring-[#09090B] transition-colors ${
                 item.completed ? "bg-emerald-500 text-white border-transparent" : "bg-zinc-900 text-zinc-500"
               }`}>
                 {item.completed && <CheckCircle2 size={12} className="text-white" />}

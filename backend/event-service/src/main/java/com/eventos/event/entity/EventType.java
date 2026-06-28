@@ -4,5 +4,9 @@ public enum EventType {
     WEDDING,
     BIRTHDAY,
     ENGAGEMENT,
-    CORPORATE
+    CORPORATE,
+    ANNIVERSARY,
+    OTHER,
+    SOCIAL
 }
+

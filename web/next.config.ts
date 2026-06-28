@@ -5,10 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["images.unsplash.com", "res.cloudinary.com"],
   },
-  experimental: {
-    workerThreads: false,
-    cpus: 1,
-  },
+
   async rewrites() {
     return [
       {

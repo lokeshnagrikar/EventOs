@@ -21,10 +21,19 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     Optional<Invoice> findByInvoiceNumberAndTenantId(String invoiceNumber, UUID tenantId);
     long countByTenantId(UUID tenantId);
     List<Invoice> findAllByClientEmailIgnoreCaseAndTenantIdOrderByCreatedAtDesc(String clientEmail, UUID tenantId);
+    Page<Invoice> findAllByClientEmailIgnoreCaseAndTenantIdOrderByCreatedAtDesc(String clientEmail, UUID tenantId, Pageable pageable);
+    List<Invoice> findAllByBookingIdInAndTenantIdOrderByCreatedAtDesc(List<UUID> bookingIds, UUID tenantId);
+    Page<Invoice> findAllByBookingIdInAndTenantIdOrderByCreatedAtDesc(List<UUID> bookingIds, UUID tenantId, Pageable pageable);
 
     @Query("SELECT i.status, COUNT(i), COALESCE(SUM(i.totalAmount), 0) FROM Invoice i WHERE i.tenantId = :tenantId GROUP BY i.status")
     List<Object[]> getInvoiceSumsAndCountsByStatus(@Param("tenantId") UUID tenantId);
 
     @Query("SELECT COALESCE(SUM(i.totalAmount), 0), COALESCE(SUM(i.subtotal), 0), COALESCE(SUM(i.tax), 0), COALESCE(SUM(i.discount), 0) FROM Invoice i WHERE i.tenantId = :tenantId")
     List<Object[]> getInvoiceSummaryAndTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT COALESCE(SUM(i.totalAmount - i.paidAmount), 0) FROM Invoice i WHERE i.tenantId = :tenantId AND i.status NOT IN ('PAID', 'VOIDED', 'CANCELLED')")
+    java.math.BigDecimal sumOutstandingAmountByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT COUNT(i) FROM Invoice i WHERE i.tenantId = :tenantId AND i.status NOT IN ('PAID', 'VOIDED', 'CANCELLED')")
+    long countOutstandingByTenantId(@Param("tenantId") UUID tenantId);
 }

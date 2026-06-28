@@ -1,10 +1,13 @@
 package com.eventos.crm.service;
 
 import com.eventos.crm.dto.CreateLeadDto;
+import com.eventos.crm.entity.Contact;
 import com.eventos.crm.entity.Lead;
-import com.eventos.crm.entity.LeadActivity;
+import com.eventos.crm.entity.Activity;
 import com.eventos.crm.entity.LeadStatus;
-import com.eventos.crm.repository.LeadActivityRepository;
+import com.eventos.crm.event.LeadCreatedEvent;
+import com.eventos.crm.event.LeadStatusUpdatedEvent;
+import com.eventos.crm.repository.ActivityRepository;
 import com.eventos.crm.repository.LeadRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +26,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,7 +36,13 @@ public class LeadServiceTest {
     private LeadRepository leadRepository;
 
     @Mock
-    private LeadActivityRepository leadActivityRepository;
+    private ActivityRepository activityRepository;
+
+    @Mock
+    private ContactService contactService;
+
+    @Mock
+    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
 
     @InjectMocks
     private LeadService leadService;
@@ -41,6 +51,7 @@ public class LeadServiceTest {
     private UUID companyId;
     private UUID userId;
     private Lead mockLead;
+    private Contact mockContact;
 
     @BeforeEach
     void setUp() {
@@ -48,16 +59,26 @@ public class LeadServiceTest {
         companyId = UUID.randomUUID();
         userId = UUID.randomUUID();
 
+        mockContact = Contact.builder()
+                .id(UUID.randomUUID())
+                .firstName("Kapoor")
+                .lastName("Wedding")
+                .email("test@kapoor.com")
+                .phone("1234567890")
+                .build();
+        mockContact.setTenantId(tenantId);
+
         mockLead = Lead.builder()
                 .id(UUID.randomUUID())
-                .tenantId(tenantId)
                 .companyId(companyId)
                 .name("Kapoor Wedding")
+                .contact(mockContact)
                 .eventType("WEDDING")
                 .budget(BigDecimal.valueOf(500000))
                 .status(LeadStatus.NEW)
                 .isDeleted(false)
                 .build();
+        mockLead.setTenantId(tenantId);
 
         setSecurityContext(userId, tenantId, "OWNER");
     }
@@ -101,18 +122,29 @@ public class LeadServiceTest {
                 .email("tata@corp.com")
                 .build();
 
+        Contact newContact = Contact.builder()
+                .id(UUID.randomUUID())
+                .firstName("Tata")
+                .lastName("Meet")
+                .email(dto.getEmail())
+                .phone(dto.getPhone())
+                .build();
+        newContact.setTenantId(tenantId);
+
         Lead savedLead = Lead.builder()
                 .id(UUID.randomUUID())
-                .tenantId(tenantId)
                 .companyId(companyId)
                 .name(dto.getName())
+                .contact(newContact)
                 .eventType(dto.getEventType())
                 .budget(dto.getBudget())
                 .status(LeadStatus.NEW)
                 .build();
+        savedLead.setTenantId(tenantId);
 
+        when(contactService.getOrCreateContact(any(), any(), any(), any(), any())).thenReturn(newContact);
         when(leadRepository.save(any(Lead.class))).thenReturn(savedLead);
-        when(leadActivityRepository.save(any(LeadActivity.class))).thenReturn(new LeadActivity());
+        when(activityRepository.save(any(Activity.class))).thenReturn(new Activity());
 
         Lead result = leadService.createLead(dto, tenantId, companyId, userId);
 
@@ -120,7 +152,8 @@ public class LeadServiceTest {
         assertEquals(LeadStatus.NEW, result.getStatus());
         assertEquals("Tata Meet", result.getName());
         verify(leadRepository, times(1)).save(any(Lead.class));
-        verify(leadActivityRepository, times(1)).save(any(LeadActivity.class));
+        verify(activityRepository, times(1)).save(any(Activity.class));
+        verify(rabbitTemplate, times(1)).convertAndSend(eq("eventos.exchange"), eq("crm.lead.created"), any(LeadCreatedEvent.class));
     }
 
     @Test
@@ -146,22 +179,24 @@ public class LeadServiceTest {
         
         Lead updatedLead = Lead.builder()
                 .id(leadId)
-                .tenantId(tenantId)
                 .companyId(companyId)
                 .name(mockLead.getName())
-                .status(LeadStatus.CONTACTED)
+                .contact(mockContact)
+                .status(LeadStatus.QUALIFIED)
                 .build();
+        updatedLead.setTenantId(tenantId);
 
         when(leadRepository.save(any(Lead.class))).thenReturn(updatedLead);
-        when(leadActivityRepository.save(any(LeadActivity.class))).thenReturn(new LeadActivity());
+        when(activityRepository.save(any(Activity.class))).thenReturn(new Activity());
 
-        Lead result = leadService.updateLeadStatus(leadId, LeadStatus.CONTACTED, tenantId, userId);
+        Lead result = leadService.updateLeadStatus(leadId, LeadStatus.QUALIFIED, tenantId, userId);
 
         assertNotNull(result);
-        assertEquals(LeadStatus.CONTACTED, result.getStatus());
+        assertEquals(LeadStatus.QUALIFIED, result.getStatus());
         verify(leadRepository, times(1)).findByIdAndTenantIdAndIsDeletedFalse(leadId, tenantId);
         verify(leadRepository, times(1)).save(any(Lead.class));
-        verify(leadActivityRepository, times(1)).save(any(LeadActivity.class));
+        verify(activityRepository, times(1)).save(any(Activity.class));
+        verify(rabbitTemplate, times(1)).convertAndSend(eq("eventos.exchange"), eq("crm.lead.status.updated"), any(LeadStatusUpdatedEvent.class));
     }
 
     @Test
@@ -171,7 +206,7 @@ public class LeadServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> {
-            leadService.updateLeadStatus(leadId, LeadStatus.CONTACTED, tenantId, userId);
+            leadService.updateLeadStatus(leadId, LeadStatus.QUALIFIED, tenantId, userId);
         });
 
         verify(leadRepository, times(1)).findByIdAndTenantIdAndIsDeletedFalse(leadId, tenantId);
@@ -200,8 +235,8 @@ public class LeadServiceTest {
 
         assertNotNull(result);
         assertEquals("Updated Kapoor Wedding", result.getName());
-        assertEquals("9999999999", result.getPhone());
-        assertEquals("updated@kapoor.com", result.getEmail());
+        assertEquals("9999999999", result.getContact().getPhone());
+        assertEquals("updated@kapoor.com", result.getContact().getEmail());
         assertEquals("Referral", result.getLeadSource());
         assertEquals(userId, result.getAssignedUserId());
         verify(leadRepository, times(1)).save(any(Lead.class));

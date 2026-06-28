@@ -15,4 +15,7 @@ public interface EventTimelineItemRepository extends JpaRepository<EventTimeline
 
     @Query("SELECT eti FROM EventTimelineItem eti JOIN Event e ON eti.eventId = e.id WHERE e.tenantId = :tenantId AND eti.completed = :completed ORDER BY eti.scheduledTime ASC")
     List<EventTimelineItem> findAllByTenantIdAndCompletedOrderByScheduledTimeAsc(@Param("tenantId") UUID tenantId, @Param("completed") boolean completed);
+
+    long countByEventId(UUID eventId);
+    long countByEventIdAndCompletedTrue(UUID eventId);
 }

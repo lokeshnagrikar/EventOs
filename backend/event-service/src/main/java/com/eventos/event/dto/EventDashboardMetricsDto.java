@@ -20,6 +20,13 @@ public class EventDashboardMetricsDto {
     private BigDecimal pendingPayments;
     private List<TaskSummaryDto> teamTasks;
 
+    private long outstandingInvoicesCount;
+    private BigDecimal outstandingInvoicesAmount;
+    private BigDecimal estimatedCosts;
+    private BigDecimal actualCosts;
+    private BigDecimal profitMargin;
+    private BigDecimal profitMarginPercentage;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

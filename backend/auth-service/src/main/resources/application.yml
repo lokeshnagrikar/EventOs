@@ -2,12 +2,18 @@ server:
   port: 8081
   servlet:
     context-path: /api/v1/auth
+  tomcat:
+    redirect-context-root: false
 
 spring:
   application:
     name: auth-service
+  mvc:
+    # Disable trailing-slash redirect to prevent 301s bypassing the API Gateway proxy (CORS)
+    pathmatch:
+      use-suffix-pattern: false
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/auth_db
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/auth_db?sslmode=disable
     username: ${POSTGRES_USER:eventos_admin}
     password: ${POSTGRES_PASSWORD:eventos_secure_pass}
     driver-class-name: org.postgresql.Driver
@@ -22,6 +28,18 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      connect-timeout: 2000
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:eventos_guest}
+    password: ${RABBITMQ_PASS:eventos_guest_pass}
 
 # Security & JWT configurations
 app:
@@ -29,3 +47,24 @@ app:
     secret: ${JWT_SECRET_KEY:9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d}
     expiration-ms: ${JWT_EXPIRATION_MS:900000}          # 15 mins
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
+  gateway:
+    secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
+  security:
+    log-tokens: ${LOG_SENSITIVE_TOKENS:true}
+  recaptcha:
+    enabled: ${RECAPTCHA_ENABLED:false}
+    secret-key: ${RECAPTCHA_SECRET_KEY:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

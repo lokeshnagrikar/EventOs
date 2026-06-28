@@ -6,6 +6,7 @@ import com.eventos.event.service.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -24,11 +25,10 @@ public class PaymentController {
     }
 
     @PostMapping
-    public ResponseEntity<?> recordPayment(
-            @Valid @RequestBody CreatePaymentDto dto,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> recordPayment(@Valid @RequestBody CreatePaymentDto dto) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             Payment saved = paymentService.savePayment(dto, tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -36,6 +36,9 @@ public class PaymentController {
             response.put("data", saved);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            // Rethrow security/status exceptions so Spring MVC returns the correct HTTP status (e.g. 403 Forbidden)
+            throw e;
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(createErrorResponse("RECORD_FAILED", e.getMessage()));
@@ -43,17 +46,18 @@ public class PaymentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
     public ResponseEntity<?> getPayments(
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestParam(required = false) Integer size) {
+        UUID tenantId = getTenantId();
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
 
         if (page != null && size != null) {
-            org.springframework.data.domain.Page<Payment> paymentsPage = paymentService.getAllPayments(tenantId, org.springframework.data.domain.PageRequest.of(page, size));
+            org.springframework.data.domain.Page<Payment> paymentsPage = paymentService.getAllPayments(tenantId,
+                    org.springframework.data.domain.PageRequest.of(page, size));
             response.put("data", paymentsPage.getContent());
 
             Map<String, Object> pagination = new HashMap<>();
@@ -71,9 +75,9 @@ public class PaymentController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<?> getPaymentStats(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getPaymentStats() {
+        UUID tenantId = getTenantId();
         Map<String, Object> stats = paymentService.getPaymentStats(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -84,11 +88,10 @@ public class PaymentController {
     }
 
     @GetMapping("/booking/{bookingId}")
-    public ResponseEntity<?> getPaymentsByBooking(
-            @PathVariable UUID bookingId,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getPaymentsByBooking(@PathVariable UUID bookingId) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             List<Payment> payments = paymentService.getPaymentsByBooking(bookingId, tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -103,11 +106,10 @@ public class PaymentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPaymentDetails(
-            @PathVariable UUID id,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getPaymentDetails(@PathVariable UUID id) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             Payment payment = paymentService.getPaymentById(id, tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -122,11 +124,10 @@ public class PaymentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePayment(
-            @PathVariable UUID id,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    public ResponseEntity<?> deletePayment(@PathVariable UUID id) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             paymentService.deletePayment(id, tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -141,14 +142,20 @@ public class PaymentController {
     }
 
     @GetMapping("/client")
-    public ResponseEntity<?> getClientPayments(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader,
-            @RequestHeader(value = "X-User-Email", required = false) String emailHeader) {
-        if (emailHeader == null || emailHeader.isEmpty()) {
-            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Email header is required"));
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getClientPayments() {
+        com.eventos.event.config.UserPrincipal principal = getCurrentPrincipal();
+        String email = principal.getEmail();
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(createErrorResponse("BAD_REQUEST", "Email is missing from authentication context"));
         }
-        UUID tenantId = getTenantId(tenantIdHeader);
-        List<Payment> payments = paymentService.getPaymentsByClientEmail(emailHeader, tenantId);
+        UUID tenantId = principal.getTenantId();
+        if (tenantId == null) {
+            return ResponseEntity.badRequest()
+                    .body(createErrorResponse("BAD_REQUEST", "Tenant ID is missing from authentication context"));
+        }
+        List<Payment> payments = paymentService.getPaymentsByClientEmail(email, tenantId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -159,20 +166,23 @@ public class PaymentController {
 
     // --- Helper Methods ---
 
-    private UUID getTenantId(String header) {
-        org.springframework.security.core.Authentication auth = 
-            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+    private com.eventos.event.config.UserPrincipal getCurrentPrincipal() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.event.config.UserPrincipal) {
-            UUID tenantId = ((com.eventos.event.config.UserPrincipal) auth.getPrincipal()).getTenantId();
-            if (tenantId != null) {
-                return tenantId;
-            }
-        }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
+            return (com.eventos.event.config.UserPrincipal) auth.getPrincipal();
         }
         throw new org.springframework.web.server.ResponseStatusException(
-            org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Authentication context is missing");
+    }
+
+    private UUID getTenantId() {
+        UUID tenantId = getCurrentPrincipal().getTenantId();
+        if (tenantId == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+        }
+        return tenantId;
     }
 
     private Map<String, Object> createErrorResponse(String code, String message) {

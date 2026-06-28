@@ -45,10 +45,10 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
     // ── Date-range search (used by GET /events) ────────────────────────────────
 
     @Query("SELECT e FROM Event e WHERE e.tenantId = :tenantId " +
-           "AND (:status IS NULL OR e.status = :status) " +
-           "AND (:type IS NULL OR e.type = :type) " +
-           "AND (:startDate IS NULL OR e.startDate >= :startDate) " +
-           "AND (:endDate IS NULL OR e.endDate <= :endDate)")
+           "AND (cast(:status as String) IS NULL OR e.status = :status) " +
+           "AND (cast(:type as String) IS NULL OR e.type = :type) " +
+           "AND (cast(:startDate as java.time.LocalDateTime) IS NULL OR e.startDate >= :startDate) " +
+           "AND (cast(:endDate as java.time.LocalDateTime) IS NULL OR e.endDate <= :endDate)")
     Page<Event> searchEvents(
             @Param("tenantId") UUID tenantId,
             @Param("status")    EventStatus status,
@@ -61,10 +61,10 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
     @Query("SELECT e FROM Event e WHERE e.tenantId = :tenantId " +
            "AND e.id IN :eventIds " +
-           "AND (:status IS NULL OR e.status = :status) " +
-           "AND (:type IS NULL OR e.type = :type) " +
-           "AND (:startDate IS NULL OR e.startDate >= :startDate) " +
-           "AND (:endDate IS NULL OR e.endDate <= :endDate)")
+           "AND (cast(:status as String) IS NULL OR e.status = :status) " +
+           "AND (cast(:type as String) IS NULL OR e.type = :type) " +
+           "AND (cast(:startDate as java.time.LocalDateTime) IS NULL OR e.startDate >= :startDate) " +
+           "AND (cast(:endDate as java.time.LocalDateTime) IS NULL OR e.endDate <= :endDate)")
     Page<Event> searchEventsForStaff(
             @Param("tenantId")  UUID tenantId,
             @Param("status")    EventStatus status,

@@ -41,4 +41,6 @@ public class CreateLeadDto {
     private String notes;
 
     private UUID assignedUserId;
+
+    private UUID contactId;
 }

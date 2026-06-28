@@ -2,12 +2,18 @@ server:
   port: 8084
   servlet:
     context-path: /api/v1/gallery
+  tomcat:
+    redirect-context-root: false
 
 spring:
   application:
     name: gallery-service
+  mvc:
+    # Disable trailing-slash redirect to prevent 301s bypassing the API Gateway proxy (CORS)
+    pathmatch:
+      use-suffix-pattern: false
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/gallery_db
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/gallery_db?sslmode=disable
     username: ${POSTGRES_USER:eventos_admin}
     password: ${POSTGRES_PASSWORD:eventos_secure_pass}
     driver-class-name: org.postgresql.Driver
@@ -26,6 +32,11 @@ spring:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:eventos_guest}
+    password: ${RABBITMQ_PASSWORD:eventos_guest_pass}
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:demo}
@@ -36,3 +47,42 @@ cloudinary:
 app:
   jwt:
     secret: ${JWT_SECRET_KEY:9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d}
+  gateway:
+    secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
+
+service:
+  event:
+    base-url: ${EVENT_SERVICE_URL:http://localhost:8083/api/v1/events}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+  retry:
+    instances:
+      default:
+        maxAttempts: 3
+        waitDuration: 1000
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2

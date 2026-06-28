@@ -3,10 +3,12 @@ package com.eventos.event.controller;
 import com.eventos.event.dto.CreateInvoiceDto;
 import com.eventos.event.dto.UpdateInvoiceStatusDto;
 import com.eventos.event.entity.Invoice;
+import com.eventos.event.entity.InvoiceHistory;
 import com.eventos.event.service.InvoiceService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -25,11 +27,10 @@ public class InvoiceController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createInvoice(
-            @Valid @RequestBody CreateInvoiceDto dto,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
+    public ResponseEntity<?> createInvoice(@Valid @RequestBody CreateInvoiceDto dto) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             Invoice saved = invoiceService.createInvoice(dto, tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -44,11 +45,11 @@ public class InvoiceController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
     public ResponseEntity<?> getInvoices(
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestParam(required = false) Integer size) {
+        UUID tenantId = getTenantId();
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -72,9 +73,9 @@ public class InvoiceController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<?> getInvoiceStats(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getInvoiceStats() {
+        UUID tenantId = getTenantId();
         Map<String, Object> stats = invoiceService.getInvoiceStats(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -85,11 +86,10 @@ public class InvoiceController {
     }
 
     @GetMapping("/booking/{bookingId}")
-    public ResponseEntity<?> getInvoicesByBooking(
-            @PathVariable UUID bookingId,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getInvoicesByBooking(@PathVariable UUID bookingId) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             List<Invoice> invoices = invoiceService.getInvoicesByBooking(bookingId, tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -104,11 +104,10 @@ public class InvoiceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getInvoiceDetails(
-            @PathVariable UUID id,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getInvoiceDetails(@PathVariable UUID id) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             Invoice invoice = invoiceService.getInvoiceById(id, tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -123,12 +122,12 @@ public class InvoiceController {
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> updateInvoiceStatus(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateInvoiceStatusDto dto,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+            @Valid @RequestBody UpdateInvoiceStatusDto dto) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             Invoice updated = invoiceService.updateInvoiceStatus(id, dto.getStatus(), tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -146,11 +145,10 @@ public class InvoiceController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteInvoice(
-            @PathVariable UUID id,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
+    public ResponseEntity<?> deleteInvoice(@PathVariable UUID id) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             invoiceService.deleteInvoice(id, tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -165,11 +163,10 @@ public class InvoiceController {
     }
 
     @PostMapping("/{id}/remind")
-    public ResponseEntity<?> sendPaymentReminder(
-            @PathVariable UUID id,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
+    public ResponseEntity<?> sendPaymentReminder(@PathVariable UUID id) {
         try {
-            UUID tenantId = getTenantId(tenantIdHeader);
+            UUID tenantId = getTenantId();
             invoiceService.sendPaymentReminder(id, tenantId);
 
             Map<String, Object> response = new HashMap<>();
@@ -187,14 +184,18 @@ public class InvoiceController {
     }
 
     @GetMapping("/client")
-    public ResponseEntity<?> getClientInvoices(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader,
-            @RequestHeader(value = "X-User-Email", required = false) String emailHeader) {
-        if (emailHeader == null || emailHeader.isEmpty()) {
-            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Email header is required"));
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getClientInvoices() {
+        com.eventos.event.config.UserPrincipal principal = getCurrentPrincipal();
+        String email = principal.getEmail();
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Email is missing from authentication context"));
         }
-        UUID tenantId = getTenantId(tenantIdHeader);
-        List<Invoice> invoices = invoiceService.getInvoicesByClientEmail(emailHeader, tenantId);
+        UUID tenantId = principal.getTenantId();
+        if (tenantId == null) {
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Tenant ID is missing from authentication context"));
+        }
+        List<Invoice> invoices = invoiceService.getInvoicesByClientEmail(email, tenantId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -203,22 +204,89 @@ public class InvoiceController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}/pdf")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getInvoicePdf(@PathVariable UUID id) {
+        try {
+            UUID tenantId = getTenantId();
+            byte[] pdfBytes = invoiceService.generateInvoicePdf(id, tenantId);
+            Invoice invoice = invoiceService.getInvoiceById(id, tenantId);
+            String filename = "invoice-" + invoice.getInvoiceNumber() + ".pdf";
+
+            return ResponseEntity.ok()
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(createErrorResponse("NOT_FOUND", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(createErrorResponse("PDF_FAILED", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> getInvoiceHistory(@PathVariable UUID id) {
+        try {
+            UUID tenantId = getTenantId();
+            List<InvoiceHistory> history = invoiceService.getInvoiceHistory(id, tenantId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", history);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(createErrorResponse("NOT_FOUND", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(createErrorResponse("FETCH_FAILED", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/reconcile")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
+    public ResponseEntity<?> reconcileInvoice(@PathVariable UUID id) {
+        try {
+            UUID tenantId = getTenantId();
+            Invoice reconciled = invoiceService.reconcileInvoice(id, tenantId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", reconciled);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(createErrorResponse("NOT_FOUND", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(createErrorResponse("RECONCILE_FAILED", e.getMessage()));
+        }
+    }
+
     // --- Helper Methods ---
 
-    private UUID getTenantId(String header) {
+    private com.eventos.event.config.UserPrincipal getCurrentPrincipal() {
         org.springframework.security.core.Authentication auth = 
             org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.event.config.UserPrincipal) {
-            UUID tenantId = ((com.eventos.event.config.UserPrincipal) auth.getPrincipal()).getTenantId();
-            if (tenantId != null) {
-                return tenantId;
-            }
-        }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
+            return (com.eventos.event.config.UserPrincipal) auth.getPrincipal();
         }
         throw new org.springframework.web.server.ResponseStatusException(
-            org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+            org.springframework.http.HttpStatus.UNAUTHORIZED, "Authentication context is missing");
+    }
+
+    private UUID getTenantId() {
+        UUID tenantId = getCurrentPrincipal().getTenantId();
+        if (tenantId == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+        }
+        return tenantId;
     }
 
     private Map<String, Object> createErrorResponse(String code, String message) {

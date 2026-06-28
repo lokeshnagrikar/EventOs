@@ -49,6 +49,25 @@ public class GalleryItem {
 
     private Double duration;
 
+    private Integer width;
+
+    private Integer height;
+
+    @Column(name = "resource_type")
+    private String resourceType;
+
+    private String category;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean favorite = false;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "gallery_item_tags", joinColumns = @JoinColumn(name = "gallery_item_id"))
+    @Column(name = "tag")
+    @Builder.Default
+    private java.util.Set<String> tags = new java.util.HashSet<>();
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

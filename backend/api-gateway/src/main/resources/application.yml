@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   cloud:
     gateway:
       globalcors:
@@ -21,23 +25,58 @@ spring:
             allowCredentials: true
       routes:
         - id: auth-service
-          uri: http://localhost:8081
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/v1/auth/**
         - id: crm-service
-          uri: http://localhost:8082
+          uri: ${CRM_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/v1/crm/**
+        - id: bookings-route
+          uri: ${EVENT_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/bookings/**
+          filters:
+            - RewritePath=/api/v1/bookings(?<segment>.*), /api/v1/events/bookings${segment}
         - id: event-service
-          uri: http://localhost:8083
+          uri: ${EVENT_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/v1/events/**
         - id: gallery-service
-          uri: http://localhost:8084
+          uri: ${GALLERY_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/v1/gallery/**
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: Auth Service
+        url: /api/v1/auth/v3/api-docs
+      - name: CRM Service
+        url: /api/v1/crm/v3/api-docs
+      - name: Event Service
+        url: /api/v1/events/v3/api-docs
+      - name: Gallery Service
+        url: /api/v1/gallery/v3/api-docs
 
 # Custom parameters
 app:
   jwt:
     secret: ${JWT_SECRET_KEY:9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d}
+    public-key: ${JWT_PUBLIC_KEY:}
+  gateway:
+    secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

@@ -2,7 +2,7 @@ package com.eventos.event.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -14,17 +14,15 @@ import java.util.UUID;
 @Entity
 @Table(name = "transactions")
 @Data
+@lombok.EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Transaction {
+@SuperBuilder
+public class Transaction extends AbstractTenantAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "booking_id")
     private UUID bookingId;
@@ -35,7 +33,7 @@ public class Transaction {
     @Column(name = "payment_id")
     private UUID paymentId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
 
     @Column(nullable = false)

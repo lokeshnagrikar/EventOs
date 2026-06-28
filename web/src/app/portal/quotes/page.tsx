@@ -19,7 +19,7 @@ interface QuoteItem {
 interface Quote {
   id: string;
   quoteNumber: string;
-  status: "DRAFT" | "SENT" | "APPROVED" | "REJECTED";
+  status: "DRAFT" | "SENT" | "VIEWED" | "ACCEPTED" | "REJECTED" | "EXPIRED";
   templateName: string;
   subtotal: number;
   discount: number;
@@ -36,6 +36,53 @@ export default function PortalQuotesPage() {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
+  // Escape key listener
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedQuote(null);
+      }
+    };
+    if (selectedQuote) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedQuote]);
+
+  // Focus trap listener
+  React.useEffect(() => {
+    if (selectedQuote && modalRef.current) {
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements.length > 0) {
+        (focusableElements[0] as HTMLElement).focus();
+      }
+
+      const handleTab = (e: KeyboardEvent) => {
+        if (e.key !== "Tab") return;
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      };
+
+      window.addEventListener("keydown", handleTab);
+      return () => window.removeEventListener("keydown", handleTab);
+    }
+  }, [selectedQuote]);
 
   // 1. Fetch Quotes
   const { data: quotesResponse, isLoading } = useQuery<{ data: Quote[] }>({
@@ -57,7 +104,7 @@ export default function PortalQuotesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clientQuotes"] });
       if (selectedQuote) {
-        setSelectedQuote(prev => prev ? { ...prev, status: "APPROVED" as const } : null);
+      setSelectedQuote(prev => prev ? { ...prev, status: "ACCEPTED" as const } : null);
       }
       addToast("Quote approved successfully! Preparing booking details...", "success");
     },
@@ -128,10 +175,12 @@ export default function PortalQuotesPage() {
                     <h4 className="text-sm font-extrabold text-zinc-200 mt-0.5 group-hover:text-purple-400 transition-colors">{quote.quoteNumber}</h4>
                   </div>
                   <span className={`text-[9px] px-2 py-0.5 rounded font-extrabold uppercase border ${
-                    quote.status === "APPROVED"
+                    quote.status === "ACCEPTED"
                       ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20"
-                      : quote.status === "REJECTED"
+                      : quote.status === "REJECTED" || quote.status === "EXPIRED"
                       ? "bg-red-500/10 text-red-400 border-red-500/20"
+                      : quote.status === "VIEWED"
+                      ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
                       : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                   }`}>
                     {quote.status}
@@ -161,6 +210,10 @@ export default function PortalQuotesPage() {
         {selectedQuote && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <motion.div
+              ref={modalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -169,7 +222,7 @@ export default function PortalQuotesPage() {
               {/* Header */}
               <div className="flex justify-between items-center p-5 border-b border-zinc-800 shrink-0">
                 <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <h2 id="modal-title" className="text-base font-bold text-white flex items-center gap-2">
                     <FileText className="text-purple-500" size={18} />
                     Proposal Details: {selectedQuote.quoteNumber}
                   </h2>

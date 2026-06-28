@@ -13,10 +13,11 @@ import java.util.UUID;
 @Entity
 @Table(name = "event_timeline_items")
 @Data
+@lombok.EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EventTimelineItem {
+public class EventTimelineItem extends AbstractTenantAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -36,6 +37,10 @@ public class EventTimelineItem {
 
     @Column(nullable = false)
     private boolean completed;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "milestone", nullable = false)
+    private MilestoneType milestone;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

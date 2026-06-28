@@ -1,9 +1,11 @@
 package com.eventos.crm.entity;
 
+import com.eventos.crm.config.AuditLogListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -15,19 +17,28 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "quotes")
+@Table(
+    name = "quotes",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            columnNames = {
+                "tenant_id",
+                "quote_number"
+            }
+        )
+    }
+)
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Quote {
+@EntityListeners(AuditLogListener.class)
+public class Quote extends AbstractTenantAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "lead_id", nullable = false)
     private UUID leadId;
@@ -70,8 +81,16 @@ public class Quote {
     @Column(name = "pdf_url", length = 2048)
     private String pdfUrl;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "quote_id")
+    @Version
+    private Long version;
+
+    @Column(name = "parent_quote_id")
+    private UUID parentQuoteId;
+
+    @Column(name = "revision_number")
+    private Integer revisionNumber;
+
+    @OneToMany(mappedBy = "quote", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<QuoteItem> items = new ArrayList<>();
 }

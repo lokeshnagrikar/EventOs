@@ -22,4 +22,7 @@ public class AlbumResponseDto {
     private LocalDateTime updatedAt;
     private long itemCount;
     private String thumbnailUrl;
+    private String coverImage;
+    private com.eventos.gallery.entity.AlbumStatus status;
+    private com.eventos.gallery.entity.AlbumVisibility visibility;
 }

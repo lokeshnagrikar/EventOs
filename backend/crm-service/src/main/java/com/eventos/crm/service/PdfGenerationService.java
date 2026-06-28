@@ -5,7 +5,7 @@ import com.eventos.crm.entity.Quote;
 import com.eventos.crm.entity.QuoteItem;
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
-import com.lowagie.text.Image;
+import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
@@ -15,8 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -56,12 +55,36 @@ public class PdfGenerationService {
                 titleLabel = "CORPORATE EVENTS WORK AGREEMENT";
             }
 
-            // Fonts setup
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, primaryColor);
-            Font headingFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, textColor);
-            Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, textColor);
-            Font regularFont = FontFactory.getFont(FontFactory.HELVETICA, 9, textColor);
-            Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.GRAY);
+            // Fonts setup - Support Unicode & Indian languages via Noto Sans Devanagari
+            Font titleFont;
+            Font headingFont;
+            Font boldFont;
+            Font regularFont;
+            Font smallFont;
+
+            try {
+                byte[] fontBytes = getClass().getResourceAsStream("/fonts/NotoSansDevanagari-Regular.ttf").readAllBytes();
+                BaseFont bf = BaseFont.createFont(
+                        "NotoSansDevanagari-Regular.ttf", 
+                        BaseFont.IDENTITY_H, 
+                        BaseFont.EMBEDDED, 
+                        true, 
+                        fontBytes, 
+                        null
+                );
+                titleFont = new Font(bf, 18, Font.BOLD, primaryColor);
+                headingFont = new Font(bf, 12, Font.BOLD, textColor);
+                boldFont = new Font(bf, 9, Font.BOLD, textColor);
+                regularFont = new Font(bf, 9, Font.NORMAL, textColor);
+                smallFont = new Font(bf, 8, Font.NORMAL, Color.GRAY);
+            } catch (Exception e) {
+                log.warn("Failed to load NotoSans font, falling back to Helvetica: {}", e.getMessage());
+                titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, primaryColor);
+                headingFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, textColor);
+                boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, textColor);
+                regularFont = FontFactory.getFont(FontFactory.HELVETICA, 9, textColor);
+                smallFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.GRAY);
+            }
 
             // Document Header / Title
             Paragraph title = new Paragraph(titleLabel, titleFont);
@@ -116,8 +139,8 @@ public class PdfGenerationService {
             clientCell.setBorder(Rectangle.NO_BORDER);
             clientCell.addElement(new Paragraph("PREPARED FOR:", smallFont));
             clientCell.addElement(new Paragraph(lead != null ? lead.getName() : "Valued Client", headingFont));
-            clientCell.addElement(new Paragraph(lead != null && lead.getEmail() != null ? lead.getEmail() : "No Email Provided", regularFont));
-            clientCell.addElement(new Paragraph(lead != null && lead.getPhone() != null ? lead.getPhone() : "No Phone Provided", regularFont));
+            clientCell.addElement(new Paragraph(lead != null && lead.getContact() != null && lead.getContact().getEmail() != null ? lead.getContact().getEmail() : "No Email Provided", regularFont));
+            clientCell.addElement(new Paragraph(lead != null && lead.getContact() != null && lead.getContact().getPhone() != null ? lead.getContact().getPhone() : "No Phone Provided", regularFont));
             clientTable.addCell(clientCell);
             clientTable.setSpacingAfter(25);
             document.add(clientTable);
@@ -154,7 +177,7 @@ public class PdfGenerationService {
                 descCell.setBorderColor(Color.LIGHT_GRAY);
                 itemsTable.addCell(descCell);
 
-                PdfPCell priceCell = new PdfPCell(new Phrase("INR " + item.getUnitPrice().setScale(2).toString(), regularFont));
+                PdfPCell priceCell = new PdfPCell(new Phrase("₹ " + item.getUnitPrice().setScale(2, RoundingMode.HALF_UP).toString(), regularFont));
                 priceCell.setPadding(6);
                 priceCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
                 priceCell.setBorderColor(Color.LIGHT_GRAY);
@@ -166,7 +189,7 @@ public class PdfGenerationService {
                 qtyCell.setBorderColor(Color.LIGHT_GRAY);
                 itemsTable.addCell(qtyCell);
 
-                PdfPCell totalCell = new PdfPCell(new Phrase("INR " + item.getTotal().setScale(2).toString(), boldFont));
+                PdfPCell totalCell = new PdfPCell(new Phrase("₹ " + item.getTotal().setScale(2, RoundingMode.HALF_UP).toString(), boldFont));
                 totalCell.setPadding(6);
                 totalCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
                 totalCell.setBorderColor(Color.LIGHT_GRAY);
@@ -198,10 +221,12 @@ public class PdfGenerationService {
             calcSubTable.setWidthPercentage(100);
             calcSubTable.setWidths(new float[]{1.5f, 1f});
 
-            addSummaryRow(calcSubTable, "Subtotal:", "INR " + quote.getSubtotal().setScale(2).toString(), regularFont, regularFont);
-            addSummaryRow(calcSubTable, "Discount:", "- INR " + quote.getDiscount().setScale(2).toString(), regularFont, regularFont);
-            addSummaryRow(calcSubTable, "Tax:", "+ INR " + quote.getTax().setScale(2).toString(), regularFont, regularFont);
-            addSummaryRow(calcSubTable, "Grand Total:", "INR " + quote.getTotal().setScale(2).toString(), boldFont, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, primaryColor));
+            addSummaryRow(calcSubTable, "Subtotal:", "₹ " + quote.getSubtotal().setScale(2, RoundingMode.HALF_UP).toString(), regularFont, regularFont);
+            addSummaryRow(calcSubTable, "Discount:", "- ₹ " + quote.getDiscount().setScale(2, RoundingMode.HALF_UP).toString(), regularFont, regularFont);
+            addSummaryRow(calcSubTable, "Tax:", "+ ₹ " + quote.getTax().setScale(2, RoundingMode.HALF_UP).toString(), regularFont, regularFont);
+            
+            Font grandTotalValFont = new Font(regularFont.getBaseFont(), 10, Font.BOLD, primaryColor);
+            addSummaryRow(calcSubTable, "Grand Total:", "₹ " + quote.getTotal().setScale(2, RoundingMode.HALF_UP).toString(), boldFont, grandTotalValFont);
 
             calcCell.addElement(calcSubTable);
             summaryTable.addCell(calcCell);

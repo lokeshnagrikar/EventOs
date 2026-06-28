@@ -11,7 +11,8 @@ import java.util.UUID;
 @Repository
 public interface PricingRuleRepository extends JpaRepository<PricingRule, UUID> {
     List<PricingRule> findAllByTenantId(UUID tenantId);
-    Optional<PricingRule> findByTenantIdAndCategoryAndRuleKey(UUID tenantId, String category, String ruleKey);
+    Optional<PricingRule> findByTenantIdAndCategoryAndRuleKey(UUID tenantId, com.eventos.event.entity.PricingCategory category, String ruleKey);
     Optional<PricingRule> findByIdAndTenantId(UUID id, UUID tenantId);
+
     void deleteByIdAndTenantId(UUID id, UUID tenantId);
 }

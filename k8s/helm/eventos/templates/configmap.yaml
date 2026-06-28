@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "eventos.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.environment }}
+  POSTGRES_HOST: {{ .Release.Name }}-postgres
+  POSTGRES_PORT: "5432"
+  REDIS_HOST: {{ .Release.Name }}-redis
+  REDIS_PORT: "6379"
+  RABBITMQ_HOST: {{ .Release.Name }}-rabbitmq
+  RABBITMQ_PORT: "5672"
+  CRM_SERVICE_URL: http://{{ .Release.Name }}-crm:{{ .Values.services.crm.port }}/api/v1/crm
+  EVENT_SERVICE_URL: http://{{ .Release.Name }}-event:{{ .Values.services.event.port }}/api/v1/events
+  GALLERY_SERVICE_URL: http://{{ .Release.Name }}-gallery:{{ .Values.services.gallery.port }}/api/v1/gallery
+  AUTH_SERVICE_URL: http://{{ .Release.Name }}-auth:{{ .Values.services.auth.port }}/api/v1/auth

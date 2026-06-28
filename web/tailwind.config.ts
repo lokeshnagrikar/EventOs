@@ -52,7 +52,42 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "sans-serif"],
+        heading: ["var(--font-heading)", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
+      },
+      animation: {
+        marquee: "marquee var(--duration, 40s) linear infinite",
+        "marquee-vertical": "marquee-vertical var(--duration, 40s) linear infinite",
+        orbit: "orbit calc(var(--duration)*1s) linear infinite",
+        "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
+        shine: "shine var(--duration) infinite linear",
+      },
+      keyframes: {
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(calc(-100% - var(--gap, 1rem)))" },
+        },
+        "marquee-vertical": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(calc(-100% - var(--gap, 1rem)))" },
+        },
+        orbit: {
+          "0%": {
+            transform: "rotate(calc(var(--angle) * 1deg)) translateY(calc(var(--radius) * 1px)) rotate(calc(var(--angle) * -1deg))",
+          },
+          "100%": {
+            transform: "rotate(calc(var(--angle) * 1deg + 360deg)) translateY(calc(var(--radius) * 1px)) rotate(calc((var(--angle) * -1deg) - 360deg))",
+          },
+        },
+        "border-beam": {
+          "100%": {
+            "offset-distance": "100%",
+          },
+        },
+        shine: {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
       },
     },
   },

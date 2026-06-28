@@ -40,12 +40,23 @@ public class InvoiceServiceTest {
     private TenantSequenceRepository tenantSequenceRepository;
 
     @Mock
+    private com.eventos.event.repository.BookingAssignmentRepository bookingAssignmentRepository;
+
+    @Mock
+    private com.eventos.event.repository.InvoiceHistoryRepository invoiceHistoryRepository;
+
+    @Mock
+    private com.eventos.event.repository.PaymentRepository paymentRepository;
+
+    @Mock
+    private com.eventos.event.repository.EventRepository eventRepository;
+
+    @Mock
     private StringRedisTemplate redisTemplate;
 
     @Mock
     private ObjectMapper objectMapper;
 
-    @InjectMocks
     private InvoiceService invoiceService;
 
     private UUID tenantId;
@@ -53,22 +64,51 @@ public class InvoiceServiceTest {
     private Booking mockBooking;
     private Invoice mockInvoice;
 
+    private void setupSecurityContext(String roles) {
+        com.eventos.event.config.UserPrincipal principal = new com.eventos.event.config.UserPrincipal(
+                UUID.randomUUID(), tenantId, "test@eventos.com", roles);
+        List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities =
+                java.util.Arrays.stream(roles.split(","))
+                        .map(r -> new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()))
+                        .toList();
+        org.springframework.security.core.Authentication auth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(principal, null, authorities);
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
     @BeforeEach
     void setUp() {
         tenantId = UUID.randomUUID();
         bookingId = UUID.randomUUID();
+        setupSecurityContext("OWNER");
+
+        invoiceService = new InvoiceService(
+                invoiceRepository,
+                bookingRepository,
+                tenantSequenceRepository,
+                bookingAssignmentRepository,
+                invoiceHistoryRepository,
+                paymentRepository,
+                eventRepository,
+                redisTemplate,
+                objectMapper
+        );
 
         mockBooking = Booking.builder()
                 .id(bookingId)
-                .tenantId(tenantId)
                 .bookingNumber("BK-0001")
                 .totalAmount(BigDecimal.valueOf(100000))
                 .paidAmount(BigDecimal.ZERO)
                 .build();
+        mockBooking.setTenantId(tenantId);
 
         mockInvoice = Invoice.builder()
                 .id(UUID.randomUUID())
-                .tenantId(tenantId)
                 .bookingId(bookingId)
                 .invoiceNumber("INV-2026-0001")
                 .subtotal(BigDecimal.valueOf(90000))
@@ -79,6 +119,7 @@ public class InvoiceServiceTest {
                 .status("DRAFT")
                 .clientName("Sanjay Shah")
                 .build();
+        mockInvoice.setTenantId(tenantId);
     }
 
     @Test
@@ -126,7 +167,7 @@ public class InvoiceServiceTest {
         assertNotNull(created);
         assertEquals(0, created.getTotalAmount().compareTo(expectedTotal));
         assertTrue(created.getInvoiceNumber().startsWith("INV-"));
-        assertTrue(created.getInvoiceNumber().endsWith("-0006")); // count is 5, next is 6
+        assertTrue(created.getInvoiceNumber().endsWith("-000006")); // count is 5, next is 6
         assertEquals("DRAFT", created.getStatus());
         assertEquals("Preeti Gupta", created.getClientName());
         verify(invoiceRepository, times(1)).save(any(Invoice.class));

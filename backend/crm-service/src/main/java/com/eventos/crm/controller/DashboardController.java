@@ -3,6 +3,7 @@ package com.eventos.crm.controller;
 import com.eventos.crm.dto.DashboardMetricsDto;
 import com.eventos.crm.service.DashboardService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -20,6 +21,7 @@ public class DashboardController {
     }
 
     @GetMapping("/metrics")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
     public ResponseEntity<?> getMetrics() {
         UUID tenantId = getTenantId();
         String roles = getRoles();
@@ -34,6 +36,7 @@ public class DashboardController {
     }
 
     @DeleteMapping("/metrics/cache")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     public ResponseEntity<?> invalidateMetrics() {
         UUID tenantId = getTenantId();
 

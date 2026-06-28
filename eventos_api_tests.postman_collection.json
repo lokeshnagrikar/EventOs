@@ -1,0 +1,5670 @@
+{
+  "info": {
+    "_postman_id": "8fa21e06-5389-4da4-8b6b-5ef0b9bb859a",
+    "name": "EventOS API Test Suite",
+    "description": "Unified API Collection to test EventOS microservices (Auth, CRM, Event, Gallery) directly and via the API Gateway (port 8080). Contains complete demo payloads matching the seed database.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication Service",
+      "item": [
+        {
+          "name": "Login via Gateway (Port 8080)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = res.getBody();",
+                  "if (jsonData.success && jsonData.data) {",
+                  "    if (jsonData.data.accessToken) {",
+                  "        bru.setVar(\"accessToken\", jsonData.data.accessToken);",
+                  "        console.log(\"Saved accessToken:\", jsonData.data.accessToken);",
+                  "    }",
+                  "    if (jsonData.data.tenantId) {",
+                  "        bru.setVar(\"tenantId\", jsonData.data.tenantId);",
+                  "        console.log(\"Saved tenantId:\", jsonData.data.tenantId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"lokesh@myevents.com\",\n  \"password\": \"Secret@123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/login",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Logs in the user through the API Gateway. Updates the collection level `accessToken` and `tenantId` variables automatically."
+          },
+          "response": []
+        },
+        {
+          "name": "Login Direct (Port 8081)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = res.getBody();",
+                  "if (jsonData.success && jsonData.data) {",
+                  "    if (jsonData.data.accessToken) {",
+                  "        bru.setVar(\"accessToken\", jsonData.data.accessToken);",
+                  "        console.log(\"Saved accessToken:\", jsonData.data.accessToken);",
+                  "    }",
+                  "    if (jsonData.data.tenantId) {",
+                  "        bru.setVar(\"tenantId\", jsonData.data.tenantId);",
+                  "        console.log(\"Saved tenantId:\", jsonData.data.tenantId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"lokesh@myevents.com\",\n  \"password\": \"Secret@123\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_url}}/api/v1/auth/login",
+              "host": [
+                "{{auth_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Logs in the user directly to the Auth Service (Port 8081). Updates the collection level `accessToken` and `tenantId` variables automatically."
+          },
+          "response": []
+        },
+        {
+          "name": "Register Workspace via Gateway (Port 8080)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = res.getBody();",
+                  "if (jsonData.success && jsonData.data) {",
+                  "    if (jsonData.data.tenantId) {",
+                  "        bru.setVar(\"tenantId\", jsonData.data.tenantId);",
+                  "        console.log(\"Saved tenantId:\", jsonData.data.tenantId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Lokesh\",\n  \"lastName\": \"Nagrikar\",\n  \"email\": \"newowner@myevents.com\",\n  \"phone\": \"9309965483\",\n  \"companyName\": \"Eventos Digital Studio\",\n  \"password\": \"Secret@123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/register",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Registers a new tenant workspace and owner via the Gateway."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token via Gateway (Port 8080)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/refresh",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Refreshes the Access Token using a Refresh Token."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Sessions (Gateway)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/sessions",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "sessions"
+              ]
+            },
+            "description": "Lists the active login sessions for the current authenticated user context."
+          },
+          "response": []
+        },
+        {
+          "name": "Invite Team Member (Gateway)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager.demo@myevents.com\",\n  \"firstName\": \"Raj\",\n  \"lastName\": \"Verma\",\n  \"role\": \"MANAGER\",\n  \"phone\": \"9876543212\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/invitations",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "invitations"
+              ]
+            },
+            "description": "Invites a new team member to the workspace (Owner/Admin privileges required)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Captcha (Gateway)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/captcha",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "captcha"
+              ]
+            },
+            "description": "Gets a mock captcha details (triggered after 3 failed login attempts)."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/logout",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ],
+              "query": []
+            },
+            "description": "Logs out user by clearing cookie/session context.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"lokesh@myevents.com\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/forgot-password",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "forgot-password"
+              ],
+              "query": []
+            },
+            "description": "Generates a reset password token in system logs.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"lokesh@myevents.com\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/reset-password",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ],
+              "query": []
+            },
+            "description": "Resets user password with active reset token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"YOUR_RESET_TOKEN\",\n  \"password\": \"NewSecret@123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke Active Session",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/sessions/{{sessionId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "sessions",
+                "{{sessionId}}"
+              ],
+              "query": []
+            },
+            "description": "Revokes specific login session for security.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Accept Team Invitation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/accept-invite",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "accept-invite"
+              ],
+              "query": []
+            },
+            "description": "Accepts a workspace invitation and sets owner/staff password.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"INVITATION_TOKEN\",\n  \"password\": \"Secret@123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Switch Tenant Workspace",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/switch",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "switch"
+              ],
+              "query": []
+            },
+            "description": "Switches active workspace context utilizing rotated token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"tenantId\": \"{{tenantId}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Company Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/settings/company",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "settings",
+                "company"
+              ],
+              "query": []
+            },
+            "description": "Fetches branding, timezone, currency for company.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Company Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/settings/company",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "settings",
+                "company"
+              ],
+              "query": []
+            },
+            "description": "Updates company branding details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Eventos Studio Pro\",\n  \"primaryColor\": \"#9333ea\",\n  \"secondaryColor\": \"#18181b\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"currency\": \"INR\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Team Members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/settings/team",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "settings",
+                "team"
+              ],
+              "query": []
+            },
+            "description": "Lists active members and roles in current tenant.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invite/Add Team Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/settings/team",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "settings",
+                "team"
+              ],
+              "query": []
+            },
+            "description": "Invites team member from settings portal.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"staff.new@myevents.com\",\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Smith\",\n  \"role\": \"STAFF\",\n  \"phone\": \"9876543219\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Team Member",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/auth/settings/team/{{userId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "settings",
+                "team",
+                "{{userId}}"
+              ],
+              "query": []
+            },
+            "description": "Revokes team member access.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. CRM Service (via Gateway)",
+      "item": [
+        {
+          "name": "List Leads",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads?page=0&size=50",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Lists all sales leads for the workspace."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads/{{leadId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "{{leadId}}"
+              ]
+            },
+            "description": "Gets details of a single lead by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Lead (Demo Data)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya & Arjun Sharma\",\n  \"email\": \"priya.sharma@gmail.com\",\n  \"phone\": \"9876543210\",\n  \"eventType\": \"WEDDING\",\n  \"eventDate\": \"2026-12-20\",\n  \"budget\": 550000.00,\n  \"leadSource\": \"REFERRAL\",\n  \"notes\": \"Client wants full-service wedding: photography, decoration, catering management. Very particular about floral arrangements. Leela Palace preferred.\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ]
+            },
+            "description": "Creates a new lead with demo details."
+          },
+          "response": []
+        },
+        {
+          "name": "Log Activity on Lead",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"CALL\",\n  \"description\": \"Initial discovery call. Confirmed budget and venue preference. Client wants Leela Palace exclusively. Sending proposal by EOD.\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads/{{leadId}}/activities",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "{{leadId}}",
+                "activities"
+              ]
+            },
+            "description": "Logs an activity against a specific lead."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lead Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PROPOSAL_SENT\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads/{{leadId}}/status",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "{{leadId}}",
+                "status"
+              ]
+            },
+            "description": "Updates status of a lead to move them in the pipeline."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Quote (Demo Data)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leadId\": \"{{leadId}}\",\n  \"discount\": 20000.00,\n  \"taxRate\": 18.00,\n  \"clientNotes\": \"50% advance required to confirm booking. Balance due 30 days before event.\",\n  \"termsConditions\": \"All bookings subject to availability. Standard cancellation policy applies.\",\n  \"items\": [\n    {\n      \"itemName\": \"Full Event Management & Coordination\",\n      \"description\": \"Comprehensive planning, staging, vendor liaison, and event day execution.\",\n      \"unitPrice\": 180000.00,\n      \"quantity\": 1\n    },\n    {\n      \"itemName\": \"Photography & Videography\",\n      \"description\": \"2 main photographers, 1 cinematographer. Pre-wedding and event coverage.\",\n      \"unitPrice\": 75000.00,\n      \"quantity\": 1\n    },\n    {\n      \"itemName\": \"Floral Decoration & Mandap Setup\",\n      \"description\": \"Floral arrangements for entrance, mandap, and reception tables.\",\n      \"unitPrice\": 120000.00,\n      \"quantity\": 1\n    },\n    {\n      \"itemName\": \"DJ & Sound System\",\n      \"description\": \"Pro DJ equipment, sound check, and evening dance floor set.\",\n      \"unitPrice\": 35000.00,\n      \"quantity\": 1\n    },\n    {\n      \"itemName\": \"Catering - Vegetarian (Leela Palace)\",\n      \"description\": \"High-end multi-cuisine vegetarian buffet.\",\n      \"unitPrice\": 850.00,\n      \"quantity\": 400\n    },\n    {\n      \"itemName\": \"Invitation Cards (Printed + Digital)\",\n      \"description\": \"Premium cards design, digital RSVP portal.\",\n      \"unitPrice\": 8000.00,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes"
+              ]
+            },
+            "description": "Creates a Quote for a Lead with complete itemization."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quote By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}"
+              ]
+            },
+            "description": "Gets details of a single Quote by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Quote (Client)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}/approve",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "approve"
+              ]
+            },
+            "description": "Approves the quote which promotes the linked lead status to WON."
+          },
+          "response": []
+        },
+        {
+          "name": "List Contacts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/contacts",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "contacts"
+              ],
+              "query": []
+            },
+            "description": "Lists all tenant contacts.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Contact By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/contacts/{{contactId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "contacts",
+                "{{contactId}}"
+              ],
+              "query": []
+            },
+            "description": "Gets specific contact details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/contacts",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "contacts"
+              ],
+              "query": []
+            },
+            "description": "Creates a new contact.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@gmail.com\",\n  \"phone\": \"9876500112\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Contact",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/contacts/{{contactId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "contacts",
+                "{{contactId}}"
+              ],
+              "query": []
+            },
+            "description": "Updates contact details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe.updated@gmail.com\",\n  \"phone\": \"9876500112\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Contact",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/contacts/{{contactId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "contacts",
+                "{{contactId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes contact profile permanently.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get CRM Dashboard Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/dashboard/metrics",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "dashboard",
+                "metrics"
+              ],
+              "query": []
+            },
+            "description": "Fetches pipeline value, conversion rate, statistics.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Dashboard Metrics Cache",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/dashboard/metrics/cache",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "dashboard",
+                "metrics",
+                "cache"
+              ],
+              "query": []
+            },
+            "description": "Clears Redis cached dashboard stats.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quote by Lead ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/lead/{{leadId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "lead",
+                "{{leadId}}"
+              ],
+              "query": []
+            },
+            "description": "Gets quote linked to lead.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Quote",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}"
+              ],
+              "query": []
+            },
+            "description": "Replaces quote details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"discount\": 10000,\n  \"taxRate\": 18,\n  \"items\": []\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Quote Revision",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}/revision",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "revision"
+              ],
+              "query": []
+            },
+            "description": "Creates a revision copy of quote.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Quote Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}/status",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "status"
+              ],
+              "query": []
+            },
+            "description": "Directly patches quote status.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SENT\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Quote",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}/reject",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "reject"
+              ],
+              "query": []
+            },
+            "description": "Marks quote status as REJECTED internally.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Quote to Client",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}/send",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "send"
+              ],
+              "query": []
+            },
+            "description": "Sends proposal quote to client.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Accept Quote (Client)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}/accept",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "accept"
+              ],
+              "query": []
+            },
+            "description": "Client accepts proposal.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Quote (Client)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}/reject",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "reject"
+              ],
+              "query": []
+            },
+            "description": "Client rejects proposal.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Client Quotes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/client",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "client"
+              ],
+              "query": []
+            },
+            "description": "Lists quotes linked to authenticated client email.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Record Quote View Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}/view",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "view"
+              ],
+              "query": []
+            },
+            "description": "Records a trace of client viewing quote.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Regenerate Quote PDF",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/quotes/{{quoteId}}/regenerate-pdf",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "quotes",
+                "{{quoteId}}",
+                "regenerate-pdf"
+              ],
+              "query": []
+            },
+            "description": "Forces rebuild of quote PDF document.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead Pipeline Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads/stats",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "stats"
+              ],
+              "query": []
+            },
+            "description": "Gets pipeline lead analytics count by status.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead Activities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads/{{leadId}}/activities",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "{{leadId}}",
+                "activities"
+              ],
+              "query": []
+            },
+            "description": "Lists activity log on lead.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lead",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads/{{leadId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "{{leadId}}"
+              ],
+              "query": []
+            },
+            "description": "Replaces entire lead profile.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya updated\",\n  \"email\": \"priya@gmail.com\",\n  \"phone\": \"9876543210\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Patch Lead Details",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads/{{leadId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "{{leadId}}"
+              ],
+              "query": []
+            },
+            "description": "Modifies specific lead parameters.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"budget\": 600000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Lead",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads/{{leadId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "{{leadId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes lead profile.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Convert Lead to Account/Contact",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/crm/leads/{{leadId}}/convert",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "{{leadId}}",
+                "convert"
+              ],
+              "query": []
+            },
+            "description": "Converts lead to contacts database.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Event & Booking Service (via Gateway)",
+      "item": [
+        {
+          "name": "List Bookings (Gateway Route)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings"
+              ]
+            },
+            "description": "Lists all bookings. Note that API Gateway rewrites `/api/v1/bookings` to `/api/v1/events/bookings` on Event Service."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "Gets details of a single booking by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Booking from Quote",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/from-quote/{{quoteId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "from-quote",
+                "{{quoteId}}"
+              ]
+            },
+            "description": "Converts an approved Quote directly into a Booking."
+          },
+          "response": []
+        },
+        {
+          "name": "List Events",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/events",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "events"
+              ]
+            },
+            "description": "Lists all events in the event-service (Gateway routes `/api/v1/events/**` -> port 8083 `/api/v1/events/**`)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Budget",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/bookings/{{bookingId}}/budget",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "bookings",
+                "{{bookingId}}",
+                "budget"
+              ]
+            },
+            "description": "Gets budget metrics for a booking."
+          },
+          "response": []
+        },
+        {
+          "name": "List Invoices",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/invoices",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "invoices"
+              ]
+            },
+            "description": "Lists all invoices."
+          },
+          "response": []
+        },
+        {
+          "name": "Record Payment (Demo Data)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"amount\": 200000.00,\n  \"paymentMethod\": \"BANK_TRANSFER\",\n  \"transactionId\": \"NEFT20261706SHARMA001\",\n  \"notes\": \"Advance payment received via NEFT.\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/payments",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "payments"
+              ]
+            },
+            "description": "Records a payment transaction against a booking."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking by Quote ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/by-quote/{{quoteId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "by-quote",
+                "{{quoteId}}"
+              ],
+              "query": []
+            },
+            "description": "Retrieves booking converted from quote.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Booking Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/status",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "status"
+              ],
+              "query": []
+            },
+            "description": "Updates booking phase status.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Booking Payment Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/payment",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "payment"
+              ],
+              "query": []
+            },
+            "description": "Directly patches payment status.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentStatus\": \"PAID\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Resources",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/resources",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "resources"
+              ],
+              "query": []
+            },
+            "description": "Gets materials, equipments reserved for booking.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Booking Resource",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/resources",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "resources"
+              ],
+              "query": []
+            },
+            "description": "Reserves equipment resource.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"4K Projector\",\n  \"quantity\": 2,\n  \"cost\": 500\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Booking Resource",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/resources/{{resourceId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "resources",
+                "{{resourceId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes booking resource assignment.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/audit",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "audit"
+              ],
+              "query": []
+            },
+            "description": "Fetches audit trail tracking state changes.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Calculator Pricing Rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/calculator/pricing-rules",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "calculator",
+                "pricing-rules"
+              ],
+              "query": []
+            },
+            "description": "Gets standard rules for estimations.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Budget Calculator Estimations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/calculator",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "calculator"
+              ],
+              "query": []
+            },
+            "description": "Lists all saved estimations.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Budget Calculator Estimation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/calculator",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "calculator"
+              ],
+              "query": []
+            },
+            "description": "Generates budget estimate.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientName\": \"Test Client\",\n  \"eventType\": \"WEDDING\",\n  \"guestCount\": 150\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Budget Estimation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/calculator/{{estimateId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "calculator",
+                "{{estimateId}}"
+              ],
+              "query": []
+            },
+            "description": "Removes saved estimation.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Convert Estimation to CRM Lead",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/calculator/{{estimateId}}/convert-to-lead",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "calculator",
+                "{{estimateId}}",
+                "convert-to-lead"
+              ],
+              "query": []
+            },
+            "description": "Pushes estimation data to create CRM Lead.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Quote from Estimation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/calculator/{{estimateId}}/generate-quote",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "calculator",
+                "{{estimateId}}",
+                "generate-quote"
+              ],
+              "query": []
+            },
+            "description": "Directly produces proposal quote from estimation.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Budget Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/budget/report",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "budget",
+                "report"
+              ],
+              "query": []
+            },
+            "description": "Fetches budget limit, expenses, and delta.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Booking Budget Limit",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/budget/limit",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "budget",
+                "limit"
+              ],
+              "query": []
+            },
+            "description": "Sets overall budget threshold limit.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limit\": 1500000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Budget Allocations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/budget/allocations",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "budget",
+                "allocations"
+              ],
+              "query": []
+            },
+            "description": "Gets category allocations (catering, decorations, AV).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Budget Allocations",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/budget/allocations",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "budget",
+                "allocations"
+              ],
+              "query": []
+            },
+            "description": "Updates allocation percentages.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allocations\": {\n    \"CATERING\": 40,\n    \"DECORATION\": 30,\n    \"ENTERTAINMENT\": 20,\n    \"OTHER\": 10\n  }\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Budget Expenses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/budget/expenses",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "budget",
+                "expenses"
+              ],
+              "query": []
+            },
+            "description": "Lists detailed expense logs.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Budget Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/budget/expenses",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "budget",
+                "expenses"
+              ],
+              "query": []
+            },
+            "description": "Logs expense against category allocation.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"CATERING\",\n  \"amount\": 4000,\n  \"notes\": \"Catering advance\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Budget Expense",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/budget/expenses/{{expenseId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "budget",
+                "expenses",
+                "{{expenseId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes logged expense.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Budget Threshold Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/budget/alerts",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "budget",
+                "alerts"
+              ],
+              "query": []
+            },
+            "description": "Retrieves threshold warning alerts.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve Budget Alert",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/bookings/{{bookingId}}/budget/alerts/{{alertId}}/resolve",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bookings",
+                "{{bookingId}}",
+                "budget",
+                "alerts",
+                "{{alertId}}",
+                "resolve"
+              ],
+              "query": []
+            },
+            "description": "Acknowledges or clears active alert warning.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/stats",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "stats"
+              ],
+              "query": []
+            },
+            "description": "Gets events analytical summary count.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}"
+              ],
+              "query": []
+            },
+            "description": "Gets specific event details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events"
+              ],
+              "query": []
+            },
+            "description": "Creates a new event manually.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Social Gathering\",\n  \"type\": \"SOCIAL\",\n  \"startDate\": \"2026-12-25T18:00:00\",\n  \"endDate\": \"2026-12-25T23:59:00\",\n  \"location\": \"Royal Ballroom\",\n  \"budget\": 80000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}"
+              ],
+              "query": []
+            },
+            "description": "Replaces event details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Social Gathering V2\",\n  \"type\": \"SOCIAL\",\n  \"startDate\": \"2026-12-25T18:00:00\",\n  \"endDate\": \"2026-12-25T23:59:00\",\n  \"location\": \"Royal Ballroom\",\n  \"budget\": 90000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Patch Event Info",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}"
+              ],
+              "query": []
+            },
+            "description": "Updates event parameters.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"budget\": 95000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Event Status (Endpoint)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/status",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "status"
+              ],
+              "query": []
+            },
+            "description": "Patches event status directly.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event Run-Of-Show Timeline",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/timeline",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "timeline"
+              ],
+              "query": []
+            },
+            "description": "Gets chronological setup, events for day.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Event Timeline Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/timeline",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "timeline"
+              ],
+              "query": []
+            },
+            "description": "Adds event milestone.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Floral Setup\",\n  \"scheduledTime\": \"2026-12-25T15:00:00\",\n  \"durationMinutes\": 120\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Timeline Item Completion",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/timeline/{{itemId}}/toggle",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "timeline",
+                "{{itemId}}",
+                "toggle"
+              ],
+              "query": []
+            },
+            "description": "Toggles checklist completion.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event Team Assignments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/assignments",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "assignments"
+              ],
+              "query": []
+            },
+            "description": "Lists staff roles allocated to event.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Event Team Assignment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/assignments",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "assignments"
+              ],
+              "query": []
+            },
+            "description": "Assigns manager/staff user.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"YOUR_USER_ID\",\n  \"role\": \"DECORATION_HEAD\",\n  \"notes\": \"In charge of florals\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Event Assignment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/assignments/{{assignmentId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "assignments",
+                "{{assignmentId}}"
+              ],
+              "query": []
+            },
+            "description": "Removes staff assignment.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Global Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/tasks",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "tasks"
+              ],
+              "query": []
+            },
+            "description": "Lists all global checklist tasks.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Global Checklist Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/tasks",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "tasks"
+              ],
+              "query": []
+            },
+            "description": "Creates global checklist task.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Check with venue for permissions\",\n  \"eventId\": \"{{eventId}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event Checklist Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/tasks",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "tasks"
+              ],
+              "query": []
+            },
+            "description": "Lists checklist tasks for event.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Event Checklist Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/tasks",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "tasks"
+              ],
+              "query": []
+            },
+            "description": "Adds task checklist item.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Inspect lighting rigs\",\n  \"priority\": \"MEDIUM\",\n  \"dueDate\": \"2026-12-24T18:00:00\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Task Status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/tasks/{{taskId}}/toggle",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "tasks",
+                "{{taskId}}",
+                "toggle"
+              ],
+              "query": []
+            },
+            "description": "Toggles checklist task completion status.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Checklist Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/tasks/{{taskId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "tasks",
+                "{{taskId}}"
+              ],
+              "query": []
+            },
+            "description": "Replaces checklist task details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Inspect lighting rigs (Verified)\",\n  \"priority\": \"HIGH\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Checklist Task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/{{eventId}}/tasks/{{taskId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "tasks",
+                "{{taskId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes task permanently.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Trigger Overdue Check Alert",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/tasks/check-overdue",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "tasks",
+                "check-overdue"
+              ],
+              "query": []
+            },
+            "description": "Scans overdue tasks and raises alerts.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Client Events List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/client",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "client"
+              ],
+              "query": []
+            },
+            "description": "Lists events for authenticated client.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Client Event Day Timeline",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/client/timeline",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "client",
+                "timeline"
+              ],
+              "query": []
+            },
+            "description": "Lists timeline logs for client.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event Dashboard Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/dashboard/metrics",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "metrics"
+              ],
+              "query": []
+            },
+            "description": "Fetches metrics dashboard view (events stats, revenue, profit).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Invoice By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/invoices/{{invoiceId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "invoices",
+                "{{invoiceId}}"
+              ],
+              "query": []
+            },
+            "description": "Fetches specific invoice details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Invoices by Booking ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/invoices/booking/{{bookingId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "invoices",
+                "booking",
+                "{{bookingId}}"
+              ],
+              "query": []
+            },
+            "description": "Lists invoices created for booking.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Invoice Payment Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/invoices/{{invoiceId}}/status",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "invoices",
+                "{{invoiceId}}",
+                "status"
+              ],
+              "query": []
+            },
+            "description": "Patches invoice status.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAID\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Invoice Notification",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/invoices/{{invoiceId}}/send",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "invoices",
+                "{{invoiceId}}",
+                "send"
+              ],
+              "query": []
+            },
+            "description": "Triggers asynchronous email notification for invoice.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Invoice Reminder",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/invoices/{{invoiceId}}/reminder",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "invoices",
+                "{{invoiceId}}",
+                "reminder"
+              ],
+              "query": []
+            },
+            "description": "Sends manual payment reminder to client.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Client Invoices List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/invoices/client",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "invoices",
+                "client"
+              ],
+              "query": []
+            },
+            "description": "Lists client invoices.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment Info By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/payments/{{paymentId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "payments",
+                "{{paymentId}}"
+              ],
+              "query": []
+            },
+            "description": "Fetches details of recorded payment.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payments by Booking ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/payments/booking/{{bookingId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "payments",
+                "booking",
+                "{{bookingId}}"
+              ],
+              "query": []
+            },
+            "description": "Lists payments registered under booking.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Payment Status (Auth)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/payments/{{paymentId}}/status",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "payments",
+                "{{paymentId}}",
+                "status"
+              ],
+              "query": []
+            },
+            "description": "Patches payment transaction status.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"VERIFIED\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Payment Transaction",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/payments/{{paymentId}}/verify",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "payments",
+                "{{paymentId}}",
+                "verify"
+              ],
+              "query": []
+            },
+            "description": "Verifies client-submitted payment and triggers ledger updates.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Client Payments List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/payments/client",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "payments",
+                "client"
+              ],
+              "query": []
+            },
+            "description": "Lists payments submitted by client.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Client Submit Payment Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/payments/client/submit",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "payments",
+                "client",
+                "submit"
+              ],
+              "query": []
+            },
+            "description": "Enables client to submit transaction ID for bank transfer payment.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"amount\": 100000,\n  \"paymentMethod\": \"BANK_TRANSFER\",\n  \"transactionId\": \"TXN_CLIENT_SUBMIT_001\",\n  \"notes\": \"Submitted client transfer\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Vendor Profiles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors"
+              ],
+              "query": []
+            },
+            "description": "Lists registered vendors.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vendor Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors"
+              ],
+              "query": []
+            },
+            "description": "Creates a new vendor profile.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vibrant Florals\",\n  \"contactName\": \"Sarah Connor\",\n  \"email\": \"sarah@vibrantflorals.com\",\n  \"phone\": \"555-0988\",\n  \"category\": \"DECORATION\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendor Profile By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/{{vendorId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "{{vendorId}}"
+              ],
+              "query": []
+            },
+            "description": "Gets vendor details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vendor Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/{{vendorId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "{{vendorId}}"
+              ],
+              "query": []
+            },
+            "description": "Replaces vendor profile details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vibrant Florals Ltd.\",\n  \"contactName\": \"Sarah Connor\",\n  \"email\": \"sarah@vibrantflorals.com\",\n  \"phone\": \"555-0988\",\n  \"category\": \"DECORATION\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vendor Profile",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/{{vendorId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "{{vendorId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes vendor permanently.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Vendor Contracts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/contracts",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "contracts"
+              ],
+              "query": []
+            },
+            "description": "Lists all active vendor contracts.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vendor Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/contracts",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "contracts"
+              ],
+              "query": []
+            },
+            "description": "Binds vendor contract to booking.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"vendorId\": \"{{vendorId}}\",\n  \"serviceType\": \"DECORATION\",\n  \"totalCost\": 15000,\n  \"depositPaid\": 5000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendor Contract By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/contracts/{{contractId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "contracts",
+                "{{contractId}}"
+              ],
+              "query": []
+            },
+            "description": "Gets contract financials.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vendor Contract",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/contracts/{{contractId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "contracts",
+                "{{contractId}}"
+              ],
+              "query": []
+            },
+            "description": "Updates contract details.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"totalCost\": 16000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vendor Contract",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/contracts/{{contractId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "contracts",
+                "{{contractId}}"
+              ],
+              "query": []
+            },
+            "description": "Removes vendor contract.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Contracts by Booking ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/contracts/booking/{{bookingId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "contracts",
+                "booking",
+                "{{bookingId}}"
+              ],
+              "query": []
+            },
+            "description": "Lists contracts for booking.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Record Payment for Vendor Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/contracts/{{contractId}}/payments",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "contracts",
+                "{{contractId}}",
+                "payments"
+              ],
+              "query": []
+            },
+            "description": "Increments actual payments made to vendor.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Vendor Task Assignments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/assignments",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "assignments"
+              ],
+              "query": []
+            },
+            "description": "Lists vendor assignments to bookings/tasks.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vendor Assignment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/assignments",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "assignments"
+              ],
+              "query": []
+            },
+            "description": "Assigns vendor to booking/task.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"vendorId\": \"{{vendorId}}\",\n  \"role\": \"MAIN_DECORATOR\",\n  \"notes\": \"Florals\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendor Assignment By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/assignments/{{assignmentId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "assignments",
+                "{{assignmentId}}"
+              ],
+              "query": []
+            },
+            "description": "Gets specific vendor assignment.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vendor Assignment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/assignments/{{assignmentId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "assignments",
+                "{{assignmentId}}"
+              ],
+              "query": []
+            },
+            "description": "Removes vendor assignment.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendor Assignments by Booking",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/events/vendors/assignments/booking/{{bookingId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "vendors",
+                "assignments",
+                "booking",
+                "{{bookingId}}"
+              ],
+              "query": []
+            },
+            "description": "Lists vendor assignments for booking.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Gallery Service (via Gateway)",
+      "item": [
+        {
+          "name": "Create Album (Demo Data)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"name\": \"Sharma-Kapoor Wedding Gallery\",\n  \"description\": \"Complete photo & video collection – Sharma-Kapoor Wedding at The Leela Palace, Delhi. December 20, 2026.\",\n  \"isClientVisible\": true\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/albums",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "albums"
+              ]
+            },
+            "description": "Creates a new gallery album for a booking."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Albums",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/albums",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "albums"
+              ]
+            },
+            "description": "Retrieves all albums."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Share Link for Album",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"albumId\": \"{{albumId}}\",\n  \"expiresInDays\": 90\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/share",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "share"
+              ]
+            },
+            "description": "Generates a secure link to share the album with the client."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Album by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/albums/{{albumId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "albums",
+                "{{albumId}}"
+              ],
+              "query": []
+            },
+            "description": "Fetches specific gallery album info.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Album Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/albums/{{albumId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "albums",
+                "{{albumId}}"
+              ],
+              "query": []
+            },
+            "description": "Replaces album settings.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Wedding Album V2\",\n  \"description\": \"Updated gallery description\",\n  \"isClientVisible\": true\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Archive Album Toggle",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/albums/{{albumId}}/archive",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "albums",
+                "{{albumId}}",
+                "archive"
+              ],
+              "query": []
+            },
+            "description": "Archives album context from dashboard.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Album",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/albums/{{albumId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "albums",
+                "{{albumId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes album permanently.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Client Active Albums",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/albums/client",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "albums",
+                "client"
+              ],
+              "query": []
+            },
+            "description": "Lists client visible albums.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Full Album zip",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/albums/{{albumId}}/download",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "albums",
+                "{{albumId}}",
+                "download"
+              ],
+              "query": []
+            },
+            "description": "Triggers zip download stream of album photos.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Gallery Items in Album",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/items/album/{{albumId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "items",
+                "album",
+                "{{albumId}}"
+              ],
+              "query": []
+            },
+            "description": "Lists images/videos in album.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Signed Upload Params (Cloudinary)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/items/signed-upload-params",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "items",
+                "signed-upload-params"
+              ],
+              "query": []
+            },
+            "description": "Requests credentials for direct cloud upload.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"albumId\": \"{{albumId}}\",\n  \"filename\": \"photo.jpg\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Cloud Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/items/confirm-upload",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "items",
+                "confirm-upload"
+              ],
+              "query": []
+            },
+            "description": "Confirms asset details to database after cloud upload.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"albumId\": \"{{albumId}}\",\n  \"publicId\": \"sample_cloud_id\",\n  \"url\": \"https://res.cloudinary.com/demo/image/upload/sample.jpg\",\n  \"bytes\": 102400,\n  \"filename\": \"photo.jpg\",\n  \"contentType\": \"image/jpeg\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Direct Multipart Upload (Fallback)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/items/upload",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "items",
+                "upload"
+              ],
+              "query": []
+            },
+            "description": "Direct multipart form upload to server filesystem.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Gallery Item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/items/{{itemId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "items",
+                "{{itemId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes gallery photo/video asset.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Favorite Gallery Item",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/items/{{itemId}}/favorite",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "items",
+                "{{itemId}}",
+                "favorite"
+              ],
+              "query": []
+            },
+            "description": "Toggles favorite rating status.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Item Folder/Organization",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/items/{{itemId}}/organization",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "items",
+                "{{itemId}}",
+                "organization"
+              ],
+              "query": []
+            },
+            "description": "Changes item details tags/category.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"High priority print candidate\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Share Links for Album",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/share/album/{{albumId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "share",
+                "album",
+                "{{albumId}}"
+              ],
+              "query": []
+            },
+            "description": "Lists share links generated for album.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke Share Link",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/share/{{shareLinkId}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "share",
+                "{{shareLinkId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes share link, disabling access.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Public View Album (Token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/share/public/view/{{shareToken}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "share",
+                "public",
+                "view",
+                "{{shareToken}}"
+              ],
+              "query": []
+            },
+            "description": "Public portal view album access."
+          },
+          "response": []
+        },
+        {
+          "name": "Public Download Album (Token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/v1/gallery/share/public/download/{{shareToken}}",
+              "host": [
+                "{{gateway_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "gallery",
+                "share",
+                "public",
+                "download",
+                "{{shareToken}}"
+              ],
+              "query": []
+            },
+            "description": "Public download zip access."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "auth_url",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tenantId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "leadId",
+      "value": "d4e5f6a7-b8c9-0123-defa-234567890123",
+      "type": "string"
+    },
+    {
+      "key": "quoteId",
+      "value": "e5f6a7b8-c9d0-1234-efab-345678901234",
+      "type": "string"
+    },
+    {
+      "key": "eventId",
+      "value": "f6a7b8c9-d0e1-2345-fabc-456789012345",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "a7b8c9d0-e1f2-3456-abcd-567890123456",
+      "type": "string"
+    },
+    {
+      "key": "invoiceId",
+      "value": "b8c9d0e1-f2a3-4567-bcde-678901234567",
+      "type": "string"
+    },
+    {
+      "key": "albumId",
+      "value": "d0e1f2a3-b4c5-6789-defa-890123456789",
+      "type": "string"
+    },
+    {
+      "key": "contactId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "itemId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "contractId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "assignmentId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "expenseId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "alertId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "estimateId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "vendorId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "shareLinkId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "string"
+    },
+    {
+      "key": "shareToken",
+      "value": "sample_share_token_string",
+      "type": "string"
+    }
+  ]
+}

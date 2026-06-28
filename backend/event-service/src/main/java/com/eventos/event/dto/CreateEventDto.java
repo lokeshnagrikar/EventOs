@@ -1,7 +1,6 @@
 package com.eventos.event.dto;
 
 import com.eventos.event.entity.EventType;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -18,8 +17,9 @@ import java.time.LocalDateTime;
 @Builder
 public class CreateEventDto {
 
-    @NotBlank(message = "Event name is required")
     private String name;
+
+    private String title;
 
     @NotNull(message = "Event type is required")
     private EventType type;
@@ -44,4 +44,10 @@ public class CreateEventDto {
     private BigDecimal budget;
 
     private String notes;
+
+    private java.util.UUID bookingId;
+
+    private java.util.List<EventDayDto> eventDays;
+
+    private java.util.List<EventVenueDto> eventVenues;
 }

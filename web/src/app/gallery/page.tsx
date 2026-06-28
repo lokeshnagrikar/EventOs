@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   Folder,
@@ -34,13 +35,67 @@ interface Event {
 
 export default function GalleryPage() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [albumToDelete, setAlbumToDelete] = useState<string | null>(null);
+
+  const createModalRef = React.useRef<HTMLDivElement>(null);
+  const deleteModalRef = React.useRef<HTMLDivElement>(null);
   
   // Form State
   const [albumName, setAlbumName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedEventId, setSelectedEventId] = useState("");
   const [formError, setFormError] = useState("");
+
+  // Keyboard accessibility & Focus trap
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showCreateModal) setShowCreateModal(false);
+        if (albumToDelete) setAlbumToDelete(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showCreateModal, albumToDelete]);
+
+  useEffect(() => {
+    const handleFocusTrap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const activeModal = showCreateModal ? createModalRef.current : (albumToDelete ? deleteModalRef.current : null);
+      if (!activeModal) return;
+
+      const focusableElements = activeModal.querySelectorAll(
+        'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
+      );
+      if (focusableElements.length === 0) return;
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    if (showCreateModal || albumToDelete) {
+      setTimeout(() => {
+        const activeModal = showCreateModal ? createModalRef.current : deleteModalRef.current;
+        const firstFocusable = activeModal?.querySelector('input, select, button, a, [tabindex="0"]') as HTMLElement;
+        firstFocusable?.focus();
+      }, 50);
+      window.addEventListener("keydown", handleFocusTrap);
+    }
+    return () => window.removeEventListener("keydown", handleFocusTrap);
+  }, [showCreateModal, albumToDelete]);
 
   // 1. Fetch Albums
   const { data: albumsResponse, isLoading: albumsLoading } = useQuery<{ data: Album[] }>({
@@ -120,9 +175,7 @@ export default function GalleryPage() {
 
   const handleDeleteAlbum = (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); // Prevent navigating to album page
-    if (confirm("Are you sure you want to delete this album? This will delete all images and videos inside it from Cloudinary and the database.")) {
-      deleteAlbumMutation.mutate(id);
-    }
+    setAlbumToDelete(id);
   };
 
   // Compute Stats
@@ -130,13 +183,18 @@ export default function GalleryPage() {
   const totalItems = albums.reduce((sum, album) => sum + album.itemCount, 0);
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => router.push("/dashboard")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to dashboard"
           >
             <ArrowLeft size={16} />
@@ -152,7 +210,7 @@ export default function GalleryPage() {
             resetForm();
             setShowCreateModal(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition-all shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
         >
           <Plus size={16} />
           Create Album
@@ -204,7 +262,7 @@ export default function GalleryPage() {
               return (
                 <div
                   key={album.id}
-                  onClick={() => (window.location.href = `/gallery/${album.id}`)}
+                  onClick={() => router.push(`/gallery/${album.id}`)}
                   className="group rounded-xl border border-zinc-800 bg-[#161618]/45 hover:border-purple-500/35 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-[290px] shadow-md hover:shadow-lg hover:shadow-purple-500/5 hover:-translate-y-0.5"
                 >
                   {/* Thumbnail / Cover section */}
@@ -291,10 +349,16 @@ export default function GalleryPage() {
       {/* CREATE ALBUM DIALOG (MODAL) */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in">
+          <div 
+            ref={createModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-album-title"
+            className="w-full max-w-md bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
+          >
             {/* Header */}
             <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <h2 id="create-album-title" className="text-base font-bold text-white flex items-center gap-2">
                 <Folder className="text-purple-500" size={16} />
                 Create Media Album
               </h2>
@@ -376,6 +440,45 @@ export default function GalleryPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* DELETE CONFIRMATION DIALOG (MODAL) */}
+      {albumToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div 
+            ref={deleteModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-album-title"
+            className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
+          >
+            <div className="flex items-center gap-3 text-red-400 mb-4">
+              <Trash2 size={20} />
+              <h3 id="delete-album-title" className="font-bold text-base">Delete Album?</h3>
+            </div>
+            <p className="text-xs text-zinc-350 mb-6 leading-normal font-normal">
+              Are you sure you want to delete this album? This will delete all images and videos inside it from Cloudinary and the database. This action is irreversible.
+            </p>
+            <div className="flex justify-end gap-3 text-xs">
+              <button
+                type="button"
+                onClick={() => setAlbumToDelete(null)}
+                className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-semibold text-zinc-300 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteAlbumMutation.mutate(albumToDelete);
+                  setAlbumToDelete(null);
+                }}
+                className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg font-semibold transition-all shadow-md"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

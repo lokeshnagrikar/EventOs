@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 public class BookingModuleTest {
 
     @Mock
@@ -47,6 +48,15 @@ public class BookingModuleTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+
+    @Mock
+    private InvoiceService invoiceService;
+
+    @Mock
+    private VendorContractRepository vendorContractRepository;
+
     @InjectMocks
     private BookingService bookingService;
 
@@ -55,6 +65,18 @@ public class BookingModuleTest {
     private UUID leadId;
     private UUID bookingId;
     private Booking mockBooking;
+
+    private void setupSecurityContext(String roles) {
+        com.eventos.event.config.UserPrincipal principal = new com.eventos.event.config.UserPrincipal(
+                UUID.randomUUID(), tenantId, "test@eventos.com", roles);
+        List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities =
+                java.util.Arrays.stream(roles.split(","))
+                        .map(r -> new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()))
+                        .toList();
+        org.springframework.security.core.Authentication auth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(principal, null, authorities);
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+    }
 
     @BeforeEach
     void setUp() {
@@ -65,7 +87,6 @@ public class BookingModuleTest {
 
         mockBooking = Booking.builder()
                 .id(bookingId)
-                .tenantId(tenantId)
                 .eventId(UUID.randomUUID())
                 .leadId(leadId)
                 .quoteId(quoteId)
@@ -74,8 +95,16 @@ public class BookingModuleTest {
                 .totalAmount(BigDecimal.valueOf(150000))
                 .paidAmount(BigDecimal.ZERO)
                 .build();
+        mockBooking.setTenantId(tenantId);
 
         bookingService.setRestTemplate(restTemplate);
+        org.springframework.test.util.ReflectionTestUtils.setField(bookingService, "crmServiceBaseUrl", "http://localhost:8082/api/v1");
+        setupSecurityContext("OWNER");
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -100,24 +129,26 @@ public class BookingModuleTest {
         quoteData.put("total", 150000.0);
         quoteData.put("quoteNumber", "QT-0001");
         quoteData.put("pdfUrl", "http://cloudinary.com/proposals/qt-0001.pdf");
+        quoteData.put("status", "ACCEPTED");
         mockQuoteResponse.put("data", quoteData);
 
         Map<String, Object> mockLeadResponse = new HashMap<>();
         Map<String, Object> leadData = new HashMap<>();
         leadData.put("name", "Wedding Reception of Alice & Bob");
         leadData.put("eventType", "WEDDING");
+        leadData.put("eventDate", "2026-07-16");
         mockLeadResponse.put("data", leadData);
 
         // Mock eventRepository save
         Event savedEvent = Event.builder()
                 .id(UUID.randomUUID())
-                .tenantId(tenantId)
                 .name("Wedding Reception of Alice & Bob")
                 .type(EventType.WEDDING)
-                .status(EventStatus.DRAFT)
+                .status(EventStatus.PLANNING)
                 .startDate(LocalDateTime.now().plusDays(30))
                 .endDate(LocalDateTime.now().plusDays(30).plusHours(6))
                 .build();
+        savedEvent.setTenantId(tenantId);
         when(eventRepository.save(any(Event.class))).thenReturn(savedEvent);
 
         // Mock sequence number logic
@@ -134,7 +165,7 @@ public class BookingModuleTest {
 
         // Stub quote details call
         when(restTemplate.exchange(
-                eq("http://localhost:8082/api/v1/crm/quotes/" + quoteId.toString()),
+                eq("http://localhost:8082/api/v1/quotes/" + quoteId.toString()),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(Map.class)
@@ -142,7 +173,7 @@ public class BookingModuleTest {
 
         // Stub lead details call
         when(restTemplate.exchange(
-                eq("http://localhost:8082/api/v1/crm/leads/" + leadId.toString()),
+                eq("http://localhost:8082/api/v1/leads/" + leadId.toString()),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(Map.class)
@@ -151,8 +182,9 @@ public class BookingModuleTest {
         Booking bookingResult = bookingService.createBookingFromQuote(quoteId, tenantId);
 
         assertNotNull(bookingResult);
-        assertEquals("BK-0002", bookingResult.getBookingNumber());
-        assertEquals(BookingStatus.CONFIRMED, bookingResult.getStatus());
+        int currentYear = java.time.LocalDate.now().getYear();
+        assertEquals("EVT-" + currentYear + "-000002", bookingResult.getBookingNumber());
+        assertEquals(BookingStatus.PENDING, bookingResult.getStatus());
         assertEquals(quoteId, bookingResult.getQuoteId());
         assertEquals(leadId, bookingResult.getLeadId());
         assertEquals(BigDecimal.valueOf(150000.0), bookingResult.getTotalAmount());
@@ -211,5 +243,71 @@ public class BookingModuleTest {
         assertEquals(BookingStatus.IN_PROGRESS, updated.getStatus());
         verify(bookingRepository, times(1)).save(any(Booking.class));
         verify(bookingAuditLogRepository, times(1)).save(any(BookingAuditLog.class));
+    }
+
+    @Test
+    void testCreateBookingFromQuote_QuoteNotAccepted_ThrowsConflict() {
+        Map<String, Object> mockQuoteResponse = new HashMap<>();
+        Map<String, Object> quoteData = new HashMap<>();
+        quoteData.put("leadId", leadId.toString());
+        quoteData.put("total", 150000.0);
+        quoteData.put("quoteNumber", "QT-0001");
+        quoteData.put("status", "DRAFT");
+        mockQuoteResponse.put("data", quoteData);
+
+        when(restTemplate.exchange(
+                eq("http://localhost:8082/api/v1/quotes/" + quoteId.toString()),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(new ResponseEntity<>(mockQuoteResponse, HttpStatus.OK));
+
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> {
+            bookingService.createBookingFromQuote(quoteId, tenantId);
+        });
+    }
+
+    @Test
+    void testCreateBookingFromQuote_MissingEventDate_ThrowsBadRequest() {
+        Map<String, Object> mockQuoteResponse = new HashMap<>();
+        Map<String, Object> quoteData = new HashMap<>();
+        quoteData.put("leadId", leadId.toString());
+        quoteData.put("total", 150000.0);
+        quoteData.put("quoteNumber", "QT-0001");
+        quoteData.put("status", "ACCEPTED");
+        mockQuoteResponse.put("data", quoteData);
+
+        Map<String, Object> mockLeadResponse = new HashMap<>();
+        Map<String, Object> leadData = new HashMap<>();
+        leadData.put("name", "Wedding Reception");
+        mockLeadResponse.put("data", leadData);
+
+        when(restTemplate.exchange(
+                eq("http://localhost:8082/api/v1/crm/quotes/" + quoteId.toString()),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(new ResponseEntity<>(mockQuoteResponse, HttpStatus.OK));
+
+        when(restTemplate.exchange(
+                eq("http://localhost:8082/api/v1/leads/" + leadId.toString()),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(new ResponseEntity<>(mockLeadResponse, HttpStatus.OK));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            bookingService.createBookingFromQuote(quoteId, tenantId);
+        });
+    }
+
+    @Test
+    void testUpdateBookingStatus_InvalidTransition_ThrowsConflict() {
+        when(bookingRepository.findByIdAndTenantId(bookingId, tenantId))
+                .thenReturn(Optional.of(mockBooking)); // Current status: CONFIRMED
+
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> {
+            bookingService.updateBookingStatus(bookingId, BookingStatus.COMPLETED, tenantId);
+        });
     }
 }

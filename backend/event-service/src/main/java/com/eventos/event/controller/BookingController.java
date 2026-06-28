@@ -4,12 +4,18 @@ import com.eventos.event.config.UserPrincipal;
 import com.eventos.event.dto.CreateBookingDto;
 import com.eventos.event.dto.CreateBookingTimelineEventDto;
 import com.eventos.event.dto.CreateBookingAssignmentDto;
+import com.eventos.event.dto.BookingBudgetDto;
 import com.eventos.event.entity.Booking;
 import com.eventos.event.entity.BookingStatus;
 import com.eventos.event.entity.BookingTimelineEvent;
 import com.eventos.event.entity.BookingAssignment;
 import com.eventos.event.entity.BookingAuditLog;
 import com.eventos.event.service.BookingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Tag(name = "Bookings", description = "Manage confirmed bookings: status updates, payment tracking, milestones, resource assignments, and audit logs")
 @RestController
 @RequestMapping("/bookings")
 public class BookingController {
@@ -46,20 +53,10 @@ public class BookingController {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tenant context is missing");
     }
 
-    private String getAuthorizationHeader() {
-        try {
-            org.springframework.web.context.request.ServletRequestAttributes attr =
-                (org.springframework.web.context.request.ServletRequestAttributes)
-                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
-            if (attr != null) return attr.getRequest().getHeader("Authorization");
-        } catch (Exception ignored) {}
-        return null;
-    }
-
     // ─── Booking CRUD ──────────────────────────────────────────────────────────
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF','CLIENT')")
     public ResponseEntity<?> getBookings() {
         UUID tenantId = getTenantId();
         List<Booking> bookings = bookingService.getAllBookings(tenantId);
@@ -72,7 +69,7 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF','CLIENT')")
     public ResponseEntity<?> getBookingById(@PathVariable UUID id) {
         UUID tenantId = getTenantId();
         Booking booking = bookingService.getBookingById(id, tenantId);
@@ -88,7 +85,6 @@ public class BookingController {
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
     public ResponseEntity<?> createBooking(@Valid @RequestBody CreateBookingDto dto) {
         UUID tenantId = getTenantId();
-        String authHeader = getAuthorizationHeader();
         Booking booking = bookingService.createBooking(dto, tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -102,7 +98,6 @@ public class BookingController {
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
     public ResponseEntity<?> createFromQuote(@PathVariable UUID quoteId) {
         UUID tenantId = getTenantId();
-        String authHeader = getAuthorizationHeader();
         Booking booking = bookingService.createBookingFromQuote(quoteId, tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -113,7 +108,7 @@ public class BookingController {
     }
 
     @GetMapping("/by-quote/{quoteId}")
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF','CLIENT')")
     public ResponseEntity<?> getBookingByQuoteId(@PathVariable UUID quoteId) {
         UUID tenantId = getTenantId();
         Booking booking = bookingService.getBookingByQuoteId(quoteId, tenantId);
@@ -125,6 +120,21 @@ public class BookingController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Update booking status", description = "Changes the booking lifecycle status. Valid values: PENDING, CONFIRMED, DEPOSIT_PAID, IN_PROGRESS, COMPLETED, CANCELLED")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        required = true,
+        content = @Content(
+            mediaType = "application/json",
+            schema = @Schema(type = "object"),
+            examples = {
+                @ExampleObject(name = "Confirm booking",   value = "{\"status\": \"CONFIRMED\"}"),
+                @ExampleObject(name = "Deposit received",  value = "{\"status\": \"DEPOSIT_PAID\"}"),
+                @ExampleObject(name = "Mark in progress", value = "{\"status\": \"IN_PROGRESS\"}"),
+                @ExampleObject(name = "Mark completed",   value = "{\"status\": \"COMPLETED\"}"),
+                @ExampleObject(name = "Cancel booking",   value = "{\"status\": \"CANCELLED\"}")
+            }
+        )
+    )
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
     public ResponseEntity<?> updateStatus(@PathVariable UUID id, @RequestBody Map<String, String> request) {
@@ -150,6 +160,19 @@ public class BookingController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Update paid amount", description = "Records an additional payment against the booking balance. amount is the new cumulative total paid (not an increment). Enter as a plain number string e.g. '200000.00'")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        required = true,
+        content = @Content(
+            mediaType = "application/json",
+            schema = @Schema(type = "object"),
+            examples = {
+                @ExampleObject(name = "Advance payment received",  value = "{\"amount\": \"200000.00\"}"),
+                @ExampleObject(name = "Mid-term instalment",       value = "{\"amount\": \"426600.00\"}"),
+                @ExampleObject(name = "Full payment settled",      value = "{\"amount\": \"853200.00\"}")
+            }
+        )
+    )
     @PatchMapping("/{id}/payment")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
     public ResponseEntity<?> updatePayment(@PathVariable UUID id, @RequestBody Map<String, String> request) {
@@ -254,6 +277,19 @@ public class BookingController {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("data", auditLogs);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{bookingId}/budget")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    public ResponseEntity<?> getBookingBudget(@PathVariable UUID bookingId) {
+        UUID tenantId = getTenantId();
+        BookingBudgetDto budget = bookingService.getBookingBudget(bookingId, tenantId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", budget);
 
         return ResponseEntity.ok(response);
     }

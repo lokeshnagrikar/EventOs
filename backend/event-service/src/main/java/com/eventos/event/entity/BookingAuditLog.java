@@ -13,10 +13,11 @@ import java.util.UUID;
 @Entity
 @Table(name = "booking_audit_logs")
 @Data
+@lombok.EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BookingAuditLog {
+public class BookingAuditLog extends AbstractTenantAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

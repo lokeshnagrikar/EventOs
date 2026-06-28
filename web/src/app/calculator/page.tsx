@@ -23,8 +23,11 @@ import {
   User,
   FileText,
   CheckCircle2,
-  Settings
+  Settings,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const formatCurrency = (val?: number) => {
   if (val === undefined || val === null) return "0";
@@ -121,10 +124,12 @@ const getEffectFeeFallback = (effect: string) => {
 
 export default function BudgetCalculatorPage() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   // Wizard Navigation
   const [currentStep, setCurrentStep] = useState(1);
   const [direction, setDirection] = useState(0); // For sliding animations
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // Inputs State
   const [eventName, setEventName] = useState("Annual Gala");
@@ -200,7 +205,9 @@ export default function BudgetCalculatorPage() {
     setVenueSum(venCost);
     setDecorSum(decTotal);
     setEffectsSum(effTotal);
-    setTotalSum(catTotal + venCost + decTotal + effTotal);
+    const sub = catTotal + venCost + decTotal + effTotal;
+    const gst = Math.round(sub * 0.18);
+    setTotalSum(sub + gst);
   }, [eventType, guestCount, venueType, decorStyle, selectedEffects, pricingRules]);
 
   // Mutations
@@ -347,13 +354,18 @@ export default function BudgetCalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans select-none overflow-x-hidden">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col font-sans select-none overflow-x-hidden relative">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-850 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/")}
-            className="h-8 w-8 rounded-md bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-750"
+            onClick={() => router.push("/dashboard")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to dashboard"
           >
             <ArrowLeft size={16} />
@@ -366,7 +378,7 @@ export default function BudgetCalculatorPage() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/crm")}
+            onClick={() => router.push("/crm")}
             className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-800 hover:bg-zinc-800/60 rounded-lg text-[11px] font-semibold transition-all text-zinc-400 hover:text-white"
           >
             <Settings size={13} />
@@ -383,7 +395,7 @@ export default function BudgetCalculatorPage() {
         />
       </div>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <main className="flex-1 max-w-7xl mx-auto w-full p-6 pb-24 lg:pb-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Left Side: Wizard Steps */}
         <div className="lg:col-span-8 space-y-6">
@@ -436,6 +448,7 @@ export default function BudgetCalculatorPage() {
                             key={cat.key}
                             type="button"
                             onClick={() => setEventType(cat.key)}
+                            aria-pressed={active}
                             className={`p-5 border rounded-xl text-left flex items-start gap-4 transition-all ${
                               active
                                 ? "border-purple-500 bg-purple-500/5 text-purple-400"
@@ -516,6 +529,7 @@ export default function BudgetCalculatorPage() {
                             key={venue.key}
                             type="button"
                             onClick={() => setVenueType(venue.key)}
+                            aria-pressed={active}
                             className={`p-5 border rounded-xl text-left flex items-start gap-4 transition-all ${
                               active
                                 ? "border-purple-500 bg-purple-500/5 text-purple-400"
@@ -554,6 +568,7 @@ export default function BudgetCalculatorPage() {
                             key={style.key}
                             type="button"
                             onClick={() => setDecorStyle(style.key)}
+                            aria-pressed={active}
                             className={`p-5 border rounded-xl text-left flex items-center justify-between transition-all ${
                               active
                                 ? "border-purple-500 bg-purple-500/5 text-purple-400"
@@ -592,7 +607,16 @@ export default function BudgetCalculatorPage() {
                         return (
                           <div
                             key={eff.key}
+                            role="checkbox"
+                            aria-checked={active}
+                            tabIndex={0}
                             onClick={() => handleEffectToggle(eff.key)}
+                            onKeyDown={(e) => {
+                              if (e.key === " " || e.key === "Enter") {
+                                e.preventDefault();
+                                handleEffectToggle(eff.key);
+                              }
+                            }}
                             className={`p-4 border rounded-xl flex items-center justify-between cursor-pointer transition-all select-none ${
                               active ? "border-purple-500 bg-purple-500/5 text-purple-400" : "border-zinc-850 bg-[#161618]/30 text-zinc-450 hover:bg-[#161618]/50"
                             }`}
@@ -709,7 +733,7 @@ export default function BudgetCalculatorPage() {
                         <button
                           onClick={handleSave}
                           disabled={saveEstimateMutation.isPending}
-                          className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-all shadow-md"
+                          className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
                         >
                           <Save size={13} />
                           {lastSavedEstimate ? "Update Saved Estimate" : "Save Estimate Plan"}
@@ -719,7 +743,7 @@ export default function BudgetCalculatorPage() {
                           <>
                             {leadCreatedData ? (
                               <button
-                                onClick={() => (window.location.href = "/crm")}
+                                onClick={() => router.push("/crm")}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-indigo-650/10 hover:bg-indigo-650/20 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-semibold transition-all"
                               >
                                 <Check size={13} />
@@ -727,7 +751,7 @@ export default function BudgetCalculatorPage() {
                               </button>
                             ) : (
                               <button
-                                onClick={() => lastSavedEstimate.id && convertToLeadMutation.mutate(lastSavedEstimate.id)}
+                                onClick={() => { if (lastSavedEstimate?.id) convertToLeadMutation.mutate(lastSavedEstimate.id); }}
                                 disabled={convertToLeadMutation.isPending}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-[#1E1B4B] hover:bg-[#312E81] text-indigo-300 border border-indigo-800 rounded-lg text-xs font-semibold transition-all"
                               >
@@ -737,7 +761,7 @@ export default function BudgetCalculatorPage() {
 
                             {quoteCreatedData ? (
                               <button
-                                onClick={() => (window.location.href = `/quotes/${quoteCreatedData.id}`)}
+                                onClick={() => router.push(`/quotes/${quoteCreatedData.id}`)}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-emerald-650/10 hover:bg-emerald-650/20 text-emerald-450 border border-emerald-500/20 rounded-lg text-xs font-semibold transition-all"
                               >
                                 <Check size={13} />
@@ -745,7 +769,7 @@ export default function BudgetCalculatorPage() {
                               </button>
                             ) : (
                               <button
-                                onClick={() => lastSavedEstimate.id && generateQuoteMutation.mutate(lastSavedEstimate.id)}
+                                onClick={() => { if (lastSavedEstimate?.id) generateQuoteMutation.mutate(lastSavedEstimate.id); }}
                                 disabled={generateQuoteMutation.isPending}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-[#064E3B] hover:bg-[#065F46] text-emerald-300 border border-emerald-800 rounded-lg text-xs font-semibold transition-all"
                               >
@@ -775,7 +799,7 @@ export default function BudgetCalculatorPage() {
             {currentStep < 6 ? (
               <button
                 onClick={handleNext}
-                className="flex items-center gap-1 px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold transition-all shadow-md"
+                className="flex items-center gap-1 px-5 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
               >
                 Next Step
                 <ArrowRight size={13} />
@@ -847,9 +871,29 @@ export default function BudgetCalculatorPage() {
                 </div>
               </div>
 
+              {/* Subtotal */}
+              <div className="space-y-1 border-t border-zinc-800/40 pt-2.5">
+                <div className="flex justify-between items-center text-zinc-400 font-semibold">
+                  <span>Subtotal</span>
+                  <span className="font-mono font-bold text-zinc-250">
+                    INR {formatCurrency(cateringSum + venueSum + decorSum + effectsSum)}
+                  </span>
+                </div>
+              </div>
+
+              {/* GST */}
+              <div className="space-y-1 border-t border-zinc-900/60 pt-2.5">
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span className="text-zinc-500">GST (18%)</span>
+                  <span className="font-mono font-bold text-zinc-300">
+                    INR {formatCurrency(Math.round((cateringSum + venueSum + decorSum + effectsSum) * 0.18))}
+                  </span>
+                </div>
+              </div>
+
               {/* Estimated Budget */}
               <div className="flex justify-between items-center border-t border-zinc-800/80 pt-4 text-xs font-extrabold">
-                <span className="text-zinc-300">Total Estimate</span>
+                <span className="text-zinc-300">Grand Total (Incl. GST)</span>
                 <span className="font-mono text-emerald-400 text-sm tracking-tight">
                   INR {formatCurrency(totalSum)}
                 </span>
@@ -909,6 +953,103 @@ export default function BudgetCalculatorPage() {
         </div>
 
       </main>
+
+      {/* Mobile Sticky Collapsible Grand Total Bottom Sheet */}
+      {currentStep < 6 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#111113]/95 backdrop-blur-md border-t border-zinc-800 z-30 transition-all duration-300">
+          {/* Header row (always visible) */}
+          <div 
+            onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
+            className="flex items-center justify-between p-4 cursor-pointer select-none"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-purple-400 animate-pulse" />
+              <div className="text-left">
+                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">Est. Grand Total</span>
+                <span className="font-mono text-emerald-400 font-extrabold text-sm">
+                  INR {formatCurrency(totalSum)}
+                </span>
+              </div>
+            </div>
+            <button className="flex items-center gap-1 text-[11px] font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-md transition-all">
+              {mobileDrawerOpen ? "Hide Breakdown" : "View Breakdown"}
+              {mobileDrawerOpen ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
+            </button>
+          </div>
+
+          {/* Collapsible details */}
+          <AnimatePresence>
+            {mobileDrawerOpen && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden border-t border-zinc-900 px-4 pb-5 pt-3 space-y-3.5 text-[11px]"
+              >
+                {/* Catering */}
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span className="flex items-center gap-1.5">
+                    <Utensils size={12} className="text-zinc-500" />
+                    Catering ({guestCount} guests)
+                  </span>
+                  <span className="font-mono font-bold text-zinc-250">
+                    INR {formatCurrency(cateringSum)}
+                  </span>
+                </div>
+
+                {/* Venue */}
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span className="flex items-center gap-1.5">
+                    <Building size={12} className="text-zinc-500" />
+                    Venue ({venueType})
+                  </span>
+                  <span className="font-mono font-bold text-zinc-250">
+                    INR {formatCurrency(venueSum)}
+                  </span>
+                </div>
+
+                {/* Decor */}
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span className="flex items-center gap-1.5">
+                    <Flower2 size={12} className="text-zinc-500" />
+                    Decor ({decorStyle})
+                  </span>
+                  <span className="font-mono font-bold text-zinc-250">
+                    INR {formatCurrency(decorSum)}
+                  </span>
+                </div>
+
+                {/* Effects */}
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span className="flex items-center gap-1.5">
+                    <Tv size={12} className="text-zinc-500" />
+                    Effects ({selectedEffects.length} items)
+                  </span>
+                  <span className="font-mono font-bold text-zinc-250">
+                    INR {formatCurrency(effectsSum)}
+                  </span>
+                </div>
+
+                {/* Subtotal */}
+                <div className="border-t border-zinc-800/40 pt-2.5 flex justify-between items-center text-zinc-400 font-semibold">
+                  <span>Subtotal</span>
+                  <span className="font-mono font-bold text-zinc-250">
+                    INR {formatCurrency(cateringSum + venueSum + decorSum + effectsSum)}
+                  </span>
+                </div>
+
+                {/* GST */}
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span className="text-zinc-500">GST (18%)</span>
+                  <span className="font-mono font-bold text-zinc-300">
+                    INR {formatCurrency(Math.round((cateringSum + venueSum + decorSum + effectsSum) * 0.18))}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }

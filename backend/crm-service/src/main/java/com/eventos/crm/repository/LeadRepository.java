@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,7 +20,7 @@ public interface LeadRepository extends JpaRepository<Lead, UUID>, org.springfra
     Page<Lead> findByTenantIdAndIsDeletedFalse(UUID tenantId, Pageable pageable);
     List<Lead> findByTenantIdAndStatusAndIsDeletedFalse(UUID tenantId, LeadStatus status);
     Optional<Lead> findByIdAndTenantIdAndIsDeletedFalse(UUID id, UUID tenantId);
-    List<Lead> findByEmailIgnoreCaseAndTenantIdAndIsDeletedFalse(String email, UUID tenantId);
+    List<Lead> findByContactEmailIgnoreCaseAndTenantIdAndIsDeletedFalse(String email, UUID tenantId);
 
     List<Lead> findTop3ByTenantIdAndIsDeletedFalseOrderByUpdatedAtDesc(UUID tenantId);
     long countByTenantIdAndIsDeletedFalse(UUID tenantId);
@@ -31,6 +32,9 @@ public interface LeadRepository extends JpaRepository<Lead, UUID>, org.springfra
     @Query("SELECT l.leadSource, COUNT(l) FROM Lead l WHERE l.tenantId = :tenantId AND l.isDeleted = false GROUP BY l.leadSource")
     List<Object[]> countBySourceAndTenantId(@Param("tenantId") UUID tenantId);
 
-    @Query("SELECT COALESCE(SUM(l.budget), 0), COALESCE(AVG(l.budget), 0), COALESCE(AVG(CASE WHEN l.status = com.eventos.crm.entity.LeadStatus.BOOKED THEN l.budget ELSE null END), 0) FROM Lead l WHERE l.tenantId = :tenantId AND l.isDeleted = false")
+    @Query("SELECT COALESCE(SUM(l.budget), 0), COALESCE(AVG(l.budget), 0), COALESCE(AVG(CASE WHEN l.status = com.eventos.crm.entity.LeadStatus.WON THEN l.budget ELSE null END), 0) FROM Lead l WHERE l.tenantId = :tenantId AND l.isDeleted = false")
     List<Object[]> getBudgetSummaryAndTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT COALESCE(SUM(l.budget), 0) FROM Lead l WHERE l.tenantId = :tenantId AND l.isDeleted = false AND l.status IN :statuses")
+    BigDecimal sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(@Param("tenantId") UUID tenantId, @Param("statuses") List<LeadStatus> statuses);
 }

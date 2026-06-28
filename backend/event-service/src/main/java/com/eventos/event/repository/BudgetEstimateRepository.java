@@ -11,5 +11,7 @@ import java.util.UUID;
 @Repository
 public interface BudgetEstimateRepository extends JpaRepository<BudgetEstimate, UUID> {
     List<BudgetEstimate> findAllByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+    List<BudgetEstimate> findAllByTenantIdAndClientEmailIgnoreCaseOrderByCreatedAtDesc(UUID tenantId, String clientEmail);
     Optional<BudgetEstimate> findByIdAndTenantId(UUID id, UUID tenantId);
+
 }

@@ -13,10 +13,11 @@ import java.util.UUID;
 @Entity
 @Table(name = "event_assignments")
 @Data
+@lombok.EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EventAssignment {
+public class EventAssignment extends AbstractTenantAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
