@@ -1,15 +1,17 @@
 package com.eventos.event.controller;
 
 import com.eventos.event.dto.EventDashboardMetricsDto;
-import com.eventos.event.entity.Booking;
 import com.eventos.event.entity.Event;
 import com.eventos.event.entity.EventTimelineItem;
+import com.eventos.event.entity.VendorContract;
 import com.eventos.event.repository.BookingRepository;
 import com.eventos.event.repository.EventRepository;
 import com.eventos.event.repository.EventTimelineItemRepository;
+import com.eventos.event.repository.InvoiceRepository;
+import com.eventos.event.repository.VendorContractRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,16 +30,23 @@ public class EventDashboardController {
     private final EventRepository eventRepository;
     private final BookingRepository bookingRepository;
     private final EventTimelineItemRepository eventTimelineItemRepository;
+    private final InvoiceRepository invoiceRepository;
+    private final VendorContractRepository vendorContractRepository;
 
     public EventDashboardController(EventRepository eventRepository,
                                     BookingRepository bookingRepository,
-                                    EventTimelineItemRepository eventTimelineItemRepository) {
+                                    EventTimelineItemRepository eventTimelineItemRepository,
+                                    InvoiceRepository invoiceRepository,
+                                    VendorContractRepository vendorContractRepository) {
         this.eventRepository = eventRepository;
         this.bookingRepository = bookingRepository;
         this.eventTimelineItemRepository = eventTimelineItemRepository;
+        this.invoiceRepository = invoiceRepository;
+        this.vendorContractRepository = vendorContractRepository;
     }
 
     @GetMapping("/metrics")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
     public ResponseEntity<?> getDashboardMetrics() {
         UUID tenantId = getTenantId();
         LocalDateTime now = LocalDateTime.now();
@@ -102,12 +111,43 @@ public class EventDashboardController {
                         .build())
                 .collect(Collectors.toList());
 
+        // 4. Fetch outstanding invoices (amount & count)
+        long outstandingInvoicesCount = invoiceRepository.countOutstandingByTenantId(tenantId);
+        BigDecimal outstandingInvoicesAmount = invoiceRepository.sumOutstandingAmountByTenantId(tenantId);
+        if (outstandingInvoicesAmount == null) {
+            outstandingInvoicesAmount = BigDecimal.ZERO;
+        }
+
+        // 5. Fetch all vendor contracts total/actual costs
+        List<VendorContract> contracts = vendorContractRepository.findAllByTenantId(tenantId);
+        BigDecimal estimatedCosts = BigDecimal.ZERO;
+        BigDecimal actualCosts = BigDecimal.ZERO;
+        for (VendorContract contract : contracts) {
+            if (!"CANCELLED".equals(contract.getStatus())) {
+                estimatedCosts = estimatedCosts.add(contract.getTotalCost() != null ? contract.getTotalCost() : BigDecimal.ZERO);
+                actualCosts = actualCosts.add(contract.getActualCost() != null ? contract.getActualCost() : BigDecimal.ZERO);
+            }
+        }
+
+        BigDecimal profitMargin = totalRevenue.subtract(actualCosts);
+        BigDecimal profitMarginPercentage = BigDecimal.ZERO;
+        if (totalRevenue.compareTo(BigDecimal.ZERO) > 0) {
+            profitMarginPercentage = profitMargin.divide(totalRevenue, 4, java.math.RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+        }
+
         EventDashboardMetricsDto metrics = EventDashboardMetricsDto.builder()
                 .upcomingEventsCount(upcomingEventsCount)
                 .upcomingEvents(upcomingSummaries)
                 .totalRevenue(totalRevenue)
                 .pendingPayments(pendingPayments)
                 .teamTasks(taskSummaries)
+                .outstandingInvoicesCount(outstandingInvoicesCount)
+                .outstandingInvoicesAmount(outstandingInvoicesAmount)
+                .estimatedCosts(estimatedCosts)
+                .actualCosts(actualCosts)
+                .profitMargin(profitMargin)
+                .profitMarginPercentage(profitMarginPercentage)
                 .build();
 
         Map<String, Object> response = new HashMap<>();

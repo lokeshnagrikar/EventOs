@@ -24,6 +24,12 @@ public class GalleryItemResponseDto {
     private Long size;
     private String format;
     private Double duration;
+    private String category;
+    private boolean favorite;
+    private java.util.Set<String> tags;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer width;
+    private Integer height;
+    private String resourceType;
 }

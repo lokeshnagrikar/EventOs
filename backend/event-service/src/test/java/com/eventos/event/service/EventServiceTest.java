@@ -9,7 +9,7 @@ import com.eventos.event.repository.EventRepository;
 import com.eventos.event.repository.EventTimelineItemRepository;
 import com.eventos.event.repository.BookingRepository;
 import com.eventos.event.repository.InvoiceRepository;
-import com.eventos.event.repository.EventTaskRepository;
+import com.eventos.event.repository.TimelineTaskRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 public class EventServiceTest {
 
         @Mock
@@ -49,7 +50,7 @@ public class EventServiceTest {
         private InvoiceRepository invoiceRepository;
 
         @Mock
-        private EventTaskRepository eventTaskRepository;
+        private TimelineTaskRepository timelineTaskRepository;
 
         @Mock
         private StringRedisTemplate redisTemplate;
@@ -69,16 +70,16 @@ public class EventServiceTest {
 
                 mockEvent = Event.builder()
                                 .id(UUID.randomUUID())
-                                .tenantId(tenantId)
                                 .name("Shyam's Wedding Ceremony")
                                 .type(EventType.WEDDING)
-                                .status(EventStatus.DRAFT)
+                                .status(EventStatus.PLANNING)
                                 .startDate(LocalDateTime.now().plusDays(2))
                                 .endDate(LocalDateTime.now().plusDays(2).plusHours(6))
                                 .location("Radisson Blu Hall")
                                 .budget(BigDecimal.valueOf(1200000))
                                 .notes("Decoration setup needs pink theme flowers.")
                                 .build();
+                mockEvent.setTenantId(tenantId);
         }
 
         @Test
@@ -107,22 +108,22 @@ public class EventServiceTest {
 
                 Event savedEvent = Event.builder()
                                 .id(UUID.randomUUID())
-                                .tenantId(tenantId)
                                 .name(dto.getName())
                                 .type(dto.getType())
-                                .status(EventStatus.DRAFT)
+                                .status(EventStatus.PLANNING)
                                 .startDate(dto.getStartDate())
                                 .endDate(dto.getEndDate())
                                 .location(dto.getLocation())
                                 .budget(dto.getBudget())
                                 .build();
+                savedEvent.setTenantId(tenantId);
 
                 when(eventRepository.save(any(Event.class))).thenReturn(savedEvent);
 
                 Event result = eventService.createEvent(dto, tenantId);
 
                 assertNotNull(result);
-                assertEquals(EventStatus.DRAFT, result.getStatus());
+                assertEquals(EventStatus.PLANNING, result.getStatus());
                 assertEquals("Annual Tech Corporate Summit", result.getName());
                 verify(eventRepository, times(1)).save(any(Event.class));
         }
@@ -248,15 +249,15 @@ public class EventServiceTest {
                 UUID bookingId = UUID.randomUUID();
                 Invoice mockInvoice = Invoice.builder()
                                 .id(UUID.randomUUID())
-                                .tenantId(tenantId)
                                 .bookingId(bookingId)
                                 .clientEmail(clientEmail)
                                 .build();
+                mockInvoice.setTenantId(tenantId);
                 Booking mockBooking = Booking.builder()
                                 .id(bookingId)
-                                .tenantId(tenantId)
                                 .eventId(mockEvent.getId())
                                 .build();
+                mockBooking.setTenantId(tenantId);
 
                 when(invoiceRepository.findAllByClientEmailIgnoreCaseAndTenantIdOrderByCreatedAtDesc(clientEmail,
                                 tenantId))
@@ -283,15 +284,15 @@ public class EventServiceTest {
                 UUID bookingId = UUID.randomUUID();
                 Invoice mockInvoice = Invoice.builder()
                                 .id(UUID.randomUUID())
-                                .tenantId(tenantId)
                                 .bookingId(bookingId)
                                 .clientEmail(clientEmail)
                                 .build();
+                mockInvoice.setTenantId(tenantId);
                 Booking mockBooking = Booking.builder()
                                 .id(bookingId)
-                                .tenantId(tenantId)
                                 .eventId(mockEvent.getId())
                                 .build();
+                mockBooking.setTenantId(tenantId);
                 EventTimelineItem timelineItem = EventTimelineItem.builder()
                                 .id(UUID.randomUUID())
                                 .eventId(mockEvent.getId())

@@ -13,5 +13,9 @@ public class CreateShareLinkDto {
 
     private Integer expiresInHours; // Expire duration (optional)
 
+    private java.time.Instant expiresAt; // Explicit expiration date/time (optional)
+
     private String password; // Optional passcode protecting the link
+
+    private Boolean allowDownload; // Whether downloading is allowed (defaults to true)
 }

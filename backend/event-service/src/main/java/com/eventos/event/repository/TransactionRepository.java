@@ -14,7 +14,9 @@ import java.util.UUID;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
     List<Transaction> findAllByTenantIdOrderByTransactionDateDesc(UUID tenantId);
+
     Optional<Transaction> findByIdAndTenantId(UUID id, UUID tenantId);
+
     List<Transaction> findAllByInvoiceIdAndTenantId(UUID invoiceId, UUID tenantId);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.tenantId = :tenantId AND t.type = :type")
@@ -22,4 +24,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     @Query("SELECT t.type, COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.tenantId = :tenantId GROUP BY t.type")
     List<Object[]> sumAmountByTenantIdGroupedByType(@Param("tenantId") UUID tenantId);
+
+    List<Transaction> findByPaymentIdAndTenantId(UUID paymentId, UUID tenantId);
+
+    boolean existsByPaymentIdAndTenantId(UUID paymentId, UUID tenantId);
 }

@@ -14,6 +14,14 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Gitleaks security scan for secrets in git history
+      - name: Gitleaks Secrets Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Setup Java environment
       - name: Setup Java JRE 21
@@ -28,7 +36,7 @@ jobs:
       - name: Build and Test Backend Microservices
         run: |
           cd backend
-          mvn clean package -DskipTests
+          mvn clean test -B
 
       # Setup Node environment for Next.js frontend
       - name: Setup Node.js 20
@@ -38,10 +46,19 @@ jobs:
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
 
-      - name: Build Web Frontend
+      - name: Install Web Dependencies
         run: |
           cd web
           npm ci
+
+      - name: Run Web Lint
+        run: |
+          cd web
+          npm run lint
+
+      - name: Build Web Frontend
+        run: |
+          cd web
           npm run build
 
   build-and-push-docker:
@@ -73,55 +90,131 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and push: API Gateway
-      - name: Build & Push API Gateway
+      # Build & Load: API Gateway (to scan locally first)
+      - name: Build & Load API Gateway
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/api-gateway/Dockerfile
-          push: true
+          load: true
           tags: ghcr.io/${{ env.REPO_LC }}/api-gateway:latest
 
-      # Build and push: Auth Service
-      - name: Build & Push Auth Service
+      # Scan API Gateway with Trivy
+      - name: Scan API Gateway Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LC }}/api-gateway:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # Build & Load: Auth Service
+      - name: Build & Load Auth Service
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/auth-service/Dockerfile
-          push: true
+          load: true
           tags: ghcr.io/${{ env.REPO_LC }}/auth-service:latest
 
-      # Build and push: CRM Service
-      - name: Build & Push CRM Service
+      # Scan Auth Service with Trivy
+      - name: Scan Auth Service Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LC }}/auth-service:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # Build & Load: CRM Service
+      - name: Build & Load CRM Service
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/crm-service/Dockerfile
-          push: true
+          load: true
           tags: ghcr.io/${{ env.REPO_LC }}/crm-service:latest
 
-      # Build and push: Event Service
-      - name: Build & Push Event Service
+      # Scan CRM Service with Trivy
+      - name: Scan CRM Service Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LC }}/crm-service:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # Build & Load: Event Service
+      - name: Build & Load Event Service
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/event-service/Dockerfile
-          push: true
+          load: true
           tags: ghcr.io/${{ env.REPO_LC }}/event-service:latest
 
-      # Build and push: Gallery Service
-      - name: Build & Push Gallery Service
+      # Scan Event Service with Trivy
+      - name: Scan Event Service Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LC }}/event-service:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # Build & Load: Gallery Service
+      - name: Build & Load Gallery Service
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/gallery-service/Dockerfile
-          push: true
+          load: true
           tags: ghcr.io/${{ env.REPO_LC }}/gallery-service:latest
 
-      # Build and push: Next.js Frontend
-      - name: Build & Push Next.js Frontend
+      # Scan Gallery Service with Trivy
+      - name: Scan Gallery Service Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LC }}/gallery-service:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # Build & Load: Next.js Frontend
+      - name: Build & Load Next.js Frontend
         uses: docker/build-push-action@v5
         with:
           context: ./web
-          push: true
+          load: true
           tags: ghcr.io/${{ env.REPO_LC }}/frontend:latest
+
+      # Scan Next.js Frontend with Trivy
+      - name: Scan Next.js Frontend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LC }}/frontend:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # Push all scanned images to GHCR
+      - name: Push Scanned Images to GHCR
+        run: |
+          docker push ghcr.io/${{ env.REPO_LC }}/api-gateway:latest
+          docker push ghcr.io/${{ env.REPO_LC }}/auth-service:latest
+          docker push ghcr.io/${{ env.REPO_LC }}/crm-service:latest
+          docker push ghcr.io/${{ env.REPO_LC }}/event-service:latest
+          docker push ghcr.io/${{ env.REPO_LC }}/gallery-service:latest
+          docker push ghcr.io/${{ env.REPO_LC }}/frontend:latest

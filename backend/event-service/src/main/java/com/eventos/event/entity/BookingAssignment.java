@@ -2,7 +2,7 @@ package com.eventos.event.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,10 +13,11 @@ import java.util.UUID;
 @Entity
 @Table(name = "booking_assignments")
 @Data
+@lombok.EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class BookingAssignment {
+@SuperBuilder
+public class BookingAssignment extends AbstractTenantAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

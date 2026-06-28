@@ -20,7 +20,7 @@ import { motion } from "framer-motion";
 interface Quote {
   id: string;
   quoteNumber: string;
-  status: "DRAFT" | "SENT" | "APPROVED" | "REJECTED";
+  status: "DRAFT" | "SENT" | "VIEWED" | "ACCEPTED" | "REJECTED" | "EXPIRED";
   total: number;
 }
 
@@ -53,9 +53,15 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedName = localStorage.getItem("user_name");
-      if (storedName) {
-        setUserName(storedName);
+      // Read from cookie — same source as portal/layout.tsx
+      const cookieName = decodeURIComponent(
+        document.cookie
+          .split("; ")
+          .find(row => row.startsWith("user_name="))
+          ?.split("=")[1] || ""
+      );
+      if (cookieName) {
+        setUserName(cookieName);
       }
     }
   }, []);

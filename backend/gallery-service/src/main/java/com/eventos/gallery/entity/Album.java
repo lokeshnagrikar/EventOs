@@ -35,6 +35,17 @@ public class Album {
     @Column(name = "event_id")
     private UUID eventId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AlbumStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AlbumVisibility visibility;
+
+    @Column(name = "cover_image")
+    private String coverImage;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

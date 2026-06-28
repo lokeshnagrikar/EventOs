@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import React, { useState, useRef, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -69,6 +69,7 @@ interface ShareLink {
 
 export default function AlbumDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,7 +77,20 @@ export default function AlbumDetailPage() {
   const [filter, setFilter] = useState<"ALL" | "IMAGE" | "VIDEO">("ALL");
   const [viewMode, setViewMode] = useState<"GRID" | "MASONRY">("GRID");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [showMobileActions, setShowMobileActions] = useState(false);
   
+  // Custom Modal States
+  const [showDeleteAlbumModal, setShowDeleteAlbumModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [linkToRevoke, setLinkToRevoke] = useState<string | null>(null);
+
+  // Modal / Lightbox Refs
+  const shareModalRef = useRef<HTMLDivElement>(null);
+  const deleteAlbumModalRef = useRef<HTMLDivElement>(null);
+  const deleteItemModalRef = useRef<HTMLDivElement>(null);
+  const revokeLinkModalRef = useRef<HTMLDivElement>(null);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+
   // Share Modal States
   const [showShareModal, setShowShareModal] = useState(false);
   const [expiryHours, setExpiryHours] = useState<string>("168"); // Default 7 days
@@ -164,7 +178,7 @@ export default function AlbumDetailPage() {
       return response.data;
     },
     onSuccess: () => {
-      window.location.href = "/gallery";
+      router.push("/gallery");
     }
   });
 
@@ -245,16 +259,11 @@ export default function AlbumDetailPage() {
 
   const handleDeleteItem = (e: React.MouseEvent, itemId: string) => {
     e.stopPropagation();
-    if (confirm("Remove this media file? This deletes it permanently from Cloudinary.")) {
-      deleteItemMutation.mutate(itemId);
-      setLightboxIndex(null);
-    }
+    setItemToDelete(itemId);
   };
 
   const handleDeleteAlbum = () => {
-    if (confirm("Delete this entire album? This will purge all associated photos and videos.")) {
-      deleteAlbumMutation.mutate();
-    }
+    setShowDeleteAlbumModal(true);
   };
 
   // Share link generation handler
@@ -294,9 +303,7 @@ export default function AlbumDetailPage() {
   };
 
   const handleRevokeLink = (linkId: string) => {
-    if (confirm("Revoke this link? External clients using it will immediately lose access to the album.")) {
-      revokeShareLinkMutation.mutate(linkId);
-    }
+    setLinkToRevoke(linkId);
   };
 
   // Lightbox navigation
@@ -324,6 +331,75 @@ export default function AlbumDetailPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
+  // Keyboard accessibility & focus trap
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (lightboxIndex !== null) setLightboxIndex(null);
+        if (showShareModal) setShowShareModal(false);
+        if (showDeleteAlbumModal) setShowDeleteAlbumModal(false);
+        if (itemToDelete) setItemToDelete(null);
+        if (linkToRevoke) setLinkToRevoke(null);
+        if (showMobileActions) setShowMobileActions(false);
+      } else if (e.key === "ArrowLeft") {
+        if (lightboxIndex !== null) navigateLightbox("prev");
+      } else if (e.key === "ArrowRight") {
+        if (lightboxIndex !== null) navigateLightbox("next");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxIndex, showShareModal, showDeleteAlbumModal, itemToDelete, linkToRevoke, showMobileActions, items]);
+
+  useEffect(() => {
+    const handleFocusTrap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      
+      const activeContainer = lightboxIndex !== null ? lightboxRef.current
+        : (showShareModal ? shareModalRef.current
+        : (showDeleteAlbumModal ? deleteAlbumModalRef.current
+        : (itemToDelete ? deleteItemModalRef.current
+        : (linkToRevoke ? revokeLinkModalRef.current : null))));
+
+      if (!activeContainer) return;
+
+      const focusableElements = activeContainer.querySelectorAll(
+        'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
+      );
+      if (focusableElements.length === 0) return;
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    const hasActiveOverlay = lightboxIndex !== null || showShareModal || showDeleteAlbumModal || itemToDelete !== null || linkToRevoke !== null;
+    if (hasActiveOverlay) {
+      setTimeout(() => {
+        const activeContainer = lightboxIndex !== null ? lightboxRef.current
+          : (showShareModal ? shareModalRef.current
+          : (showDeleteAlbumModal ? deleteAlbumModalRef.current
+          : (itemToDelete ? deleteItemModalRef.current
+          : (linkToRevoke ? revokeLinkModalRef.current : null))));
+        
+        const firstFocusable = activeContainer?.querySelector('input, select, button, a, [tabindex="0"]') as HTMLElement;
+        firstFocusable?.focus();
+      }, 50);
+      window.addEventListener("keydown", handleFocusTrap);
+    }
+    return () => window.removeEventListener("keydown", handleFocusTrap);
+  }, [lightboxIndex, showShareModal, showDeleteAlbumModal, itemToDelete, linkToRevoke]);
+
   const isLoading = albumLoading || itemsLoading;
 
   if (albumError) {
@@ -331,10 +407,10 @@ export default function AlbumDetailPage() {
       <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col items-center justify-center p-6 gap-3">
         <AlertCircle className="text-red-500" size={48} />
         <h2 className="font-bold text-lg">Failed to retrieve album details</h2>
-        <p className="text-zinc-500 text-xs">The album may have been deleted, or you might not have permission.</p>
+        <p className="text-zinc-550 text-xs">The album may have been deleted, or you might not have permission.</p>
         <button
-          onClick={() => (window.location.href = "/gallery")}
-          className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-semibold text-zinc-300 transition-all border border-zinc-750"
+          onClick={() => router.push("/gallery")}
+          className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-semibold text-zinc-350 transition-all border border-zinc-750"
         >
           Return to Galleries
         </button>
@@ -343,26 +419,32 @@ export default function AlbumDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/gallery")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => router.push("/gallery")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to galleries"
           >
             <ArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-base max-w-[200px] truncate">{album?.name || "Album Details"}</span>
-            <span className="text-xs px-2 py-0.5 bg-zinc-800 rounded text-zinc-400 font-mono">
+            <span className="font-bold text-base max-w-[150px] sm:max-w-[200px] truncate">{album?.name || "Album Details"}</span>
+            <span className="text-xs px-2 py-0.5 bg-zinc-800 rounded text-zinc-455 font-mono">
               {items.length} Files
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Desktop actions */}
+        <div className="hidden md:flex items-center gap-2">
           <button
             onClick={() => setShowShareModal(true)}
             className="flex items-center gap-1.5 px-3 py-2 border border-zinc-800 hover:border-purple-500/30 hover:bg-purple-500/5 text-zinc-400 hover:text-purple-400 rounded-lg text-xs font-semibold transition-all"
@@ -383,7 +465,7 @@ export default function AlbumDetailPage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold transition-all shadow-md"
+            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
           >
             {isUploading ? (
               <Loader2 size={13} className="animate-spin" />
@@ -392,15 +474,36 @@ export default function AlbumDetailPage() {
             )}
             Add Media
           </button>
-          <input
-            type="file"
-            multiple
-            accept="image/*,video/*"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-          />
         </div>
+
+        {/* Mobile actions */}
+        <div className="flex md:hidden items-center gap-2">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex items-center gap-1 py-1.5 px-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98] shrink-0"
+          >
+            {isUploading ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+            Add
+          </button>
+          
+          <button
+            onClick={() => setShowMobileActions(true)}
+            className="h-8 w-8 rounded-md bg-zinc-850 flex items-center justify-center text-zinc-400 hover:text-white border border-zinc-750 shadow"
+            aria-label="More actions"
+          >
+            <Layers size={14} />
+          </button>
+        </div>
+
+        <input
+          type="file"
+          multiple
+          accept="image/*,video/*"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+        />
       </nav>
 
       {/* Main Container */}
@@ -414,7 +517,7 @@ export default function AlbumDetailPage() {
         ) : (
           <div className="bg-[#111113]/40 border border-zinc-800/60 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <p className="text-xs text-zinc-500 font-mono">
+              <p className="text-xs text-zinc-550 font-mono">
                 Established: {album && new Date(album.createdAt).toLocaleString()}
               </p>
               <h1 className="text-xl font-extrabold text-zinc-100 mt-1">{album?.name}</h1>
@@ -426,7 +529,7 @@ export default function AlbumDetailPage() {
             {associatedEvent && (
               <a
                 href={`/events/${associatedEvent.id}`}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-950/20 hover:bg-purple-950/40 border border-purple-900/30 text-purple-400 hover:text-purple-300 rounded-lg text-xs font-semibold transition-all shrink-0"
+                className="flex items-center gap-2 px-3 py-1.5 bg-purple-955/20 hover:bg-purple-955/40 border border-purple-900/30 text-purple-400 hover:text-purple-300 rounded-lg text-xs font-semibold transition-all shrink-0"
               >
                 <Layers size={13} />
                 <span>Workspace: {associatedEvent.name}</span>
@@ -555,10 +658,10 @@ export default function AlbumDetailPage() {
                     ) : (
                       <div className="relative w-full h-full">
                         <video
-                          src={item.url}
-                          preload="metadata"
-                          muted
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                           src={item.url}
+                           preload="metadata"
+                           muted
+                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                           <div className="h-10 w-10 rounded-full bg-black/60 backdrop-blur border border-zinc-800/80 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-md">
@@ -667,10 +770,16 @@ export default function AlbumDetailPage() {
       {/* SHARE LINKS MANAGEMENT MODAL */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-2xl bg-[#111113] border border-zinc-800 rounded-2xl shadow-2xl p-6 overflow-hidden flex flex-col max-h-[85vh] animate-slide-in">
+          <div 
+            ref={shareModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="share-album-title"
+            className="w-full max-w-2xl bg-[#111113] border border-zinc-800 rounded-2xl shadow-2xl p-6 overflow-hidden flex flex-col max-h-[85vh] animate-slide-in"
+          >
             {/* Header */}
             <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4 shrink-0">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <h2 id="share-album-title" className="text-base font-bold text-white flex items-center gap-2">
                 <Share2 className="text-purple-500" size={16} />
                 Share Visual Album
               </h2>
@@ -708,7 +817,7 @@ export default function AlbumDetailPage() {
                       <select
                         value={expiryHours}
                         onChange={(e) => setExpiryHours(e.target.value)}
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white font-medium focus:outline-none focus:border-purple-600"
+                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white font-medium focus:outline-none focus:border-purple-650"
                       >
                         <option value="24">24 Hours (1 Day)</option>
                         <option value="168">7 Days (1 Week)</option>
@@ -741,7 +850,7 @@ export default function AlbumDetailPage() {
                           value={passcode}
                           onChange={(e) => setPasscode(e.target.value)}
                           placeholder="Create 4+ char passcode"
-                          className="w-full px-3 py-1.5 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-600 transition-all font-mono"
+                          className="w-full px-3 py-1.5 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-605 transition-all font-mono"
                         />
                       )}
                     </div>
@@ -826,7 +935,7 @@ export default function AlbumDetailPage() {
                       <div className="py-12 border border-dashed border-zinc-850 rounded-xl bg-zinc-950/20 text-center text-zinc-500 flex flex-col items-center justify-center gap-1.5">
                         <Lock size={20} className="text-zinc-750" />
                         <p className="font-semibold text-zinc-450">No share links established</p>
-                        <p className="text-[10px] text-zinc-600">Active tokens for clients will appear here.</p>
+                        <p className="text-[10px] text-zinc-650">Active tokens for clients will appear here.</p>
                       </div>
                     )}
                   </div>
@@ -845,7 +954,13 @@ export default function AlbumDetailPage() {
 
       {/* LIGHTBOX / SLIDER / VIDEO PLAYER OVERLAY */}
       {lightboxIndex !== null && items[lightboxIndex] && (
-        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col justify-between p-4 md:p-6 select-none animate-fade-in">
+        <div 
+          ref={lightboxRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Media Lightbox"
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col justify-between p-4 md:p-6 select-none animate-fade-in"
+        >
           {/* Lightbox Header */}
           <div className="flex justify-between items-center z-50">
             <div>
@@ -932,6 +1047,167 @@ export default function AlbumDetailPage() {
             <span>
               Uploaded: {new Date(items[lightboxIndex].createdAt).toLocaleString()}
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE ACTIONS BOTTOM DRAWER */}
+      {showMobileActions && (
+        <div 
+          className="fixed inset-0 z-40 md:hidden bg-black/60 backdrop-blur-sm flex items-end animate-fade-in" 
+          onClick={() => setShowMobileActions(false)}
+        >
+          <div 
+            className="w-full bg-[#111113] border-t border-zinc-800 rounded-t-2xl p-5 space-y-4 animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-1">
+              <span className="font-bold text-[10px] text-zinc-450 uppercase tracking-wider">Album Operations</span>
+              <button 
+                onClick={() => setShowMobileActions(false)}
+                className="h-7 w-7 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            
+            <button
+              onClick={() => {
+                setShowMobileActions(false);
+                setShowShareModal(true);
+              }}
+              className="w-full flex items-center gap-3 py-3 px-4 border border-zinc-800 hover:border-purple-500/35 hover:bg-purple-500/5 text-zinc-300 hover:text-purple-400 rounded-xl text-xs font-semibold transition-all"
+            >
+              <Share2 size={16} className="text-purple-450" />
+              <span>Share Securely...</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setShowMobileActions(false);
+                handleDeleteAlbum();
+              }}
+              disabled={deleteAlbumMutation.isPending}
+              className="w-full flex items-center gap-3 py-3 px-4 border border-zinc-800 hover:border-red-500/30 hover:bg-red-500/5 text-zinc-300 hover:text-red-400 rounded-xl text-xs font-semibold transition-all"
+            >
+              <Trash2 size={16} className="text-red-450" />
+              <span>Delete Album...</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE ALBUM CONFIRM MODAL */}
+      {showDeleteAlbumModal && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div 
+            ref={deleteAlbumModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-album-title"
+            className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
+          >
+            <div className="flex items-center gap-3 text-red-400 mb-4">
+              <Trash2 size={20} />
+              <h3 id="delete-album-title" className="font-bold text-base">Delete Album?</h3>
+            </div>
+            <p className="text-xs text-zinc-300 mb-6 leading-normal font-normal">
+              Are you sure you want to delete this entire album? This will purge all associated photos and videos. This action is irreversible.
+            </p>
+            <div className="flex justify-end gap-3 text-xs">
+              <button
+                onClick={() => setShowDeleteAlbumModal(false)}
+                className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-semibold text-zinc-350 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteAlbumMutation.mutate();
+                  setShowDeleteAlbumModal(false);
+                }}
+                className="px-4 py-2 bg-red-650 hover:bg-red-750 text-white rounded-lg font-semibold transition-all shadow-md"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE ITEM CONFIRM MODAL */}
+      {itemToDelete && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div 
+            ref={deleteItemModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-item-title"
+            className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
+          >
+            <div className="flex items-center gap-3 text-red-400 mb-4">
+              <Trash2 size={20} />
+              <h3 id="delete-item-title" className="font-bold text-base">Remove File?</h3>
+            </div>
+            <p className="text-xs text-zinc-300 mb-6 leading-normal font-normal">
+              Are you sure you want to remove this media file? This will delete it permanently from Cloudinary and the database.
+            </p>
+            <div className="flex justify-end gap-3 text-xs">
+              <button
+                onClick={() => setItemToDelete(null)}
+                className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-semibold text-zinc-350 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteItemMutation.mutate(itemToDelete);
+                  setItemToDelete(null);
+                  setLightboxIndex(null);
+                }}
+                className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg font-semibold transition-all shadow-md"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REVOKE SHARE LINK CONFIRM MODAL */}
+      {linkToRevoke && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div 
+            ref={revokeLinkModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="revoke-link-title"
+            className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
+          >
+            <div className="flex items-center gap-3 text-red-400 mb-4">
+              <ShieldAlert size={20} />
+              <h3 id="revoke-link-title" className="font-bold text-base">Revoke Share Link?</h3>
+            </div>
+            <p className="text-xs text-zinc-300 mb-6 leading-normal font-normal">
+              Are you sure you want to revoke this share link? External clients using it will immediately lose access to the album.
+            </p>
+            <div className="flex justify-end gap-3 text-xs">
+              <button
+                onClick={() => setLinkToRevoke(null)}
+                className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-semibold text-zinc-355 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  revokeShareLinkMutation.mutate(linkToRevoke);
+                  setLinkToRevoke(null);
+                }}
+                className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg font-semibold transition-all shadow-md"
+              >
+                Revoke Link
+              </button>
+            </div>
           </div>
         </div>
       )}

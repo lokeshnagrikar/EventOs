@@ -17,5 +17,6 @@ public class SharedAlbumResponseDto {
     private String name;
     private String description;
     private UUID eventId;
+    private boolean allowDownload;
     private List<GalleryItemResponseDto> items;
 }

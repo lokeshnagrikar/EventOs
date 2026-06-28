@@ -74,13 +74,17 @@ export default function NewLeadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
       
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center gap-3 z-20 shrink-0">
         <button 
           onClick={() => window.location.href = "/crm"}
-          className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+          className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
           aria-label="Back to CRM"
         >
           <ArrowLeft size={16} />
@@ -91,7 +95,7 @@ export default function NewLeadPage() {
       </nav>
 
       {/* Form Area */}
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center p-6 relative z-10">
         <div className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-2xl shadow-xl p-8 space-y-6 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
 
@@ -267,7 +271,7 @@ export default function NewLeadPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-lg transition-all shadow-md disabled:opacity-50 active:scale-[0.98]"
+                  className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-purple-600/10 disabled:opacity-50 active:scale-[0.98]"
                 >
                   {loading ? "Recording Lead..." : "Add Lead to Kanban Pipeline"}
                 </button>

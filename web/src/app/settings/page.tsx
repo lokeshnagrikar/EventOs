@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useToastStore } from "@/lib/toastStore";
@@ -57,6 +57,16 @@ export default function SettingsPage() {
   const { addToast } = useToastStore();
   const [activeSubTab, setActiveSubTab] = useState<"company" | "branding" | "team">("company");
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam === "company" || tabParam === "branding" || tabParam === "team") {
+        setActiveSubTab(tabParam as any);
+      }
+    }
+  }, []);
 
   // Form states for Company
   const [companyName, setCompanyName] = useState("");
@@ -190,6 +200,19 @@ export default function SettingsPage() {
       setMemberError("First name, email, and password are required.");
       return;
     }
+    // Password strength validation
+    if (newPassword.length < 8) {
+      setMemberError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      setMemberError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      setMemberError("Password must contain at least one number.");
+      return;
+    }
     addTeamMemberMutation.mutate({
       firstName: newFirstName,
       lastName: newLastName || undefined,
@@ -219,13 +242,18 @@ export default function SettingsPage() {
   const isSaving = updateCompanyMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => (window.location.href = "/dashboard")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to dashboard"
           >
             <ArrowLeft size={16} />
@@ -278,6 +306,13 @@ export default function SettingsPage() {
           >
             <Users size={14} />
             Team Management
+          </button>
+          <button
+            onClick={() => (window.location.href = "/settings/security")}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30 border border-transparent transition-all"
+          >
+            <Shield size={14} />
+            Security & Sessions
           </button>
         </aside>
 
@@ -381,7 +416,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="px-5 py-2 bg-purple-600 hover:bg-purple-750 text-white rounded-lg font-semibold transition-all shadow-md"
+                    className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
                   >
                     {isSaving ? "Saving details..." : "Save Company Profile"}
                   </button>
@@ -480,7 +515,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="px-5 py-2 bg-purple-600 hover:bg-purple-750 text-white rounded-lg font-semibold transition-all shadow-md"
+                    className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
                   >
                     {isSaving ? "Saving styling..." : "Save Branding Theme"}
                   </button>
@@ -502,7 +537,7 @@ export default function SettingsPage() {
                     resetMemberForm();
                     setShowAddMemberModal(true);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-750 text-white rounded-lg text-xs font-semibold transition-all shadow"
+                  className="flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
                 >
                   <Plus size={13} />
                   Add Member
@@ -688,7 +723,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={addTeamMemberMutation.isPending}
-                  className="px-5 py-2 bg-purple-600 hover:bg-purple-750 text-white rounded-lg font-semibold shadow"
+                  className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
                 >
                   {addTeamMemberMutation.isPending ? "Registering..." : "Register Member"}
                 </button>

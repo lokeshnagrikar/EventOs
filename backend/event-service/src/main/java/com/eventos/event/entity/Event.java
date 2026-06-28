@@ -3,6 +3,7 @@ package com.eventos.event.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -15,17 +16,16 @@ import java.util.UUID;
 @Entity
 @Table(name = "events")
 @Data
+@lombok.EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Event {
+@SuperBuilder
+@EntityListeners(com.eventos.event.config.AuditLogListener.class)
+public class Event extends AbstractTenantAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(nullable = false)
     private String name;
@@ -62,6 +62,22 @@ public class Event {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Column(name = "booking_id")
+    private UUID bookingId;
+
+    @Transient
+    private Double progressPercentage;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "event_id", nullable = false)
+    @Builder.Default
+    private java.util.List<EventDay> eventDays = new java.util.ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "event_id", nullable = false)
+    @Builder.Default
+    private java.util.List<EventVenue> eventVenues = new java.util.ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

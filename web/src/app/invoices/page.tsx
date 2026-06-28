@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   Plus,
@@ -53,9 +54,11 @@ const STATUS_PILLS: Record<string, string> = {
 
 export default function InvoicesPage() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorText, setErrorText] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; num: string } | null>(null);
 
   // Form State
   const [bookingId, setBookingId] = useState("");
@@ -67,6 +70,56 @@ export default function InvoicesPage() {
   const [clientEmail, setClientEmail] = useState("");
   const [billingAddress, setBillingAddress] = useState("");
   const [notes, setNotes] = useState("");
+
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
+  // Keyboard Escape listener
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsModalOpen(false);
+        setDeleteTarget(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Keyboard focus trap
+  React.useEffect(() => {
+    if (isModalOpen && modalRef.current) {
+      const focusableElements = modalRef.current.querySelectorAll(
+        'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
+      );
+      if (focusableElements.length > 0) {
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+        firstElement.focus();
+
+        const handleTabTrap = (e: KeyboardEvent) => {
+          if (e.key === "Tab") {
+            if (e.shiftKey) {
+              if (document.activeElement === firstElement) {
+                lastElement.focus();
+                e.preventDefault();
+              }
+            } else {
+              if (document.activeElement === lastElement) {
+                firstElement.focus();
+                e.preventDefault();
+              }
+            }
+          }
+        };
+
+        const currentModalRef = modalRef.current;
+        currentModalRef.addEventListener("keydown", handleTabTrap);
+        return () => {
+          currentModalRef.removeEventListener("keydown", handleTabTrap);
+        };
+      }
+    }
+  }, [isModalOpen]);
 
   // 1. Fetch Invoices
   const { data: invoicesResponse, isLoading: invoicesLoading } = useQuery<{ data: Invoice[] }>({
@@ -150,20 +203,24 @@ export default function InvoicesPage() {
       return;
     }
 
-    const subNum = parseFloat(subtotal);
-    const taxNum = parseFloat(tax);
-    const discNum = parseFloat(discount);
+    const subPaisa = Math.round(parseFloat(subtotal) * 100);
+    const taxPaisa = Math.round(parseFloat(tax) * 100);
+    const discPaisa = Math.round(parseFloat(discount) * 100);
 
-    if (isNaN(subNum) || subNum < 0) {
+    if (isNaN(subPaisa) || subPaisa < 0) {
       setErrorText("Subtotal must be a non-negative number.");
       return;
     }
-    if (isNaN(taxNum) || taxNum < 0) {
+    if (isNaN(taxPaisa) || taxPaisa < 0) {
       setErrorText("Tax must be a non-negative number.");
       return;
     }
-    if (isNaN(discNum) || discNum < 0) {
+    if (isNaN(discPaisa) || discPaisa < 0) {
       setErrorText("Discount must be a non-negative number.");
+      return;
+    }
+    if (discPaisa > subPaisa + taxPaisa) {
+      setErrorText("Discount cannot exceed subtotal plus tax.");
       return;
     }
     if (!clientName.trim()) {
@@ -173,9 +230,9 @@ export default function InvoicesPage() {
 
     saveInvoiceMutation.mutate({
       bookingId,
-      subtotal: subNum,
-      tax: taxNum,
-      discount: discNum,
+      subtotal: subPaisa / 100,
+      tax: taxPaisa / 100,
+      discount: discPaisa / 100,
       dueDate: new Date(dueDate).toISOString(),
       clientName,
       clientEmail,
@@ -195,13 +252,18 @@ export default function InvoicesPage() {
   const overdueCount = invoices.filter((i) => i.status === "OVERDUE").length;
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => router.push("/dashboard")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to dashboard"
           >
             <ArrowLeft size={16} />
@@ -217,7 +279,7 @@ export default function InvoicesPage() {
             resetForm();
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition-all shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
         >
           <Plus size={16} />
           Generate Invoice
@@ -337,18 +399,14 @@ export default function InvoicesPage() {
                         </td>
                         <td className="p-4 flex items-center justify-center gap-2">
                           <button
-                            onClick={() => (window.location.href = `/invoices/${inv.id}`)}
+                            onClick={() => router.push(`/invoices/${inv.id}`)}
                             className="h-7 w-7 rounded bg-zinc-800/40 hover:bg-zinc-700 hover:text-white flex items-center justify-center text-zinc-400 transition-all"
                             aria-label="View Printable Invoice Sheet"
                           >
                             <Eye size={13} />
                           </button>
                           <button
-                            onClick={() => {
-                              if (confirm(`Delete invoice ${inv.invoiceNumber}?`)) {
-                                deleteInvoiceMutation.mutate(inv.id);
-                              }
-                            }}
+                            onClick={() => setDeleteTarget({ id: inv.id, num: inv.invoiceNumber })}
                             className="h-7 w-7 rounded bg-zinc-800/40 hover:bg-red-500/10 hover:text-red-500 flex items-center justify-center text-zinc-500 transition-all"
                             aria-label="Delete Invoice"
                           >
@@ -374,13 +432,14 @@ export default function InvoicesPage() {
 
       {/* Generate Invoice Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#111113] border border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <div ref={modalRef} className="bg-[#111113] border border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <div className="p-5 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/30">
-              <h3 className="font-bold text-sm text-zinc-200">Generate New Billing Invoice</h3>
+              <h3 id="modal-title" className="font-bold text-sm text-zinc-200">Generate New Billing Invoice</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-zinc-500 hover:text-zinc-300 text-sm font-semibold transition-colors"
+                aria-label="Close modal"
               >
                 ✕
               </button>
@@ -452,7 +511,7 @@ export default function InvoicesPage() {
               </div>
 
               {/* Prices calculations grid */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-zinc-400 font-semibold uppercase">Subtotal (₹)</label>
                   <input
@@ -516,23 +575,52 @@ export default function InvoicesPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-2 text-xs">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-750 text-zinc-300 rounded-lg font-semibold transition-colors"
+                  className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl font-bold transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saveInvoiceMutation.isPending}
-                  className="flex-1 py-2 bg-purple-600 hover:bg-purple-750 text-white rounded-lg font-semibold transition-colors"
+                  className="flex-1 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
                 >
                   {saveInvoiceMutation.isPending ? "Generating..." : "Generate Invoice"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Accessible Void / Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+          <div className="bg-[#111113] border border-zinc-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6 space-y-4">
+            <h3 id="delete-title" className="font-bold text-base text-zinc-200">Confirm Deletion</h3>
+            <p className="text-xs text-zinc-400">
+              Are you sure you want to void invoice <span className="font-mono text-zinc-200 font-semibold">{deleteTarget.num}</span>? This action cannot be undone and will record a reversing entry in the ledger.
+            </p>
+            <div className="flex gap-3 pt-2 text-xs">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-2 bg-zinc-850 hover:bg-zinc-800 text-zinc-350 rounded-lg font-semibold transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteInvoiceMutation.mutate(deleteTarget.id);
+                  setDeleteTarget(null);
+                }}
+                className="flex-1 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg font-semibold transition-all"
+              >
+                Void Invoice
+              </button>
+            </div>
           </div>
         </div>
       )}

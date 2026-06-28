@@ -1,16 +1,12 @@
 package com.eventos.auth.controller;
 
 import com.eventos.auth.entity.Company;
-import com.eventos.auth.entity.Role;
-import com.eventos.auth.entity.User;
 import com.eventos.auth.entity.Membership;
 import com.eventos.auth.repository.MembershipRepository;
 import com.eventos.auth.repository.CompanyRepository;
-import com.eventos.auth.repository.RoleRepository;
-import com.eventos.auth.repository.UserRepository;
+import com.eventos.auth.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,39 +15,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/settings")
+@SuppressWarnings("null")
 public class SettingsController {
 
     private final CompanyRepository companyRepository;
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final MembershipRepository membershipRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
     public SettingsController(CompanyRepository companyRepository,
-                              UserRepository userRepository,
-                              RoleRepository roleRepository,
-                              MembershipRepository membershipRepository,
-                              PasswordEncoder passwordEncoder) {
+            MembershipRepository membershipRepository,
+            AuthService authService) {
         this.companyRepository = companyRepository;
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
         this.membershipRepository = membershipRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.authService = authService;
     }
 
     // --- Company & Branding Endpoints ---
 
     @GetMapping("/company")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
     public ResponseEntity<?> getCompanySettings(
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
         UUID tenantId = getTenantId(tenantIdHeader);
         List<Company> companies = companyRepository.findByTenantId(tenantId);
-        
+
         Company company;
         if (companies.isEmpty()) {
             // Auto-create a default company profile if not present
@@ -75,13 +65,13 @@ public class SettingsController {
     }
 
     @PutMapping("/company")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> updateCompanySettings(
             @RequestBody Map<String, String> request,
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
         UUID tenantId = getTenantId(tenantIdHeader);
         List<Company> companies = companyRepository.findByTenantId(tenantId);
-        
+
         Company company;
         if (companies.isEmpty()) {
             company = new Company();
@@ -90,17 +80,28 @@ public class SettingsController {
             company = companies.get(0);
         }
 
-        if (request.containsKey("name")) company.setName(request.get("name"));
-        if (request.containsKey("logoUrl")) company.setLogoUrl(request.get("logoUrl"));
-        if (request.containsKey("email")) company.setEmail(request.get("email"));
-        if (request.containsKey("phone")) company.setPhone(request.get("phone"));
-        if (request.containsKey("website")) company.setWebsite(request.get("website"));
-        if (request.containsKey("address")) company.setAddress(request.get("address"));
-        if (request.containsKey("gstNumber")) company.setGstNumber(request.get("gstNumber"));
-        if (request.containsKey("primaryColor")) company.setPrimaryColor(request.get("primaryColor"));
-        if (request.containsKey("secondaryColor")) company.setSecondaryColor(request.get("secondaryColor"));
-        if (request.containsKey("timezone")) company.setTimezone(request.get("timezone"));
-        if (request.containsKey("currency")) company.setCurrency(request.get("currency"));
+        if (request.containsKey("name"))
+            company.setName(request.get("name"));
+        if (request.containsKey("logoUrl"))
+            company.setLogoUrl(request.get("logoUrl"));
+        if (request.containsKey("email"))
+            company.setEmail(request.get("email"));
+        if (request.containsKey("phone"))
+            company.setPhone(request.get("phone"));
+        if (request.containsKey("website"))
+            company.setWebsite(request.get("website"));
+        if (request.containsKey("address"))
+            company.setAddress(request.get("address"));
+        if (request.containsKey("gstNumber"))
+            company.setGstNumber(request.get("gstNumber"));
+        if (request.containsKey("primaryColor"))
+            company.setPrimaryColor(request.get("primaryColor"));
+        if (request.containsKey("secondaryColor"))
+            company.setSecondaryColor(request.get("secondaryColor"));
+        if (request.containsKey("timezone"))
+            company.setTimezone(request.get("timezone"));
+        if (request.containsKey("currency"))
+            company.setCurrency(request.get("currency"));
 
         Company saved = companyRepository.save(company);
 
@@ -113,7 +114,7 @@ public class SettingsController {
     // --- Team Management Endpoints ---
 
     @GetMapping("/team")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
     public ResponseEntity<?> getTeamMembers(
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
         UUID tenantId = getTenantId(tenantIdHeader);
@@ -121,8 +122,10 @@ public class SettingsController {
 
         List<Map<String, Object>> members = new ArrayList<>();
         for (Membership m : memberships) {
-            if (!"ACTIVE".equals(m.getStatus())) continue;
-            if (m.getUser().isDeleted()) continue;
+            if (!"ACTIVE".equals(m.getStatus()))
+                continue;
+            if (m.getUser().isDeleted())
+                continue;
             Map<String, Object> uInfo = new HashMap<>();
             uInfo.put("id", m.getUser().getId().toString());
             uInfo.put("firstName", m.getUser().getFirstName());
@@ -141,7 +144,7 @@ public class SettingsController {
     }
 
     @PostMapping("/team")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> addTeamMember(
             @RequestBody Map<String, String> request,
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
@@ -152,59 +155,30 @@ public class SettingsController {
             return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Email is required"));
         }
 
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user != null) {
-            Optional<Membership> existingOpt = membershipRepository.findByUserIdAndTenantId(user.getId(), tenantId);
-            if (existingOpt.isPresent()) {
-                return ResponseEntity.badRequest().body(createErrorResponse("MEMBER_EXISTS", "User is already a member of this tenant"));
-            }
-        } else {
-            user = User.builder()
-                    .firstName(request.get("firstName"))
-                    .lastName(request.get("lastName"))
-                    .email(email)
-                    .phone(request.get("phone"))
-                    .passwordHash(passwordEncoder.encode(request.getOrDefault("password", "EventOS123")))
-                    .status("ACTIVE")
-                    .isDeleted(false)
-                    .build();
-            user = userRepository.save(user);
+        String firstName = request.get("firstName");
+        String lastName = request.get("lastName");
+        String roleName = request.getOrDefault("role", "STAFF");
+        String phone = request.get("phone");
+
+        // Resolve senderId from current principal if available
+        UUID senderId = null;
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
+            senderId = ((com.eventos.auth.config.UserPrincipal) auth.getPrincipal()).getUserId();
         }
 
-        String roleName = request.getOrDefault("role", "STAFF").toUpperCase();
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new IllegalArgumentException("Specified role not found: " + roleName));
-
-        // Default Company ID lookup for tenant
-        List<Company> companies = companyRepository.findByTenantId(tenantId);
-        UUID companyId = companies.isEmpty() ? tenantId : companies.get(0).getId();
-
-        Membership membership = Membership.builder()
-                .user(user)
-                .tenantId(tenantId)
-                .companyId(companyId)
-                .role(role)
-                .status("ACTIVE")
-                .build();
-        membershipRepository.save(membership);
-
-        Map<String, Object> uInfo = new HashMap<>();
-        uInfo.put("id", user.getId().toString());
-        uInfo.put("firstName", user.getFirstName());
-        uInfo.put("lastName", user.getLastName());
-        uInfo.put("email", user.getEmail());
-        uInfo.put("phone", user.getPhone());
-        uInfo.put("status", membership.getStatus());
-        uInfo.put("role", role);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", uInfo);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        try {
+            Map<String, Object> result = authService.inviteTeamMember(tenantId, email, firstName, lastName, roleName,
+                    phone, senderId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("INVITATION_FAILED", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/team/{userId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> removeTeamMember(
             @PathVariable UUID userId,
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
@@ -224,8 +198,8 @@ public class SettingsController {
     // --- Helpers ---
 
     private UUID getTenantId(String header) {
-        org.springframework.security.core.Authentication auth = 
-            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
             UUID tenantId = ((com.eventos.auth.config.UserPrincipal) auth.getPrincipal()).getTenantId();
             if (tenantId != null) {
@@ -236,7 +210,7 @@ public class SettingsController {
             return UUID.fromString(header);
         }
         throw new org.springframework.web.server.ResponseStatusException(
-            org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
     }
 
     private Map<String, Object> createErrorResponse(String code, String message) {

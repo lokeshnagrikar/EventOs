@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 import {
   Calendar,
   FileText,
@@ -28,42 +29,155 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
+  const mobileMenuRef = React.useRef<HTMLDivElement>(null);
+
+  const getCookieValue = (name: string) => {
+    if (typeof window === "undefined") return "";
+    return document.cookie
+      .split("; ")
+      .find(row => row.startsWith(`${name}=`))
+      ?.split("=")[1] || "";
+  };
+
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedName = localStorage.getItem("user_name");
-      const storedRole = localStorage.getItem("user_role");
+      const storedName = getCookieValue("user_name");
+      const storedRole = getCookieValue("user_role");
       
-      // Verification of client role
-      if (!storedName || (storedRole !== "CLIENT" && storedRole !== "ADMIN" && storedRole !== "MANAGER")) {
+      // Verification of client role - restrict to CLIENT role only
+      if (!storedName || storedRole !== "CLIENT") {
         router.push("/login");
         return;
       }
       
-      if (storedName) {
-        setUserName(storedName);
-      }
+      setUserName(decodeURIComponent(storedName));
       setAuthChecked(true);
 
       // Dark mode initialization
-      const isDark = document.documentElement.classList.contains("dark");
+      const cookieTheme = getCookieValue("theme");
+      const isDark = cookieTheme ? cookieTheme === "dark" : true;
       setDarkMode(isDark);
     }
   }, [router]);
 
-  const toggleTheme = () => {
-    setDarkMode(!darkMode);
-    if (typeof window !== "undefined") {
-      document.documentElement.classList.toggle("dark");
+  const handleLogout = async (expired: boolean | React.MouseEvent = false) => {
+    const isExpired = typeof expired === "boolean" ? expired : false;
+    try {
+      await api.post("/auth/logout", { email: decodeURIComponent(getCookieValue("user_name")) });
+    } catch (err) {
+      console.error("Portal logout API call failed:", err);
     }
-  };
-
-  const handleLogout = () => {
+    document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "user_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "hasSession=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     localStorage.removeItem("user_name");
     localStorage.removeItem("user_role");
     localStorage.removeItem("user_id");
     localStorage.removeItem("tenant_id");
-    router.push("/login");
+    router.push(isExpired ? "/login?expired=true" : "/login");
   };
+
+  // Inactivity timeout of 30 minutes
+  useEffect(() => {
+    if (!authChecked) return;
+
+    let timeoutId: any;
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        handleLogout(true);
+      }, 30 * 60 * 1000);
+    };
+
+    const events = ["mousemove", "keydown", "click", "scroll"];
+    
+    resetTimer();
+
+    events.forEach(event => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach(event => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [authChecked]);
+
+  const toggleTheme = () => {
+    const nextTheme = !darkMode ? "dark" : "light";
+    setDarkMode(!darkMode);
+    if (typeof window !== "undefined") {
+      if (nextTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      document.cookie = `theme=${nextTheme}; path=/; max-age=31536000; SameSite=Strict`;
+    }
+  };
+
+  // Body scroll locking when mobile menu is open
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (isMobileMenuOpen) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+      }
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        document.body.style.overflow = "";
+      }
+    };
+  }, [isMobileMenuOpen]);
+
+  // Escape closing & focus trapping for Mobile menu
+  useEffect(() => {
+    if (isMobileMenuOpen && mobileMenuRef.current) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setIsMobileMenuOpen(false);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+
+      const focusableElements = mobileMenuRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements.length > 0) {
+        (focusableElements[0] as HTMLElement).focus();
+      }
+
+      const handleTab = (e: KeyboardEvent) => {
+        if (e.key !== "Tab") return;
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      };
+
+      window.addEventListener("keydown", handleTab);
+      return () => {
+        window.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("keydown", handleTab);
+      };
+    }
+  }, [isMobileMenuOpen]);
 
   const navItems = [
     { name: "Overview", path: "/portal", icon: LayoutDashboard },
@@ -102,60 +216,68 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       {/* Mobile Drawer Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.15 }}
-            className="md:hidden fixed inset-x-0 top-16 bg-[#111113] border-b border-zinc-800 z-25 p-4 flex flex-col gap-4 shadow-xl"
-          >
-            <nav className="flex flex-col gap-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.path;
-                return (
-                  <button
-                    key={item.path}
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      router.push(item.path);
-                    }}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${
-                      isActive
-                        ? "bg-purple-600/10 text-purple-400 border border-purple-900/30"
-                        : "text-zinc-400 hover:text-zinc-200"
-                    }`}
-                  >
-                    <Icon size={15} />
-                    {item.name}
-                  </button>
-                );
-              })}
-            </nav>
+          <>
+            {/* Backdrop Overlay for mobile drawer */}
+            <div 
+              className="md:hidden fixed inset-0 bg-black/60 z-20"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div
+              ref={mobileMenuRef}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="md:hidden fixed inset-x-0 top-16 bg-[#111113] border-b border-zinc-800 z-25 p-4 flex flex-col gap-4 shadow-xl"
+            >
+              <nav className="flex flex-col gap-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.path;
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        router.push(item.path);
+                      }}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${
+                        isActive
+                          ? "bg-purple-600/10 text-purple-400 border border-purple-900/30"
+                          : "text-zinc-400 hover:text-zinc-200"
+                      }`}
+                    >
+                      <Icon size={15} />
+                      {item.name}
+                    </button>
+                  );
+                })}
+              </nav>
 
-            <div className="border-t border-zinc-800 pt-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400">
-                  <User size={14} />
+              <div className="border-t border-zinc-800 pt-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400">
+                    <User size={14} />
+                  </div>
+                  <span className="text-xs font-bold text-zinc-300">{userName}</span>
                 </div>
-                <span className="text-xs font-bold text-zinc-300">{userName}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={toggleTheme}
+                    className="h-8 w-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300"
+                  >
+                    {darkMode ? <Sun size={14} /> : <Moon size={14} />}
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="h-8 w-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
+                  >
+                    <LogOut size={14} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleTheme}
-                  className="h-8 w-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300"
-                >
-                  {darkMode ? <Sun size={14} /> : <Moon size={14} />}
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="h-8 w-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
-                >
-                  <LogOut size={14} />
-                </button>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

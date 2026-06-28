@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   ArrowLeft,
@@ -62,6 +62,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function QuoteDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const quoteId = params.id as string;
   const queryClient = useQueryClient();
   const [errorText, setErrorText] = useState("");
@@ -176,7 +177,7 @@ export default function QuoteDetailPage() {
         <h2 className="text-lg font-bold">Quote not found</h2>
         <p className="text-zinc-500 text-xs">Verify that the quote exists and the backend microservices are running.</p>
         <button
-          onClick={() => (window.location.href = "/quotes")}
+          onClick={() => router.push("/quotes")}
           className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-semibold"
         >
           <ArrowLeft size={14} />
@@ -220,13 +221,18 @@ export default function QuoteDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0 print:hidden">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/quotes")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => router.push("/quotes")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to quotes"
           >
             <ArrowLeft size={16} />
@@ -272,7 +278,7 @@ export default function QuoteDetailPage() {
               <button
                 onClick={handleApprove}
                 disabled={approveQuoteMutation.isPending}
-                className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition-all shadow-md"
+                className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
               >
                 <Check size={14} />
                 Approve
@@ -282,7 +288,7 @@ export default function QuoteDetailPage() {
 
           {quote.status === "ACCEPTED" && booking && (
             <button
-              onClick={() => (window.location.href = `/bookings/${booking.id}`)}
+              onClick={() => router.push(`/bookings/${booking.id}`)}
               className="flex items-center gap-1.5 px-4 py-2 bg-emerald-650/10 hover:bg-emerald-650/20 text-emerald-450 border border-emerald-500/20 rounded-lg text-xs font-semibold transition-all shadow-md"
             >
               <Award size={14} />

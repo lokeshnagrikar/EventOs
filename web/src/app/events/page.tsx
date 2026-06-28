@@ -591,14 +591,18 @@ export default function EventsPage() {
   // ─── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col transition-all duration-200">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col transition-all duration-200 relative overflow-hidden">
+ 
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
 
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/85 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push("/")}
-            className="h-8 w-8 rounded-md bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => router.push("/dashboard")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to dashboard"
           >
             <ArrowLeft size={16} />
@@ -622,7 +626,7 @@ export default function EventsPage() {
 
           <button
             onClick={() => { resetForm(); setShowCreateModal(true); }}
-            className="flex items-center gap-2 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-all shadow-md active:scale-[0.98]"
+            className="flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-650/15 active:scale-[0.98]"
           >
             <Plus size={14} />
             Create Event

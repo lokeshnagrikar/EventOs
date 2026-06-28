@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -43,6 +44,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function BookingsPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -123,13 +125,18 @@ export default function BookingsPage() {
   const isLoading = bookingsLoading || eventsLoading;
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => router.push("/dashboard")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to dashboard"
           >
             <ArrowLeft size={16} />
@@ -145,7 +152,7 @@ export default function BookingsPage() {
             resetForm();
             setShowCreateModal(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition-all shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
         >
           <Plus size={16} />
           Lock Booking
@@ -175,7 +182,7 @@ export default function BookingsPage() {
               return (
                 <div
                   key={b.id}
-                  onClick={() => (window.location.href = `/bookings/${b.id}`)}
+                  onClick={() => router.push(`/bookings/${b.id}`)}
                   className="p-5 rounded-xl border border-zinc-800 bg-[#161618]/40 hover:border-purple-500/30 transition-all cursor-pointer flex flex-col justify-between h-[220px] hover:shadow-lg hover:shadow-purple-500/5 group"
                 >
                   <div className="space-y-2">
@@ -317,10 +324,10 @@ export default function BookingsPage() {
                 >
                   Cancel
                 </button>
-                <button
+                 <button
                   type="submit"
                   disabled={createBookingMutation.isPending}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold transition-all shadow-md"
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
                 >
                   {createBookingMutation.isPending ? "Locking..." : "Lock Booking"}
                 </button>

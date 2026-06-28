@@ -27,13 +27,16 @@ public class DashboardService {
     private final ObjectMapper objectMapper;
     private final WebClient webClient;
 
+    @org.springframework.beans.factory.annotation.Value("${service.event.base-url:http://localhost:8083/api/v1/events}")
+    private String eventServiceBaseUrl;
+
     public DashboardService(LeadRepository leadRepository,
             StringRedisTemplate redisTemplate,
             ObjectMapper objectMapper) {
         this.leadRepository = leadRepository;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
-        this.webClient = WebClient.builder().baseUrl("http://localhost:8083/api/v1").build();
+        this.webClient = WebClient.builder().build();
     }
 
     public DashboardMetricsDto getMetricsForTenant(UUID tenantId, String userRole) {
@@ -54,24 +57,26 @@ public class DashboardService {
 
         // 2. Fetch CRM/Leads metrics from crm_db
         long totalLeads = leadRepository.countByTenantIdAndIsDeletedFalse(tenantId);
-        long bookedOrCompleted = leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.BOOKED, LeadStatus.COMPLETED));
-        double conversionRate = totalLeads > 0 ? (bookedOrCompleted * 100.0 / totalLeads) : 0.0;
+        long wonLeads = leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.WON));
+        double conversionRate = totalLeads > 0 ? (wonLeads * 100.0 / totalLeads) : 0.0;
+
+        BigDecimal pipelineValue = leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(tenantId,
+                List.of(LeadStatus.NEW, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION));
+        BigDecimal wonValue = leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(tenantId,
+                List.of(LeadStatus.WON));
+        BigDecimal revenueForecast = wonValue.add(pipelineValue.multiply(BigDecimal.valueOf(conversionRate / 100.0)));
 
         // 3. Retrieve Event/Financial metrics from event-service (with token
         // forwarding)
         Map<String, Object> eventData = fetchRemoteEventMetrics(tenantId);
 
         // Parse remote data
-        long upcomingEventsCount = 0;
         List<DashboardMetricsDto.EventDto> upcomingEvents = new ArrayList<>();
         BigDecimal totalRevenue = BigDecimal.ZERO;
         BigDecimal pendingPayments = BigDecimal.ZERO;
         List<DashboardMetricsDto.TaskDto> teamTasks = new ArrayList<>();
 
         if (eventData != null) {
-            if (eventData.get("upcomingEventsCount") instanceof Number) {
-                upcomingEventsCount = ((Number) eventData.get("upcomingEventsCount")).longValue();
-            }
             if (eventData.get("upcomingEvents") instanceof List) {
                 List<?> list = (List<?>) eventData.get("upcomingEvents");
                 for (Object item : list) {
@@ -138,12 +143,17 @@ public class DashboardService {
         DashboardMetricsDto.RevenueMetrics revenueMetricsObj = null;
         List<DashboardMetricsDto.PaymentDto> pendingPaymentsList = null;
 
-        if (cleanRole.contains("ADMIN") || cleanRole.contains("MANAGER")) {
+        if (cleanRole.contains("OWNER") || cleanRole.contains("ADMIN") || cleanRole.contains("MANAGER")) {
             BigDecimal revenueSafe = (totalRevenue != null) ? totalRevenue : BigDecimal.ZERO;
             BigDecimal pendingSafe = (pendingPayments != null) ? pendingPayments : BigDecimal.ZERO;
             visibleWidgets.addAll(List.of("totalLeads", "conversionRate", "upcomingEvents", "revenueMetrics",
                     "pendingPayments", "recentActivity", "teamTasks"));
-            leadMetricsObj = new DashboardMetricsDto.LeadMetrics(totalLeads, conversionRate);
+            leadMetricsObj = DashboardMetricsDto.LeadMetrics.builder()
+                    .totalLeads(totalLeads)
+                    .conversionRate(conversionRate)
+                    .pipelineValue(pipelineValue)
+                    .revenueForecast(revenueForecast)
+                    .build();
             revenueMetricsObj = DashboardMetricsDto.RevenueMetrics.builder()
                     .totalRevenue("INR " + String.format("%,.0f", revenueSafe))
                     .outstandingBalance("INR " + String.format("%,.0f", pendingSafe))
@@ -163,7 +173,12 @@ public class DashboardService {
         } else if (cleanRole.contains("STAFF")) {
             visibleWidgets
                     .addAll(List.of("totalLeads", "conversionRate", "upcomingEvents", "recentActivity", "teamTasks"));
-            leadMetricsObj = new DashboardMetricsDto.LeadMetrics(totalLeads, conversionRate);
+            leadMetricsObj = DashboardMetricsDto.LeadMetrics.builder()
+                    .totalLeads(totalLeads)
+                    .conversionRate(conversionRate)
+                    .pipelineValue(pipelineValue)
+                    .revenueForecast(revenueForecast)
+                    .build();
             pendingPayments = null; // staff does not see pending payments or revenue overview details
             revenueMetricsObj = null;
         } else if (cleanRole.contains("CLIENT")) {
@@ -224,7 +239,7 @@ public class DashboardService {
 
         try {
             return webClient.get()
-                    .uri("/dashboard/metrics")
+                    .uri(eventServiceBaseUrl + "/dashboard/metrics")
                     .header("Authorization", authHeader)
                     .retrieve()
                     .bodyToMono(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {})

@@ -2,16 +2,27 @@ server:
   port: 8082
   servlet:
     context-path: /api/v1/crm
+  tomcat:
+    redirect-context-root: false
 
 spring:
   application:
     name: crm-service
+  mvc:
+    # Disable trailing-slash redirect to prevent 301s bypassing the API Gateway proxy (CORS)
+    pathmatch:
+      use-suffix-pattern: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:eventos_guest}
+    password: ${RABBITMQ_PASS:eventos_guest_pass}
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/crm_db
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/crm_db?sslmode=disable
     username: ${POSTGRES_USER:eventos_admin}
     password: ${POSTGRES_PASSWORD:eventos_secure_pass}
     driver-class-name: org.postgresql.Driver
@@ -36,3 +47,45 @@ cloudinary:
 app:
   jwt:
     secret: ${JWT_SECRET_KEY:9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d}
+  gateway:
+    secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
+
+service:
+  auth:
+    base-url: ${AUTH_SERVICE_URL:http://localhost:8081/api/v1/auth}
+  event:
+    base-url: ${EVENT_SERVICE_URL:http://localhost:8083/api/v1/events}
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+  retry:
+    instances:
+      default:
+        maxAttempts: 3
+        waitDuration: 1000
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2

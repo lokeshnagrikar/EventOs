@@ -1,7 +1,6 @@
 package com.eventos.event.service;
 
 import com.eventos.event.dto.CreateBookingDto;
-import com.eventos.event.dto.CreateBookingTimelineEventDto;
 import com.eventos.event.entity.*;
 import com.eventos.event.repository.BookingRepository;
 import com.eventos.event.repository.BookingTimelineEventRepository;
@@ -9,6 +8,7 @@ import com.eventos.event.repository.EventRepository;
 import com.eventos.event.repository.TenantSequenceRepository;
 import com.eventos.event.repository.BookingAuditLogRepository;
 import com.eventos.event.repository.BookingAssignmentRepository;
+import com.eventos.event.repository.VendorContractRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,9 +25,11 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 public class BookingServiceTest {
 
     @Mock
@@ -48,6 +50,15 @@ public class BookingServiceTest {
     @Mock
     private BookingAssignmentRepository bookingAssignmentRepository;
 
+    @Mock
+    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+
+    @Mock
+    private InvoiceService invoiceService;
+
+    @Mock
+    private VendorContractRepository vendorContractRepository;
+
     @InjectMocks
     private BookingService bookingService;
 
@@ -56,6 +67,18 @@ public class BookingServiceTest {
     private Event mockEvent;
     private Booking mockBooking;
 
+    private void setupSecurityContext(String roles) {
+        com.eventos.event.config.UserPrincipal principal = new com.eventos.event.config.UserPrincipal(
+                UUID.randomUUID(), tenantId, "test@eventos.com", roles);
+        List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities =
+                java.util.Arrays.stream(roles.split(","))
+                        .map(r -> new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()))
+                        .toList();
+        org.springframework.security.core.Authentication auth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(principal, null, authorities);
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
     @BeforeEach
     void setUp() {
         tenantId = UUID.randomUUID();
@@ -63,23 +86,30 @@ public class BookingServiceTest {
 
         mockEvent = Event.builder()
                 .id(eventId)
-                .tenantId(tenantId)
                 .name("Roy Anniversary Party")
                 .type(EventType.BIRTHDAY)
-                .status(EventStatus.PLANNED)
+                .status(EventStatus.PLANNING)
                 .startDate(LocalDateTime.now().plusDays(5))
                 .endDate(LocalDateTime.now().plusDays(5).plusHours(4))
                 .build();
+        mockEvent.setTenantId(tenantId);
 
         mockBooking = Booking.builder()
                 .id(UUID.randomUUID())
-                .tenantId(tenantId)
                 .eventId(eventId)
                 .bookingNumber("BK-0001")
                 .status(BookingStatus.PENDING)
                 .totalAmount(BigDecimal.valueOf(200000))
                 .paidAmount(BigDecimal.valueOf(50000))
                 .build();
+        mockBooking.setTenantId(tenantId);
+
+        setupSecurityContext("OWNER");
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -118,7 +148,8 @@ public class BookingServiceTest {
         Booking result = bookingService.createBooking(dto, tenantId);
 
         assertNotNull(result);
-        assertEquals("BK-0001", result.getBookingNumber());
+        int currentYear = java.time.LocalDate.now().getYear();
+        assertEquals("EVT-" + currentYear + "-000001", result.getBookingNumber());
         assertEquals(BookingStatus.CONFIRMED, result.getStatus());
         assertEquals(3, result.getTimelineEvents().size());
         
@@ -136,6 +167,7 @@ public class BookingServiceTest {
     @Test
     void testUpdateBookingStatus() {
         UUID bookingId = mockBooking.getId();
+        mockBooking.setStatus(BookingStatus.IN_PROGRESS);
         when(bookingRepository.findByIdAndTenantId(bookingId, tenantId))
                 .thenReturn(Optional.of(mockBooking));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -183,5 +215,24 @@ public class BookingServiceTest {
         });
 
         verify(bookingRepository, times(1)).findByIdAndTenantId(mockBooking.getId(), unauthorizedTenantId);
+    }
+
+    @Test
+    void testUpdateBookingStatus_CancelledPublishesEvent() {
+        UUID bookingId = mockBooking.getId();
+        when(bookingRepository.findByIdAndTenantId(bookingId, tenantId))
+                .thenReturn(Optional.of(mockBooking));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Booking result = bookingService.updateBookingStatus(bookingId, BookingStatus.CANCELLED, tenantId);
+
+        assertNotNull(result);
+        assertEquals(BookingStatus.CANCELLED, result.getStatus());
+        verify(bookingRepository, times(1)).save(any(Booking.class));
+        verify(rabbitTemplate, times(1)).convertAndSend(
+                eq("eventos.exchange"),
+                eq("booking.cancelled"),
+                any(com.eventos.event.event.BookingCancelledEvent.class)
+        );
     }
 }

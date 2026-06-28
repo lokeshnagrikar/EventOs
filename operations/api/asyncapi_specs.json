@@ -1,0 +1,72 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "EventOS RabbitMQ Broker Event Streams",
+    "description": "Asynchronous event-driven communication mapping cross-service actions in EventOS.",
+    "version": "1.0.0"
+  },
+  "servers": {
+    "rabbitmq": {
+      "url": "amqp://localhost:5672",
+      "protocol": "amqp",
+      "description": "Production RabbitMQ cluster broker"
+    }
+  },
+  "channels": {
+    "eventos.exchange/budget.converted": {
+      "subscribe": {
+        "summary": "Subscribe to calculator budget estimate conversions",
+        "message": {
+          "$ref": "#/components/messages/BudgetConvertedToLeadEvent"
+        }
+      }
+    },
+    "eventos.exchange/quote.accepted": {
+      "subscribe": {
+        "summary": "Subscribe to approved customer quote proposals",
+        "message": {
+          "$ref": "#/components/messages/QuoteAcceptedEvent"
+        }
+      }
+    }
+  },
+  "components": {
+    "messages": {
+      "BudgetConvertedToLeadEvent": {
+        "name": "BudgetConvertedToLeadEvent",
+        "title": "Budget Conversion Payload",
+        "contentType": "application/json",
+        "payload": {
+          "type": "object",
+          "required": ["estimateId", "leadId", "quoteId", "tenantId"],
+          "properties": {
+            "estimateId": { "type": "string", "format": "uuid" },
+            "leadId": { "type": "string", "format": "uuid" },
+            "quoteId": { "type": "string", "format": "uuid" },
+            "tenantId": { "type": "string", "format": "uuid" }
+          }
+        }
+      },
+      "QuoteAcceptedEvent": {
+        "name": "QuoteAcceptedEvent",
+        "title": "Quote Proposal Acceptance Payload",
+        "contentType": "application/json",
+        "payload": {
+          "type": "object",
+          "required": ["quoteId", "leadId", "tenantId", "totalAmount", "quoteNumber"],
+          "properties": {
+            "quoteId": { "type": "string", "format": "uuid" },
+            "leadId": { "type": "string", "format": "uuid" },
+            "tenantId": { "type": "string", "format": "uuid" },
+            "totalAmount": { "type": "number" },
+            "quoteNumber": { "type": "string" },
+            "contractUrl": { "type": "string" },
+            "eventDate": { "type": "string", "format": "date" },
+            "clientName": { "type": "string" },
+            "eventType": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

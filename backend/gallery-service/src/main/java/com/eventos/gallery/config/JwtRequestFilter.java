@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.crypto.SecretKey;
+import org.springframework.lang.NonNull;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -30,10 +31,68 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
+    @Value("${app.gateway.secret:}")
+    private String gatewaySecret;
+
+    private SecretKey signingKey;
+    private io.jsonwebtoken.JwtParser jwtParser;
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        this.signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        this.jwtParser = Jwts.parser()
+                .verifyWith(signingKey)
+                .build();
+    }
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         
+        final String tenantIdHeader = request.getHeader("X-Tenant-ID");
+        final String userIdHeader = request.getHeader("X-User-ID");
+        final String userRolesHeader = request.getHeader("X-User-Roles");
+        final String userEmailHeader = request.getHeader("X-User-Email");
+        final String gatewaySecretHeader = request.getHeader("X-Gateway-Secret");
+
+        if (tenantIdHeader != null && userIdHeader != null) {
+            // Verify gateway secret to prevent header spoofing
+            if (gatewaySecret == null || gatewaySecret.trim().isEmpty() || !gatewaySecret.equals(gatewaySecretHeader)) {
+                logger.warn("Blocked direct access attempt with spoofed user headers (missing or invalid gateway secret).");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Invalid Gateway Trust Secret\"}}");
+                return;
+            }
+            try {
+                UUID tenantId = UUID.fromString(tenantIdHeader);
+                UUID userId = UUID.fromString(userIdHeader);
+                String email = userEmailHeader != null ? userEmailHeader : "";
+                String rolesStr = userRolesHeader != null ? userRolesHeader : "";
+
+                List<SimpleGrantedAuthority> authorities = Collections.emptyList();
+                if (!rolesStr.isEmpty()) {
+                    authorities = Stream.of(rolesStr.split(","))
+                            .map(r -> new SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()))
+                            .collect(Collectors.toList());
+                }
+
+                UserPrincipal principal = new UserPrincipal(userId, tenantId, email, rolesStr);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        principal, null, authorities);
+                
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (Exception e) {
+                logger.warn("Failed to authenticate via Gateway headers: " + e.getMessage());
+            }
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -43,10 +102,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         final String token = authHeader.substring(7);
         try {
-            SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-            Claims claims = Jwts.parser()
-                    .verifyWith(key)
-                    .build()
+            Claims claims = jwtParser
                     .parseSignedClaims(token)
                     .getPayload();
 

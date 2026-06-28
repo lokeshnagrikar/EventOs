@@ -2,7 +2,7 @@ package com.eventos.event.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -14,17 +14,15 @@ import java.util.UUID;
 @Entity
 @Table(name = "budget_estimates")
 @Data
+@lombok.EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class BudgetEstimate {
+@SuperBuilder
+public class BudgetEstimate extends AbstractTenantAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "event_name", nullable = false)
     private String eventName;
@@ -65,7 +63,14 @@ public class BudgetEstimate {
     @Column(name = "client_phone")
     private String clientPhone;
 
+    @Column(name = "lead_id")
+    private UUID leadId;
 
+    @Column(name = "quote_id")
+    private UUID quoteId;
+
+    @Version
+    private Integer version;
 
     @Column(name = "grand_total", nullable = false)
     private BigDecimal grandTotal;
@@ -73,4 +78,5 @@ public class BudgetEstimate {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
 }

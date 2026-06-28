@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   ArrowLeft,
@@ -75,6 +75,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function BookingDetailPage() {
+  const router = useRouter();
   const params = useParams();
   const bookingId = params.id as string;
   const queryClient = useQueryClient();
@@ -92,7 +93,7 @@ export default function BookingDetailPage() {
   const { data: bookingResponse, isLoading: bookingLoading, error: bookingError } = useQuery<{ data: Booking }>({
     queryKey: ["booking", bookingId],
     queryFn: async () => {
-      const response = await api.get(`/events/bookings/${bookingId}`);
+      const response = await api.get(`/bookings/${bookingId}`);
       return response.data;
     }
   });
@@ -115,7 +116,7 @@ export default function BookingDetailPage() {
   const { data: resourcesResponse } = useQuery<{ data: BookingAssignment[] }>({
     queryKey: ["bookingResources", bookingId],
     queryFn: async () => {
-      const response = await api.get(`/events/bookings/${bookingId}/resources`);
+      const response = await api.get(`/bookings/${bookingId}/resources`);
       return response.data;
     }
   });
@@ -125,7 +126,7 @@ export default function BookingDetailPage() {
   const { data: auditResponse } = useQuery<{ data: BookingAuditLog[] }>({
     queryKey: ["bookingAudit", bookingId],
     queryFn: async () => {
-      const response = await api.get(`/events/bookings/${bookingId}/audit`);
+      const response = await api.get(`/bookings/${bookingId}/audit`);
       return response.data;
     }
   });
@@ -134,7 +135,7 @@ export default function BookingDetailPage() {
   // Mutations
   const updateStatusMutation = useMutation({
     mutationFn: async (status: string) => {
-      const response = await api.patch(`/events/bookings/${bookingId}/status`, { status });
+      const response = await api.patch(`/bookings/${bookingId}/status`, { status });
       return response.data;
     },
     onSuccess: () => {
@@ -146,7 +147,7 @@ export default function BookingDetailPage() {
 
   const collectPaymentMutation = useMutation({
     mutationFn: async (amount: number) => {
-      const response = await api.patch(`/events/bookings/${bookingId}/payment`, { amount: amount.toString() });
+      const response = await api.patch(`/bookings/${bookingId}/payment`, { amount: amount.toString() });
       return response.data;
     },
     onSuccess: () => {
@@ -162,7 +163,7 @@ export default function BookingDetailPage() {
 
   const toggleMilestoneMutation = useMutation({
     mutationFn: async (milestoneId: string) => {
-      const response = await api.patch(`/events/bookings/${bookingId}/timeline/${milestoneId}/toggle`);
+      const response = await api.patch(`/bookings/${bookingId}/timeline/${milestoneId}/toggle`);
       return response.data;
     },
     onSuccess: () => {
@@ -173,7 +174,7 @@ export default function BookingDetailPage() {
 
   const addMilestoneMutation = useMutation({
     mutationFn: async (newMilestone: Partial<BookingTimelineEvent>) => {
-      const response = await api.post(`/events/bookings/${bookingId}/timeline`, newMilestone);
+      const response = await api.post(`/bookings/${bookingId}/timeline`, newMilestone);
       return response.data;
     },
     onSuccess: () => {
@@ -190,7 +191,7 @@ export default function BookingDetailPage() {
 
   const assignResourceMutation = useMutation({
     mutationFn: async (payload: { resourceName: string; resourceType: string }) => {
-      const response = await api.post(`/events/bookings/${bookingId}/resources`, payload);
+      const response = await api.post(`/bookings/${bookingId}/resources`, payload);
       return response.data;
     },
     onSuccess: () => {
@@ -206,7 +207,7 @@ export default function BookingDetailPage() {
 
   const removeResourceMutation = useMutation({
     mutationFn: async (resourceId: string) => {
-      const response = await api.delete(`/events/bookings/${bookingId}/resources/${resourceId}`);
+      const response = await api.delete(`/bookings/${bookingId}/resources/${resourceId}`);
       return response.data;
     },
     onSuccess: () => {
@@ -255,7 +256,7 @@ export default function BookingDetailPage() {
         <h2 className="text-lg font-bold">Booking file not found</h2>
         <p className="text-zinc-500 text-xs">Verify that the booking exists and the backend microservices are running.</p>
         <button
-          onClick={() => (window.location.href = "/bookings")}
+          onClick={() => router.push("/bookings")}
           className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-semibold"
         >
           <ArrowLeft size={14} />
@@ -270,13 +271,18 @@ export default function BookingDetailPage() {
   const statusStyle = STATUS_COLORS[booking.status] || "border-zinc-800 text-zinc-450";
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+      
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/bookings")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            onClick={() => router.push("/bookings")}
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to bookings"
           >
             <ArrowLeft size={16} />
@@ -393,7 +399,7 @@ export default function BookingDetailPage() {
                 <button
                   type="submit"
                   disabled={collectPaymentMutation.isPending}
-                  className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-all text-xs"
+                  className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-xl transition-all shadow-md shadow-purple-600/10 text-xs active:scale-[0.98]"
                 >
                   {collectPaymentMutation.isPending ? "Logging..." : "Log Transaction"}
                 </button>
@@ -444,19 +450,19 @@ export default function BookingDetailPage() {
               }}
               className="border-t border-zinc-850 pt-3 space-y-2 text-[11px]"
             >
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col md:flex-row gap-2">
                 <input
                   type="text"
                   required
                   placeholder="Resource/Staff name..."
                   value={newResourceName}
                   onChange={(e) => setNewResourceName(e.target.value)}
-                  className="w-full px-2 py-1.5 bg-[#18181B] border border-zinc-800 rounded text-white focus:outline-none placeholder-zinc-650"
+                  className="w-full md:flex-1 px-2 py-1.5 bg-[#18181B] border border-zinc-800 rounded text-white focus:outline-none placeholder-zinc-650"
                 />
                 <select
                   value={newResourceType}
                   onChange={(e) => setNewResourceType(e.target.value)}
-                  className="w-full px-2 py-1.5 bg-[#18181B] border border-zinc-800 rounded text-white focus:outline-none"
+                  className="w-full md:w-32 px-2 py-1.5 bg-[#18181B] border border-zinc-800 rounded text-white focus:outline-none"
                 >
                   <option value="STAFF">Staff Member</option>
                   <option value="VENUE">Venue/Hall</option>
@@ -469,7 +475,7 @@ export default function BookingDetailPage() {
               <button
                 type="submit"
                 disabled={assignResourceMutation.isPending}
-                className="w-full py-1.5 bg-purple-650/10 hover:bg-purple-650/20 text-purple-400 border border-purple-500/20 rounded font-bold transition-all"
+                className="w-full py-1.5 bg-purple-650/10 hover:bg-purple-650/20 text-purple-400 border border-purple-500/20 rounded-xl font-bold transition-all shadow-sm shadow-purple-500/5"
               >
                 {assignResourceMutation.isPending ? "Assigning..." : "Assign Resource"}
               </button>
@@ -495,18 +501,27 @@ export default function BookingDetailPage() {
               {booking.timelineEvents?.map((milestone) => (
                 <div
                   key={milestone.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Toggle milestone: ${milestone.title}`}
                   onClick={() => toggleMilestoneMutation.mutate(milestone.id)}
-                  className={`flex items-start gap-3 p-3.5 border rounded-lg bg-zinc-900/30 cursor-pointer transition-all hover:bg-zinc-900/60 select-none ${
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleMilestoneMutation.mutate(milestone.id);
+                    }
+                  }}
+                  className={`flex items-start text-left gap-3 p-3.5 border rounded-lg bg-zinc-900/30 cursor-pointer transition-all hover:bg-zinc-900/60 select-none ${
                     milestone.status === "COMPLETED" ? "border-zinc-800/40 text-zinc-500" : "border-zinc-800 text-zinc-200"
                   }`}
                 >
-                  <button className="mt-0.5" aria-label={milestone.status === "COMPLETED" ? "Mark incomplete" : "Mark complete"}>
+                  <div className="mt-0.5" aria-hidden="true">
                     {milestone.status === "COMPLETED" ? (
                       <CheckCircle2 size={16} className="text-emerald-500" />
                     ) : (
                       <div className="h-4 w-4 rounded border border-zinc-700 hover:border-purple-500 transition-colors" />
                     )}
-                  </button>
+                  </div>
                   <div className="flex-1">
                     <h4 className={`text-xs font-bold leading-none ${milestone.status === "COMPLETED" ? "line-through text-zinc-500" : ""}`}>
                       {milestone.title}
@@ -565,7 +580,7 @@ export default function BookingDetailPage() {
                   <button
                     type="submit"
                     disabled={addMilestoneMutation.isPending}
-                    className="flex items-center justify-center gap-1.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shrink-0 transition-all text-xs"
+                    className="flex items-center justify-center gap-1.5 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-xl shrink-0 transition-all shadow-md shadow-purple-600/10 text-xs active:scale-[0.98]"
                   >
                     <Plus size={14} />
                     Add

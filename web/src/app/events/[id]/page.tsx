@@ -406,14 +406,18 @@ export default function EventDetailPage() {
   const typeLabel = EVENT_TYPES.find((t) => t.key === event.type)?.label || event.type;
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col transition-all duration-200">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col transition-all duration-200 relative overflow-hidden">
       
+      {/* Background glow effects to match landing page theme */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/85 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/events")}
-            className="h-8 w-8 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to events"
           >
             <ArrowLeft size={16} />
@@ -584,7 +588,7 @@ export default function EventDetailPage() {
               <button
                 type="submit"
                 disabled={updateEventMutation.isPending}
-                className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold flex items-center justify-center gap-1.5 transition-colors shadow mt-2"
+                className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all shadow shadow-purple-600/10 mt-2"
               >
                 <Save size={13} />
                 Save Event Specs
@@ -776,7 +780,7 @@ export default function EventDetailPage() {
                   <button
                     type="submit"
                     disabled={addTaskMutation.isPending}
-                    className="flex items-center justify-center gap-1.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shrink-0 transition-all"
+                    className="flex items-center justify-center gap-1.5 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-xl shrink-0 transition-all shadow-md shadow-purple-600/10"
                   >
                     <Plus size={14} />
                     Add Task

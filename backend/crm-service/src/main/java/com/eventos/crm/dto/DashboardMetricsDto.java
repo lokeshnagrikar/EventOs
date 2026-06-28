@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -32,6 +33,8 @@ public class DashboardMetricsDto implements Serializable {
         private static final long serialVersionUID = 1L;
         private long totalLeads;
         private double conversionRate;
+        private BigDecimal pipelineValue;
+        private BigDecimal revenueForecast;
     }
 
     @Data

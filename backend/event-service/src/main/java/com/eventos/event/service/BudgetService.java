@@ -1,353 +1,371 @@
 package com.eventos.event.service;
 
-import com.eventos.event.dto.CreateBudgetEstimateDto;
-import com.eventos.event.entity.BudgetEstimate;
-import com.eventos.event.entity.PricingRule;
-import com.eventos.event.repository.BudgetEstimateRepository;
-import com.eventos.event.repository.PricingRuleRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.eventos.event.dto.*;
+import com.eventos.event.entity.*;
+import com.eventos.event.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@SuppressWarnings("null")
 public class BudgetService {
 
-    private static final Logger log = LoggerFactory.getLogger(BudgetService.class);
+    private final BookingBudgetRepository bookingBudgetRepository;
+    private final BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
+    private final ExpenseRepository expenseRepository;
+    private final BudgetAlertRepository budgetAlertRepository;
+    private final BookingRepository bookingRepository;
+    private final VendorContractRepository vendorContractRepository;
+    private final VendorRepository vendorRepository;
 
-    private final BudgetEstimateRepository budgetEstimateRepository;
-    private final PricingRuleRepository pricingRuleRepository;
-    private RestTemplate restTemplate = new RestTemplate();
-
-    public BudgetService(BudgetEstimateRepository budgetEstimateRepository,
-                         PricingRuleRepository pricingRuleRepository) {
-        this.budgetEstimateRepository = budgetEstimateRepository;
-        this.pricingRuleRepository = pricingRuleRepository;
+    public BudgetService(BookingBudgetRepository bookingBudgetRepository,
+                         BudgetCategoryAllocationRepository budgetCategoryAllocationRepository,
+                         ExpenseRepository expenseRepository,
+                         BudgetAlertRepository budgetAlertRepository,
+                         BookingRepository bookingRepository,
+                         VendorContractRepository vendorContractRepository,
+                         VendorRepository vendorRepository) {
+        this.bookingBudgetRepository = bookingBudgetRepository;
+        this.budgetCategoryAllocationRepository = budgetCategoryAllocationRepository;
+        this.expenseRepository = expenseRepository;
+        this.budgetAlertRepository = budgetAlertRepository;
+        this.bookingRepository = bookingRepository;
+        this.vendorContractRepository = vendorContractRepository;
+        this.vendorRepository = vendorRepository;
     }
 
-    public void setRestTemplate(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    // Get or initialize overall budget limit
+    private BookingBudget getOrInitBudget(UUID bookingId, UUID tenantId) {
+        return bookingBudgetRepository.findByBookingIdAndTenantId(bookingId, tenantId)
+                .orElseGet(() -> {
+                    BookingBudget budget = BookingBudget.builder()
+                            .bookingId(bookingId)
+                            .totalBudgetLimit(BigDecimal.ZERO)
+                            .alertThresholdPercentage(BigDecimal.valueOf(90.00))
+                            .build();
+                    budget.setTenantId(tenantId);
+                    return bookingBudgetRepository.save(budget);
+                });
     }
 
-    @Transactional(readOnly = true)
-    public List<BudgetEstimate> getAllEstimates(UUID tenantId) {
-        return budgetEstimateRepository.findAllByTenantIdOrderByCreatedAtDesc(tenantId);
+    // ─── Limit operations ───
+    public BookingBudget updateBudgetLimit(UUID bookingId, UpdateBookingBudgetLimitDto dto, UUID tenantId) {
+        bookingRepository.findByIdAndTenantId(bookingId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found or access denied"));
+
+        BookingBudget budget = getOrInitBudget(bookingId, tenantId);
+        budget.setTotalBudgetLimit(dto.getTotalBudgetLimit());
+        budget.setAlertThresholdPercentage(dto.getAlertThresholdPercentage());
+        BookingBudget saved = bookingBudgetRepository.save(budget);
+
+        recalculateAndCheckAlerts(bookingId, tenantId);
+        return saved;
     }
 
-    @Transactional(readOnly = true)
-    public BudgetEstimate getEstimateById(UUID id, UUID tenantId) {
-        return budgetEstimateRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Budget estimate not found or access denied"));
+    // ─── Allocations operations ───
+    public List<BudgetCategoryAllocation> getAllocations(UUID bookingId, UUID tenantId) {
+        bookingRepository.findByIdAndTenantId(bookingId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found or access denied"));
+        return budgetCategoryAllocationRepository.findAllByBookingIdAndTenantId(bookingId, tenantId);
     }
 
-    public void deleteEstimate(UUID id, UUID tenantId) {
-        BudgetEstimate estimate = getEstimateById(id, tenantId);
-        budgetEstimateRepository.delete(estimate);
+    public BudgetCategoryAllocation saveCategoryAllocation(UUID bookingId, BudgetCategoryAllocationDto dto, UUID tenantId) {
+        bookingRepository.findByIdAndTenantId(bookingId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found or access denied"));
+
+        BudgetCategoryAllocation allocation = budgetCategoryAllocationRepository
+                .findByBookingIdAndCategoryAndTenantId(bookingId, dto.getCategory(), tenantId)
+                .orElseGet(() -> {
+                    BudgetCategoryAllocation newAlloc = BudgetCategoryAllocation.builder()
+                            .bookingId(bookingId)
+                            .category(dto.getCategory())
+                            .build();
+                    newAlloc.setTenantId(tenantId);
+                    return newAlloc;
+                });
+
+        allocation.setEstimatedCost(dto.getEstimatedCost());
+        BudgetCategoryAllocation saved = budgetCategoryAllocationRepository.save(allocation);
+
+        recalculateAndCheckAlerts(bookingId, tenantId);
+        return saved;
     }
 
-    public BudgetEstimate calculateEstimate(CreateBudgetEstimateDto dto) {
-        // Fallback for non-tenant legacy calculations (e.g. basic tests)
-        UUID defaultTenant = UUID.fromString("00000000-0000-0000-0000-000000000000");
-        return calculateEstimate(dto, defaultTenant);
+    // ─── Expense Operations ───
+    public List<Expense> getExpenses(UUID bookingId, UUID tenantId) {
+        bookingRepository.findByIdAndTenantId(bookingId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found or access denied"));
+        return expenseRepository.findAllByBookingIdAndTenantIdOrderByExpenseDateDesc(bookingId, tenantId);
     }
 
-    public BudgetEstimate calculateEstimate(CreateBudgetEstimateDto dto, UUID tenantId) {
-        ensurePricingRulesSeeded(tenantId);
+    public Expense createExpense(UUID bookingId, CreateExpenseDto dto, UUID tenantId) {
+        bookingRepository.findByIdAndTenantId(bookingId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found or access denied"));
 
-        // 1. Catering calculation
-        BigDecimal plateCost = getPricingValue(tenantId, "EVENT_TYPE", dto.getEventType(), getPlateCostFallback(dto.getEventType()));
-        BigDecimal cateringTotal = plateCost.multiply(BigDecimal.valueOf(dto.getGuestCount()));
+        LocalDateTime date = dto.getExpenseDate() != null ? dto.getExpenseDate() : LocalDateTime.now();
 
-        // 2. Venue calculation
-        BigDecimal venueTotal = getPricingValue(tenantId, "VENUE_TYPE", dto.getVenueType(), getVenueCostFallback(dto.getVenueType()));
+        Expense expense = Expense.builder()
+                .bookingId(bookingId)
+                .category(dto.getCategory())
+                .description(dto.getDescription())
+                .amount(dto.getAmount())
+                .expenseDate(date)
+                .vendorContractId(dto.getVendorContractId())
+                .paymentMethod(dto.getPaymentMethod())
+                .status(dto.getStatus() != null ? dto.getStatus().toUpperCase() : "PAID")
+                .build();
+        expense.setTenantId(tenantId);
 
-        // 3. Decor calculation
-        BigDecimal decorTotal = getPricingValue(tenantId, "DECOR_STYLE", dto.getDecorStyle(), getDecorCostFallback(dto.getDecorStyle()));
+        Expense saved = expenseRepository.save(expense);
+        recalculateAndCheckAlerts(bookingId, tenantId);
+        return saved;
+    }
 
-        // 4. Special Effects calculation
-        BigDecimal effectsTotal = BigDecimal.ZERO;
-        StringBuilder effectsJoined = new StringBuilder();
+    public void deleteExpense(UUID expenseId, UUID tenantId) {
+        Expense expense = expenseRepository.findByIdAndTenantId(expenseId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expense not found or access denied"));
+        expenseRepository.delete(expense);
+        recalculateAndCheckAlerts(expense.getBookingId(), tenantId);
+    }
 
-        if (dto.getEffectsList() != null) {
-            for (String effect : dto.getEffectsList()) {
-                BigDecimal fee = getPricingValue(tenantId, "ADD_ON", effect, getEffectFeeFallback(effect));
-                effectsTotal = effectsTotal.add(fee);
-                
-                if (effectsJoined.length() > 0) {
-                    effectsJoined.append(",");
-                }
-                effectsJoined.append(effect);
+    // ─── Alerts operations ───
+    public List<BudgetAlert> getActiveAlerts(UUID bookingId, UUID tenantId) {
+        bookingRepository.findByIdAndTenantId(bookingId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found or access denied"));
+        return budgetAlertRepository.findAllByBookingIdAndTenantIdAndResolvedFalse(bookingId, tenantId);
+    }
+
+    public BudgetAlert resolveAlert(UUID alertId, UUID tenantId) {
+        BudgetAlert alert = budgetAlertRepository.findByIdAndTenantId(alertId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Alert not found or access denied"));
+        alert.setResolved(true);
+        return budgetAlertRepository.save(alert);
+    }
+
+    // ─── Reports and calculations ───
+    public BudgetSummaryReportDto getBudgetReport(UUID bookingId, UUID tenantId) {
+        Booking booking = bookingRepository.findByIdAndTenantId(bookingId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found or access denied"));
+
+        BookingBudget budget = getOrInitBudget(bookingId, tenantId);
+        List<BudgetCategoryAllocation> allocations = budgetCategoryAllocationRepository.findAllByBookingIdAndTenantId(bookingId, tenantId);
+        List<VendorContract> contracts = vendorContractRepository.findAllByBookingIdAndTenantId(bookingId, tenantId);
+        List<Expense> expenses = expenseRepository.findAllByBookingIdAndTenantIdOrderByExpenseDateDesc(bookingId, tenantId);
+
+        // Preload vendors to map contract category
+        Map<UUID, Vendor> vendorMap = vendorRepository.findAllByTenantId(tenantId).stream()
+                .collect(Collectors.toMap(Vendor::getId, v -> v, (v1, v2) -> v1));
+
+        Map<BudgetCategory, List<VendorContract>> contractsByCategory = new EnumMap<>(BudgetCategory.class);
+        for (VendorContract contract : contracts) {
+            if ("CANCELLED".equals(contract.getStatus())) {
+                continue;
             }
+            Vendor vendor = vendorMap.get(contract.getVendorId());
+            BudgetCategory cat = mapVendorCategoryToBudget(vendor != null ? vendor.getServiceType() : null);
+            contractsByCategory.computeIfAbsent(cat, k -> new ArrayList<>()).add(contract);
         }
 
-        BigDecimal grandTotal = cateringTotal.add(venueTotal).add(decorTotal).add(effectsTotal);
+        Map<BudgetCategory, List<Expense>> expensesByCategory = expenses.stream()
+                .collect(Collectors.groupingBy(Expense::getCategory));
 
-        return BudgetEstimate.builder()
-                .tenantId(tenantId)
-                .eventName(dto.getEventName())
-                .eventType(dto.getEventType())
-                .guestCount(dto.getGuestCount())
-                .decorStyle(dto.getDecorStyle())
-                .venueType(dto.getVenueType())
-                .effectsList(effectsJoined.toString())
-                .cateringTotal(cateringTotal)
-                .decorTotal(decorTotal)
-                .venueTotal(venueTotal)
-                .effectsTotal(effectsTotal)
-                .grandTotal(grandTotal)
-                .clientName(dto.getClientName())
-                .clientEmail(dto.getClientEmail())
-                .clientPhone(dto.getClientPhone())
+        Map<BudgetCategory, BudgetCategoryAllocation> allocationsByCategory = allocations.stream()
+                .collect(Collectors.toMap(BudgetCategoryAllocation::getCategory, a -> a, (a1, a2) -> a1));
+
+        List<BudgetSummaryReportDto.CategoryBreakdown> breakdowns = new ArrayList<>();
+        BigDecimal totalEstimatedCost = BigDecimal.ZERO;
+        BigDecimal totalActualCost = BigDecimal.ZERO;
+
+        for (BudgetCategory cat : BudgetCategory.values()) {
+            BudgetCategoryAllocation alloc = allocationsByCategory.get(cat);
+            BigDecimal allocationLimit = alloc != null ? alloc.getEstimatedCost() : BigDecimal.ZERO;
+
+            List<VendorContract> catContracts = contractsByCategory.getOrDefault(cat, Collections.emptyList());
+            BigDecimal contractEstimatedCost = BigDecimal.ZERO;
+            BigDecimal contractActualCost = BigDecimal.ZERO;
+            BigDecimal contractPayouts = BigDecimal.ZERO;
+
+            for (VendorContract contract : catContracts) {
+                contractEstimatedCost = contractEstimatedCost.add(contract.getTotalCost() != null ? contract.getTotalCost() : BigDecimal.ZERO);
+                contractActualCost = contractActualCost.add(contract.getActualCost() != null ? contract.getActualCost() : BigDecimal.ZERO);
+                contractPayouts = contractPayouts.add(contract.getPaidAmount() != null ? contract.getPaidAmount() : BigDecimal.ZERO);
+            }
+
+            List<Expense> catExpenses = expensesByCategory.getOrDefault(cat, Collections.emptyList());
+            BigDecimal directExpensesCost = BigDecimal.ZERO;
+            BigDecimal directExpensesPaid = BigDecimal.ZERO;
+
+            for (Expense exp : catExpenses) {
+                if (exp.getVendorContractId() == null) {
+                    directExpensesCost = directExpensesCost.add(exp.getAmount() != null ? exp.getAmount() : BigDecimal.ZERO);
+                    if ("PAID".equals(exp.getStatus())) {
+                        directExpensesPaid = directExpensesPaid.add(exp.getAmount() != null ? exp.getAmount() : BigDecimal.ZERO);
+                    }
+                }
+            }
+
+            BigDecimal catEstimated = allocationLimit.compareTo(BigDecimal.ZERO) > 0 ? allocationLimit : contractEstimatedCost;
+            BigDecimal catActual = contractActualCost.add(directExpensesCost);
+            BigDecimal catRemaining = catEstimated.subtract(catActual);
+            BigDecimal catPayoutsTotal = contractPayouts.add(directExpensesPaid);
+
+            breakdowns.add(BudgetSummaryReportDto.CategoryBreakdown.builder()
+                    .category(cat)
+                    .allocationLimit(allocationLimit)
+                    .contractEstimatedCost(contractEstimatedCost)
+                    .contractActualCost(contractActualCost)
+                    .directExpensesCost(directExpensesCost)
+                    .totalEstimatedCost(catEstimated)
+                    .totalActualCost(catActual)
+                    .remainingBudget(catRemaining)
+                    .vendorPayouts(catPayoutsTotal)
+                    .build());
+
+            totalEstimatedCost = totalEstimatedCost.add(catEstimated);
+            totalActualCost = totalActualCost.add(catActual);
+        }
+
+        BigDecimal revenue = booking.getTotalAmount() != null ? booking.getTotalAmount() : BigDecimal.ZERO;
+        BigDecimal totalBudgetLimit = budget.getTotalBudgetLimit() != null ? budget.getTotalBudgetLimit() : BigDecimal.ZERO;
+        BigDecimal remainingBudget = totalBudgetLimit.compareTo(BigDecimal.ZERO) > 0
+                ? totalBudgetLimit.subtract(totalActualCost)
+                : totalEstimatedCost.subtract(totalActualCost);
+
+        BigDecimal profitMargin = revenue.subtract(totalActualCost);
+        BigDecimal profitMarginPercentage = BigDecimal.ZERO;
+        if (revenue.compareTo(BigDecimal.ZERO) > 0) {
+            profitMarginPercentage = profitMargin.divide(revenue, 4, java.math.RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+        }
+
+        List<BudgetAlert> activeAlerts = budgetAlertRepository.findAllByBookingIdAndTenantIdAndResolvedFalse(bookingId, tenantId);
+
+        return BudgetSummaryReportDto.builder()
+                .revenue(revenue)
+                .totalBudgetLimit(totalBudgetLimit)
+                .alertThresholdPercentage(budget.getAlertThresholdPercentage())
+                .totalEstimatedCost(totalEstimatedCost)
+                .totalActualCost(totalActualCost)
+                .totalRemainingBudget(remainingBudget)
+                .profitMargin(profitMargin)
+                .profitMarginPercentage(profitMarginPercentage)
+                .categoryBreakdowns(breakdowns)
+                .activeAlerts(activeAlerts)
                 .build();
     }
 
-    public BudgetEstimate saveEstimate(CreateBudgetEstimateDto dto, UUID tenantId) {
-        BudgetEstimate estimate = calculateEstimate(dto, tenantId);
-        return budgetEstimateRepository.save(estimate);
-    }
+    public void recalculateAndCheckAlerts(UUID bookingId, UUID tenantId) {
+        BookingBudget budget = getOrInitBudget(bookingId, tenantId);
 
-    // --- Pricing Rules CRUD ---
+        BudgetSummaryReportDto report = getBudgetReport(bookingId, tenantId);
 
-    @Transactional(readOnly = true)
-    public List<PricingRule> getPricingRules(UUID tenantId) {
-        ensurePricingRulesSeeded(tenantId);
-        return pricingRuleRepository.findAllByTenantId(tenantId);
-    }
+        BigDecimal totalActual = report.getTotalActualCost();
+        BigDecimal limit = budget.getTotalBudgetLimit();
+        BigDecimal threshold = budget.getAlertThresholdPercentage();
 
-    public PricingRule savePricingRule(PricingRule rule, UUID tenantId) {
-        rule.setTenantId(tenantId);
-        return pricingRuleRepository.save(rule);
-    }
-
-    public void deletePricingRule(UUID id, UUID tenantId) {
-        PricingRule rule = pricingRuleRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Pricing rule not found"));
-        pricingRuleRepository.delete(rule);
-    }
-
-    // --- CRM Integration Hook Endpoints ---
-
-    public Map<?, ?> convertToLead(UUID estimateId, UUID tenantId, String authHeader) {
-        BudgetEstimate estimate = getEstimateById(estimateId, tenantId);
-
-        Map<String, Object> leadDto = new HashMap<>();
-        leadDto.put("name", (estimate.getClientName() != null && !estimate.getClientName().isEmpty()) ? estimate.getClientName() : estimate.getEventName());
-        leadDto.put("phone", estimate.getClientPhone());
-        leadDto.put("email", estimate.getClientEmail());
-        leadDto.put("eventType", estimate.getEventType());
-        leadDto.put("budget", estimate.getGrandTotal());
-        leadDto.put("leadSource", "Budget Calculator");
-        leadDto.put("notes", String.format(
-            "Auto-converted from Budget Estimate. Details: Guest Count=%d, Venue Type=%s, Decor Style=%s, Effects=%s",
-            estimate.getGuestCount(), estimate.getVenueType(), estimate.getDecorStyle(), estimate.getEffectsList()
-        ));
-
-        try {
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            if (authHeader != null) {
-                headers.set("Authorization", authHeader);
+        // 1. Overall Limit Alert checks
+        if (limit != null && limit.compareTo(BigDecimal.ZERO) > 0) {
+            if (totalActual.compareTo(limit) > 0) {
+                triggerAlert(bookingId, null, AlertType.OVERALL_LIMIT_EXCEEDED,
+                        String.format("Overall actual cost ($%s) has exceeded the budget limit ($%s)", totalActual, limit), tenantId);
+                resolveAlert(bookingId, null, AlertType.OVERALL_THRESHOLD_REACHED, tenantId);
+            } else {
+                BigDecimal thresholdLimit = limit.multiply(threshold).divide(BigDecimal.valueOf(100), 4, java.math.RoundingMode.HALF_UP);
+                if (totalActual.compareTo(thresholdLimit) > 0) {
+                    triggerAlert(bookingId, null, AlertType.OVERALL_THRESHOLD_REACHED,
+                            String.format("Overall actual cost ($%s) has exceeded the threshold of %s%% of the budget limit ($%s)", totalActual, threshold, limit), tenantId);
+                    resolveAlert(bookingId, null, AlertType.OVERALL_LIMIT_EXCEEDED, tenantId);
+                } else {
+                    resolveAlert(bookingId, null, AlertType.OVERALL_LIMIT_EXCEEDED, tenantId);
+                    resolveAlert(bookingId, null, AlertType.OVERALL_THRESHOLD_REACHED, tenantId);
+                }
             }
-            headers.set("X-Tenant-ID", tenantId.toString());
-            org.springframework.http.HttpEntity<Map<String, Object>> entity = new org.springframework.http.HttpEntity<>(leadDto, headers);
+        } else {
+            resolveAlert(bookingId, null, AlertType.OVERALL_LIMIT_EXCEEDED, tenantId);
+            resolveAlert(bookingId, null, AlertType.OVERALL_THRESHOLD_REACHED, tenantId);
+        }
 
-            org.springframework.http.ResponseEntity<Map> response = restTemplate.exchange(
-                    "http://localhost:8082/api/v1/crm/leads",
-                    org.springframework.http.HttpMethod.POST,
-                    entity,
-                    Map.class);
+        // 2. Category Limit Alert checks
+        for (BudgetSummaryReportDto.CategoryBreakdown breakdown : report.getCategoryBreakdowns()) {
+            BigDecimal catActual = breakdown.getTotalActualCost();
+            BigDecimal catLimit = breakdown.getAllocationLimit();
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return (Map<?, ?>) response.getBody().get("data");
+            if (catLimit.compareTo(BigDecimal.ZERO) > 0 && catActual.compareTo(catLimit) > 0) {
+                triggerAlert(bookingId, breakdown.getCategory(), AlertType.CATEGORY_LIMIT_EXCEEDED,
+                        String.format("Actual cost for category %s ($%s) has exceeded the allocation limit ($%s)", breakdown.getCategory(), catActual, catLimit), tenantId);
+            } else {
+                resolveAlert(bookingId, breakdown.getCategory(), AlertType.CATEGORY_LIMIT_EXCEEDED, tenantId);
             }
-        } catch (Exception e) {
-            log.error("Failed to convert budget estimate to Lead: {}", e.getMessage());
-            throw new IllegalArgumentException("CRM Lead generation failed: " + e.getMessage());
-        }
-        throw new IllegalStateException("Invalid response from CRM lead service");
-    }
-
-    public Map<?, ?> generateQuoteFromEstimate(UUID estimateId, UUID tenantId, String authHeader) {
-        BudgetEstimate estimate = getEstimateById(estimateId, tenantId);
-
-        // 1. Establish/convert to lead first to get a valid leadId
-        Map<?, ?> leadData = convertToLead(estimateId, tenantId, authHeader);
-        String leadIdStr = (String) leadData.get("id");
-        UUID leadId = UUID.fromString(leadIdStr);
-
-        // 2. Map items
-        List<Map<String, Object>> items = new ArrayList<>();
-
-        // Catering line item
-        Map<String, Object> cateringItem = new HashMap<>();
-        cateringItem.put("itemName", "Catering Service (" + estimate.getEventType() + ")");
-        cateringItem.put("description", "Per-plate catering fee for " + estimate.getGuestCount() + " guests.");
-        cateringItem.put("unitPrice", estimate.getCateringTotal().divide(BigDecimal.valueOf(estimate.getGuestCount()), 2, java.math.RoundingMode.HALF_UP));
-        cateringItem.put("quantity", estimate.getGuestCount());
-        items.add(cateringItem);
-
-        // Venue line item
-        if (estimate.getVenueTotal() != null && estimate.getVenueTotal().compareTo(BigDecimal.ZERO) > 0) {
-            Map<String, Object> venueItem = new HashMap<>();
-            venueItem.put("itemName", "Venue Rental (" + estimate.getVenueType() + ")");
-            venueItem.put("description", "Venue lease flat rate pricing.");
-            venueItem.put("unitPrice", estimate.getVenueTotal());
-            venueItem.put("quantity", 1);
-            items.add(venueItem);
-        }
-
-        // Decor line item
-        if (estimate.getDecorTotal() != null && estimate.getDecorTotal().compareTo(BigDecimal.ZERO) > 0) {
-            Map<String, Object> decorItem = new HashMap<>();
-            decorItem.put("itemName", "Decoration Package (" + estimate.getDecorStyle() + ")");
-            decorItem.put("description", "Full themed layout installation.");
-            decorItem.put("unitPrice", estimate.getDecorTotal());
-            decorItem.put("quantity", 1);
-            items.add(decorItem);
-        }
-
-        // Add-ons/Effects item
-        if (estimate.getEffectsTotal() != null && estimate.getEffectsTotal().compareTo(BigDecimal.ZERO) > 0) {
-            Map<String, Object> effectsItem = new HashMap<>();
-            effectsItem.put("itemName", "Effects & Add-ons Packages");
-            effectsItem.put("description", "Integrated setup: " + estimate.getEffectsList());
-            effectsItem.put("unitPrice", estimate.getEffectsTotal());
-            effectsItem.put("quantity", 1);
-            items.add(effectsItem);
-        }
-
-        Map<String, Object> quoteDto = new HashMap<>();
-        quoteDto.put("leadId", leadId);
-        quoteDto.put("templateName", "MINIMALIST");
-        quoteDto.put("discount", BigDecimal.ZERO);
-        quoteDto.put("taxRate", BigDecimal.valueOf(18.00)); // 18% standard GST tax
-        quoteDto.put("clientNotes", "Generated automatically from online Budget Estimate tool.");
-        quoteDto.put("termsConditions", "Standard EventOS Terms and Conditions apply.");
-        quoteDto.put("items", items);
-
-        try {
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            if (authHeader != null) {
-                headers.set("Authorization", authHeader);
-            }
-            headers.set("X-Tenant-ID", tenantId.toString());
-            org.springframework.http.HttpEntity<Map<String, Object>> entity = new org.springframework.http.HttpEntity<>(quoteDto, headers);
-
-            org.springframework.http.ResponseEntity<Map> response = restTemplate.exchange(
-                    "http://localhost:8082/api/v1/crm/quotes",
-                    org.springframework.http.HttpMethod.POST,
-                    entity,
-                    Map.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return (Map<?, ?>) response.getBody().get("data");
-            }
-        } catch (Exception e) {
-            log.error("Failed to generate Quote from estimate: {}", e.getMessage());
-            throw new IllegalArgumentException("CRM Quote generation failed: " + e.getMessage());
-        }
-        throw new IllegalStateException("Invalid response from CRM quote service");
-    }
-
-    // --- Internal Helpers & Pricing engine logic ---
-
-    private BigDecimal getPricingValue(UUID tenantId, String category, String ruleKey, BigDecimal defaultValue) {
-        if (pricingRuleRepository == null || ruleKey == null) {
-            return defaultValue;
-        }
-        try {
-            return pricingRuleRepository.findByTenantIdAndCategoryAndRuleKey(tenantId, category, ruleKey.toUpperCase())
-                    .map(PricingRule::getBasePrice)
-                    .orElse(defaultValue);
-        } catch (Exception e) {
-            return defaultValue;
         }
     }
 
-    private void ensurePricingRulesSeeded(UUID tenantId) {
-        if (pricingRuleRepository == null) return;
-        try {
-            List<PricingRule> rules = pricingRuleRepository.findAllByTenantId(tenantId);
-            if (rules.isEmpty()) {
-                log.info("Auto-seeding default Pricing Rules for Tenant: {}", tenantId);
-                List<PricingRule> defaults = new ArrayList<>();
+    private void triggerAlert(UUID bookingId, BudgetCategory category, AlertType alertType, String message, UUID tenantId) {
+        BudgetAlert alert;
+        if (category == null) {
+            alert = budgetAlertRepository.findByBookingIdAndCategoryIsNullAndAlertTypeAndTenantId(bookingId, alertType, tenantId)
+                    .orElse(null);
+        } else {
+            alert = budgetAlertRepository.findByBookingIdAndCategoryAndAlertTypeAndTenantId(bookingId, category, alertType, tenantId)
+                    .orElse(null);
+        }
 
-                // Event Types (Per plate)
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("EVENT_TYPE").ruleKey("WEDDING").basePrice(BigDecimal.valueOf(1200)).priceType("PER_GUEST").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("EVENT_TYPE").ruleKey("CORPORATE").basePrice(BigDecimal.valueOf(850)).priceType("PER_GUEST").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("EVENT_TYPE").ruleKey("ENGAGEMENT").basePrice(BigDecimal.valueOf(900)).priceType("PER_GUEST").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("EVENT_TYPE").ruleKey("BIRTHDAY").basePrice(BigDecimal.valueOf(500)).priceType("PER_GUEST").build());
+        if (alert == null) {
+            alert = BudgetAlert.builder()
+                    .bookingId(bookingId)
+                    .category(category)
+                    .alertType(alertType)
+                    .message(message)
+                    .resolved(false)
+                    .build();
+            alert.setTenantId(tenantId);
+        } else {
+            alert.setResolved(false);
+            alert.setMessage(message);
+        }
+        budgetAlertRepository.save(alert);
+    }
 
-                // Venue Types (Flat rate)
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("VENUE_TYPE").ruleKey("HOTEL").basePrice(BigDecimal.valueOf(100000)).priceType("FLAT_RATE").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("VENUE_TYPE").ruleKey("HALL").basePrice(BigDecimal.valueOf(60000)).priceType("FLAT_RATE").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("VENUE_TYPE").ruleKey("GARDEN").basePrice(BigDecimal.valueOf(80000)).priceType("FLAT_RATE").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("VENUE_TYPE").ruleKey("RESORT").basePrice(BigDecimal.valueOf(150000)).priceType("FLAT_RATE").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("VENUE_TYPE").ruleKey("BEACH").basePrice(BigDecimal.valueOf(120000)).priceType("FLAT_RATE").build());
+    private void resolveAlert(UUID bookingId, BudgetCategory category, AlertType alertType, UUID tenantId) {
+        BudgetAlert alert;
+        if (category == null) {
+            alert = budgetAlertRepository.findByBookingIdAndCategoryIsNullAndAlertTypeAndTenantId(bookingId, alertType, tenantId)
+                    .orElse(null);
+        } else {
+            alert = budgetAlertRepository.findByBookingIdAndCategoryAndAlertTypeAndTenantId(bookingId, category, alertType, tenantId)
+                    .orElse(null);
+        }
 
-                // Decor Styles (Flat rate)
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("DECOR_STYLE").ruleKey("STANDARD").basePrice(BigDecimal.valueOf(50000)).priceType("FLAT_RATE").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("DECOR_STYLE").ruleKey("PREMIUM").basePrice(BigDecimal.valueOf(150000)).priceType("FLAT_RATE").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("DECOR_STYLE").ruleKey("ROYAL").basePrice(BigDecimal.valueOf(350000)).priceType("FLAT_RATE").build());
-
-                // Special Effects (Flat rate)
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("ADD_ON").ruleKey("COLD_PYRO").basePrice(BigDecimal.valueOf(15000)).priceType("FLAT_RATE").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("ADD_ON").ruleKey("DRY_ICE").basePrice(BigDecimal.valueOf(8000)).priceType("FLAT_RATE").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("ADD_ON").ruleKey("LASER_SHOW").basePrice(BigDecimal.valueOf(25000)).priceType("FLAT_RATE").build());
-                defaults.add(PricingRule.builder().tenantId(tenantId).category("ADD_ON").ruleKey("LED_WALL").basePrice(BigDecimal.valueOf(40000)).priceType("FLAT_RATE").build());
-
-                pricingRuleRepository.saveAll(defaults);
-            }
-        } catch (Exception e) {
-            log.error("Failed to check/seed default pricing rules: {}", e.getMessage());
+        if (alert != null && !alert.isResolved()) {
+            alert.setResolved(true);
+            budgetAlertRepository.save(alert);
         }
     }
 
-    private BigDecimal getPlateCostFallback(String type) {
-        if (type == null) return BigDecimal.valueOf(600);
-        switch (type.toUpperCase()) {
-            case "WEDDING": return BigDecimal.valueOf(1200);
-            case "CORPORATE": return BigDecimal.valueOf(850);
-            case "ENGAGEMENT": return BigDecimal.valueOf(900);
-            case "BIRTHDAY": return BigDecimal.valueOf(500);
-            default: return BigDecimal.valueOf(600);
+    private BudgetCategory mapVendorCategoryToBudget(VendorCategory vendorCategory) {
+        if (vendorCategory == null) {
+            return BudgetCategory.MISCELLANEOUS;
         }
-    }
-
-    private BigDecimal getVenueCostFallback(String type) {
-        if (type == null) return BigDecimal.valueOf(60000);
-        switch (type.toUpperCase()) {
-            case "HOTEL": return BigDecimal.valueOf(100000);
-            case "HALL": return BigDecimal.valueOf(60000);
-            case "GARDEN": return BigDecimal.valueOf(80000);
-            case "RESORT": return BigDecimal.valueOf(150000);
-            case "BEACH": return BigDecimal.valueOf(120000);
-            default: return BigDecimal.valueOf(60000);
-        }
-    }
-
-    private BigDecimal getDecorCostFallback(String style) {
-        if (style == null) return BigDecimal.valueOf(50000);
-        switch (style.toUpperCase()) {
-            case "STANDARD": return BigDecimal.valueOf(50000);
-            case "PREMIUM": return BigDecimal.valueOf(150000);
-            case "ROYAL": return BigDecimal.valueOf(350000);
-            default: return BigDecimal.valueOf(50000);
-        }
-    }
-
-    private BigDecimal getEffectFeeFallback(String effect) {
-        if (effect == null) return BigDecimal.ZERO;
-        switch (effect.toUpperCase()) {
-            case "COLD_PYRO": return BigDecimal.valueOf(15000);
-            case "DRY_ICE": return BigDecimal.valueOf(8000);
-            case "LASER_SHOW": return BigDecimal.valueOf(25000);
-            case "LED_WALL": return BigDecimal.valueOf(40000);
-            default: return BigDecimal.ZERO;
+        switch (vendorCategory) {
+            case VENUE:
+                return BudgetCategory.VENUE;
+            case CATERING:
+                return BudgetCategory.CATERING;
+            case PHOTOGRAPHY:
+                return BudgetCategory.PHOTOGRAPHY;
+            case DECORATION:
+                return BudgetCategory.DECORATION;
+            case TRANSPORT:
+                return BudgetCategory.TRANSPORT;
+            default:
+                return BudgetCategory.MISCELLANEOUS;
         }
     }
 }

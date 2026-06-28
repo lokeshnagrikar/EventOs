@@ -16,8 +16,9 @@ public class ShareLinkResponseDto {
     private UUID id;
     private UUID albumId;
     private String token;
-    private LocalDateTime expiresAt;
+    private java.time.Instant expiresAt;
     private boolean passwordProtected;
     private LocalDateTime createdAt;
     private boolean expired;
+    private boolean allowDownload;
 }

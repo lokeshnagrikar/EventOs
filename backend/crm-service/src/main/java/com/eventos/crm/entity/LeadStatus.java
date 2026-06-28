@@ -2,10 +2,9 @@ package com.eventos.crm.entity;
 
 public enum LeadStatus {
     NEW,
-    CONTACTED,
-    QUOTE_SENT,
+    QUALIFIED,
+    PROPOSAL_SENT,
     NEGOTIATION,
-    BOOKED,
-    COMPLETED,
+    WON,
     LOST
 }

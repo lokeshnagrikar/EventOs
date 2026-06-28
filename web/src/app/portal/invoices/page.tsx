@@ -20,6 +20,7 @@ interface Invoice {
   billingAddress?: string;
   notes?: string;
   createdAt: string;
+  bookingId: string;
 }
 
 interface Payment {
@@ -27,13 +28,63 @@ interface Payment {
   amount: number;
   paymentMethod: string;
   transactionReference?: string;
-  status: "PENDING" | "SUCCESSFUL" | "FAILED";
+  status: "PENDING" | "PENDING_VERIFICATION" | "COMPLETED" | "REFUNDED" | "FAILED";
   paymentDate: string;
   notes?: string;
 }
 
 export default function PortalInvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
+  // Escape key listener
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedInvoice(null);
+      }
+    };
+    if (selectedInvoice) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedInvoice]);
+
+  // Focus trap listener
+  React.useEffect(() => {
+    if (selectedInvoice && modalRef.current) {
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements.length > 0) {
+        (focusableElements[0] as HTMLElement).focus();
+      }
+
+      const handleTab = (e: KeyboardEvent) => {
+        if (e.key !== "Tab") return;
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      };
+
+      window.addEventListener("keydown", handleTab);
+      return () => window.removeEventListener("keydown", handleTab);
+    }
+  }, [selectedInvoice]);
+
+  // Payment is handled offline — clients cannot directly post payment records.
+  // Contact coordinator to process payment confirmation.
 
   // 1. Fetch Invoices
   const { data: invoicesResponse, isLoading: loadingInvoices } = useQuery<{ data: Invoice[] }>({
@@ -171,8 +222,10 @@ export default function PortalInvoicesPage() {
                     </p>
                   </div>
                   <span className={`text-[8px] px-1.5 py-0.5 rounded font-extrabold uppercase border ${
-                    payment.status === "SUCCESSFUL"
+                    payment.status === "COMPLETED"
                       ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : payment.status === "PENDING_VERIFICATION"
+                      ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
                       : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                   }`}>
                     {payment.status}
@@ -189,6 +242,10 @@ export default function PortalInvoicesPage() {
         {selectedInvoice && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <motion.div
+              ref={modalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -196,7 +253,7 @@ export default function PortalInvoicesPage() {
             >
               {/* Header */}
               <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4">
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <h2 id="modal-title" className="text-base font-bold text-white flex items-center gap-2">
                   <FileSpreadsheet className="text-purple-500" size={16} />
                   Invoice Details: {selectedInvoice.invoiceNumber}
                 </h2>
@@ -268,6 +325,26 @@ export default function PortalInvoicesPage() {
                     {selectedInvoice.status}
                   </span>
                 </div>
+
+                {selectedInvoice.status !== "PAID" && selectedInvoice.status !== "CANCELLED" && (
+                  <div className="mt-4 pt-4 border-t border-zinc-800">
+                    <div className="w-full p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0 mt-0.5">
+                        <DollarSign size={15} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-blue-300">Ready to Pay?</p>
+                        <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">
+                          Share your UPI transaction reference or bank transfer receipt with your event coordinator to confirm payment.
+                          Payments are verified and confirmed by your team.
+                        </p>
+                        <p className="text-[10px] text-zinc-500 mt-2 font-mono">
+                          Invoice: <span className="text-zinc-300 font-bold">{selectedInvoice.invoiceNumber}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

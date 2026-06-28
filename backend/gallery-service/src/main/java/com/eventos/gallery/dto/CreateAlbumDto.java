@@ -16,4 +16,10 @@ public class CreateAlbumDto {
     private String description;
 
     private UUID eventId;
+
+    private String coverImage;
+
+    private com.eventos.gallery.entity.AlbumStatus status;
+
+    private com.eventos.gallery.entity.AlbumVisibility visibility;
 }

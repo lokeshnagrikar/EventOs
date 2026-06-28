@@ -1,0 +1,62 @@
+# EventOS Helm Configuration Values
+
+environment: production # staging / production
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/lokeshnagrikar/eventos
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+ingress:
+  enabled: true
+  host: eventos.local
+  tls:
+    enabled: true
+    secretName: eventos-tls-cert
+
+postgres:
+  storageSize: 10Gi
+  cpuLimit: "500m"
+  memoryLimit: "512Mi"
+  cpuRequest: "250m"
+  memoryRequest: "256Mi"
+
+redis:
+  cpuLimit: "250m"
+  memoryLimit: "128Mi"
+  cpuRequest: "100m"
+  memoryRequest: "64Mi"
+
+rabbitmq:
+  cpuLimit: "500m"
+  memoryLimit: "512Mi"
+  cpuRequest: "250m"
+  memoryRequest: "256Mi"
+
+services:
+  auth:
+    port: 8081
+    cpuLimit: "500m"
+    memoryLimit: "512Mi"
+  crm:
+    port: 8082
+    cpuLimit: "500m"
+    memoryLimit: "512Mi"
+  event:
+    port: 8083
+    cpuLimit: "500m"
+    memoryLimit: "512Mi"
+  gallery:
+    port: 8084
+    cpuLimit: "500m"
+    memoryLimit: "512Mi"
+  gateway:
+    port: 8080
+    cpuLimit: "500m"
+    memoryLimit: "512Mi"
+  web:
+    port: 3000
+    cpuLimit: "500m"
+    memoryLimit: "512Mi"

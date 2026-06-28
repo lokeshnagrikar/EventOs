@@ -44,4 +44,15 @@ public class CreateInvoiceDto {
     private String billingAddress;
 
     private String notes;
+
+    @jakarta.validation.constraints.DecimalMin(value = "0.00", message = "Tax rate cannot be negative")
+    private BigDecimal taxRate;
+
+    @jakarta.validation.constraints.AssertTrue(message = "Discount cannot exceed subtotal plus tax")
+    public boolean isDiscountValid() {
+        if (subtotal == null || tax == null || discount == null) {
+            return true;
+        }
+        return discount.compareTo(subtotal.add(tax)) <= 0;
+    }
 }

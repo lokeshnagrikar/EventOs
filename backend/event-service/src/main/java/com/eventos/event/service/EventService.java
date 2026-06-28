@@ -3,13 +3,14 @@ package com.eventos.event.service;
 import com.eventos.event.config.UserPrincipal;
 import com.eventos.event.dto.AssignTeamMemberDto;
 import com.eventos.event.dto.CreateEventDto;
+import com.eventos.event.dto.PatchEventDto;
 import com.eventos.event.dto.CreateTimelineItemDto;
-import com.eventos.event.dto.CreateEventTaskDto;
+import com.eventos.event.dto.CreateTimelineTaskDto;
 import com.eventos.event.entity.*;
 import com.eventos.event.repository.EventAssignmentRepository;
 import com.eventos.event.repository.EventRepository;
 import com.eventos.event.repository.EventTimelineItemRepository;
-import com.eventos.event.repository.EventTaskRepository;
+import com.eventos.event.repository.TimelineTaskRepository;
 import com.eventos.event.repository.BookingRepository;
 import com.eventos.event.repository.InvoiceRepository;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@SuppressWarnings("null")
 public class EventService {
 
     private static final Logger log = LoggerFactory.getLogger(EventService.class);
@@ -46,24 +48,23 @@ public class EventService {
     private static final Map<EventStatus, Set<EventStatus>> VALID_TRANSITIONS = new EnumMap<>(EventStatus.class);
 
     static {
-        VALID_TRANSITIONS.put(EventStatus.DRAFT,       EnumSet.of(EventStatus.PLANNED, EventStatus.CANCELLED));
-        VALID_TRANSITIONS.put(EventStatus.PLANNED,     EnumSet.of(EventStatus.CONFIRMED, EventStatus.CANCELLED));
+        VALID_TRANSITIONS.put(EventStatus.PLANNING,    EnumSet.of(EventStatus.CONFIRMED, EventStatus.CANCELLED));
         VALID_TRANSITIONS.put(EventStatus.CONFIRMED,   EnumSet.of(EventStatus.IN_PROGRESS, EventStatus.CANCELLED));
         VALID_TRANSITIONS.put(EventStatus.IN_PROGRESS, EnumSet.of(EventStatus.COMPLETED, EventStatus.CANCELLED));
         VALID_TRANSITIONS.put(EventStatus.COMPLETED,   Collections.emptySet());
         VALID_TRANSITIONS.put(EventStatus.CANCELLED,   Collections.emptySet());
-        VALID_TRANSITIONS.put(EventStatus.ARCHIVED,    Collections.emptySet());
     }
 
     private final EventRepository eventRepository;
     private final EventAssignmentRepository eventAssignmentRepository;
     private final EventTimelineItemRepository eventTimelineItemRepository;
-    private final EventTaskRepository eventTaskRepository;
+    private final TimelineTaskRepository timelineTaskRepository;
     private final BookingRepository bookingRepository;
     private final InvoiceRepository invoiceRepository;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
+    private final org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
 
     @Value("${service.auth.base-url:http://localhost:8081/api/v1}")
     private String authServiceBaseUrl;
@@ -71,19 +72,21 @@ public class EventService {
     public EventService(EventRepository eventRepository,
                         EventAssignmentRepository eventAssignmentRepository,
                         EventTimelineItemRepository eventTimelineItemRepository,
-                        EventTaskRepository eventTaskRepository,
+                        TimelineTaskRepository timelineTaskRepository,
                         BookingRepository bookingRepository,
                         InvoiceRepository invoiceRepository,
                         StringRedisTemplate redisTemplate,
-                        ObjectMapper objectMapper) {
+                        ObjectMapper objectMapper,
+                        org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate) {
         this.eventRepository = eventRepository;
         this.eventAssignmentRepository = eventAssignmentRepository;
         this.eventTimelineItemRepository = eventTimelineItemRepository;
-        this.eventTaskRepository = eventTaskRepository;
+        this.timelineTaskRepository = timelineTaskRepository;
         this.bookingRepository = bookingRepository;
         this.invoiceRepository = invoiceRepository;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
+        this.rabbitTemplate = rabbitTemplate;
         this.restTemplate = new RestTemplate();
     }
 
@@ -116,6 +119,7 @@ public class EventService {
                                     EventStatus status, EventType type,
                                     LocalDateTime startDate, LocalDateTime endDate,
                                     Pageable pageable) {
+        Page<Event> page;
         // STAFF: restrict to events they are assigned to
         if (hasRole("STAFF") && !isAdminOrOwner()) {
             List<UUID> assignedEventIds = eventAssignmentRepository
@@ -126,26 +130,32 @@ public class EventService {
                     .collect(Collectors.toList());
 
             if (assignedEventIds.isEmpty()) {
-                return org.springframework.data.domain.Page.empty(pageable);
+                page = org.springframework.data.domain.Page.empty(pageable);
+            } else {
+                page = eventRepository.searchEventsForStaff(tenantId, status, type, startDate, endDate,
+                        assignedEventIds, pageable);
             }
-
-            return eventRepository.searchEventsForStaff(tenantId, status, type, startDate, endDate,
-                    assignedEventIds, pageable);
+        } else {
+            page = eventRepository.searchEvents(tenantId, status, type, startDate, endDate, pageable);
         }
-
-        return eventRepository.searchEvents(tenantId, status, type, startDate, endDate, pageable);
+        page.forEach(this::populateProgressPercentage);
+        return page;
     }
 
     @Transactional(readOnly = true)
     public List<Event> getAllEvents(UUID tenantId, EventStatus status, EventType type) {
+        List<Event> events;
         if (status != null && type != null) {
-            return eventRepository.findAllByTenantIdAndStatusAndTypeOrderByStartDateAsc(tenantId, status, type);
+            events = eventRepository.findAllByTenantIdAndStatusAndTypeOrderByStartDateAsc(tenantId, status, type);
         } else if (status != null) {
-            return eventRepository.findAllByTenantIdAndStatusOrderByStartDateAsc(tenantId, status);
+            events = eventRepository.findAllByTenantIdAndStatusOrderByStartDateAsc(tenantId, status);
         } else if (type != null) {
-            return eventRepository.findAllByTenantIdAndTypeOrderByStartDateAsc(tenantId, type);
+            events = eventRepository.findAllByTenantIdAndTypeOrderByStartDateAsc(tenantId, type);
+        } else {
+            events = eventRepository.findAllByTenantIdOrderByStartDateAsc(tenantId);
         }
-        return eventRepository.findAllByTenantIdOrderByStartDateAsc(tenantId);
+        events.forEach(this::populateProgressPercentage);
+        return events;
     }
 
     // ─── Stats (cached) ────────────────────────────────────────────────────────
@@ -221,6 +231,23 @@ public class EventService {
             }
         }
 
+        // CLIENT: verify they are linked via a booking invoice matching their email
+        if (hasRole("CLIENT")) {
+            String clientEmail = getCurrentUser().getEmail();
+            List<Booking> bookings = bookingRepository.findAllByEventIdAndTenantId(id, tenantId);
+            boolean hasAccess = false;
+            if (bookings != null && !bookings.isEmpty()) {
+                List<UUID> bookingIds = bookings.stream().map(Booking::getId).toList();
+                hasAccess = invoiceRepository.findAllByBookingIdInAndTenantIdOrderByCreatedAtDesc(bookingIds, tenantId)
+                        .stream()
+                        .anyMatch(invoice -> invoice.getClientEmail() != null && invoice.getClientEmail().equalsIgnoreCase(clientEmail));
+            }
+            if (!hasAccess) {
+                throw new AccessDeniedException("Access denied: You are not authorized to access this event");
+            }
+        }
+
+        populateProgressPercentage(event);
         return event;
     }
 
@@ -231,11 +258,37 @@ public class EventService {
             throw new IllegalArgumentException("Event end date cannot be before start date");
         }
 
+        String eventName = dto.getTitle() != null && !dto.getTitle().isEmpty() ? dto.getTitle() : dto.getName();
+
+        List<EventDay> days = new ArrayList<>();
+        if (dto.getEventDays() != null) {
+            for (com.eventos.event.dto.EventDayDto dDto : dto.getEventDays()) {
+                days.add(EventDay.builder()
+                        .dayDate(dDto.getDayDate())
+                        .title(dDto.getTitle())
+                        .description(dDto.getDescription())
+                        .tenantId(tenantId)
+                        .build());
+            }
+        }
+
+        List<EventVenue> venues = new ArrayList<>();
+        if (dto.getEventVenues() != null) {
+            for (com.eventos.event.dto.EventVenueDto vDto : dto.getEventVenues()) {
+                venues.add(EventVenue.builder()
+                        .name(vDto.getName())
+                        .address(vDto.getAddress())
+                        .notes(vDto.getNotes())
+                        .tenantId(tenantId)
+                        .build());
+            }
+        }
+
         Event event = Event.builder()
                 .tenantId(tenantId)
-                .name(dto.getName())
+                .name(eventName)
                 .type(dto.getType())
-                .status(EventStatus.DRAFT)
+                .status(EventStatus.PLANNING)
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .location(dto.getLocation())
@@ -245,9 +298,22 @@ public class EventService {
                 .guestList(dto.getGuestList())
                 .budget(dto.getBudget())
                 .notes(dto.getNotes())
+                .bookingId(dto.getBookingId())
+                .eventDays(days)
+                .eventVenues(venues)
                 .build();
 
+        populateChildTenants(event, tenantId);
         Event saved = eventRepository.save(event);
+
+        if (dto.getBookingId() != null) {
+            bookingRepository.findByIdAndTenantId(dto.getBookingId(), tenantId).ifPresent(b -> {
+                b.setEventId(saved.getId());
+                bookingRepository.save(b);
+            });
+        }
+
+        populateProgressPercentage(saved);
         evictCache(tenantId);
         return saved;
     }
@@ -259,7 +325,9 @@ public class EventService {
             throw new IllegalArgumentException("Event end date cannot be before start date");
         }
 
-        event.setName(dto.getName());
+        String eventName = dto.getTitle() != null && !dto.getTitle().isEmpty() ? dto.getTitle() : dto.getName();
+
+        event.setName(eventName);
         event.setType(dto.getType());
         event.setStartDate(dto.getStartDate());
         event.setEndDate(dto.getEndDate());
@@ -270,8 +338,47 @@ public class EventService {
         event.setGuestList(dto.getGuestList());
         event.setBudget(dto.getBudget());
         event.setNotes(dto.getNotes());
+        event.setBookingId(dto.getBookingId());
 
+        // Update days
+        event.getEventDays().clear();
+        if (dto.getEventDays() != null) {
+            for (com.eventos.event.dto.EventDayDto dDto : dto.getEventDays()) {
+                event.getEventDays().add(EventDay.builder()
+                        .eventId(event.getId())
+                        .dayDate(dDto.getDayDate())
+                        .title(dDto.getTitle())
+                        .description(dDto.getDescription())
+                        .tenantId(tenantId)
+                        .build());
+            }
+        }
+
+        // Update venues
+        event.getEventVenues().clear();
+        if (dto.getEventVenues() != null) {
+            for (com.eventos.event.dto.EventVenueDto vDto : dto.getEventVenues()) {
+                event.getEventVenues().add(EventVenue.builder()
+                        .eventId(event.getId())
+                        .name(vDto.getName())
+                        .address(vDto.getAddress())
+                        .notes(vDto.getNotes())
+                        .tenantId(tenantId)
+                        .build());
+            }
+        }
+
+        populateChildTenants(event, tenantId);
         Event saved = eventRepository.save(event);
+
+        if (dto.getBookingId() != null) {
+            bookingRepository.findByIdAndTenantId(dto.getBookingId(), tenantId).ifPresent(b -> {
+                b.setEventId(saved.getId());
+                bookingRepository.save(b);
+            });
+        }
+
+        populateProgressPercentage(saved);
         evictCache(tenantId);
         return saved;
     }
@@ -298,6 +405,7 @@ public class EventService {
             cascadeCancelBookings(id, tenantId);
         }
 
+        populateProgressPercentage(saved);
         return saved;
     }
 
@@ -342,7 +450,9 @@ public class EventService {
                 .description(dto.getDescription())
                 .scheduledTime(scheduled)
                 .completed(false)
+                .milestone(dto.getMilestone())
                 .build();
+        item.setTenantId(tenantId);
 
         return eventTimelineItemRepository.save(item);
     }
@@ -399,36 +509,91 @@ public class EventService {
     // ─── Tasks (STAFF can only toggle their own) ───────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<EventTask> getEventTasks(UUID eventId, UUID tenantId) {
+    public List<TimelineTask> getEventTasks(UUID eventId, UUID tenantId) {
         getEventById(eventId, tenantId);
-        return eventTaskRepository.findAllByEventIdOrderByDueDateAsc(eventId);
+        return timelineTaskRepository.findAllByEventIdOrderByDueDateAsc(eventId);
     }
 
-    public EventTask addEventTask(UUID eventId, CreateEventTaskDto dto, UUID tenantId, String authHeader) {
+    public TimelineTask addEventTask(UUID eventId, CreateTimelineTaskDto dto, UUID tenantId, String authHeader) {
         getEventById(eventId, tenantId);
 
         if (dto.getAssignedUserId() != null) {
             validateAssignedUser(dto.getAssignedUserId(), tenantId, authHeader);
         }
 
-        EventTask task = EventTask.builder()
+        TaskPriority priority = dto.getPriority() != null ? dto.getPriority() : TaskPriority.MEDIUM;
+        TaskStatus status = dto.getStatus() != null ? dto.getStatus() : TaskStatus.TODO;
+
+        TimelineTask task = TimelineTask.builder()
                 .eventId(eventId)
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .dueDate(dto.getDueDate())
-                .completed(false)
+                .completed(status == TaskStatus.COMPLETED)
                 .assignedUserId(dto.getAssignedUserId())
                 .assignedUserName(dto.getAssignedUserName())
+                .priority(priority)
+                .status(status)
                 .build();
+        task.setTenantId(tenantId);
 
+        TimelineTask saved = timelineTaskRepository.save(task);
         evictCache(tenantId);
-        return eventTaskRepository.save(task);
+
+        // Publish TASK_ASSIGNED notification if assigned to a user
+        if (saved.getAssignedUserId() != null) {
+            publishTaskNotification(saved, "TASK_ASSIGNED", tenantId);
+        }
+
+        return saved;
     }
 
-    public EventTask toggleEventTask(UUID eventId, UUID taskId, UUID tenantId, UUID requestingUserId) {
+    public TimelineTask updateEventTask(UUID eventId, UUID taskId, CreateTimelineTaskDto dto, UUID tenantId, String authHeader) {
         getEventById(eventId, tenantId);
 
-        EventTask task = eventTaskRepository.findById(taskId)
+        TimelineTask task = timelineTaskRepository.findById(taskId)
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+
+        if (!task.getEventId().equals(eventId)) {
+            throw new IllegalArgumentException("Task does not belong to the specified event");
+        }
+
+        if (dto.getAssignedUserId() != null && !dto.getAssignedUserId().equals(task.getAssignedUserId())) {
+            validateAssignedUser(dto.getAssignedUserId(), tenantId, authHeader);
+        }
+
+        boolean assigneeChanged = !Objects.equals(task.getAssignedUserId(), dto.getAssignedUserId());
+        TaskStatus oldStatus = task.getStatus();
+        TaskStatus newStatus = dto.getStatus() != null ? dto.getStatus() : task.getStatus();
+
+        task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
+        task.setDueDate(dto.getDueDate());
+        task.setAssignedUserId(dto.getAssignedUserId());
+        task.setAssignedUserName(dto.getAssignedUserName());
+        if (dto.getPriority() != null) {
+            task.setPriority(dto.getPriority());
+        }
+        task.setStatus(newStatus);
+
+        TimelineTask saved = timelineTaskRepository.save(task);
+        evictCache(tenantId);
+
+        // Publish notifications as needed
+        if (assigneeChanged && saved.getAssignedUserId() != null) {
+            publishTaskNotification(saved, "TASK_ASSIGNED", tenantId);
+        }
+        if (oldStatus != newStatus) {
+            publishTaskNotification(saved, "TASK_STATUS_CHANGED", tenantId);
+        }
+
+        return saved;
+    }
+
+    public TimelineTask toggleEventTask(UUID eventId, UUID taskId, UUID tenantId, UUID requestingUserId) {
+        getEventById(eventId, tenantId);
+
+        TimelineTask task = timelineTaskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getEventId().equals(eventId)) {
@@ -442,23 +607,65 @@ public class EventService {
             }
         }
 
+        TaskStatus oldStatus = task.getStatus();
         task.setCompleted(!task.isCompleted());
+        TimelineTask saved = timelineTaskRepository.save(task);
         evictCache(tenantId);
-        return eventTaskRepository.save(task);
+
+        if (oldStatus != saved.getStatus()) {
+            publishTaskNotification(saved, "TASK_STATUS_CHANGED", tenantId);
+        }
+
+        return saved;
     }
 
     public void deleteEventTask(UUID eventId, UUID taskId, UUID tenantId) {
         getEventById(eventId, tenantId);
 
-        EventTask task = eventTaskRepository.findById(taskId)
+        TimelineTask task = timelineTaskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getEventId().equals(eventId)) {
             throw new IllegalArgumentException("Task does not belong to the specified event");
         }
 
-        eventTaskRepository.delete(task);
+        timelineTaskRepository.delete(task);
         evictCache(tenantId);
+    }
+
+    public List<TimelineTask> checkOverdueTasks(UUID tenantId) {
+        List<TimelineTask> overdue = timelineTaskRepository.findAllByTenantIdAndDueDateBeforeAndCompletedFalse(tenantId, LocalDateTime.now());
+        for (TimelineTask task : overdue) {
+            publishTaskNotification(task, "TASK_OVERDUE", tenantId);
+        }
+        return overdue;
+    }
+
+    private void publishTaskNotification(TimelineTask task, String notificationType, UUID tenantId) {
+        try {
+            com.eventos.event.event.TaskNotificationEvent event = com.eventos.event.event.TaskNotificationEvent.builder()
+                    .taskId(task.getId())
+                    .eventId(task.getEventId())
+                    .tenantId(tenantId)
+                    .title(task.getTitle())
+                    .eventType(notificationType)
+                    .description(task.getDescription())
+                    .assignedUserId(task.getAssignedUserId())
+                    .dueDate(task.getDueDate())
+                    .priority(task.getPriority())
+                    .status(task.getStatus())
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+            rabbitTemplate.convertAndSend(
+                    com.eventos.event.config.MessagingConfig.EXCHANGE,
+                    com.eventos.event.config.MessagingConfig.TASK_NOTIFICATION_ROUTING_KEY,
+                    event
+            );
+            log.info("Published TaskNotificationEvent of type {} for Task ID: {}", notificationType, task.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish TaskNotificationEvent: {}", e.getMessage());
+        }
     }
 
     // ─── Client-facing ─────────────────────────────────────────────────────────
@@ -474,6 +681,7 @@ public class EventService {
             bookingRepository.findByIdAndTenantId(bookingId, tenantId).ifPresent(booking ->
                     eventRepository.findByIdAndTenantId(booking.getEventId(), tenantId).ifPresent(events::add));
         }
+        events.forEach(this::populateProgressPercentage);
         return events;
     }
 
@@ -512,11 +720,12 @@ public class EventService {
                     entity,
                     Map.class);
 
-            if (!response.getStatusCode().is2xxSuccessful() || !(response.getBody() instanceof Map)) {
+            Object responseBody = response.getBody();
+            if (!response.getStatusCode().is2xxSuccessful() || !(responseBody instanceof Map)) {
                 throw new IllegalArgumentException("Could not validate assigned user — auth-service error");
             }
 
-            Map<?, ?> body = (Map<?, ?>) response.getBody();
+            Map<?, ?> body = (Map<?, ?>) responseBody;
             List<?> teamList = (List<?>) body.get("data");
             if (teamList == null) {
                 throw new IllegalArgumentException("Could not validate assigned user — no team data returned");
@@ -540,9 +749,123 @@ public class EventService {
         }
     }
 
+    public void populateProgressPercentage(Event event) {
+        if (event == null) return;
+        long totalTasks = timelineTaskRepository.countByEventId(event.getId());
+        long completedTasks = timelineTaskRepository.countByEventIdAndCompletedTrue(event.getId());
+        long totalTimeline = eventTimelineItemRepository.countByEventId(event.getId());
+        long completedTimeline = eventTimelineItemRepository.countByEventIdAndCompletedTrue(event.getId());
+        
+        long total = totalTasks + totalTimeline;
+        long completed = completedTasks + completedTimeline;
+        
+        double percentage = total > 0 ? (completed * 100.0) / total : 0.0;
+        event.setProgressPercentage(percentage);
+    }
+
+    private void populateChildTenants(Event event, UUID tenantId) {
+        if (event.getEventDays() != null) {
+            for (EventDay day : event.getEventDays()) {
+                day.setTenantId(tenantId);
+            }
+        }
+        if (event.getEventVenues() != null) {
+            for (EventVenue venue : event.getEventVenues()) {
+                venue.setTenantId(tenantId);
+            }
+        }
+    }
+
     // ─── Visible for testing ───────────────────────────────────────────────────
 
     void setRestTemplate(RestTemplate restTemplate) {
         // no-op setter; actual instance is final — override in tests via reflection or constructor injection
+    }
+
+    public Event patchEvent(UUID id, PatchEventDto dto, UUID tenantId) {
+        Event event = getEventById(id, tenantId);
+
+        if (dto.getStartDate() != null && dto.getEndDate() != null) {
+            if (dto.getEndDate().isBefore(dto.getStartDate())) {
+                throw new IllegalArgumentException("Event end date cannot be before start date");
+            }
+        }
+
+        String eventName = dto.getTitle() != null && !dto.getTitle().isEmpty() ? dto.getTitle() : dto.getName();
+        if (eventName != null) {
+            event.setName(eventName);
+        }
+        if (dto.getType() != null) {
+            event.setType(dto.getType());
+        }
+        if (dto.getStartDate() != null) {
+            event.setStartDate(dto.getStartDate());
+        }
+        if (dto.getEndDate() != null) {
+            event.setEndDate(dto.getEndDate());
+        }
+        if (dto.getLocation() != null) {
+            event.setLocation(dto.getLocation());
+        }
+        if (dto.getVenueName() != null) {
+            event.setVenueName(dto.getVenueName());
+        }
+        if (dto.getVenueAddress() != null) {
+            event.setVenueAddress(dto.getVenueAddress());
+        }
+        if (dto.getGuestCount() != null) {
+            event.setGuestCount(dto.getGuestCount());
+        }
+        if (dto.getGuestList() != null) {
+            event.setGuestList(dto.getGuestList());
+        }
+        if (dto.getBudget() != null) {
+            event.setBudget(dto.getBudget());
+        }
+        if (dto.getNotes() != null) {
+            event.setNotes(dto.getNotes());
+        }
+        if (dto.getBookingId() != null) {
+            event.setBookingId(dto.getBookingId());
+        }
+        if (dto.getStatus() != null) {
+            event.setStatus(dto.getStatus());
+        }
+
+        if (dto.getEventDays() != null) {
+            event.getEventDays().clear();
+            for (com.eventos.event.dto.EventDayDto dDto : dto.getEventDays()) {
+                event.getEventDays().add(EventDay.builder()
+                        .eventId(event.getId())
+                        .dayDate(dDto.getDayDate())
+                        .title(dDto.getTitle())
+                        .description(dDto.getDescription())
+                        .tenantId(tenantId)
+                        .build());
+            }
+        }
+
+        if (dto.getEventVenues() != null) {
+            event.getEventVenues().clear();
+            for (com.eventos.event.dto.EventVenueDto vDto : dto.getEventVenues()) {
+                event.getEventVenues().add(EventVenue.builder()
+                        .eventId(event.getId())
+                        .name(vDto.getName())
+                        .address(vDto.getAddress())
+                        .notes(vDto.getNotes())
+                        .tenantId(tenantId)
+                        .build());
+            }
+        }
+
+        populateChildTenants(event, tenantId);
+        Event saved = eventRepository.save(event);
+        populateProgressPercentage(saved);
+        evictCache(tenantId);
+        return saved;
+    }
+
+    public List<TimelineTask> getAllTasksForTenant(UUID tenantId) {
+        return timelineTaskRepository.findAllByTenantIdOrderByDueDateAsc(tenantId);
     }
 }

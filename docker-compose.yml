@@ -16,10 +16,10 @@ services:
     networks:
       - eventos-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U eventos_admin -d eventos_root"]
+      test: ["CMD-SHELL", "psql -U ${POSTGRES_USER:-eventos_admin} -d gallery_db -c 'SELECT 1;'"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   redis:
     image: redis:7.2-alpine
@@ -55,12 +55,241 @@ services:
       timeout: 10s
       retries: 5
 
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: auth-service/Dockerfile
+    container_name: eventos-auth-service
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=auth_db
+      - POSTGRES_USER=${POSTGRES_USER:-eventos_admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:-eventos_guest_pass}
+      - SPRING_PROFILES_ACTIVE=dev
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS}
+      - JWT_REFRESH_EXPIRATION_MS=${JWT_REFRESH_EXPIRATION_MS}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./jwt_private.pem:/app/jwt_private.pem:ro
+      - ./jwt_public.pem:/app/jwt_public.pem:ro
+    networks:
+      - eventos-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8081/api/v1/auth/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+      start_period: 480s
+
+  crm-service:
+    build:
+      context: ./backend
+      dockerfile: crm-service/Dockerfile
+    container_name: eventos-crm-service
+    ports:
+      - "127.0.0.1:8082:8082"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=crm_db
+      - POSTGRES_USER=${POSTGRES_USER:-eventos_admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:-eventos_guest_pass}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SPRING_PROFILES_ACTIVE=dev
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - AUTH_SERVICE_URL=http://auth-service:8081/api/v1/auth
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - eventos-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8082/api/v1/crm/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+      start_period: 480s
+
+  event-service:
+    build:
+      context: ./backend
+      dockerfile: event-service/Dockerfile
+    container_name: eventos-event-service
+    ports:
+      - "127.0.0.1:8083:8083"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=event_db
+      - POSTGRES_USER=${POSTGRES_USER:-eventos_admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:-eventos_guest_pass}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SPRING_PROFILES_ACTIVE=dev
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - AUTH_SERVICE_URL=http://auth-service:8081/api/v1/auth
+      - CRM_SERVICE_URL=http://crm-service:8082/api/v1/crm
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - eventos-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8083/api/v1/events/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+      start_period: 480s
+
+  gallery-service:
+    build:
+      context: ./backend
+      dockerfile: gallery-service/Dockerfile
+    container_name: eventos-gallery-service
+    ports:
+      - "127.0.0.1:8084:8084"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=gallery_db
+      - POSTGRES_USER=${POSTGRES_USER:-eventos_admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:-eventos_guest_pass}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - SPRING_PROFILES_ACTIVE=dev
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - EVENT_SERVICE_URL=http://event-service:8083/api/v1/events
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - eventos-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8084/api/v1/gallery/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+      start_period: 480s
+
+  api-gateway:
+    build:
+      context: ./backend
+      dockerfile: api-gateway/Dockerfile
+    container_name: eventos-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - CRM_SERVICE_URL=http://crm-service:8082
+      - EVENT_SERVICE_URL=http://event-service:8083
+      - GALLERY_SERVICE_URL=http://gallery-service:8084
+      - SPRING_PROFILES_ACTIVE=dev
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      crm-service:
+        condition: service_healthy
+      event-service:
+        condition: service_healthy
+      gallery-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./jwt_private.pem:/app/jwt_private.pem:ro
+      - ./jwt_public.pem:/app/jwt_public.pem:ro
+    networks:
+      - eventos-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+      start_period: 480s
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: eventos-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - eventos-net
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: eventos-grafana
+    ports:
+      - "${GRAFANA_PORT:-3002}:3000"
+    environment:
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    volumes:
+      - ./docker/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_started
+    networks:
+      - eventos-net
+
 volumes:
   postgres-data:
     driver: local
   redis-data:
     driver: local
   rabbitmq-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
     driver: local
 
 networks:

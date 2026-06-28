@@ -1,12 +1,16 @@
 package com.eventos.crm.service;
 
 import com.eventos.crm.dto.CreateLeadDto;
+import com.eventos.crm.entity.Contact;
 import com.eventos.crm.entity.Lead;
-import com.eventos.crm.entity.LeadActivity;
+import com.eventos.crm.entity.Activity;
 import com.eventos.crm.entity.LeadStatus;
-import com.eventos.crm.repository.LeadActivityRepository;
+import com.eventos.crm.event.LeadCreatedEvent;
+import com.eventos.crm.event.LeadStatusUpdatedEvent;
+import com.eventos.crm.repository.ActivityRepository;
 import com.eventos.crm.repository.LeadRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -17,10 +21,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Join;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,20 +33,31 @@ import java.util.UUID;
 @Service
 public class LeadService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LeadService.class);
+
     private final LeadRepository leadRepository;
-    private final LeadActivityRepository leadActivityRepository;
+    private final ActivityRepository activityRepository;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
     private final WebClient webClient;
+    private final ContactService contactService;
+    private final RabbitTemplate rabbitTemplate;
+
+    @org.springframework.beans.factory.annotation.Value("${service.auth.base-url:http://localhost:8081/api/v1}")
+    private String authServiceBaseUrl;
 
     public LeadService(LeadRepository leadRepository,
-                       LeadActivityRepository leadActivityRepository,
+                       ActivityRepository activityRepository,
                        StringRedisTemplate redisTemplate,
-                       ObjectMapper objectMapper) {
+                       ObjectMapper objectMapper,
+                       ContactService contactService,
+                       RabbitTemplate rabbitTemplate) {
         this.leadRepository = leadRepository;
-        this.leadActivityRepository = leadActivityRepository;
+        this.activityRepository = activityRepository;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
+        this.contactService = contactService;
+        this.rabbitTemplate = rabbitTemplate;
         this.webClient = WebClient.builder().build();
     }
 
@@ -117,7 +132,7 @@ public class LeadService {
                 
                 if (l.getBudget() != null) {
                     totalBudget = totalBudget.add(l.getBudget());
-                    if (l.getStatus() == LeadStatus.BOOKED) {
+                    if (l.getStatus() == LeadStatus.WON) {
                         bookedLeads++;
                         bookedBudget = bookedBudget.add(l.getBudget());
                     }
@@ -266,9 +281,9 @@ public class LeadService {
     }
 
     @Transactional(readOnly = true)
-    public List<LeadActivity> getLeadActivities(UUID leadId, UUID tenantId) {
+    public List<Activity> getLeadActivities(UUID leadId, UUID tenantId) {
         getLeadById(leadId, tenantId); // enforces role & tenant checks
-        return leadActivityRepository.findByLeadIdOrderByCreatedAtDesc(leadId);
+        return activityRepository.findByLeadIdOrderByCreatedAtDesc(leadId);
     }
 
     @Transactional(readOnly = true)
@@ -289,11 +304,14 @@ public class LeadService {
             
             if (query != null && !query.trim().isEmpty()) {
                 String term = "%" + query.trim().toLowerCase() + "%";
+                Join<Lead, Contact> contactJoin = root.join("contact");
                 Predicate nameLike = cb.like(cb.lower(root.get("name")), term);
-                Predicate emailLike = cb.like(cb.lower(root.get("email")), term);
-                Predicate phoneLike = cb.like(cb.lower(root.get("phone")), term);
+                Predicate contactFirstLike = cb.like(cb.lower(contactJoin.get("firstName")), term);
+                Predicate contactLastLike = cb.like(cb.lower(contactJoin.get("lastName")), term);
+                Predicate emailLike = cb.like(cb.lower(contactJoin.get("email")), term);
+                Predicate phoneLike = cb.like(cb.lower(contactJoin.get("phone")), term);
                 Predicate notesLike = cb.like(cb.lower(root.get("notes")), term);
-                predicates.add(cb.or(nameLike, emailLike, phoneLike, notesLike));
+                predicates.add(cb.or(nameLike, contactFirstLike, contactLastLike, emailLike, phoneLike, notesLike));
             }
             
             if (source != null && !source.trim().isEmpty()) {
@@ -333,12 +351,25 @@ public class LeadService {
         String authHeader = (attr != null) ? attr.getRequest().getHeader("Authorization") : null;
         validateAssignedUser(dto.getAssignedUserId(), tenantId, authHeader);
 
+        Contact contact;
+        if (dto.getContactId() != null) {
+            contact = contactService.getContactById(dto.getContactId(), tenantId);
+        } else {
+            String fullName = dto.getName();
+            String firstName = fullName;
+            String lastName = null;
+            int spaceIdx = fullName.indexOf(' ');
+            if (spaceIdx > 0) {
+                firstName = fullName.substring(0, spaceIdx);
+                lastName = fullName.substring(spaceIdx + 1);
+            }
+            contact = contactService.getOrCreateContact(firstName, lastName, dto.getEmail(), dto.getPhone(), tenantId);
+        }
+
         Lead lead = Lead.builder()
-                .tenantId(tenantId)
                 .companyId(companyId)
                 .name(dto.getName())
-                .phone(dto.getPhone())
-                .email(dto.getEmail())
+                .contact(contact)
                 .eventType(dto.getEventType())
                 .eventDate(dto.getEventDate())
                 .budget(dto.getBudget())
@@ -347,18 +378,104 @@ public class LeadService {
                 .notes(dto.getNotes())
                 .assignedUserId(dto.getAssignedUserId())
                 .build();
+        lead.setTenantId(tenantId);
 
         lead = leadRepository.save(lead);
         evictCache(tenantId);
 
         // Auto log creation activity
-        LeadActivity activity = LeadActivity.builder()
+        Activity activity = Activity.builder()
                 .lead(lead)
                 .activityType("SYSTEM")
                 .description("Lead added to pipeline (NEW stage)")
                 .createdBy(userId)
                 .build();
-        leadActivityRepository.save(activity);
+        activity.setTenantId(tenantId);
+        activityRepository.save(activity);
+
+        try {
+            LeadCreatedEvent event = LeadCreatedEvent.builder()
+                    .leadId(lead.getId())
+                    .tenantId(tenantId)
+                    .name(lead.getName())
+                    .clientName(lead.getContact() != null ? (lead.getContact().getFirstName() + (lead.getContact().getLastName() != null ? " " + lead.getContact().getLastName() : "")) : null)
+                    .clientEmail(lead.getContact() != null ? lead.getContact().getEmail() : null)
+                    .clientPhone(lead.getContact() != null ? lead.getContact().getPhone() : null)
+                    .eventType(lead.getEventType())
+                    .budget(lead.getBudget())
+                    .source(lead.getLeadSource())
+                    .build();
+            rabbitTemplate.convertAndSend("eventos.exchange", "crm.lead.created", event);
+            log.info("Published LeadCreatedEvent for Lead ID: {}", lead.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish LeadCreatedEvent for Lead ID: {}", lead.getId(), e);
+        }
+
+        return lead;
+    }
+
+    @Transactional
+    public Lead createLeadFromEvent(com.eventos.crm.event.BudgetConvertedToLeadEvent event) {
+        if (leadRepository.existsById(event.getLeadId())) {
+            log.warn("Lead with ID {} already exists. Skipping creation.", event.getLeadId());
+            return leadRepository.findById(event.getLeadId()).orElse(null);
+        }
+
+        String clientName = event.getClientName() != null && !event.getClientName().isEmpty() ? event.getClientName() : event.getEventName();
+        String firstName = clientName;
+        String lastName = null;
+        int spaceIdx = clientName.indexOf(' ');
+        if (spaceIdx > 0) {
+            firstName = clientName.substring(0, spaceIdx);
+            lastName = clientName.substring(spaceIdx + 1);
+        }
+        Contact contact = contactService.getOrCreateContact(firstName, lastName, event.getClientPhone(), event.getClientEmail(), event.getTenantId());
+
+        Lead lead = Lead.builder()
+                .id(event.getLeadId())
+                .companyId(event.getTenantId()) // default to tenantId
+                .name(event.getEventName() != null && !event.getEventName().isEmpty() ? event.getEventName() : clientName)
+                .contact(contact)
+                .eventType(event.getEventType())
+                .budget(event.getGrandTotal())
+                .status(LeadStatus.NEW)
+                .leadSource("Budget Calculator")
+                .notes(String.format(
+                    "Auto-converted from Budget Estimate. Details: Guest Count=%d, Venue Type=%s, Decor Style=%s, Effects=%s",
+                    event.getGuestCount(), event.getVenueType(), event.getDecorStyle(), event.getEffectsList()
+                ))
+                .build();
+        lead.setTenantId(event.getTenantId());
+
+        lead = leadRepository.save(lead);
+        evictCache(event.getTenantId());
+
+        Activity activity = Activity.builder()
+                .lead(lead)
+                .activityType("SYSTEM")
+                .description("Lead added to pipeline via Budget Calculator Event")
+                .createdBy(UUID.fromString("00000000-0000-0000-0000-000000000000"))
+                .build();
+        activity.setTenantId(event.getTenantId());
+        activityRepository.save(activity);
+
+        try {
+            LeadCreatedEvent createdEvent = LeadCreatedEvent.builder()
+                    .leadId(lead.getId())
+                    .tenantId(event.getTenantId())
+                    .name(lead.getName())
+                    .clientName(lead.getContact() != null ? (lead.getContact().getFirstName() + (lead.getContact().getLastName() != null ? " " + lead.getContact().getLastName() : "")) : null)
+                    .clientEmail(lead.getContact() != null ? lead.getContact().getEmail() : null)
+                    .clientPhone(lead.getContact() != null ? lead.getContact().getPhone() : null)
+                    .eventType(lead.getEventType())
+                    .budget(lead.getBudget())
+                    .source(lead.getLeadSource())
+                    .build();
+            rabbitTemplate.convertAndSend("eventos.exchange", "crm.lead.created", createdEvent);
+            log.info("Published LeadCreatedEvent from event conversion for Lead ID: {}", lead.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish LeadCreatedEvent for Lead ID: {}", lead.getId(), e);
+        }
 
         return lead;
     }
@@ -385,37 +502,45 @@ public class LeadService {
 
         // Record stage transition
         String desc = String.format("Lead status shifted from %s to %s", oldStatus, newStatus);
-        LeadActivity activity = LeadActivity.builder()
+        Activity activity = Activity.builder()
                 .lead(lead)
                 .activityType("STATUS_CHANGE")
                 .description(desc)
                 .createdBy(userId)
                 .build();
-        leadActivityRepository.save(activity);
+        activity.setTenantId(tenantId);
+        activityRepository.save(activity);
 
-        // Downstream trigger mock for Bookings integration
-        if (newStatus == LeadStatus.BOOKED) {
-            System.out.println("=================================================");
-            System.out.println("TRIGGER: Lead converted to BOOKING: " + leadId);
-            System.out.println("Publishing LeadBookedEvent to RabbitMQ broker...");
-            System.out.println("=================================================");
+        try {
+            LeadStatusUpdatedEvent event = LeadStatusUpdatedEvent.builder()
+                    .leadId(lead.getId())
+                    .tenantId(tenantId)
+                    .name(lead.getName())
+                    .oldStatus(oldStatus.name())
+                    .newStatus(newStatus.name())
+                    .build();
+            rabbitTemplate.convertAndSend("eventos.exchange", "crm.lead.status.updated", event);
+            log.info("Published LeadStatusUpdatedEvent for Lead ID: {}", lead.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish LeadStatusUpdatedEvent for Lead ID: {}", lead.getId(), e);
         }
 
         return lead;
     }
 
     @Transactional
-    public LeadActivity addActivity(UUID leadId, String activityType, String description, UUID tenantId, UUID userId) {
+    public Activity addActivity(UUID leadId, String activityType, String description, UUID tenantId, UUID userId) {
         Lead lead = getLeadById(leadId, tenantId); // enforces role & tenant validation
 
-        LeadActivity activity = LeadActivity.builder()
+        Activity activity = Activity.builder()
                 .lead(lead)
                 .activityType(activityType)
                 .description(description)
                 .createdBy(userId)
                 .build();
+        activity.setTenantId(tenantId);
 
-        return leadActivityRepository.save(activity);
+        return activityRepository.save(activity);
     }
 
     @Transactional
@@ -444,14 +569,54 @@ public class LeadService {
             changes.append(String.format("Name changed from '%s' to '%s'. ", lead.getName(), dto.getName()));
             lead.setName(dto.getName());
         }
-        if (dto.getPhone() != null && !dto.getPhone().equals(lead.getPhone())) {
-            changes.append(String.format("Phone changed from '%s' to '%s'. ", lead.getPhone() != null ? lead.getPhone() : "", dto.getPhone()));
-            lead.setPhone(dto.getPhone());
+
+        // Handle contact details updates
+        Contact contact = lead.getContact();
+        if (dto.getContactId() != null && !dto.getContactId().equals(contact.getId())) {
+            Contact oldContact = contact;
+            contact = contactService.getContactById(dto.getContactId(), tenantId);
+            lead.setContact(contact);
+            changes.append(String.format("Linked contact changed from %s to %s. ", oldContact.getId(), contact.getId()));
+        } else {
+            String fullName = dto.getName();
+            String firstName = fullName;
+            String lastName = null;
+            int spaceIdx = fullName.indexOf(' ');
+            if (spaceIdx > 0) {
+                firstName = fullName.substring(0, spaceIdx);
+                lastName = fullName.substring(spaceIdx + 1);
+            }
+            
+            boolean contactChanged = false;
+            if (firstName != null && !firstName.equals(contact.getFirstName())) {
+                contact.setFirstName(firstName);
+                contactChanged = true;
+            }
+            if (lastName != null && !lastName.equals(contact.getLastName())) {
+                contact.setLastName(lastName);
+                contactChanged = true;
+            }
+            if (dto.getEmail() != null && !dto.getEmail().equals(contact.getEmail())) {
+                changes.append(String.format("Contact email changed from '%s' to '%s'. ", contact.getEmail() != null ? contact.getEmail() : "", dto.getEmail()));
+                contact.setEmail(dto.getEmail());
+                contactChanged = true;
+            }
+            if (dto.getPhone() != null && !dto.getPhone().equals(contact.getPhone())) {
+                changes.append(String.format("Contact phone changed from '%s' to '%s'. ", contact.getPhone() != null ? contact.getPhone() : "", dto.getPhone()));
+                contact.setPhone(dto.getPhone());
+                contactChanged = true;
+            }
+            if (contactChanged) {
+                contactService.updateContact(contact.getId(), com.eventos.crm.dto.CreateContactDto.builder()
+                        .firstName(contact.getFirstName())
+                        .lastName(contact.getLastName())
+                        .email(contact.getEmail())
+                        .phone(contact.getPhone())
+                        .companyName(contact.getCompanyName())
+                        .build(), tenantId);
+            }
         }
-        if (dto.getEmail() != null && !dto.getEmail().equals(lead.getEmail())) {
-            changes.append(String.format("Email changed from '%s' to '%s'. ", lead.getEmail() != null ? lead.getEmail() : "", dto.getEmail()));
-            lead.setEmail(dto.getEmail());
-        }
+
         if (dto.getEventType() != null && !dto.getEventType().equals(lead.getEventType())) {
             changes.append(String.format("Event type changed from '%s' to '%s'. ", lead.getEventType() != null ? lead.getEventType() : "", dto.getEventType()));
             lead.setEventType(dto.getEventType());
@@ -486,13 +651,14 @@ public class LeadService {
         evictCache(tenantId);
 
         if (changes.length() > 0) {
-            LeadActivity act = LeadActivity.builder()
+            Activity act = Activity.builder()
                     .lead(lead)
                     .activityType("UPDATE")
                     .description(changes.toString().trim())
                     .createdBy(userId)
                     .build();
-            leadActivityRepository.save(act);
+            act.setTenantId(tenantId);
+            activityRepository.save(act);
         }
 
         return lead;
@@ -511,13 +677,61 @@ public class LeadService {
         leadRepository.save(lead);
         evictCache(tenantId);
 
-        LeadActivity activity = LeadActivity.builder()
+        Activity activity = Activity.builder()
                 .lead(lead)
                 .activityType("SYSTEM")
                 .description("Lead soft-deleted from pipeline")
                 .createdBy(userId)
                 .build();
-        leadActivityRepository.save(activity);
+        activity.setTenantId(tenantId);
+        activityRepository.save(activity);
+    }
+
+    @Transactional
+    public Lead convertLead(UUID leadId, UUID tenantId, UUID userId) {
+        Lead lead = getLeadById(leadId, tenantId); // checks tenant and role access
+        
+        com.eventos.crm.config.UserPrincipal user = getCurrentUser();
+        if (isStaff(user) || isManager(user)) {
+            if (lead.getAssignedUserId() == null || !lead.getAssignedUserId().equals(user.getUserId())) {
+                throw new org.springframework.security.access.AccessDeniedException("You can only convert leads assigned to you.");
+            }
+        }
+        
+        if (lead.getStatus() == LeadStatus.WON) {
+            throw new IllegalStateException("Lead is already converted/won");
+        }
+        
+        LeadStatus oldStatus = lead.getStatus();
+        lead.setStatus(LeadStatus.WON);
+        lead = leadRepository.save(lead);
+        evictCache(tenantId);
+        
+        // Log conversion activity
+        Activity activity = Activity.builder()
+                .lead(lead)
+                .activityType("CONVERSION")
+                .description(String.format("Lead converted to WON from %s", oldStatus))
+                .createdBy(userId)
+                .build();
+        activity.setTenantId(tenantId);
+        activityRepository.save(activity);
+        
+        try {
+            LeadStatusUpdatedEvent event = LeadStatusUpdatedEvent.builder()
+                    .leadId(lead.getId())
+                    .tenantId(tenantId)
+                    .name(lead.getName())
+                    .oldStatus(oldStatus.name())
+                    .newStatus(LeadStatus.WON.name())
+                    .build();
+            rabbitTemplate.convertAndSend("eventos.exchange", "crm.lead.status.updated", event);
+            log.info("Published LeadStatusUpdatedEvent (conversion) for Lead ID: {}", lead.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish LeadStatusUpdatedEvent for Lead ID: {}", lead.getId(), e);
+        }
+        
+        return lead;
     }
 
     private com.eventos.crm.config.UserPrincipal getCurrentUser() {
@@ -559,7 +773,7 @@ public class LeadService {
 
         try {
             Map<String, Object> response = webClient.get()
-                    .uri("http://localhost:8081/api/v1/settings/team")
+                    .uri(authServiceBaseUrl + "/settings/team")
                     .header("Authorization", authHeader)
                     .retrieve()
                     .bodyToMono(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {})

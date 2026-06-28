@@ -1,0 +1,45 @@
+{
+  "name": "EventOS Local",
+  "variables": [
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "auth_url",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "tenantId",
+      "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    },
+    {
+      "key": "leadId",
+      "value": "d4e5f6a7-b8c9-0123-defa-234567890123"
+    },
+    {
+      "key": "quoteId",
+      "value": "e5f6a7b8-c9d0-1234-efab-345678901234"
+    },
+    {
+      "key": "eventId",
+      "value": "f6a7b8c9-d0e1-2345-fabc-456789012345"
+    },
+    {
+      "key": "bookingId",
+      "value": "a7b8c9d0-e1f2-3456-abcd-567890123456"
+    },
+    {
+      "key": "invoiceId",
+      "value": "b8c9d0e1-f2a3-4567-bcde-678901234567"
+    },
+    {
+      "key": "albumId",
+      "value": "d0e1f2a3-b4c5-6789-defa-890123456789"
+    }
+  ]
+}

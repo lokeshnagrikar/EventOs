@@ -34,9 +34,13 @@ public class ShareLink {
     private String token;
 
     @Column(name = "expires_at")
-    private LocalDateTime expiresAt;
+    private java.time.Instant expiresAt;
 
     private String password; // Passcode/password for securing access
+
+    @Column(name = "allow_download", nullable = false)
+    @Builder.Default
+    private boolean allowDownload = true;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -47,6 +51,6 @@ public class ShareLink {
     private LocalDateTime updatedAt;
 
     public boolean isExpired() {
-        return expiresAt != null && expiresAt.isBefore(LocalDateTime.now());
+        return expiresAt != null && expiresAt.isBefore(java.time.Instant.now());
     }
 }

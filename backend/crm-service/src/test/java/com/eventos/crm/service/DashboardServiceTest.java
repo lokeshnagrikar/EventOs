@@ -15,7 +15,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -52,23 +51,23 @@ public class DashboardServiceTest {
 
         mockLeadNew = Lead.builder()
                 .id(UUID.randomUUID())
-                .tenantId(tenantId)
                 .name("Karan Malhotra")
                 .status(LeadStatus.NEW)
                 .budget(BigDecimal.valueOf(50000))
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(false)
                 .build();
+        mockLeadNew.setTenantId(tenantId);
 
         mockLeadBooked = Lead.builder()
                 .id(UUID.randomUUID())
-                .tenantId(tenantId)
                 .name("Anjali Sharma")
-                .status(LeadStatus.BOOKED)
+                .status(LeadStatus.WON)
                 .budget(BigDecimal.valueOf(150000))
                 .updatedAt(LocalDateTime.now().minusDays(1))
                 .isDeleted(false)
                 .build();
+        mockLeadBooked.setTenantId(tenantId);
     }
 
     @Test
@@ -95,7 +94,13 @@ public class DashboardServiceTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(anyString())).thenReturn(null);
         when(leadRepository.countByTenantIdAndIsDeletedFalse(tenantId)).thenReturn(2L);
-        when(leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.BOOKED, LeadStatus.COMPLETED))).thenReturn(1L);
+        when(leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.WON))).thenReturn(1L);
+        when(leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(eq(tenantId),
+                eq(List.of(LeadStatus.NEW, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION))))
+                .thenReturn(BigDecimal.valueOf(100000));
+        when(leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(eq(tenantId),
+                eq(List.of(LeadStatus.WON))))
+                .thenReturn(BigDecimal.valueOf(150000));
         when(leadRepository.findTop3ByTenantIdAndIsDeletedFalseOrderByUpdatedAtDesc(tenantId))
                 .thenReturn(Arrays.asList(mockLeadNew, mockLeadBooked));
 
@@ -105,7 +110,9 @@ public class DashboardServiceTest {
         assertTrue(result.getVisibleWidgets().contains("totalLeads"));
         assertTrue(result.getVisibleWidgets().contains("revenueMetrics"));
         assertEquals(2, result.getLeadMetrics().getTotalLeads());
-        assertEquals(50.0, result.getLeadMetrics().getConversionRate()); // 1 out of 2 booked
+        assertEquals(50.0, result.getLeadMetrics().getConversionRate()); // 1 out of 2 won
+        assertEquals(0, result.getLeadMetrics().getPipelineValue().compareTo(BigDecimal.valueOf(100000)));
+        assertEquals(0, result.getLeadMetrics().getRevenueForecast().compareTo(BigDecimal.valueOf(200000))); // 150000 + 100000 * 0.5 = 200000
         assertNotNull(result.getRevenueMetrics());
     }
 
@@ -114,7 +121,13 @@ public class DashboardServiceTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(anyString())).thenReturn(null);
         when(leadRepository.countByTenantIdAndIsDeletedFalse(tenantId)).thenReturn(2L);
-        when(leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.BOOKED, LeadStatus.COMPLETED))).thenReturn(1L);
+        when(leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.WON))).thenReturn(1L);
+        when(leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(eq(tenantId),
+                eq(List.of(LeadStatus.NEW, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION))))
+                .thenReturn(BigDecimal.valueOf(100000));
+        when(leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(eq(tenantId),
+                eq(List.of(LeadStatus.WON))))
+                .thenReturn(BigDecimal.valueOf(150000));
         when(leadRepository.findTop3ByTenantIdAndIsDeletedFalseOrderByUpdatedAtDesc(tenantId))
                 .thenReturn(Arrays.asList(mockLeadNew, mockLeadBooked));
 
@@ -125,6 +138,9 @@ public class DashboardServiceTest {
         assertFalse(result.getVisibleWidgets().contains("revenueMetrics")); // STAFF hides revenue overview metrics
         assertNull(result.getRevenueMetrics());
         assertEquals(2, result.getLeadMetrics().getTotalLeads());
+        assertEquals(50.0, result.getLeadMetrics().getConversionRate());
+        assertEquals(0, result.getLeadMetrics().getPipelineValue().compareTo(BigDecimal.valueOf(100000)));
+        assertEquals(0, result.getLeadMetrics().getRevenueForecast().compareTo(BigDecimal.valueOf(200000)));
     }
 
     @Test
@@ -132,7 +148,8 @@ public class DashboardServiceTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(anyString())).thenReturn(null);
         when(leadRepository.countByTenantIdAndIsDeletedFalse(tenantId)).thenReturn(0L);
-        when(leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.BOOKED, LeadStatus.COMPLETED))).thenReturn(0L);
+        when(leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.WON))).thenReturn(0L);
+        when(leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(eq(tenantId), any())).thenReturn(BigDecimal.ZERO);
         when(leadRepository.findTop3ByTenantIdAndIsDeletedFalseOrderByUpdatedAtDesc(tenantId))
                 .thenReturn(Collections.emptyList());
 

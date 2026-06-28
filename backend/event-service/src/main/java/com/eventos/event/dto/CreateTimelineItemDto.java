@@ -22,4 +22,7 @@ public class CreateTimelineItemDto {
 
     @NotNull(message = "Scheduled time is required")
     private LocalDateTime scheduledTime;
+
+    @NotNull(message = "Milestone type is required")
+    private com.eventos.event.entity.MilestoneType milestone;
 }

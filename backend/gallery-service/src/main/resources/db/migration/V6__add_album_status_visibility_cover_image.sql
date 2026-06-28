@@ -1,0 +1,4 @@
+-- Add status, visibility, and cover_image columns to albums table
+ALTER TABLE albums ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'PUBLISHED';
+ALTER TABLE albums ADD COLUMN IF NOT EXISTS visibility VARCHAR(50) NOT NULL DEFAULT 'PUBLIC';
+ALTER TABLE albums ADD COLUMN IF NOT EXISTS cover_image VARCHAR(1000);

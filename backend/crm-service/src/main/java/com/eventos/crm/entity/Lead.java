@@ -1,5 +1,6 @@
 package com.eventos.crm.entity;
 
+import com.eventos.crm.config.AuditLogListener;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -14,14 +15,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Lead {
+@ToString
+@EntityListeners(AuditLogListener.class)
+public class Lead extends AbstractTenantAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
 
     @Column(name = "company_id", nullable = false)
     private UUID companyId;
@@ -35,8 +35,9 @@ public class Lead {
     @Column(nullable = false)
     private String name;
 
-    private String phone;
-    private String email;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "contact_id", nullable = false)
+    private Contact contact;
 
     @Column(name = "event_type")
     private String eventType;

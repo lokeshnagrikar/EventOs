@@ -1,10 +1,11 @@
 package com.eventos.event.controller;
 
 import com.eventos.event.config.UserPrincipal;
-import com.eventos.event.dto.CreateBudgetEstimateDto;
-import com.eventos.event.entity.BudgetEstimate;
-import com.eventos.event.entity.PricingRule;
+import com.eventos.event.dto.*;
+import com.eventos.event.entity.*;
 import com.eventos.event.service.BudgetService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Tag(name = "Budgets", description = "Manage event budgets, category allocations, direct expense logging, and budget warning alerts")
 @RestController
-@RequestMapping("/calculator")
+@RequestMapping("/bookings/{bookingId}/budget")
 public class BudgetController {
 
     private final BudgetService budgetService;
@@ -28,8 +30,6 @@ public class BudgetController {
     public BudgetController(BudgetService budgetService) {
         this.budgetService = budgetService;
     }
-
-    // ─── Tenant helper (JWT-only, no header fallback) ──────────────────────────
 
     private UUID getTenantId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -40,148 +40,138 @@ public class BudgetController {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tenant context is missing");
     }
 
-    private String getAuthorizationHeader() {
-        try {
-            org.springframework.web.context.request.ServletRequestAttributes attr =
-                (org.springframework.web.context.request.ServletRequestAttributes)
-                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
-            if (attr != null) return attr.getRequest().getHeader("Authorization");
-        } catch (Exception ignored) {}
-        return null;
-    }
-
-    // ─── Budget Calculator ─────────────────────────────────────────────────────
-
-    @PostMapping("/calculate")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> calculateEstimate(@Valid @RequestBody CreateBudgetEstimateDto dto) {
-        // Budget calculator is accessible to any authenticated user (public-facing wizard)
-        UUID tenantId;
-        try {
-            tenantId = getTenantId();
-        } catch (Exception e) {
-            tenantId = UUID.fromString("00000000-0000-0000-0000-000000000000");
-        }
-        BudgetEstimate estimate = budgetService.calculateEstimate(dto, tenantId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", estimate);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
-    public ResponseEntity<?> getSavedEstimates() {
+    @Operation(summary = "Get complete budget financial report")
+    @GetMapping("/report")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    public ResponseEntity<?> getBudgetReport(@PathVariable UUID bookingId) {
         UUID tenantId = getTenantId();
-        List<BudgetEstimate> estimates = budgetService.getAllEstimates(tenantId);
+        BudgetSummaryReportDto report = budgetService.getBudgetReport(bookingId, tenantId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("data", estimates);
+        response.put("data", report);
 
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> saveEstimate(@Valid @RequestBody CreateBudgetEstimateDto dto) {
-        UUID tenantId;
-        try {
-            tenantId = getTenantId();
-        } catch (Exception e) {
-            tenantId = UUID.fromString("00000000-0000-0000-0000-000000000000");
-        }
-        BudgetEstimate saved = budgetService.saveEstimate(dto, tenantId);
+    @Operation(summary = "Update overall budget limit and warning threshold")
+    @PutMapping("/limit")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
+    public ResponseEntity<?> updateBudgetLimit(
+            @PathVariable UUID bookingId,
+            @Valid @RequestBody UpdateBookingBudgetLimitDto dto) {
+        UUID tenantId = getTenantId();
+        BookingBudget budget = budgetService.updateBudgetLimit(bookingId, dto, tenantId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("data", saved);
+        response.put("data", budget);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get budget allocations for all categories")
+    @GetMapping("/allocations")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    public ResponseEntity<?> getCategoryAllocations(@PathVariable UUID bookingId) {
+        UUID tenantId = getTenantId();
+        List<BudgetCategoryAllocation> allocations = budgetService.getAllocations(bookingId, tenantId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", allocations);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Upsert category budget allocation")
+    @PutMapping("/allocations")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
+    public ResponseEntity<?> saveCategoryAllocation(
+            @PathVariable UUID bookingId,
+            @Valid @RequestBody BudgetCategoryAllocationDto dto) {
+        UUID tenantId = getTenantId();
+        BudgetCategoryAllocation allocation = budgetService.saveCategoryAllocation(bookingId, dto, tenantId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", allocation);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get list of logged expenses")
+    @GetMapping("/expenses")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    public ResponseEntity<?> getExpenses(@PathVariable UUID bookingId) {
+        UUID tenantId = getTenantId();
+        List<Expense> expenses = budgetService.getExpenses(bookingId, tenantId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", expenses);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Log new direct expense")
+    @PostMapping("/expenses")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
+    public ResponseEntity<?> createExpense(
+            @PathVariable UUID bookingId,
+            @Valid @RequestBody CreateExpenseDto dto) {
+        UUID tenantId = getTenantId();
+        Expense expense = budgetService.createExpense(bookingId, dto, tenantId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", expense);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete expense entry")
+    @DeleteMapping("/expenses/{expenseId}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
-    public ResponseEntity<?> deleteEstimate(@PathVariable UUID id) {
+    public ResponseEntity<?> deleteExpense(
+            @PathVariable UUID bookingId,
+            @PathVariable UUID expenseId) {
         UUID tenantId = getTenantId();
-        budgetService.deleteEstimate(id, tenantId);
+        budgetService.deleteExpense(expenseId, tenantId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Estimate deleted successfully");
+        response.put("message", "Expense deleted successfully");
 
         return ResponseEntity.ok(response);
     }
 
-    // ─── CRM Lead & Quote Conversion ───────────────────────────────────────────
-
-    @PostMapping("/{id}/convert-to-lead")
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
-    public ResponseEntity<?> convertToLead(@PathVariable UUID id) {
+    @Operation(summary = "Get active budget warning alerts")
+    @GetMapping("/alerts")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    public ResponseEntity<?> getActiveAlerts(@PathVariable UUID bookingId) {
         UUID tenantId = getTenantId();
-        String authHeader = getAuthorizationHeader();
-        Map<?, ?> lead = budgetService.convertToLead(id, tenantId, authHeader);
+        List<BudgetAlert> alerts = budgetService.getActiveAlerts(bookingId, tenantId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("data", lead);
+        response.put("data", alerts);
 
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{id}/generate-quote")
+    @Operation(summary = "Resolve budget warning alert")
+    @PostMapping("/alerts/{alertId}/resolve")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
-    public ResponseEntity<?> generateQuote(@PathVariable UUID id) {
+    public ResponseEntity<?> resolveAlert(
+            @PathVariable UUID bookingId,
+            @PathVariable UUID alertId) {
         UUID tenantId = getTenantId();
-        String authHeader = getAuthorizationHeader();
-        Map<?, ?> quote = budgetService.generateQuoteFromEstimate(id, tenantId, authHeader);
+        BudgetAlert alert = budgetService.resolveAlert(alertId, tenantId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("data", quote);
-
-        return ResponseEntity.ok(response);
-    }
-
-    // ─── Pricing Rules ─────────────────────────────────────────────────────────
-
-    @GetMapping("/pricing-rules")
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
-    public ResponseEntity<?> getPricingRules() {
-        UUID tenantId = getTenantId();
-        List<PricingRule> rules = budgetService.getPricingRules(tenantId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", rules);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/pricing-rules")
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
-    public ResponseEntity<?> savePricingRule(@RequestBody PricingRule rule) {
-        UUID tenantId = getTenantId();
-        PricingRule saved = budgetService.savePricingRule(rule, tenantId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("data", saved);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @DeleteMapping("/pricing-rules/{ruleId}")
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
-    public ResponseEntity<?> deletePricingRule(@PathVariable UUID ruleId) {
-        UUID tenantId = getTenantId();
-        budgetService.deletePricingRule(ruleId, tenantId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "Pricing rule deleted successfully");
+        response.put("data", alert);
 
         return ResponseEntity.ok(response);
     }
