@@ -269,8 +269,11 @@ services:
     container_name: eventos-grafana
     ports:
       - "${GRAFANA_PORT:-3002}:3000"
+<<<<<<< HEAD
     environment:
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+=======
+>>>>>>> 2d20804ee36fb6128e16807e0c123ddea9a18b76
     volumes:
       - ./docker/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana-data:/var/lib/grafana
