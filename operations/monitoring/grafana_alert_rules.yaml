@@ -65,11 +65,7 @@ receivers:
   - name: slack-notifications
     slack_configs:
       - channel: '#eventos-ops-alerts'
-<<<<<<< HEAD
         api_url: '${SLACK_WEBHOOK_URL}' # Injected at runtime
-=======
-        api_url: 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX' # Placeholder webhook URL
->>>>>>> 2d20804ee36fb6128e16807e0c123ddea9a18b76
         send_resolved: true
         title: '[{{ .Status | toUpper }}] EventOS Platform Alert'
         text: >-
