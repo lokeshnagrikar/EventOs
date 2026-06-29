@@ -5,15 +5,17 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: [".next/**", "node_modules/**", "out/**", "build/**"]
+  },
   ...compat.config({
     extends: ["next/core-web-vitals"],
   }),
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
       "react/no-unescaped-entities": "warn",
       "react-hooks/rules-of-hooks": "warn",
-      "@typescript-eslint/no-unused-vars": "warn"
+      "@next/next/no-html-link-for-pages": "warn"
     }
   }
 ];
