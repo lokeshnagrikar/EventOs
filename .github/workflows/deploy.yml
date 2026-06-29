@@ -90,7 +90,7 @@ jobs:
       - name: Install Web Dependencies
         run: |
           cd web
-          npm ci
+          npm install
 
       - name: Run Web Lint
         run: |
