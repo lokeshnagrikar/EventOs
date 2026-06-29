@@ -596,16 +596,28 @@ public class LeadService {
                 contact.setLastName(lastName);
                 contactChanged = true;
             }
-            if (dto.getEmail() != null && !dto.getEmail().equals(contact.getEmail())) {
-                changes.append(String.format("Contact email changed from '%s' to '%s'. ", contact.getEmail() != null ? contact.getEmail() : "", dto.getEmail()));
-                contact.setEmail(dto.getEmail());
+            String emailVal = (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) ? null : dto.getEmail().trim();
+            if (emailVal == null && contact.getEmail() != null) {
+                changes.append("Contact email cleared. ");
+                contact.setEmail(null);
+                contactChanged = true;
+            } else if (emailVal != null && !emailVal.equals(contact.getEmail())) {
+                changes.append(String.format("Contact email changed from '%s' to '%s'. ", contact.getEmail() != null ? contact.getEmail() : "", emailVal));
+                contact.setEmail(emailVal);
                 contactChanged = true;
             }
-            if (dto.getPhone() != null && !dto.getPhone().equals(contact.getPhone())) {
-                changes.append(String.format("Contact phone changed from '%s' to '%s'. ", contact.getPhone() != null ? contact.getPhone() : "", dto.getPhone()));
-                contact.setPhone(dto.getPhone());
+
+            String phoneVal = (dto.getPhone() == null || dto.getPhone().trim().isEmpty()) ? null : dto.getPhone().trim();
+            if (phoneVal == null && contact.getPhone() != null) {
+                changes.append("Contact phone cleared. ");
+                contact.setPhone(null);
+                contactChanged = true;
+            } else if (phoneVal != null && !phoneVal.equals(contact.getPhone())) {
+                changes.append(String.format("Contact phone changed from '%s' to '%s'. ", contact.getPhone() != null ? contact.getPhone() : "", phoneVal));
+                contact.setPhone(phoneVal);
                 contactChanged = true;
             }
+
             if (contactChanged) {
                 contactService.updateContact(contact.getId(), com.eventos.crm.dto.CreateContactDto.builder()
                         .firstName(contact.getFirstName())
@@ -617,14 +629,23 @@ public class LeadService {
             }
         }
 
-        if (dto.getEventType() != null && !dto.getEventType().equals(lead.getEventType())) {
-            changes.append(String.format("Event type changed from '%s' to '%s'. ", lead.getEventType() != null ? lead.getEventType() : "", dto.getEventType()));
-            lead.setEventType(dto.getEventType());
+        String eventTypeVal = (dto.getEventType() == null || dto.getEventType().trim().isEmpty()) ? null : dto.getEventType().trim();
+        if (eventTypeVal == null && lead.getEventType() != null) {
+            changes.append("Event type cleared. ");
+            lead.setEventType(null);
+        } else if (eventTypeVal != null && !eventTypeVal.equals(lead.getEventType())) {
+            changes.append(String.format("Event type changed from '%s' to '%s'. ", lead.getEventType() != null ? lead.getEventType() : "", eventTypeVal));
+            lead.setEventType(eventTypeVal);
         }
-        if (dto.getEventDate() != null && !dto.getEventDate().equals(lead.getEventDate())) {
+
+        if (dto.getEventDate() == null && lead.getEventDate() != null) {
+            changes.append("Event date cleared. ");
+            lead.setEventDate(null);
+        } else if (dto.getEventDate() != null && !dto.getEventDate().equals(lead.getEventDate())) {
             changes.append(String.format("Event date changed from '%s' to '%s'. ", lead.getEventDate() != null ? lead.getEventDate() : "", dto.getEventDate()));
             lead.setEventDate(dto.getEventDate());
         }
+
         if (dto.getBudget() != null && (lead.getBudget() == null || dto.getBudget().compareTo(lead.getBudget()) != 0)) {
             changes.append(String.format("Budget adjusted from %s to %s. ", lead.getBudget() != null ? lead.getBudget() : "0", dto.getBudget()));
             lead.setBudget(dto.getBudget());
@@ -633,9 +654,14 @@ public class LeadService {
             changes.append(String.format("Source changed from '%s' to '%s'. ", lead.getLeadSource() != null ? lead.getLeadSource() : "", dto.getLeadSource()));
             lead.setLeadSource(dto.getLeadSource());
         }
-        if (dto.getNotes() != null && !dto.getNotes().equals(lead.getNotes())) {
+
+        String notesVal = (dto.getNotes() == null || dto.getNotes().trim().isEmpty()) ? null : dto.getNotes().trim();
+        if (notesVal == null && lead.getNotes() != null) {
+            changes.append("Notes cleared. ");
+            lead.setNotes(null);
+        } else if (notesVal != null && !notesVal.equals(lead.getNotes())) {
             changes.append("Notes updated. ");
-            lead.setNotes(dto.getNotes());
+            lead.setNotes(notesVal);
         }
 
         // Handle assignment changes

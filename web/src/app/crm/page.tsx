@@ -354,13 +354,13 @@ export default function CrmPage() {
 
     updateLeadMutation.mutate({
       name: editForm.name,
-      phone: editForm.phone,
-      email: editForm.email,
-      eventType: editForm.eventType,
-      eventDate: editForm.eventDate,
+      phone: editForm.phone || null,
+      email: editForm.email || null,
+      eventType: editForm.eventType || null,
+      eventDate: editForm.eventDate || null,
       budget: editForm.budget,
       leadSource: editForm.leadSource,
-      notes: editForm.notes,
+      notes: editForm.notes || null,
       assignedUserId: editForm.assignedUserId || null
     });
   };
