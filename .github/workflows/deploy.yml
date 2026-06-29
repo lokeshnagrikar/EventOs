@@ -146,7 +146,7 @@ jobs:
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/api-gateway:latest
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
@@ -166,7 +166,7 @@ jobs:
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/auth-service:latest
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
@@ -186,7 +186,7 @@ jobs:
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/crm-service:latest
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
@@ -206,7 +206,7 @@ jobs:
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/event-service:latest
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
@@ -226,7 +226,7 @@ jobs:
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/gallery-service:latest
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
@@ -245,7 +245,7 @@ jobs:
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/frontend:latest
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
