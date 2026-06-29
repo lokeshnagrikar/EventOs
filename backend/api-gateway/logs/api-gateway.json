@@ -1,405 +1,124 @@
-{"timestamp":"2026-06-20 13:13:27.929","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Starting ApiGatewayApplication v1.0.0 using Java 17.0.16 with PID 11884 (D:\EventOs\backend\api-gateway\target\api-gateway-1.0.0.jar started by LENOVO in D:\EventOs\backend\api-gateway)"}
-{"timestamp":"2026-06-20 13:13:27.946","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"No active profile set, falling back to 1 default profile: "default""}
-{"timestamp":"2026-06-20 13:13:31.028","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Multiple Spring Data modules found, entering strict repository configuration mode"}
-{"timestamp":"2026-06-20 13:13:31.046","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Bootstrapping Spring Data Redis repositories in DEFAULT mode."}
-{"timestamp":"2026-06-20 13:13:31.131","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Finished Spring Data repository scanning in 30 ms. Found 0 Redis repository interfaces."}
-{"timestamp":"2026-06-20 13:13:31.517","thread":"main","level":"INFO","logger":"org.springframework.cloud.context.scope.GenericScope","traceId":"","spanId":"","message":"BeanFactory id=8e975ba5-0267-3cce-80da-3c41da899ece"}
-{"timestamp":"2026-06-20 13:13:32.724","thread":"main","level":"INFO","logger":"com.eventos.gateway.config.JwtAuthFilter","traceId":"","spanId":"","message":"Successfully loaded shared JWT RSA public key from file."}
-{"timestamp":"2026-06-20 13:13:35.479","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [After]"}
-{"timestamp":"2026-06-20 13:13:35.479","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Before]"}
-{"timestamp":"2026-06-20 13:13:35.480","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Between]"}
-{"timestamp":"2026-06-20 13:13:35.480","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Cookie]"}
-{"timestamp":"2026-06-20 13:13:35.480","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Header]"}
-{"timestamp":"2026-06-20 13:13:35.480","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Host]"}
-{"timestamp":"2026-06-20 13:13:35.481","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Method]"}
-{"timestamp":"2026-06-20 13:13:35.481","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Path]"}
-{"timestamp":"2026-06-20 13:13:35.481","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Query]"}
-{"timestamp":"2026-06-20 13:13:35.481","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [ReadBody]"}
-{"timestamp":"2026-06-20 13:13:35.482","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [RemoteAddr]"}
-{"timestamp":"2026-06-20 13:13:35.482","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [XForwardedRemoteAddr]"}
-{"timestamp":"2026-06-20 13:13:35.482","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Weight]"}
-{"timestamp":"2026-06-20 13:13:35.483","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [CloudFoundryRouteService]"}
-{"timestamp":"2026-06-20 13:13:36.267","thread":"main","level":"INFO","logger":"org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver","traceId":"","spanId":"","message":"Exposing 2 endpoints beneath base path '/actuator'"}
-{"timestamp":"2026-06-20 13:13:37.247","thread":"main","level":"INFO","logger":"org.springframework.boot.web.embedded.netty.NettyWebServer","traceId":"","spanId":"","message":"Netty started on port 8080 (http)"}
-{"timestamp":"2026-06-20 13:13:38.023","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Started ApiGatewayApplication in 11.824 seconds (process running for 13.586)"}
-{"timestamp":"2026-06-20 13:36:41.619","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Starting ApiGatewayApplication v1.0.0 using Java 17.0.16 with PID 26188 (D:\EventOs\backend\api-gateway\target\api-gateway-1.0.0.jar started by LENOVO in D:\EventOs\backend\api-gateway)"}
-{"timestamp":"2026-06-20 13:36:41.627","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"No active profile set, falling back to 1 default profile: "default""}
-{"timestamp":"2026-06-20 13:36:44.169","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Multiple Spring Data modules found, entering strict repository configuration mode"}
-{"timestamp":"2026-06-20 13:36:44.176","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Bootstrapping Spring Data Redis repositories in DEFAULT mode."}
-{"timestamp":"2026-06-20 13:36:44.240","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Finished Spring Data repository scanning in 26 ms. Found 0 Redis repository interfaces."}
-{"timestamp":"2026-06-20 13:36:44.592","thread":"main","level":"INFO","logger":"org.springframework.cloud.context.scope.GenericScope","traceId":"","spanId":"","message":"BeanFactory id=8e975ba5-0267-3cce-80da-3c41da899ece"}
-{"timestamp":"2026-06-20 13:36:45.315","thread":"main","level":"INFO","logger":"com.eventos.gateway.config.JwtAuthFilter","traceId":"","spanId":"","message":"Successfully loaded shared JWT RSA public key from file."}
-{"timestamp":"2026-06-20 13:36:47.978","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [After]"}
-{"timestamp":"2026-06-20 13:36:47.979","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Before]"}
-{"timestamp":"2026-06-20 13:36:47.979","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Between]"}
-{"timestamp":"2026-06-20 13:36:47.980","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Cookie]"}
-{"timestamp":"2026-06-20 13:36:47.980","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Header]"}
-{"timestamp":"2026-06-20 13:36:47.981","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Host]"}
-{"timestamp":"2026-06-20 13:36:47.981","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Method]"}
-{"timestamp":"2026-06-20 13:36:47.981","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Path]"}
-{"timestamp":"2026-06-20 13:36:47.981","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Query]"}
-{"timestamp":"2026-06-20 13:36:47.981","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [ReadBody]"}
-{"timestamp":"2026-06-20 13:36:47.982","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [RemoteAddr]"}
-{"timestamp":"2026-06-20 13:36:47.983","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [XForwardedRemoteAddr]"}
-{"timestamp":"2026-06-20 13:36:47.983","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Weight]"}
-{"timestamp":"2026-06-20 13:36:47.983","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [CloudFoundryRouteService]"}
-{"timestamp":"2026-06-20 13:36:48.705","thread":"main","level":"INFO","logger":"org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver","traceId":"","spanId":"","message":"Exposing 2 endpoints beneath base path '/actuator'"}
-{"timestamp":"2026-06-20 13:36:49.563","thread":"main","level":"INFO","logger":"org.springframework.boot.web.embedded.netty.NettyWebServer","traceId":"","spanId":"","message":"Netty started on port 8080 (http)"}
-{"timestamp":"2026-06-20 13:36:50.266","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Started ApiGatewayApplication in 11.106 seconds (process running for 12.928)"}
-{"timestamp":"2026-06-20 13:56:54.146","thread":"reactor-http-nio-2","level":"ERROR","logger":"com.eventos.gateway.config.GlobalErrorWebExceptionHandler","traceId":"","spanId":"","message":"[GATEWAY ERROR] Path: /api/v1/api/swagger-ui/index.html, Message: 404 NOT_FOUND "No static resource api/v1/api/swagger-ui/index.html.""}
-org.springframework.web.reactive.resource.NoResourceFoundException: 404 NOT_FOUND "No static resource api/v1/api/swagger-ui/index.html."
-	at org.springframework.web.reactive.resource.ResourceWebHandler.lambda$handle$1(ResourceWebHandler.java:431)
-	Suppressed: reactor.core.publisher.FluxOnAssembly$OnAssemblyException: 
-Error has been observed at the following site(s):
-	*__checkpoint ? org.springframework.cloud.gateway.filter.WeightCalculatorWebFilter [DefaultWebFilterChain]
-	*__checkpoint ? HTTP GET "/api/v1/api/swagger-ui/index.html" [ExceptionHandlingWebHandler]
-Original Stack Trace:
-		at org.springframework.web.reactive.resource.ResourceWebHandler.lambda$handle$1(ResourceWebHandler.java:431)
-		at reactor.core.publisher.MonoDefer.subscribe(MonoDefer.java:45)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.FluxSwitchIfEmpty$SwitchIfEmptySubscriber.onComplete(FluxSwitchIfEmpty.java:82)
-		at reactor.core.publisher.MonoFlatMap$FlatMapMain.onComplete(MonoFlatMap.java:189)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onComplete(MonoNext.java:102)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onComplete(FluxConcatMapNoPrefetch.java:241)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.slowPath(FluxIterable.java:357)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.request(FluxIterable.java:294)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.request(FluxConcatMapNoPrefetch.java:337)
-		at reactor.core.publisher.MonoNext$NextSubscriber.request(MonoNext.java:108)
-		at reactor.core.publisher.MonoFlatMap$FlatMapMain.request(MonoFlatMap.java:194)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.set(Operators.java:2367)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.onSubscribe(Operators.java:2241)
-		at reactor.core.publisher.MonoFlatMap$FlatMapMain.onSubscribe(MonoFlatMap.java:117)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onSubscribe(MonoNext.java:70)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onSubscribe(FluxConcatMapNoPrefetch.java:164)
-		at reactor.core.publisher.FluxIterable.subscribe(FluxIterable.java:201)
-		at reactor.core.publisher.FluxIterable.subscribe(FluxIterable.java:83)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.MonoIgnoreThen$ThenIgnoreMain.subscribeNext(MonoIgnoreThen.java:265)
-		at reactor.core.publisher.MonoIgnoreThen.subscribe(MonoIgnoreThen.java:51)
-		at reactor.core.publisher.InternalMonoOperator.subscribe(InternalMonoOperator.java:76)
-		at reactor.core.publisher.MonoFlatMap$FlatMapMain.onNext(MonoFlatMap.java:165)
-		at reactor.core.publisher.FluxOnErrorResume$ResumeSubscriber.onNext(FluxOnErrorResume.java:79)
-		at reactor.core.publisher.FluxSwitchIfEmpty$SwitchIfEmptySubscriber.onNext(FluxSwitchIfEmpty.java:74)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onNext(MonoNext.java:82)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.innerNext(FluxConcatMapNoPrefetch.java:259)
-		at reactor.core.publisher.FluxConcatMap$ConcatMapInner.onNext(FluxConcatMap.java:865)
-		at reactor.core.publisher.FluxMapFuseable$MapFuseableSubscriber.onNext(FluxMapFuseable.java:129)
-		at reactor.core.publisher.Operators$ScalarSubscription.request(Operators.java:2571)
-		at reactor.core.publisher.FluxMapFuseable$MapFuseableSubscriber.request(FluxMapFuseable.java:171)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.set(Operators.java:2367)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.onSubscribe(Operators.java:2241)
-		at reactor.core.publisher.FluxMapFuseable$MapFuseableSubscriber.onSubscribe(FluxMapFuseable.java:96)
-		at reactor.core.publisher.MonoJust.subscribe(MonoJust.java:55)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onNext(FluxConcatMapNoPrefetch.java:207)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.slowPath(FluxIterable.java:335)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.request(FluxIterable.java:294)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.innerComplete(FluxConcatMapNoPrefetch.java:275)
-		at reactor.core.publisher.FluxConcatMap$ConcatMapInner.onComplete(FluxConcatMap.java:889)
-		at reactor.core.publisher.FluxMap$MapSubscriber.onComplete(FluxMap.java:144)
-		at reactor.core.publisher.FluxSwitchIfEmpty$SwitchIfEmptySubscriber.onComplete(FluxSwitchIfEmpty.java:85)
-		at reactor.core.publisher.MonoIgnoreThen$ThenIgnoreMain.onComplete(MonoIgnoreThen.java:210)
-		at reactor.core.publisher.MonoIgnoreThen$ThenIgnoreMain.subscribeNext(MonoIgnoreThen.java:239)
-		at reactor.core.publisher.MonoIgnoreThen.subscribe(MonoIgnoreThen.java:51)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.FluxSwitchIfEmpty$SwitchIfEmptySubscriber.onComplete(FluxSwitchIfEmpty.java:82)
-		at reactor.core.publisher.FluxMap$MapSubscriber.onComplete(FluxMap.java:144)
-		at reactor.core.publisher.FluxMap$MapSubscriber.onComplete(FluxMap.java:144)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onComplete(MonoNext.java:102)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onComplete(FluxConcatMapNoPrefetch.java:241)
-		at reactor.core.publisher.FluxDematerialize$DematerializeSubscriber.onComplete(FluxDematerialize.java:121)
-		at reactor.core.publisher.FluxDematerialize$DematerializeSubscriber.onNext(FluxDematerialize.java:91)
-		at reactor.core.publisher.FluxDematerialize$DematerializeSubscriber.onNext(FluxDematerialize.java:44)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.slowPath(FluxIterable.java:335)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.request(FluxIterable.java:294)
-		at reactor.core.publisher.FluxDematerialize$DematerializeSubscriber.request(FluxDematerialize.java:127)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.innerComplete(FluxConcatMapNoPrefetch.java:275)
-		at reactor.core.publisher.FluxConcatMap$ConcatMapInner.onComplete(FluxConcatMap.java:889)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.onComplete(Operators.java:2231)
-		at reactor.core.publisher.MonoPeekTerminal$MonoTerminalPeekSubscriber.onComplete(MonoPeekTerminal.java:299)
-		at reactor.core.publisher.MonoFilterWhen$MonoFilterWhenMain.onNext(MonoFilterWhen.java:141)
-		at reactor.core.publisher.Operators$ScalarSubscription.request(Operators.java:2571)
-		at reactor.core.publisher.MonoFilterWhen$MonoFilterWhenMain.request(MonoFilterWhen.java:183)
-		at reactor.core.publisher.MonoPeekTerminal$MonoTerminalPeekSubscriber.request(MonoPeekTerminal.java:139)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.request(Operators.java:2331)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.request(Operators.java:2331)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.request(FluxConcatMapNoPrefetch.java:339)
-		at reactor.core.publisher.MonoNext$NextSubscriber.request(MonoNext.java:108)
-		at reactor.core.publisher.FluxMap$MapSubscriber.request(FluxMap.java:164)
-		at reactor.core.publisher.FluxMap$MapSubscriber.request(FluxMap.java:164)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.request(Operators.java:2331)
-		at reactor.core.publisher.FluxMap$MapSubscriber.request(FluxMap.java:164)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.request(Operators.java:2331)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.request(FluxConcatMapNoPrefetch.java:339)
-		at reactor.core.publisher.MonoNext$NextSubscriber.request(MonoNext.java:108)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.set(Operators.java:2367)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.onSubscribe(Operators.java:2241)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onSubscribe(MonoNext.java:70)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onSubscribe(FluxConcatMapNoPrefetch.java:164)
-		at reactor.core.publisher.FluxIterable.subscribe(FluxIterable.java:201)
-		at reactor.core.publisher.FluxIterable.subscribe(FluxIterable.java:83)
-		at reactor.core.publisher.InternalMonoOperator.subscribe(InternalMonoOperator.java:76)
-		at reactor.core.publisher.MonoDefer.subscribe(MonoDefer.java:53)
-		at reactor.core.publisher.InternalMonoOperator.subscribe(InternalMonoOperator.java:76)
-		at reactor.core.publisher.MonoDefer.subscribe(MonoDefer.java:53)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.MonoIgnoreThen$ThenIgnoreMain.subscribeNext(MonoIgnoreThen.java:265)
-		at reactor.core.publisher.MonoIgnoreThen.subscribe(MonoIgnoreThen.java:51)
-		at reactor.core.publisher.InternalMonoOperator.subscribe(InternalMonoOperator.java:76)
-		at reactor.core.publisher.MonoDeferContextual.subscribe(MonoDeferContextual.java:55)
-		at reactor.netty.http.server.HttpServer$HttpServerHandle.onStateChange(HttpServer.java:1176)
-		at reactor.netty.ReactorNetty$CompositeConnectionObserver.onStateChange(ReactorNetty.java:710)
-		at reactor.netty.transport.ServerTransport$ChildObserver.onStateChange(ServerTransport.java:481)
-		at reactor.netty.http.server.HttpServerOperations.onInboundNext(HttpServerOperations.java:652)
-		at reactor.netty.channel.ChannelOperationsHandler.channelRead(ChannelOperationsHandler.java:114)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)
-		at reactor.netty.http.server.HttpTrafficHandler.channelRead(HttpTrafficHandler.java:240)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)
-		at io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:436)
-		at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346)
-		at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:318)
-		at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:251)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)
-		at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1407)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
-		at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)
-		at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)
-		at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:788)
-		at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)
-		at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)
-		at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)
-		at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:994)
-		at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
-		at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-		at java.base/java.lang.Thread.run(Thread.java:842)
-{"timestamp":"2026-06-20 13:56:54.659","thread":"reactor-http-nio-2","level":"ERROR","logger":"com.eventos.gateway.config.GlobalErrorWebExceptionHandler","traceId":"","spanId":"","message":"[GATEWAY ERROR] Path: /favicon.ico, Message: 404 NOT_FOUND "No static resource favicon.ico.""}
-org.springframework.web.reactive.resource.NoResourceFoundException: 404 NOT_FOUND "No static resource favicon.ico."
-	at org.springframework.web.reactive.resource.ResourceWebHandler.lambda$handle$1(ResourceWebHandler.java:431)
-	Suppressed: reactor.core.publisher.FluxOnAssembly$OnAssemblyException: 
-Error has been observed at the following site(s):
-	*__checkpoint ? org.springframework.cloud.gateway.filter.WeightCalculatorWebFilter [DefaultWebFilterChain]
-	*__checkpoint ? HTTP GET "/favicon.ico" [ExceptionHandlingWebHandler]
-Original Stack Trace:
-		at org.springframework.web.reactive.resource.ResourceWebHandler.lambda$handle$1(ResourceWebHandler.java:431)
-		at reactor.core.publisher.MonoDefer.subscribe(MonoDefer.java:45)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.FluxSwitchIfEmpty$SwitchIfEmptySubscriber.onComplete(FluxSwitchIfEmpty.java:82)
-		at reactor.core.publisher.MonoFlatMap$FlatMapMain.onComplete(MonoFlatMap.java:189)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onComplete(MonoNext.java:102)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onComplete(FluxConcatMapNoPrefetch.java:241)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.slowPath(FluxIterable.java:357)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.request(FluxIterable.java:294)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.request(FluxConcatMapNoPrefetch.java:337)
-		at reactor.core.publisher.MonoNext$NextSubscriber.request(MonoNext.java:108)
-		at reactor.core.publisher.MonoFlatMap$FlatMapMain.request(MonoFlatMap.java:194)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.set(Operators.java:2367)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.onSubscribe(Operators.java:2241)
-		at reactor.core.publisher.MonoFlatMap$FlatMapMain.onSubscribe(MonoFlatMap.java:117)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onSubscribe(MonoNext.java:70)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onSubscribe(FluxConcatMapNoPrefetch.java:164)
-		at reactor.core.publisher.FluxIterable.subscribe(FluxIterable.java:201)
-		at reactor.core.publisher.FluxIterable.subscribe(FluxIterable.java:83)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.MonoIgnoreThen$ThenIgnoreMain.subscribeNext(MonoIgnoreThen.java:265)
-		at reactor.core.publisher.MonoIgnoreThen.subscribe(MonoIgnoreThen.java:51)
-		at reactor.core.publisher.InternalMonoOperator.subscribe(InternalMonoOperator.java:76)
-		at reactor.core.publisher.MonoFlatMap$FlatMapMain.onNext(MonoFlatMap.java:165)
-		at reactor.core.publisher.FluxOnErrorResume$ResumeSubscriber.onNext(FluxOnErrorResume.java:79)
-		at reactor.core.publisher.FluxSwitchIfEmpty$SwitchIfEmptySubscriber.onNext(FluxSwitchIfEmpty.java:74)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onNext(MonoNext.java:82)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.innerNext(FluxConcatMapNoPrefetch.java:259)
-		at reactor.core.publisher.FluxConcatMap$ConcatMapInner.onNext(FluxConcatMap.java:865)
-		at reactor.core.publisher.FluxMapFuseable$MapFuseableSubscriber.onNext(FluxMapFuseable.java:129)
-		at reactor.core.publisher.Operators$ScalarSubscription.request(Operators.java:2571)
-		at reactor.core.publisher.FluxMapFuseable$MapFuseableSubscriber.request(FluxMapFuseable.java:171)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.set(Operators.java:2367)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.onSubscribe(Operators.java:2241)
-		at reactor.core.publisher.FluxMapFuseable$MapFuseableSubscriber.onSubscribe(FluxMapFuseable.java:96)
-		at reactor.core.publisher.MonoJust.subscribe(MonoJust.java:55)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onNext(FluxConcatMapNoPrefetch.java:207)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.slowPath(FluxIterable.java:335)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.request(FluxIterable.java:294)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.innerComplete(FluxConcatMapNoPrefetch.java:275)
-		at reactor.core.publisher.FluxConcatMap$ConcatMapInner.onComplete(FluxConcatMap.java:889)
-		at reactor.core.publisher.FluxMap$MapSubscriber.onComplete(FluxMap.java:144)
-		at reactor.core.publisher.FluxSwitchIfEmpty$SwitchIfEmptySubscriber.onComplete(FluxSwitchIfEmpty.java:85)
-		at reactor.core.publisher.MonoIgnoreThen$ThenIgnoreMain.onComplete(MonoIgnoreThen.java:210)
-		at reactor.core.publisher.MonoIgnoreThen$ThenIgnoreMain.subscribeNext(MonoIgnoreThen.java:239)
-		at reactor.core.publisher.MonoIgnoreThen.subscribe(MonoIgnoreThen.java:51)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.FluxSwitchIfEmpty$SwitchIfEmptySubscriber.onComplete(FluxSwitchIfEmpty.java:82)
-		at reactor.core.publisher.FluxMap$MapSubscriber.onComplete(FluxMap.java:144)
-		at reactor.core.publisher.FluxMap$MapSubscriber.onComplete(FluxMap.java:144)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onComplete(MonoNext.java:102)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onComplete(FluxConcatMapNoPrefetch.java:241)
-		at reactor.core.publisher.FluxDematerialize$DematerializeSubscriber.onComplete(FluxDematerialize.java:121)
-		at reactor.core.publisher.FluxDematerialize$DematerializeSubscriber.onNext(FluxDematerialize.java:91)
-		at reactor.core.publisher.FluxDematerialize$DematerializeSubscriber.onNext(FluxDematerialize.java:44)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.slowPath(FluxIterable.java:335)
-		at reactor.core.publisher.FluxIterable$IterableSubscription.request(FluxIterable.java:294)
-		at reactor.core.publisher.FluxDematerialize$DematerializeSubscriber.request(FluxDematerialize.java:127)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.innerComplete(FluxConcatMapNoPrefetch.java:275)
-		at reactor.core.publisher.FluxConcatMap$ConcatMapInner.onComplete(FluxConcatMap.java:889)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.onComplete(Operators.java:2231)
-		at reactor.core.publisher.MonoPeekTerminal$MonoTerminalPeekSubscriber.onComplete(MonoPeekTerminal.java:299)
-		at reactor.core.publisher.MonoFilterWhen$MonoFilterWhenMain.onNext(MonoFilterWhen.java:141)
-		at reactor.core.publisher.Operators$ScalarSubscription.request(Operators.java:2571)
-		at reactor.core.publisher.MonoFilterWhen$MonoFilterWhenMain.request(MonoFilterWhen.java:183)
-		at reactor.core.publisher.MonoPeekTerminal$MonoTerminalPeekSubscriber.request(MonoPeekTerminal.java:139)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.request(Operators.java:2331)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.request(Operators.java:2331)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.request(FluxConcatMapNoPrefetch.java:339)
-		at reactor.core.publisher.MonoNext$NextSubscriber.request(MonoNext.java:108)
-		at reactor.core.publisher.FluxMap$MapSubscriber.request(FluxMap.java:164)
-		at reactor.core.publisher.FluxMap$MapSubscriber.request(FluxMap.java:164)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.request(Operators.java:2331)
-		at reactor.core.publisher.FluxMap$MapSubscriber.request(FluxMap.java:164)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.request(Operators.java:2331)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.request(FluxConcatMapNoPrefetch.java:339)
-		at reactor.core.publisher.MonoNext$NextSubscriber.request(MonoNext.java:108)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.set(Operators.java:2367)
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.onSubscribe(Operators.java:2241)
-		at reactor.core.publisher.MonoNext$NextSubscriber.onSubscribe(MonoNext.java:70)
-		at reactor.core.publisher.FluxConcatMapNoPrefetch$FluxConcatMapNoPrefetchSubscriber.onSubscribe(FluxConcatMapNoPrefetch.java:164)
-		at reactor.core.publisher.FluxIterable.subscribe(FluxIterable.java:201)
-		at reactor.core.publisher.FluxIterable.subscribe(FluxIterable.java:83)
-		at reactor.core.publisher.InternalMonoOperator.subscribe(InternalMonoOperator.java:76)
-		at reactor.core.publisher.MonoDefer.subscribe(MonoDefer.java:53)
-		at reactor.core.publisher.InternalMonoOperator.subscribe(InternalMonoOperator.java:76)
-		at reactor.core.publisher.MonoDefer.subscribe(MonoDefer.java:53)
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568)
-		at reactor.core.publisher.MonoIgnoreThen$ThenIgnoreMain.subscribeNext(MonoIgnoreThen.java:265)
-		at reactor.core.publisher.MonoIgnoreThen.subscribe(MonoIgnoreThen.java:51)
-		at reactor.core.publisher.InternalMonoOperator.subscribe(InternalMonoOperator.java:76)
-		at reactor.core.publisher.MonoDeferContextual.subscribe(MonoDeferContextual.java:55)
-		at reactor.netty.http.server.HttpServer$HttpServerHandle.onStateChange(HttpServer.java:1176)
-		at reactor.netty.ReactorNetty$CompositeConnectionObserver.onStateChange(ReactorNetty.java:710)
-		at reactor.netty.transport.ServerTransport$ChildObserver.onStateChange(ServerTransport.java:481)
-		at reactor.netty.http.server.HttpServerOperations.onInboundNext(HttpServerOperations.java:652)
-		at reactor.netty.channel.ChannelOperationsHandler.channelRead(ChannelOperationsHandler.java:114)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)
-		at reactor.netty.http.server.HttpTrafficHandler.channelRead(HttpTrafficHandler.java:240)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)
-		at io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:436)
-		at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346)
-		at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:318)
-		at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:251)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)
-		at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1407)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440)
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
-		at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)
-		at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)
-		at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:788)
-		at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)
-		at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)
-		at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)
-		at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:994)
-		at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
-		at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-		at java.base/java.lang.Thread.run(Thread.java:842)
-{"timestamp":"2026-06-20 14:02:56.449","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Starting ApiGatewayApplication v1.0.0 using Java 17.0.16 with PID 9076 (D:\EventOs\backend\api-gateway\target\api-gateway-1.0.0.jar started by LENOVO in D:\EventOs\backend\api-gateway)"}
-{"timestamp":"2026-06-20 14:02:56.456","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"No active profile set, falling back to 1 default profile: "default""}
-{"timestamp":"2026-06-20 14:02:59.103","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Multiple Spring Data modules found, entering strict repository configuration mode"}
-{"timestamp":"2026-06-20 14:02:59.109","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Bootstrapping Spring Data Redis repositories in DEFAULT mode."}
-{"timestamp":"2026-06-20 14:02:59.179","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Finished Spring Data repository scanning in 31 ms. Found 0 Redis repository interfaces."}
-{"timestamp":"2026-06-20 14:02:59.503","thread":"main","level":"INFO","logger":"org.springframework.cloud.context.scope.GenericScope","traceId":"","spanId":"","message":"BeanFactory id=8e975ba5-0267-3cce-80da-3c41da899ece"}
-{"timestamp":"2026-06-20 14:03:00.281","thread":"main","level":"INFO","logger":"com.eventos.gateway.config.JwtAuthFilter","traceId":"","spanId":"","message":"Successfully loaded shared JWT RSA public key from file."}
-{"timestamp":"2026-06-20 14:03:03.213","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [After]"}
-{"timestamp":"2026-06-20 14:03:03.215","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Before]"}
-{"timestamp":"2026-06-20 14:03:03.216","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Between]"}
-{"timestamp":"2026-06-20 14:03:03.216","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Cookie]"}
-{"timestamp":"2026-06-20 14:03:03.217","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Header]"}
-{"timestamp":"2026-06-20 14:03:03.217","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Host]"}
-{"timestamp":"2026-06-20 14:03:03.217","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Method]"}
-{"timestamp":"2026-06-20 14:03:03.218","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Path]"}
-{"timestamp":"2026-06-20 14:03:03.219","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Query]"}
-{"timestamp":"2026-06-20 14:03:03.219","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [ReadBody]"}
-{"timestamp":"2026-06-20 14:03:03.222","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [RemoteAddr]"}
-{"timestamp":"2026-06-20 14:03:03.223","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [XForwardedRemoteAddr]"}
-{"timestamp":"2026-06-20 14:03:03.224","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Weight]"}
-{"timestamp":"2026-06-20 14:03:03.225","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [CloudFoundryRouteService]"}
-{"timestamp":"2026-06-20 14:03:04.596","thread":"main","level":"INFO","logger":"org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver","traceId":"","spanId":"","message":"Exposing 2 endpoints beneath base path '/actuator'"}
-{"timestamp":"2026-06-20 14:03:05.814","thread":"main","level":"INFO","logger":"org.springframework.boot.web.embedded.netty.NettyWebServer","traceId":"","spanId":"","message":"Netty started on port 8080 (http)"}
-{"timestamp":"2026-06-20 14:03:06.841","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Started ApiGatewayApplication in 12.421 seconds (process running for 13.704)"}
-{"timestamp":"2026-06-20 15:09:01.420","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplicationTest","traceId":"","spanId":"","message":"Starting ApiGatewayApplicationTest using Java 17.0.16 with PID 11600 (started by LENOVO in D:\EventOs\backend\api-gateway)"}
-{"timestamp":"2026-06-20 15:09:01.425","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplicationTest","traceId":"","spanId":"","message":"No active profile set, falling back to 1 default profile: "default""}
-{"timestamp":"2026-06-20 15:09:05.073","thread":"main","level":"INFO","logger":"org.springframework.cloud.context.scope.GenericScope","traceId":"","spanId":"","message":"BeanFactory id=8d4ca68b-adec-33f2-afa5-cb34a22f996c"}
-{"timestamp":"2026-06-20 15:09:06.005","thread":"main","level":"INFO","logger":"com.eventos.gateway.config.JwtAuthFilter","traceId":"","spanId":"","message":"Successfully loaded shared JWT RSA public key from file."}
-{"timestamp":"2026-06-20 15:09:09.263","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [After]"}
-{"timestamp":"2026-06-20 15:09:09.264","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Before]"}
-{"timestamp":"2026-06-20 15:09:09.264","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Between]"}
-{"timestamp":"2026-06-20 15:09:09.264","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Cookie]"}
-{"timestamp":"2026-06-20 15:09:09.264","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Header]"}
-{"timestamp":"2026-06-20 15:09:09.264","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Host]"}
-{"timestamp":"2026-06-20 15:09:09.264","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Method]"}
-{"timestamp":"2026-06-20 15:09:09.264","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Path]"}
-{"timestamp":"2026-06-20 15:09:09.266","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Query]"}
-{"timestamp":"2026-06-20 15:09:09.266","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [ReadBody]"}
-{"timestamp":"2026-06-20 15:09:09.266","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [RemoteAddr]"}
-{"timestamp":"2026-06-20 15:09:09.266","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [XForwardedRemoteAddr]"}
-{"timestamp":"2026-06-20 15:09:09.266","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Weight]"}
-{"timestamp":"2026-06-20 15:09:09.266","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [CloudFoundryRouteService]"}
-{"timestamp":"2026-06-20 15:09:10.134","thread":"main","level":"INFO","logger":"org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver","traceId":"","spanId":"","message":"Exposing 1 endpoint beneath base path '/actuator'"}
-{"timestamp":"2026-06-20 15:09:11.214","thread":"main","level":"INFO","logger":"org.springframework.boot.web.embedded.netty.NettyWebServer","traceId":"","spanId":"","message":"Netty started on port 63222 (http)"}
-{"timestamp":"2026-06-20 15:09:11.932","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplicationTest","traceId":"","spanId":"","message":"Started ApiGatewayApplicationTest in 12.016 seconds (process running for 14.74)"}
-{"timestamp":"2026-06-20 15:09:14.844","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 9cbf6e9973204811bc52cd999573adef, Method: POST, Path: /api/v1/auth/login, Client IP: /127.0.0.1:63223"}
-{"timestamp":"2026-06-20 15:09:14.917","thread":"reactor-http-nio-5","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 5eab4a5b762b44a2b81c855129aefcae, Method: POST, Path: /api/v1/auth/login, Client IP: /127.0.0.1:63223"}
-{"timestamp":"2026-06-20 15:09:14.919","thread":"reactor-http-nio-5","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 5eab4a5b762b44a2b81c855129aefcae, Status Code: 200 OK"}
-{"timestamp":"2026-06-20 15:38:48.547","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplicationTest","traceId":"","spanId":"","message":"Starting ApiGatewayApplicationTest using Java 17.0.16 with PID 15184 (started by LENOVO in D:\EventOs\backend\api-gateway)"}
-{"timestamp":"2026-06-20 15:38:48.552","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplicationTest","traceId":"","spanId":"","message":"No active profile set, falling back to 1 default profile: "default""}
-{"timestamp":"2026-06-20 15:38:51.364","thread":"main","level":"INFO","logger":"org.springframework.cloud.context.scope.GenericScope","traceId":"","spanId":"","message":"BeanFactory id=8d4ca68b-adec-33f2-afa5-cb34a22f996c"}
-{"timestamp":"2026-06-20 15:38:52.273","thread":"main","level":"INFO","logger":"com.eventos.gateway.config.JwtAuthFilter","traceId":"","spanId":"","message":"Successfully loaded shared JWT RSA public key from file."}
-{"timestamp":"2026-06-20 15:38:54.919","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [After]"}
-{"timestamp":"2026-06-20 15:38:54.920","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Before]"}
-{"timestamp":"2026-06-20 15:38:54.920","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Between]"}
-{"timestamp":"2026-06-20 15:38:54.920","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Cookie]"}
-{"timestamp":"2026-06-20 15:38:54.920","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Header]"}
-{"timestamp":"2026-06-20 15:38:54.921","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Host]"}
-{"timestamp":"2026-06-20 15:38:54.921","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Method]"}
-{"timestamp":"2026-06-20 15:38:54.921","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Path]"}
-{"timestamp":"2026-06-20 15:38:54.921","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Query]"}
-{"timestamp":"2026-06-20 15:38:54.922","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [ReadBody]"}
-{"timestamp":"2026-06-20 15:38:54.922","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [RemoteAddr]"}
-{"timestamp":"2026-06-20 15:38:54.922","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [XForwardedRemoteAddr]"}
-{"timestamp":"2026-06-20 15:38:54.922","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Weight]"}
-{"timestamp":"2026-06-20 15:38:54.923","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [CloudFoundryRouteService]"}
-{"timestamp":"2026-06-20 15:38:55.736","thread":"main","level":"INFO","logger":"org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver","traceId":"","spanId":"","message":"Exposing 1 endpoint beneath base path '/actuator'"}
-{"timestamp":"2026-06-20 15:38:56.569","thread":"main","level":"INFO","logger":"org.springframework.boot.web.embedded.netty.NettyWebServer","traceId":"","spanId":"","message":"Netty started on port 64203 (http)"}
-{"timestamp":"2026-06-20 15:38:57.128","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplicationTest","traceId":"","spanId":"","message":"Started ApiGatewayApplicationTest in 9.925 seconds (process running for 12.153)"}
-{"timestamp":"2026-06-20 15:38:59.376","thread":"reactor-http-nio-4","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 767566fa6f8948c7aa9b1a66ff3c0637, Method: POST, Path: /api/v1/auth/login, Client IP: /127.0.0.1:64204"}
-{"timestamp":"2026-06-20 15:38:59.426","thread":"reactor-http-nio-4","level":"ERROR","logger":"com.eventos.gateway.config.GlobalErrorWebExceptionHandler","traceId":"","spanId":"","message":"[GATEWAY ERROR] Path: /api/v1/auth/login, Message: Connection refused: no further information: localhost/127.0.0.1:8081"}
-io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: no further information: localhost/127.0.0.1:8081
-	Suppressed: reactor.core.publisher.FluxOnAssembly$OnAssemblyException: 
-Error has been observed at the following site(s):
-	*__checkpoint ? org.springframework.cloud.gateway.filter.WeightCalculatorWebFilter [DefaultWebFilterChain]
-	*__checkpoint ? HTTP POST "/api/v1/auth/login" [ExceptionHandlingWebHandler]
-Original Stack Trace:
-Caused by: java.net.ConnectException: Connection refused: no further information
-	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
-	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672)
-	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:946)
-	at io.netty.channel.socket.nio.NioSocketChannel.doFinishConnect(NioSocketChannel.java:336)
-	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.finishConnect(AbstractNioChannel.java:339)
-	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:776)
-	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)
-	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)
-	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)
-	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:994)
-	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:842)
+{"timestamp":"2026-06-29 18:20:19.057","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Starting ApiGatewayApplication using Java 17.0.16 with PID 13584 (D:\EventOs\backend\api-gateway\target\classes started by LENOVO in D:\EventOs\backend\api-gateway)"}
+{"timestamp":"2026-06-29 18:20:19.070","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"No active profile set, falling back to 1 default profile: "default""}
+{"timestamp":"2026-06-29 18:20:21.143","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Multiple Spring Data modules found, entering strict repository configuration mode"}
+{"timestamp":"2026-06-29 18:20:21.151","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Bootstrapping Spring Data Redis repositories in DEFAULT mode."}
+{"timestamp":"2026-06-29 18:20:21.224","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Finished Spring Data repository scanning in 32 ms. Found 0 Redis repository interfaces."}
+{"timestamp":"2026-06-29 18:20:21.571","thread":"main","level":"INFO","logger":"org.springframework.cloud.context.scope.GenericScope","traceId":"","spanId":"","message":"BeanFactory id=8e975ba5-0267-3cce-80da-3c41da899ece"}
+{"timestamp":"2026-06-29 18:20:22.168","thread":"main","level":"INFO","logger":"com.eventos.gateway.config.JwtAuthFilter","traceId":"","spanId":"","message":"Successfully loaded shared JWT RSA public key from file."}
+{"timestamp":"2026-06-29 18:20:24.831","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [After]"}
+{"timestamp":"2026-06-29 18:20:24.834","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Before]"}
+{"timestamp":"2026-06-29 18:20:24.834","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Between]"}
+{"timestamp":"2026-06-29 18:20:24.835","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Cookie]"}
+{"timestamp":"2026-06-29 18:20:24.835","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Header]"}
+{"timestamp":"2026-06-29 18:20:24.835","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Host]"}
+{"timestamp":"2026-06-29 18:20:24.836","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Method]"}
+{"timestamp":"2026-06-29 18:20:24.836","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Path]"}
+{"timestamp":"2026-06-29 18:20:24.837","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Query]"}
+{"timestamp":"2026-06-29 18:20:24.837","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [ReadBody]"}
+{"timestamp":"2026-06-29 18:20:24.837","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [RemoteAddr]"}
+{"timestamp":"2026-06-29 18:20:24.838","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [XForwardedRemoteAddr]"}
+{"timestamp":"2026-06-29 18:20:24.838","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Weight]"}
+{"timestamp":"2026-06-29 18:20:24.839","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [CloudFoundryRouteService]"}
+{"timestamp":"2026-06-29 18:20:25.621","thread":"main","level":"INFO","logger":"org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver","traceId":"","spanId":"","message":"Exposing 2 endpoints beneath base path '/actuator'"}
+{"timestamp":"2026-06-29 18:20:26.687","thread":"main","level":"INFO","logger":"org.springframework.boot.web.embedded.netty.NettyWebServer","traceId":"","spanId":"","message":"Netty started on port 8080 (http)"}
+{"timestamp":"2026-06-29 18:20:27.577","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Started ApiGatewayApplication in 10.126 seconds (process running for 11.151)"}
+{"timestamp":"2026-06-29 18:30:40.478","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: d64d144af41a4863be9ab403305c0964, Method: POST, Path: /api/v1/auth/login, Client IP: /[0:0:0:0:0:0:0:1]:51660"}
+{"timestamp":"2026-06-29 18:30:52.287","thread":"reactor-http-nio-4","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: d64d144af41a4863be9ab403305c0964, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:35:26.172","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: c514c3ef14b94645b01d26fd949a74cb, Method: POST, Path: /api/v1/auth/login, Client IP: /[0:0:0:0:0:0:0:1]:59391"}
+{"timestamp":"2026-06-29 18:35:29.489","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: c514c3ef14b94645b01d26fd949a74cb, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:35:50.075","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 619a6d6ad61c4e439057d46b5c804b16, Method: POST, Path: /api/v1/auth/switch, Client IP: /[0:0:0:0:0:0:0:1]:50375"}
+{"timestamp":"2026-06-29 18:35:52.440","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 619a6d6ad61c4e439057d46b5c804b16, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:35:58.845","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 6968830910a9409f872288d281de54d3, Method: GET, Path: /api/v1/crm/dashboard/metrics, Client IP: /[0:0:0:0:0:0:0:1]:53631"}
+{"timestamp":"2026-06-29 18:36:11.796","thread":"reactor-http-nio-9","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 6968830910a9409f872288d281de54d3, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:36:42.457","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: d8cee713cfad4ac381862c28df674d88, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:59928"}
+{"timestamp":"2026-06-29 18:36:42.548","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 346d0519f94741fea8f9657bc99e717a, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:59927"}
+{"timestamp":"2026-06-29 18:36:44.128","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: d8cee713cfad4ac381862c28df674d88, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:36:44.129","thread":"reactor-http-nio-14","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 346d0519f94741fea8f9657bc99e717a, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:36:44.265","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: b608d1d8608a455aa58ac1a05b29778c, Method: GET, Path: /api/v1/crm/leads, Client IP: /[0:0:0:0:0:0:0:1]:59930"}
+{"timestamp":"2026-06-29 18:36:44.353","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 4c0642ef49b5489b9af6a256fc68f0ec, Method: GET, Path: /api/v1/auth/settings/team, Client IP: /[0:0:0:0:0:0:0:1]:59931"}
+{"timestamp":"2026-06-29 18:36:45.421","thread":"reactor-http-nio-14","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 4c0642ef49b5489b9af6a256fc68f0ec, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:36:47.208","thread":"reactor-http-nio-9","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: b608d1d8608a455aa58ac1a05b29778c, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:37:20.183","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: aadc89dc47064b36b323c8de3ee6eeb5, Method: GET, Path: /api/v1/crm/leads/0dc38d6a-c5a3-46e6-8753-9a49a671e950/activities, Client IP: /[0:0:0:0:0:0:0:1]:63923"}
+{"timestamp":"2026-06-29 18:37:20.541","thread":"reactor-http-nio-9","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: aadc89dc47064b36b323c8de3ee6eeb5, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:39:09.881","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 0a3acc92d4cb4950ae1be69fc29bce22, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:50185"}
+{"timestamp":"2026-06-29 18:39:10.048","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: d2b235607fb44cc99449f0f350fd78a8, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:50186"}
+{"timestamp":"2026-06-29 18:39:12.245","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 0a3acc92d4cb4950ae1be69fc29bce22, Status Code: 401 UNAUTHORIZED"}
+{"timestamp":"2026-06-29 18:39:12.245","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: d2b235607fb44cc99449f0f350fd78a8, Status Code: 401 UNAUTHORIZED"}
+{"timestamp":"2026-06-29 18:39:15.628","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 8788334212d945ddbb4f51ebbdda5f6b, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:61845"}
+{"timestamp":"2026-06-29 18:39:15.640","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 63f08906db5a46f1ba7f9275994336c0, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:61846"}
+{"timestamp":"2026-06-29 18:39:15.681","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 8788334212d945ddbb4f51ebbdda5f6b, Status Code: 401 UNAUTHORIZED"}
+{"timestamp":"2026-06-29 18:39:15.722","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 63f08906db5a46f1ba7f9275994336c0, Status Code: 401 UNAUTHORIZED"}
+{"timestamp":"2026-06-29 18:39:18.097","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 798ada3508fc402fb3bfbfc92827d9c5, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:64191"}
+{"timestamp":"2026-06-29 18:39:18.173","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 798ada3508fc402fb3bfbfc92827d9c5, Status Code: 401 UNAUTHORIZED"}
+{"timestamp":"2026-06-29 18:39:19.685","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 4ced45ef97554ccb9b14830b7422e473, Method: POST, Path: /api/v1/auth/refresh, Client IP: /127.0.0.1:54160"}
+{"timestamp":"2026-06-29 18:39:19.890","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 4ced45ef97554ccb9b14830b7422e473, Status Code: 401 UNAUTHORIZED"}
+{"timestamp":"2026-06-29 18:39:36.622","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 633b9ad1b21e423cb1c89887de94a67a, Method: POST, Path: /api/v1/auth/login, Client IP: /[0:0:0:0:0:0:0:1]:61475"}
+{"timestamp":"2026-06-29 18:39:38.239","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 633b9ad1b21e423cb1c89887de94a67a, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:39:41.709","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 076a0141dfce4b51b401f271e4625936, Method: POST, Path: /api/v1/auth/switch, Client IP: /[0:0:0:0:0:0:0:1]:53407"}
+{"timestamp":"2026-06-29 18:39:42.048","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 076a0141dfce4b51b401f271e4625936, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:39:42.723","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 40cd330f8e784cd985f4a447ccb22720, Method: GET, Path: /api/v1/crm/dashboard/metrics, Client IP: /[0:0:0:0:0:0:0:1]:57526"}
+{"timestamp":"2026-06-29 18:39:44.385","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 40cd330f8e784cd985f4a447ccb22720, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:39:55.079","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: bf69e1a73bc343b98e835e220aec7175, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:63993"}
+{"timestamp":"2026-06-29 18:39:55.089","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 497e3dfc1de14a4496351abfa8caa376, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:63994"}
+{"timestamp":"2026-06-29 18:39:55.219","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 497e3dfc1de14a4496351abfa8caa376, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:39:55.226","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: bf69e1a73bc343b98e835e220aec7175, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:39:55.270","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: e70642b3cd214db293b9377802fdf211, Method: GET, Path: /api/v1/auth/settings/team, Client IP: /[0:0:0:0:0:0:0:1]:63995"}
+{"timestamp":"2026-06-29 18:39:55.285","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 247ac426b41a417d8dbab40935b56245, Method: GET, Path: /api/v1/crm/leads, Client IP: /[0:0:0:0:0:0:0:1]:63996"}
+{"timestamp":"2026-06-29 18:39:55.377","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: e70642b3cd214db293b9377802fdf211, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:39:55.882","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 247ac426b41a417d8dbab40935b56245, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:40:00.788","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: aafe55abbb364af7b437dcd319728242, Method: GET, Path: /api/v1/crm/leads/0dc38d6a-c5a3-46e6-8753-9a49a671e950/activities, Client IP: /[0:0:0:0:0:0:0:1]:55278"}
+{"timestamp":"2026-06-29 18:40:00.996","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: aafe55abbb364af7b437dcd319728242, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:40:17.604","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 4294765ddb8d4c439f9bebb120b80d60, Method: PUT, Path: /api/v1/crm/leads/0dc38d6a-c5a3-46e6-8753-9a49a671e950, Client IP: /[0:0:0:0:0:0:0:1]:65124"}
+{"timestamp":"2026-06-29 18:40:26.130","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 4294765ddb8d4c439f9bebb120b80d60, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:40:31.215","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 03bcbb624fde433ba0f0e6ab79c8fb37, Method: GET, Path: /api/v1/crm/leads/0dc38d6a-c5a3-46e6-8753-9a49a671e950/activities, Client IP: /[0:0:0:0:0:0:0:1]:54133"}
+{"timestamp":"2026-06-29 18:40:31.314","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 37b6cdf8505b447393aa1780f24d6d3b, Method: GET, Path: /api/v1/crm/leads, Client IP: /[0:0:0:0:0:0:0:1]:54132"}
+{"timestamp":"2026-06-29 18:40:31.773","thread":"reactor-http-nio-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 37b6cdf8505b447393aa1780f24d6d3b, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:40:31.922","thread":"reactor-http-nio-6","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 03bcbb624fde433ba0f0e6ab79c8fb37, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:40:51.166","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: c4de3d21ecf64c9a8e2e6eda001ffd12, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:59766"}
+{"timestamp":"2026-06-29 18:40:53.182","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: c4de3d21ecf64c9a8e2e6eda001ffd12, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:40:53.358","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 905dd4be0b2b4ae9a59c34d7a4be9eca, Method: GET, Path: /api/v1/crm/dashboard/metrics, Client IP: /[0:0:0:0:0:0:0:1]:59768"}
+{"timestamp":"2026-06-29 18:40:58.136","thread":"reactor-http-nio-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 905dd4be0b2b4ae9a59c34d7a4be9eca, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:41:12.617","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: e0059838ebf2468b8897104f8af04f65, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:50372"}
+{"timestamp":"2026-06-29 18:41:12.724","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: a87acbf02e97480fb576ab03e4644bef, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:50373"}
+{"timestamp":"2026-06-29 18:41:14.792","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: e0059838ebf2468b8897104f8af04f65, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:41:14.792","thread":"reactor-http-nio-9","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: a87acbf02e97480fb576ab03e4644bef, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:41:14.947","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 9251897be5c746cf882a74f3bcc95e04, Method: GET, Path: /api/v1/auth/settings/team, Client IP: /[0:0:0:0:0:0:0:1]:50376"}
+{"timestamp":"2026-06-29 18:41:14.969","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: b6e12c2860ae4dbaa4a52f16a5fabd60, Method: GET, Path: /api/v1/auth/settings/company, Client IP: /[0:0:0:0:0:0:0:1]:50377"}
+{"timestamp":"2026-06-29 18:41:15.110","thread":"reactor-http-nio-9","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 9251897be5c746cf882a74f3bcc95e04, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:41:15.330","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: b6e12c2860ae4dbaa4a52f16a5fabd60, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:41:49.206","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 2302023505c744269b5fbbeaded677df, Method: PUT, Path: /api/v1/auth/settings/company, Client IP: /[0:0:0:0:0:0:0:1]:54889"}
+{"timestamp":"2026-06-29 18:41:50.916","thread":"reactor-http-nio-9","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 2302023505c744269b5fbbeaded677df, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:41:51.127","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 63f49758e8c9469fbfee690adb083466, Method: GET, Path: /api/v1/auth/settings/company, Client IP: /[0:0:0:0:0:0:0:1]:52900"}
+{"timestamp":"2026-06-29 18:41:51.171","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 63f49758e8c9469fbfee690adb083466, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:42:28.782","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: e0f6745e19ff43968394d5ffdc7eb5e3, Method: POST, Path: /api/v1/auth/settings/team, Client IP: /[0:0:0:0:0:0:0:1]:53031"}
+{"timestamp":"2026-06-29 18:42:30.613","thread":"reactor-http-nio-9","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: e0f6745e19ff43968394d5ffdc7eb5e3, Status Code: 201 CREATED"}
+{"timestamp":"2026-06-29 18:42:30.705","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 98fd61cca8f248a4b9d4de528b86cf78, Method: GET, Path: /api/v1/auth/settings/team, Client IP: /[0:0:0:0:0:0:0:1]:50458"}
+{"timestamp":"2026-06-29 18:42:30.770","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 98fd61cca8f248a4b9d4de528b86cf78, Status Code: 200 OK"}
+{"timestamp":"2026-06-29 18:42:37.261","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 6e2e811bdf444f99b88412238c8612f2, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:54210"}
+{"timestamp":"2026-06-29 18:42:37.267","thread":"lettuce-nioEventLoop-5-1","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY REQUEST] Trace ID: 32516b5f79b6473eb7d7c004ee218280, Method: POST, Path: /api/v1/auth/refresh, Client IP: /[0:0:0:0:0:0:0:1]:54211"}
+{"timestamp":"2026-06-29 18:42:37.458","thread":"reactor-http-nio-9","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 6e2e811bdf444f99b88412238c8612f2, Status Code: 401 UNAUTHORIZED"}
+{"timestamp":"2026-06-29 18:42:37.458","thread":"reactor-http-nio-7","level":"INFO","logger":"com.eventos.gateway.config.RequestLoggingFilter","traceId":"","spanId":"","message":"[GATEWAY RESPONSE] Trace ID: 32516b5f79b6473eb7d7c004ee218280, Status Code: 401 UNAUTHORIZED"}
+{"timestamp":"2026-06-29 20:29:26.121","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Starting ApiGatewayApplication using Java 17.0.16 with PID 22628 (D:\EventOs\backend\api-gateway\target\classes started by LENOVO in D:\EventOs\backend\api-gateway)"}
+{"timestamp":"2026-06-29 20:29:26.129","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"No active profile set, falling back to 1 default profile: "default""}
+{"timestamp":"2026-06-29 20:29:28.955","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Multiple Spring Data modules found, entering strict repository configuration mode"}
+{"timestamp":"2026-06-29 20:29:28.959","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Bootstrapping Spring Data Redis repositories in DEFAULT mode."}
+{"timestamp":"2026-06-29 20:29:29.014","thread":"main","level":"INFO","logger":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","traceId":"","spanId":"","message":"Finished Spring Data repository scanning in 28 ms. Found 0 Redis repository interfaces."}
+{"timestamp":"2026-06-29 20:29:29.356","thread":"main","level":"INFO","logger":"org.springframework.cloud.context.scope.GenericScope","traceId":"","spanId":"","message":"BeanFactory id=8e975ba5-0267-3cce-80da-3c41da899ece"}
+{"timestamp":"2026-06-29 20:29:29.966","thread":"main","level":"INFO","logger":"com.eventos.gateway.config.JwtAuthFilter","traceId":"","spanId":"","message":"Successfully loaded shared JWT RSA public key from file."}
+{"timestamp":"2026-06-29 20:29:32.390","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [After]"}
+{"timestamp":"2026-06-29 20:29:32.391","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Before]"}
+{"timestamp":"2026-06-29 20:29:32.391","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Between]"}
+{"timestamp":"2026-06-29 20:29:32.391","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Cookie]"}
+{"timestamp":"2026-06-29 20:29:32.392","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Header]"}
+{"timestamp":"2026-06-29 20:29:32.392","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Host]"}
+{"timestamp":"2026-06-29 20:29:32.392","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Method]"}
+{"timestamp":"2026-06-29 20:29:32.393","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Path]"}
+{"timestamp":"2026-06-29 20:29:32.393","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Query]"}
+{"timestamp":"2026-06-29 20:29:32.393","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [ReadBody]"}
+{"timestamp":"2026-06-29 20:29:32.393","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [RemoteAddr]"}
+{"timestamp":"2026-06-29 20:29:32.394","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [XForwardedRemoteAddr]"}
+{"timestamp":"2026-06-29 20:29:32.395","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [Weight]"}
+{"timestamp":"2026-06-29 20:29:32.395","thread":"main","level":"INFO","logger":"org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator","traceId":"","spanId":"","message":"Loaded RoutePredicateFactory [CloudFoundryRouteService]"}
+{"timestamp":"2026-06-29 20:29:33.016","thread":"main","level":"INFO","logger":"org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver","traceId":"","spanId":"","message":"Exposing 2 endpoints beneath base path '/actuator'"}
+{"timestamp":"2026-06-29 20:29:33.716","thread":"main","level":"INFO","logger":"org.springframework.boot.web.embedded.netty.NettyWebServer","traceId":"","spanId":"","message":"Netty started on port 8080 (http)"}
+{"timestamp":"2026-06-29 20:29:34.207","thread":"main","level":"INFO","logger":"com.eventos.gateway.ApiGatewayApplication","traceId":"","spanId":"","message":"Started ApiGatewayApplication in 10.436 seconds (process running for 11.365)"}
