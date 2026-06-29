@@ -34,6 +34,20 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Response Interceptor: Catch 401 and attempt token refresh
 api.interceptors.response.use(
   (response) => response,
@@ -41,45 +55,66 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
       originalRequest._retry = true;
-      try {
-        // Post request to Gateway → Auth Service /refresh route (relies on HTTP-only cookie)
-        const refreshResponse = await axios.post(
+      isRefreshing = true;
+
+      return new Promise((resolve, reject) => {
+        axios.post(
           "/api/v1/auth/refresh",
           {},
           { withCredentials: true }
-        );
-        
-        const newAccessToken = refreshResponse.data.data.accessToken;
-        setAccessToken(newAccessToken);
-        
-        // IMPORTANT: After a Spring Boot trailing-slash redirect, Axios mutates
-        // originalRequest.url to the absolute backend URL (e.g. http://localhost:8083/...).
-        // Reset the url to the relative path so the retry goes via the Next.js proxy, not direct to backend.
-        if (originalRequest.url && originalRequest.url.startsWith("http")) {
-          // Extract path after /api/v1
-          const match = originalRequest.url.match(/\/api\/v1(\/.*)/);
-          if (match) {
-            originalRequest.url = match[1]; // relative path like /events/
-          }
-        }
-        // Clear baseURL override if Axios set it to an absolute url during redirect
-        if (originalRequest.baseURL && originalRequest.baseURL.startsWith("http://localhost:8")) {
-          originalRequest.baseURL = "/api/v1";
-        }
+        )
+          .then((refreshResponse) => {
+            const newAccessToken = refreshResponse.data.data.accessToken;
+            setAccessToken(newAccessToken);
+            
+            // IMPORTANT: After a Spring Boot trailing-slash redirect, Axios mutates
+            // originalRequest.url to the absolute backend URL. Reset to relative path.
+            if (originalRequest.url && originalRequest.url.startsWith("http")) {
+              const match = originalRequest.url.match(/\/api\/v1(\/.*)/);
+              if (match) {
+                originalRequest.url = match[1]; // relative path like /events/
+              }
+            }
+            // Clear baseURL override if Axios set it to an absolute url during redirect
+            if (originalRequest.baseURL && originalRequest.baseURL.startsWith("http://localhost:8")) {
+              originalRequest.baseURL = "/api/v1";
+            }
 
-        // Re-execute original request with new token
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        // Refresh token failed/expired: clear token memory and redirect to login
-        setAccessToken(null);
-        useAuthStore.getState().clearAuth();
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
-        }
-        return Promise.reject(refreshError);
-      }
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            }
+            processQueue(null, newAccessToken);
+            resolve(api(originalRequest));
+          })
+          .catch((refreshError) => {
+            processQueue(refreshError, null);
+            setAccessToken(null);
+            useAuthStore.getState().clearAuth();
+            if (typeof window !== "undefined") {
+              window.location.href = "/login";
+            }
+            reject(refreshError);
+          })
+          .finally(() => {
+            isRefreshing = false;
+          });
+      });
     }
     return Promise.reject(error);
   }
