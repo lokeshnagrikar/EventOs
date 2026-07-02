@@ -186,6 +186,10 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
   };
 
   const onSubmit = async (data: RegisterInputs) => {
+    if (step === 1) {
+      await nextStep();
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
