@@ -170,7 +170,7 @@ public class EventPlanningIntegrationTest {
                         .with(authentication(otherAuth)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success", is(false)))
-                .andExpect(jsonPath("$.error.code", is("BAD_REQUEST")));
+                .andExpect(jsonPath("$.title", is("BAD_REQUEST")));
     }
 
     @Test
