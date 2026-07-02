@@ -53,6 +53,8 @@ public class AuthServiceTest {
     private RecaptchaService recaptchaService;
     @Mock
     private GoogleAuthService googleAuthService;
+    @Mock
+    private PasswordHistoryRepository passwordHistoryRepository;
 
     @InjectMocks
     private AuthService authService;
@@ -134,7 +136,7 @@ public class AuthServiceTest {
         when(sessionRepository.findAllByUserIdAndTenantId(testUser.getId(), tenantId))
                 .thenReturn(Collections.emptyList());
 
-        when(jwtService.generateToken(any(), any(), anyString())).thenReturn("mockedAccessToken");
+        when(jwtService.generateToken(any(), any(), anyString(), any(), anyString(), any(), anyString(), anyString())).thenReturn("mockedAccessToken");
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(i -> i.getArguments()[0]);
 
         Map<String, Object> response = authService.login(testUser.getEmail(), "password", tenantId, "127.0.0.1",
