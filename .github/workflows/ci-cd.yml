@@ -15,6 +15,45 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Start Services (PostgreSQL, Redis, RabbitMQ)
+        run: |
+          docker compose up -d postgres redis rabbitmq
+
+      - name: Wait for Services to be healthy
+        run: |
+          echo "Waiting for PostgreSQL..."
+          for i in {1..30}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' eventos-postgres 2>/dev/null || echo "starting")
+            if [ "$STATUS" = "healthy" ]; then
+              echo "PostgreSQL is healthy!"
+              break
+            fi
+            echo "PostgreSQL status: $STATUS. Waiting..."
+            sleep 2
+          done
+          
+          echo "Waiting for Redis..."
+          for i in {1..15}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' eventos-redis 2>/dev/null || echo "starting")
+            if [ "$STATUS" = "healthy" ]; then
+              echo "Redis is healthy!"
+              break
+            fi
+            echo "Redis status: $STATUS. Waiting..."
+            sleep 1
+          done
+          
+          echo "Waiting for RabbitMQ..."
+          for i in {1..30}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' eventos-rabbitmq 2>/dev/null || echo "starting")
+            if [ "$STATUS" = "healthy" ]; then
+              echo "RabbitMQ is healthy!"
+              break
+            fi
+            echo "RabbitMQ status: $STATUS. Waiting..."
+            sleep 2
+          done
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
