@@ -96,7 +96,7 @@ public class DashboardServiceTest {
         when(leadRepository.countByTenantIdAndIsDeletedFalse(tenantId)).thenReturn(2L);
         when(leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.WON))).thenReturn(1L);
         when(leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(eq(tenantId),
-                eq(List.of(LeadStatus.NEW, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION))))
+                eq(List.of(LeadStatus.NEW, LeadStatus.CONTACTED, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION))))
                 .thenReturn(BigDecimal.valueOf(100000));
         when(leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(eq(tenantId),
                 eq(List.of(LeadStatus.WON))))
@@ -123,7 +123,7 @@ public class DashboardServiceTest {
         when(leadRepository.countByTenantIdAndIsDeletedFalse(tenantId)).thenReturn(2L);
         when(leadRepository.countByTenantIdAndStatusInAndIsDeletedFalse(tenantId, List.of(LeadStatus.WON))).thenReturn(1L);
         when(leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(eq(tenantId),
-                eq(List.of(LeadStatus.NEW, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION))))
+                eq(List.of(LeadStatus.NEW, LeadStatus.CONTACTED, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION))))
                 .thenReturn(BigDecimal.valueOf(100000));
         when(leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(eq(tenantId),
                 eq(List.of(LeadStatus.WON))))
