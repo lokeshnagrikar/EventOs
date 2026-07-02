@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Search, Compass, Plus, CreditCard, Layers, Calculator, FileText, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface CommandItem {
   icon: React.ReactNode;
@@ -13,6 +14,7 @@ interface CommandItem {
 export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
@@ -28,19 +30,19 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; o
 
   const commands: CommandItem[] = [
     // Navigation
-    { icon: <Compass size={14} />, label: "Go to Dashboard", category: "Navigation", action: () => (window.location.href = "/") },
-    { icon: <Plus size={14} />, label: "Go to CRM / Leads", category: "Navigation", action: () => (window.location.href = "/crm") },
-    { icon: <Layers size={14} />, label: "Go to Bookings", category: "Navigation", action: () => (window.location.href = "/bookings") },
-    { icon: <FileText size={14} />, label: "Go to Quotes", category: "Navigation", action: () => (window.location.href = "/quotes") },
-    { icon: <CreditCard size={14} />, label: "Go to Payments Ledger", category: "Navigation", action: () => (window.location.href = "/payments") },
-    { icon: <FileText size={14} />, label: "Go to Invoices Manager", category: "Navigation", action: () => (window.location.href = "/invoices") },
-    { icon: <Calculator size={14} />, label: "Go to Budget Calculator", category: "Navigation", action: () => (window.location.href = "/calculator") },
+    { icon: <Compass size={14} />, label: "Go to Dashboard", category: "Navigation", action: () => router.push("/dashboard") },
+    { icon: <Plus size={14} />, label: "Go to CRM / Leads", category: "Navigation", action: () => router.push("/crm") },
+    { icon: <Layers size={14} />, label: "Go to Bookings", category: "Navigation", action: () => router.push("/bookings") },
+    { icon: <FileText size={14} />, label: "Go to Quotes", category: "Navigation", action: () => router.push("/quotes") },
+    { icon: <CreditCard size={14} />, label: "Go to Payments Ledger", category: "Navigation", action: () => router.push("/payments") },
+    { icon: <FileText size={14} />, label: "Go to Invoices Manager", category: "Navigation", action: () => router.push("/invoices") },
+    { icon: <Calculator size={14} />, label: "Go to Budget Calculator", category: "Navigation", action: () => router.push("/calculator") },
 
     // Quick Actions
-    { icon: <Plus size={14} className="text-purple-400" />, label: "Create New Lead", category: "Quick Actions", action: () => (window.location.href = "/crm") },
-    { icon: <CreditCard size={14} className="text-emerald-450" />, label: "Log Payment Transaction", category: "Quick Actions", action: () => (window.location.href = "/payments") },
-    { icon: <FileText size={14} className="text-blue-400" />, label: "Generate Billing Invoice", category: "Quick Actions", action: () => (window.location.href = "/invoices") },
-    { icon: <Calculator size={14} className="text-amber-400" />, label: "Compute Event Estimation", category: "Quick Actions", action: () => (window.location.href = "/calculator") }
+    { icon: <Plus size={14} className="text-purple-400" />, label: "Create New Lead", category: "Quick Actions", action: () => router.push("/crm") },
+    { icon: <CreditCard size={14} className="text-emerald-450" />, label: "Log Payment Transaction", category: "Quick Actions", action: () => router.push("/payments") },
+    { icon: <FileText size={14} className="text-blue-400" />, label: "Generate Billing Invoice", category: "Quick Actions", action: () => router.push("/invoices") },
+    { icon: <Calculator size={14} className="text-amber-400" />, label: "Compute Event Estimation", category: "Quick Actions", action: () => router.push("/calculator") }
   ];
 
   const filteredCommands = commands.filter((cmd) =>

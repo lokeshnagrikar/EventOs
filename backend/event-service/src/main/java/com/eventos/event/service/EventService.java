@@ -63,7 +63,10 @@ public class EventService {
     private final InvoiceRepository invoiceRepository;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate;
+    
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private RestTemplate restTemplate;
+    
     private final org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
 
     @Value("${service.auth.base-url:http://localhost:8081/api/v1}")

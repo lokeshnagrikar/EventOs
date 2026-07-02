@@ -6,6 +6,8 @@ import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -17,9 +19,13 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class JwtService {
+
+    @Autowired(required = false)
+    private StringRedisTemplate redisTemplate;
 
     @Value("${app.jwt.expiration-ms}")
     private long jwtExpirationMs;
@@ -106,10 +112,21 @@ public class JwtService {
     }
 
     public String generateToken(User user, java.util.UUID tenantId, String role) {
+        return generateToken(user, tenantId, role, java.util.Collections.emptyList(), "", tenantId, "", "");
+    }
+
+    public String generateToken(User user, java.util.UUID tenantId, String role, 
+                                 java.util.List<String> permissions, String companyName, 
+                                 java.util.UUID workspaceId, String deviceId, String sessionId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenantId", tenantId.toString());
         claims.put("userId", user.getId().toString());
         claims.put("roles", role);
+        claims.put("permissions", permissions);
+        claims.put("companyName", companyName != null ? companyName : "");
+        claims.put("workspaceId", workspaceId != null ? workspaceId.toString() : tenantId.toString());
+        claims.put("deviceId", deviceId != null ? deviceId : "");
+        claims.put("sessionId", sessionId != null ? sessionId : "");
         claims.put("firstName", user.getFirstName());
         claims.put("lastName", user.getLastName());
         claims.put("email", user.getEmail());
@@ -130,8 +147,41 @@ public class JwtService {
 
     public boolean validateToken(String token) {
         try {
+            if (isTokenBlacklisted(token)) {
+                return false;
+            }
             jwtParser.parseSignedClaims(token);
             return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void blacklistToken(String token) {
+        if (redisTemplate == null) {
+            return;
+        }
+        try {
+            Claims claims = getClaims(token);
+            Date expiration = claims.getExpiration();
+            long ttlMs = expiration.getTime() - System.currentTimeMillis();
+            if (ttlMs > 0) {
+                // To match gateway: "blacklist:" + token
+                String key = "blacklist:" + token;
+                redisTemplate.opsForValue().set(key, "blacklisted", ttlMs, TimeUnit.MILLISECONDS);
+            }
+        } catch (Exception e) {
+            // Ignore if parsing/redis fails
+        }
+    }
+
+    public boolean isTokenBlacklisted(String token) {
+        if (redisTemplate == null) {
+            return false;
+        }
+        try {
+            String key = "blacklist:" + token;
+            return Boolean.TRUE.equals(redisTemplate.hasKey(key));
         } catch (Exception e) {
             return false;
         }

@@ -35,7 +35,17 @@ interface Quote {
 interface Lead {
   id: string;
   name: string;
+  phone?: string;
+  email?: string;
+  contact?: {
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+  };
 }
+
 
 const STATUS_COLORS: Record<string, string> = {
   DRAFT: "border-zinc-800 bg-zinc-800/20 text-zinc-400",

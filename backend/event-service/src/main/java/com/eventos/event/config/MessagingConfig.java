@@ -30,6 +30,10 @@ public class MessagingConfig {
     public static final String TASK_NOTIFICATION_DLQ = "event.task.notification.dlq";
     public static final String TASK_NOTIFICATION_ROUTING_KEY = "task.notification";
 
+    public static final String INVOICE_REMINDER_QUEUE = "event.invoice.reminder.queue";
+    public static final String INVOICE_REMINDER_DLQ = "event.invoice.reminder.dlq";
+    public static final String INVOICE_REMINDER_ROUTING_KEY = "invoice.reminder";
+
     @Bean
     public TopicExchange eventosExchange() {
         return new TopicExchange(EXCHANGE);
@@ -148,6 +152,29 @@ public class MessagingConfig {
     @Bean
     public Binding taskNotificationDlqBinding(Queue taskNotificationDlq, TopicExchange eventosExchange) {
         return BindingBuilder.bind(taskNotificationDlq).to(eventosExchange).with("task.notification.dlq");
+    }
+
+    @Bean
+    public Queue invoiceReminderQueue() {
+        return QueueBuilder.durable(INVOICE_REMINDER_QUEUE)
+                .withArgument("x-dead-letter-exchange", EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", "invoice.reminder.dlq")
+                .build();
+    }
+
+    @Bean
+    public Queue invoiceReminderDlq() {
+        return new Queue(INVOICE_REMINDER_DLQ);
+    }
+
+    @Bean
+    public Binding invoiceReminderBinding(Queue invoiceReminderQueue, TopicExchange eventosExchange) {
+        return BindingBuilder.bind(invoiceReminderQueue).to(eventosExchange).with(INVOICE_REMINDER_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding invoiceReminderDlqBinding(Queue invoiceReminderDlq, TopicExchange eventosExchange) {
+        return BindingBuilder.bind(invoiceReminderDlq).to(eventosExchange).with("invoice.reminder.dlq");
     }
 
     @Bean

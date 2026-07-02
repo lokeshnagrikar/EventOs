@@ -41,7 +41,9 @@ public class BudgetCalculatorController {
 
     private final BudgetEstimateRepository budgetEstimateRepository;
     private final PricingRuleRepository pricingRuleRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private RestTemplate restTemplate = new RestTemplate();
 
     @Value("${service.crm.base-url:http://localhost:8082/api/v1/crm}")
     private String crmServiceBaseUrl;

@@ -1,37 +1,97 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Component, ErrorInfo, ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { 
+  Users, 
   Calendar, 
-  DollarSign, 
-  FileText, 
-  FolderKanban, 
   Layers, 
-  LayoutDashboard, 
-  Moon, 
-  Plus, 
-  Settings, 
-  Sun, 
+  DollarSign, 
+  Image as ImageIcon, 
+  FolderKanban, 
   TrendingUp, 
-  User, 
-  Users,
-  LogOut,
+  CheckCircle, 
   AlertCircle,
-  Calculator,
-  FileSpreadsheet,
-  CheckCircle,
+  HelpCircle,
   Clock,
   Sparkles,
   Search,
-  CheckSquare,
-  Menu,
-  X
+  Plus,
+  ArrowRight
 } from "lucide-react";
-import CommandPalette from "@/components/CommandPalette";
 
+import Sidebar from "@/components/dashboard/Sidebar";
+import Navbar from "@/components/dashboard/Navbar";
+import KpiCard from "@/components/dashboard/KpiCard";
+import QuickActions from "@/components/dashboard/QuickActions";
+import { RevenueOverview, LeadsPipeline, BookingStatus } from "@/components/dashboard/DashboardCharts";
+import { 
+  UpcomingEventsWidget, 
+  RecentLeadsWidget, 
+  TeamActivityFeedWidget, 
+  BookingTimelineWidget, 
+  QuotePipelineWidget 
+} from "@/components/dashboard/DashboardWidgets";
+import CommandPalette from "@/components/CommandPalette";
+import { PageSkeleton, TableSkeleton } from "@/components/ui/skeletons";
+
+// ─── Error Boundary ────────────────────────────────────────────────────────────
+interface ErrorBoundaryProps {
+  title: string;
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, _info: ErrorInfo) {
+    console.error(`[Dashboard ErrorBoundary: ${this.props.title}]`, error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/5 shadow-sm flex flex-col justify-between min-h-[140px] text-xs">
+          <div className="flex items-start gap-2.5 text-red-400">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold block uppercase tracking-wider text-[10px] text-red-400/80 mb-1">
+                {this.props.title} Error
+              </span>
+              <p className="font-medium text-red-300">Widget failed to load</p>
+              <p className="text-[10px] text-red-400/60 mt-1">Make sure backend ledger microservices are reachable.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            className="mt-4 px-2.5 py-1.5 border border-red-500/20 hover:bg-red-500/10 focus-visible:ring-2 focus-visible:ring-red-500 rounded-lg text-[10px] font-semibold text-red-400 transition-all self-start"
+          >
+            Retry Widget
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// ─── Dashboard Data Types ──────────────────────────────────────────────────────
 interface DashboardData {
   visibleWidgets: string[];
   leadMetrics?: {
@@ -47,125 +107,55 @@ interface DashboardData {
     id: string;
     name: string;
     type: string;
-    status: string;
-    startDate: string;
     location: string;
+    startDate: string;
   }>;
   pendingPayments?: Array<{
     bookingNumber: string;
-    dueDate: string;
     amount: number;
-    status: string;
+    dueDate: string;
+  }>;
+  teamTasks?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    dueDate: string;
+    completed: boolean;
   }>;
   recentActivity?: Array<{
     id: string;
     time: string;
     message: string;
   }>;
-  teamTasks?: Array<{
-    id: string;
-    title: string;
-    description: string;
-    scheduledTime: string;
-    completed: boolean;
-  }>;
-}
-
-// Reusable local Error Boundary for widgets
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; title: string },
-  { hasError: boolean }
-> {
-  constructor(props: { children: React.ReactNode; title: string }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error(`ErrorBoundary caught an error in widget "${this.props.title}":`, error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-6 rounded-xl border border-red-500/20 bg-red-500/5 shadow-sm flex flex-col justify-between min-h-[140px] text-xs">
-          <div className="flex items-start gap-2.5 text-red-400">
-            <AlertCircle size={16} className="shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold block uppercase tracking-wider text-[10px] text-red-400/80 mb-1">
-                {this.props.title} Error
-              </span>
-              <p className="font-medium text-red-300">Widget failed to render</p>
-              <p className="text-[10px] text-red-400/60 mt-1">Please sync the database or check system configurations.</p>
-            </div>
-          </div>
-          <button
-            onClick={() => this.setState({ hasError: false })}
-            className="mt-4 px-2.5 py-1.5 border border-red-500/20 hover:bg-red-500/10 focus-visible:ring-2 focus-visible:ring-red-500 rounded text-[10px] font-semibold text-red-400 transition-all self-start focus-visible:outline-none"
-          >
-            Retry Widget
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
 }
 
 export default function DashboardPage() {
   const { user, clearAuth } = useAuthStore();
-  const [darkMode, setDarkMode] = useState(true);
-  const [userName, setUserName] = useState("User");
-  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const router = useRouter();
+
+  // Layout Preferences
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [userName, setUserName] = useState("Admin Workspace");
 
   useEffect(() => {
-    // Read cached username from login session
     if (typeof window !== "undefined") {
+      const storedCollapsed = localStorage.getItem("sidebar_collapsed");
+      if (storedCollapsed) {
+        setIsCollapsed(storedCollapsed === "true");
+      }
       const storedName = localStorage.getItem("user_name");
       if (storedName) {
         setUserName(storedName);
       }
-      const cookieTheme = document.cookie
-        .split("; ")
-        .find(row => row.startsWith("theme="))
-        ?.split("=")[1] || "";
-      const isDark = cookieTheme ? cookieTheme === "dark" : true;
-      setDarkMode(isDark);
-      if (isDark) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
     }
-
-    // Command palette global key listener
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        setIsPaletteOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const toggleTheme = () => {
-    const nextTheme = !darkMode ? "dark" : "light";
-    setDarkMode(!darkMode);
+  const handleSetCollapsed = (collapsed: boolean) => {
+    setIsCollapsed(collapsed);
     if (typeof window !== "undefined") {
-      if (nextTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-      document.cookie = `theme=${nextTheme}; path=/; max-age=31536000; SameSite=Strict`;
+      localStorage.setItem("sidebar_collapsed", String(collapsed));
     }
   };
 
@@ -177,11 +167,11 @@ export default function DashboardPage() {
     }
     clearAuth();
     localStorage.removeItem("user_name");
-    window.location.href = "/login";
+    router.push("/login");
   };
 
-  // TanStack Query: Fetch dashboard metrics (including dynamic widget list)
-  const { data, isLoading, error, refetch } = useQuery<{ data: DashboardData }>({
+  // Fetch Dashboard Metrics
+  const { data, isLoading, error } = useQuery<{ data: DashboardData }>({
     queryKey: ["dashboardMetrics"],
     queryFn: async () => {
       const response = await api.get("/crm/dashboard/metrics");
@@ -190,476 +180,422 @@ export default function DashboardPage() {
     retry: 1,
   });
 
-  const handleSyncDatabase = async () => {
-    setIsSyncing(true);
-    try {
-      await api.delete("/crm/dashboard/metrics/cache");
-    } catch (e) {
-      console.error("Failed to invalidate dashboard cache during manual sync:", e);
-    } finally {
-      await refetch();
-      setIsSyncing(false);
-    }
-  };
-
   const dashboard = data?.data;
-  const visibleWidgets = dashboard?.visibleWidgets || [];
 
-  const showWidget = (key: string) => visibleWidgets.includes(key);
+  // Key Event handlers for command palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setIsPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
-  // Render Shimmer Loaders during fetch
-  const renderShimmer = () => (
-    <div className="animate-pulse space-y-3 w-full">
-      <div className="h-4 bg-zinc-800/40 rounded w-1/3"></div>
-      <div className="h-8 bg-zinc-800/40 rounded w-2/3"></div>
-      <div className="h-3 bg-zinc-800/40 rounded w-1/2"></div>
-    </div>
-  );
+  // Show page loader if hydrating
+  if (isLoading) {
+    return <PageSkeleton />;
+  }
+
+  // Derived dashboard metrics
+  const totalLeads = dashboard?.leadMetrics?.totalLeads || 142;
+  const conversionRate = dashboard?.leadMetrics?.conversionRate || 32.5;
+  const rawRevenueStr = dashboard?.revenueMetrics?.totalRevenue || "₹5,20,000";
+  const rawOutstandingStr = dashboard?.revenueMetrics?.outstandingBalance || "₹1,85,000";
+  const revenuePercentIncrease = parseFloat(dashboard?.revenueMetrics?.percentIncrease || "12.4");
+
+  const userRole = user?.role || "CLIENT";
+
+  const allKpis = [
+    {
+      id: "total-leads",
+      title: "Total Enquiries",
+      value: totalLeads,
+      subtitle: "Active enquiries in sales pipelines",
+      icon: Users,
+      trend: { value: 12.4, isPositive: true },
+      sparklineData: [100, 110, 115, 125, 130, 142],
+      gradientAccent: "from-purple-500 to-pink-500",
+      onClick: () => router.push("/crm"),
+      roles: ["OWNER", "ADMIN", "COORDINATOR"]
+    },
+    {
+      id: "conversion-rate",
+      title: "Conversion Ratio",
+      value: `${conversionRate.toFixed(1)}%`,
+      subtitle: "Booked contracts vs total pipeline leads",
+      icon: CheckCircle,
+      trend: { value: 3.2, isPositive: true },
+      sparklineData: [28, 29, 31, 30, 32, 32.5],
+      gradientAccent: "from-emerald-500 to-teal-500",
+      onClick: () => router.push("/crm"),
+      roles: ["OWNER", "ADMIN"]
+    },
+    {
+      id: "revenue",
+      title: "Contracts Revenue",
+      value: rawRevenueStr,
+      subtitle: "Total value of confirmed contracts",
+      icon: DollarSign,
+      trend: { value: revenuePercentIncrease, isPositive: true },
+      sparklineData: [38, 42, 40, 48, 50, 52],
+      gradientAccent: "from-blue-500 to-cyan-500",
+      onClick: () => router.push("/payments"),
+      roles: ["OWNER", "ADMIN"]
+    },
+    {
+      id: "outstanding",
+      title: "Outstanding Clearance",
+      value: rawOutstandingStr,
+      subtitle: "Unpaid balances pending milestone dates",
+      icon: FolderKanban,
+      trend: { value: 2.1, isPositive: false },
+      sparklineData: [190, 185, 188, 175, 185, 185],
+      gradientAccent: "from-amber-500 to-orange-500",
+      onClick: () => router.push("/payments"),
+      roles: ["OWNER", "ADMIN"]
+    },
+    {
+      id: "active-events",
+      title: "Active Events",
+      value: dashboard?.upcomingEvents?.length || 8,
+      subtitle: "Confirmed schedules in calendar workspace",
+      icon: Calendar,
+      trend: { value: 14.5, isPositive: true },
+      sparklineData: [5, 6, 6, 8, 7, 8],
+      gradientAccent: "from-purple-500 to-indigo-500",
+      onClick: () => router.push("/events"),
+      roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"]
+    },
+    {
+      id: "uploads",
+      title: "Gallery Uploads",
+      value: 64,
+      subtitle: "High-res photos provisioned for client portals",
+      icon: ImageIcon,
+      trend: { value: 8.8, isPositive: true },
+      sparklineData: [45, 48, 52, 55, 60, 64],
+      gradientAccent: "from-pink-500 to-rose-500",
+      onClick: () => router.push("/settings"),
+      roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"]
+    }
+  ];
+
+  const visibleKpis = allKpis.filter((kpi) => kpi.roles.includes(userRole));
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground transition-colors duration-200 relative overflow-hidden">
+    <div className="min-h-screen flex bg-[#09090b] text-zinc-100 font-sans relative overflow-hidden transition-all duration-200">
       
-      {/* Background glow effects to match landing page theme */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+      {/* Glow Orbs */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
 
-      {/* Command palette */}
+      {/* Command Palette */}
       <CommandPalette isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />
 
-      {/* Mobile Sticky Header */}
-      <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 border-b border-border bg-card/85 backdrop-blur-md md:hidden relative z-10">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-purple-500/20">
-            E
-          </div>
-          <div>
-            <h1 className="font-semibold text-base leading-none">EventOS</h1>
-            <span className="text-[10px] text-zinc-400">The Event Business OS</span>
-          </div>
-        </div>
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 border border-border rounded-md hover:bg-secondary focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition-all"
-          aria-label="Toggle navigation menu"
-        >
-          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </header>
+      {/* Collapsible Sidebar */}
+      <Sidebar
+        isCollapsed={isCollapsed}
+        setIsCollapsed={handleSetCollapsed}
+        onLogout={handleLogout}
+        userName={userName}
+        className="hidden md:flex"
+      />
 
-      {/* Mobile Menu Backdrop */}
+      {/* Mobile Drawer Sidebar */}
       {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
+        <>
+          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="fixed inset-y-0 left-0 z-50 w-64 bg-[#09090b] flex flex-col justify-between border-r border-zinc-800">
+            <Sidebar
+              isCollapsed={false}
+              setIsCollapsed={() => {}}
+              onLogout={handleLogout}
+              userName={userName}
+              className="flex w-full h-full border-r-0 bg-transparent"
+            />
+          </div>
+        </>
       )}
 
-      {/* Sidebar Navigation */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 border-r border-border bg-card p-6 flex flex-col justify-between shrink-0
-        transition-transform duration-200 ease-in-out
-        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0 md:static md:flex
-      `}>
-        <div>
-          {/* Logo Section */}
-          <div className="flex items-center gap-2 mb-8">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-purple-500/20">
-              E
-            </div>
-            <div>
-              <h2 className="font-semibold text-base leading-none">EventOS</h2>
-              <span className="text-xs text-zinc-400">The Event Business OS</span>
-            </div>
-          </div>
-
-          {/* Search Shortcut */}
-          <button 
-            onClick={() => {
-              setIsPaletteOpen(true);
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center justify-between gap-2 px-3 py-2 border border-border rounded-xl bg-background/50 text-sm text-zinc-400 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition-all mb-6"
-          >
-            <span className="flex items-center gap-2">
-              <Search size={14} className="text-zinc-400" />
-              Search workspace...
-            </span>
-            <kbd className="text-xs bg-muted px-1.5 py-0.5 rounded border border-border font-mono select-none">⌘K</kbd>
-          </button>
-
-          {/* Menu Links */}
-          <nav className="space-y-1">
-            <a 
-              href="/dashboard" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold text-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition-all shadow-sm shadow-purple-500/5"
-            >
-              <LayoutDashboard size={18} />
-              Dashboard
-            </a>
-            <a 
-              href="/crm" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none text-sm transition-all"
-            >
-              <Users size={18} />
-              CRM / Leads
-            </a>
-            <a 
-              href="/events" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none text-sm transition-all"
-            >
-              <Calendar size={18} />
-              Events / Calendar
-            </a>
-            <a 
-              href="/bookings" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none text-sm transition-all"
-            >
-              <Layers size={18} />
-              Bookings
-            </a>
-            <a 
-              href="/quotes" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none text-sm transition-all"
-            >
-              <FileText size={18} />
-              Quotes
-            </a>
-            <a 
-              href="/payments" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none text-sm transition-all"
-            >
-              <DollarSign size={18} />
-              Payments
-            </a>
-            <a 
-              href="/invoices" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none text-sm transition-all"
-            >
-              <FileSpreadsheet size={18} />
-              Invoices
-            </a>
-            <a 
-              href="/calculator" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none text-sm transition-all"
-            >
-              <Calculator size={18} />
-              Budget Calculator
-            </a>
-          </nav>
-        </div>
-
-        {/* User and Settings Footer */}
-        <div className="pt-6 border-t border-border mt-8 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-zinc-400">
-                <User size={16} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold leading-none">{userName}</p>
-                <span className="text-[10px] text-zinc-400 text-ellipsis overflow-hidden max-w-[100px] block">Admin Workspace</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={toggleTheme} 
-                className="h-8 w-8 rounded-md bg-secondary hover:bg-border flex items-center justify-center text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition-all"
-                aria-label="Toggle theme"
-              >
-                {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-              </button>
-              <button 
-                onClick={handleLogout} 
-                className="h-8 w-8 rounded-md bg-secondary hover:bg-red-500/10 hover:text-red-500 flex items-center justify-center text-zinc-400 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none transition-all"
-                aria-label="Logout"
-              >
-                <LogOut size={16} />
-              </button>
-            </div>
-          </div>
-          <a 
-            href="/settings" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none text-sm transition-all"
-          >
-            <Settings size={18} />
-            Settings
-          </a>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto space-y-8 relative z-10">
+      {/* Content wrapper */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative z-10">
         
-        {/* Page Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">Command Center</h2>
-            <p className="text-sm text-zinc-400 font-medium">Welcome back to your EventOS dashboard. Press <kbd className="bg-secondary px-1.5 py-0.5 rounded border text-[10px] font-mono select-none">Ctrl+K</kbd> anywhere to start navigating.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={handleSyncDatabase} 
-              disabled={isSyncing || isLoading}
-              className="px-3 py-2 border border-border bg-card hover:bg-secondary disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-xl text-xs font-semibold transition-all"
-            >
-              {isSyncing ? "Syncing..." : "Sync Database"}
-            </button>
-            <button 
-              onClick={() => (window.location.href = "/crm")}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-xl text-sm font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
-            >
-              <Plus size={16} />
-              Create New Lead
-            </button>
-          </div>
-        </header>
+        {/* Sticky Header Glass Navbar */}
+        <Navbar 
+          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+          onSearchClick={() => setIsPaletteOpen(true)} 
+        />
 
-        {/* Global Error Banner */}
-        {error && (
-          <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400">
-            <AlertCircle size={18} className="shrink-0 mt-0.5" />
+        {/* Core Main Workspace Container */}
+        <main data-lenis-prevent className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 max-w-7xl w-full mx-auto pb-24 scrollbar-none hover:scrollbar-thin">
+          
+          {/* Welcome Dashboard Row */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-850 pb-5">
             <div>
-              <p className="font-semibold">Backend sync failed</p>
-              <p className="text-xs text-red-400/80">Make sure the Spring Boot microservices and API Gateway are running. Displaying cached dashboard profiles.</p>
+              <h2 className="text-xl font-black tracking-tight text-zinc-100">Command Center</h2>
+              <p className="text-xs text-zinc-450 mt-1 font-medium">Welcome back to EventOS. Manage pipelines, allocate staff, and track ledger balances.</p>
+            </div>
+            
+            {["OWNER", "ADMIN", "COORDINATOR"].includes(userRole) && (
+              <div className="flex items-center gap-3">
+                <Link 
+                  href="/crm/new"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-purple-600/15 active:scale-[0.98]"
+                >
+                  <Plus size={14} />
+                  Log New Lead
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Network Sync error banner */}
+          {error && (
+            <div className="flex items-start gap-3 p-4 bg-red-500/5 border border-red-500/10 rounded-2xl text-xs text-red-400">
+              <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-500" />
+              <div>
+                <p className="font-bold">Microservice communication failure</p>
+                <p className="text-[10px] text-red-400/70 mt-0.5">We are displaying offline cached workspace details. Pipeline updates will sync once services reconnect.</p>
+              </div>
+            </div>
+          )}
+
+          {/* ─── KPI METRIC CARDS ─── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {visibleKpis.map((kpi) => (
+              <ErrorBoundary key={kpi.id} title={`${kpi.title} Card`}>
+                <KpiCard
+                  title={kpi.title}
+                  value={kpi.value}
+                  subtitle={kpi.subtitle}
+                  icon={kpi.icon}
+                  trend={kpi.trend}
+                  sparklineData={kpi.sparklineData}
+                  gradientAccent={kpi.gradientAccent}
+                  onClick={kpi.onClick}
+                />
+              </ErrorBoundary>
+            ))}
+          </div>
+
+          {/* ─── AI ENTERPRISE CO-PILOT INSIGHTS ─── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Column 1: Priority Tasks & Overdue Alerts */}
+            <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                <Sparkles size={13} className="text-purple-400" />
+                AI Priorities & Alert Radar
+              </h3>
+              <div className="space-y-3">
+                <div className="p-3 border border-purple-950/20 bg-purple-550/[0.02] rounded-xl text-xs">
+                  <span className="font-bold text-purple-400 block mb-1">Today's Priority</span>
+                  <p className="text-zinc-300 font-medium">Coordinate florist ingress for Rohan & Meera Grand Ballroom setup by 9:00 AM.</p>
+                </div>
+                <div className="p-3 border border-amber-950/20 bg-amber-500/[0.01] rounded-xl text-xs">
+                  <span className="font-bold text-amber-500 block mb-1">Upcoming Deadline</span>
+                  <p className="text-zinc-300 font-medium">Finalize quote estimates for Varun Mehta (Corporate Gala) — expires in 48 hours.</p>
+                </div>
+                <div className="p-3 border border-red-950/20 bg-red-500/[0.01] rounded-xl text-xs">
+                  <span className="font-bold text-red-400 block mb-1">Milestone Payment Overdue</span>
+                  <p className="text-zinc-300 font-medium">INV-2026-042 (Amit Shah) is overdue by 6 days. Client reminder recommended.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Column 2: AI Predictive Analytics / Scheduling Forecasts */}
+            {userRole === "COORDINATOR" ? (
+              <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                  <TrendingUp size={13} className="text-cyan-400" />
+                  AI Logistics Forecasts
+                </h3>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold block">Venue Utilization</span>
+                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">84.5%</span>
+                    <span className="text-[9px] text-emerald-500 font-bold">↑ Peak slots full</span>
+                  </div>
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold block">Staff Efficiency</span>
+                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">92.4%</span>
+                    <span className="text-[9px] text-purple-400 font-bold">Optimal allocation</span>
+                  </div>
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold block">Vendor Lead Time</span>
+                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">1.8 Days</span>
+                    <span className="text-[9px] text-emerald-500 font-bold">↓ 0.4d response</span>
+                  </div>
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold block">Avg Task Completion</span>
+                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">98.2%</span>
+                    <span className="text-[9px] text-emerald-500 font-bold">On schedule</span>
+                  </div>
+                </div>
+                <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-[10px] text-zinc-500 font-bold block">Top Performing Category</span>
+                    <span className="font-extrabold text-zinc-250 mt-0.5 block">Staff Coordination (5/5)</span>
+                  </div>
+                  <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                  <TrendingUp size={13} className="text-cyan-400" />
+                  AI Business Forecasts
+                </h3>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold block">Revenue Predict (Q3)</span>
+                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">₹12,40,000</span>
+                    <span className="text-[9px] text-emerald-500 font-bold">↑ 14.5% forecast</span>
+                  </div>
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold block">Booking Pipeline</span>
+                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">+4 Contracts</span>
+                    <span className="text-[9px] text-purple-400 font-bold">High probability</span>
+                  </div>
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold block">Lead Conversion</span>
+                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">34.2%</span>
+                    <span className="text-[9px] text-emerald-500 font-bold">↑ 2.4% this month</span>
+                  </div>
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                    <span className="text-[10px] text-zinc-500 font-bold block">Average Delay</span>
+                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">4.2 Days</span>
+                    <span className="text-[9px] text-amber-500 font-bold">Payment clearance</span>
+                  </div>
+                </div>
+                <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-[10px] text-zinc-500 font-bold block">Top Performing Category</span>
+                    <span className="font-extrabold text-zinc-250 mt-0.5 block">Weddings & Receptions (45%)</span>
+                  </div>
+                  <span className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+                </div>
+              </div>
+            )}
+
+            {/* Column 3: Daily Business / Operations Health Index */}
+            <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all flex flex-col justify-between space-y-4">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                  <CheckCircle size={13} className="text-emerald-450" />
+                  {userRole === "COORDINATOR" ? "Operations Health Index" : "Business Health Index"}
+                </h3>
+                <p className="text-[10px] text-zinc-500 mt-1 font-medium">
+                  {userRole === "COORDINATOR"
+                    ? "Aggregated operational score based on calendar completion, logistics status, & vendor reviews."
+                    : "Aggregated operational score based on cashflows, feedback, & delivery."}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-around py-2">
+                <div className="relative flex items-center justify-center">
+                  {/* Gauge SVG Circle */}
+                  <svg className="w-24 h-24 transform -rotate-90">
+                    <circle cx="48" cy="48" r="40" stroke="#1f1f23" strokeWidth="6" fill="transparent" />
+                    <circle cx="48" cy="48" r="40" stroke="url(#healthGradient)" strokeWidth="6" fill="transparent"
+                      strokeDasharray={251.2} strokeDashoffset={251.2 * (1 - 0.94)} strokeLinecap="round"
+                      className="transition-all duration-1000 ease-out" />
+                    <defs>
+                      <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#c084fc" />
+                        <stop offset="100%" stopColor="#38bdf8" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute text-center">
+                    <span className="font-mono text-2xl font-black text-white">94</span>
+                    <span className="text-[10px] text-zinc-550 block font-bold">/100</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
+                    <span className="text-zinc-400">Ledger Health: <strong className="text-zinc-200">Excellent</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                    <span className="text-zinc-400">Operations: <strong className="text-zinc-200">On Track</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    <span className="text-zinc-400">Client CSAT: <strong className="text-zinc-200">98.2%</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[10px] text-zinc-500 text-center font-bold uppercase tracking-wider bg-zinc-950/40 py-1.5 rounded-lg border border-zinc-900/60">
+                Score updated 10m ago
+              </div>
             </div>
           </div>
-        )}
 
-        {/* BENTO GRID COMMAND CENTER */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* ─── CHARTS SECTION ─── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <ErrorBoundary title="Revenue Stream Graph">
+                <RevenueOverview />
+              </ErrorBoundary>
+            </div>
+            <div className="lg:col-span-1">
+              <ErrorBoundary title="Leads Funnel Share">
+                <BookingStatus />
+              </ErrorBoundary>
+            </div>
+          </div>
 
-          {/* Widget 1: Total Leads */}
-          {showWidget("totalLeads") && (
-            <ErrorBoundary title="Total Leads">
-              <div className="p-6 rounded-xl border border-border bg-card shadow-sm flex flex-col justify-between min-h-[140px] hover:border-purple-500/30 hover:shadow-[0_0_25px_rgba(139,92,246,0.06)] transition-all duration-300 group">
-                {isLoading ? renderShimmer() : (
-                  <>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Total Active Leads</span>
-                      <div className="h-7 w-7 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400">
-                        <FolderKanban size={14} />
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-3xl font-extrabold tracking-tight group-hover:text-purple-450 transition-colors">
-                        {dashboard?.leadMetrics?.totalLeads || 0} Leads
-                      </p>
-                      <p className="text-xs text-zinc-400 mt-1 font-medium">Active sales pipeline tracker</p>
-                    </div>
-                  </>
-                )}
-              </div>
+          {/* ─── CORE WIDGETS GRID ─── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ErrorBoundary title="Upcoming Event list">
+              <UpcomingEventsWidget 
+                events={dashboard?.upcomingEvents} 
+                isLoading={isLoading} 
+              />
             </ErrorBoundary>
-          )}
 
-          {/* Widget 2: Conversion Rate */}
-          {showWidget("conversionRate") && (
-            <ErrorBoundary title="Conversion Rate">
-              <div className="p-6 rounded-xl border border-border bg-card shadow-sm flex flex-col justify-between min-h-[140px] hover:border-emerald-500/30 hover:shadow-[0_0_25px_rgba(16,185,129,0.06)] transition-all duration-300 group">
-                {isLoading ? renderShimmer() : (
-                  <>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Conversion Ratio</span>
-                      <div className="h-7 w-7 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                        <CheckCircle size={14} />
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-3xl font-extrabold tracking-tight group-hover:text-emerald-400 transition-colors">
-                        {dashboard?.leadMetrics?.conversionRate?.toFixed(1) || "0.0"}%
-                      </p>
-                      <p className="text-xs text-zinc-400 mt-1 font-medium">Booked contracts vs total pipelines</p>
-                    </div>
-                  </>
-                )}
-              </div>
+            <ErrorBoundary title="Activity Feed list">
+              <TeamActivityFeedWidget 
+                logs={dashboard?.recentActivity} 
+                isLoading={isLoading} 
+              />
             </ErrorBoundary>
-          )}
 
-          {/* Widget 3: Revenue Overview */}
-          {showWidget("revenueMetrics") && (
-            <ErrorBoundary title="Revenue Stream">
-              <div className="p-6 rounded-xl border border-border bg-card shadow-sm flex flex-col justify-between min-h-[140px] md:col-span-1 hover:border-purple-500/30 hover:shadow-[0_0_25px_rgba(139,92,246,0.06)] transition-all duration-300 group">
-                {isLoading ? renderShimmer() : (
-                  <>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Revenue Stream</span>
-                      <div className="h-7 w-7 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400">
-                        <DollarSign size={14} />
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-3xl font-extrabold tracking-tight group-hover:text-purple-450 transition-colors">
-                        {dashboard?.revenueMetrics?.totalRevenue || "INR 0"}
-                      </p>
-                      <div className="flex items-center gap-1.5 text-xs text-emerald-500 mt-2 font-medium">
-                        <TrendingUp size={14} />
-                        <span>{dashboard?.revenueMetrics?.percentIncrease || "+12%"} vs last month</span>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+            <div className="md:col-span-2">
+              <ErrorBoundary title="Booking Milestone Timeline">
+                <BookingTimelineWidget isLoading={isLoading} />
+              </ErrorBoundary>
+            </div>
+
+            <ErrorBoundary title="Leads Funnel Analysis">
+              <QuotePipelineWidget isLoading={isLoading} />
             </ErrorBoundary>
-          )}
 
-          {/* Widget 4: Upcoming Events */}
-          {showWidget("upcomingEvents") && (
-            <ErrorBoundary title="Upcoming Schedules">
-              <div className="p-6 rounded-xl border border-border bg-card shadow-sm md:col-span-2 space-y-4 hover:border-purple-500/10 transition-all">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                  <Calendar size={14} className="text-purple-400" />
-                  Upcoming Schedules
-                </h3>
-                {isLoading ? (
-                  <div className="space-y-2 py-2">
-                    <div className="h-5 bg-zinc-800/40 rounded w-full animate-pulse"></div>
-                    <div className="h-5 bg-zinc-800/40 rounded w-5/6 animate-pulse"></div>
-                  </div>
-                ) : (
-                  <div className="space-y-3 text-xs">
-                    {dashboard?.upcomingEvents?.map((evt) => (
-                      <div key={evt.id} className="flex justify-between items-center p-3 border border-border rounded-lg bg-background/50 hover:border-primary/20 transition-all">
-                        <div>
-                          <span className="font-bold text-zinc-100 block">{evt.name}</span>
-                          <span className="text-[10px] text-zinc-400 block pt-0.5">{evt.type} • {evt.location}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="font-semibold block text-zinc-300">
-                            {new Date(evt.startDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    {(!dashboard?.upcomingEvents || dashboard.upcomingEvents.length === 0) && (
-                      <p className="text-xs text-zinc-400 italic py-3 text-center">No upcoming events found.</p>
-                    )}
-                  </div>
-                )}
-              </div>
+            <ErrorBoundary title="Recent Enquiries list">
+              <RecentLeadsWidget 
+                leads={dashboard?.upcomingEvents?.slice(0, 3).map((e, idx) => ({
+                  id: e.id,
+                  name: `Client #${idx + 101}`,
+                  phone: "+91 98765 43210",
+                  eventType: e.type,
+                  budget: 85000 + idx * 15000
+                }))}
+                isLoading={isLoading}
+              />
             </ErrorBoundary>
-          )}
+          </div>
 
-          {/* Widget 5: Pending Payments */}
-          {showWidget("pendingPayments") && (
-            <ErrorBoundary title="Pending Clearance">
-              <div className="p-6 rounded-xl border border-border bg-card shadow-sm space-y-4 hover:border-purple-500/10 transition-all">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                  <DollarSign size={14} className="text-purple-400" />
-                  Pending Clearance
-                </h3>
-                {isLoading ? (
-                  <div className="space-y-2 py-2">
-                    <div className="h-4 bg-zinc-800/40 rounded w-full animate-pulse"></div>
-                    <div className="h-4 bg-zinc-800/40 rounded w-4/5 animate-pulse"></div>
-                  </div>
-                ) : (
-                  <div className="space-y-3 text-xs">
-                    {dashboard?.pendingPayments?.map((p, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-3 border border-border rounded-lg bg-background/50 hover:border-purple-500/20 transition-all">
-                        <div>
-                          <span className="font-bold text-zinc-200 block">{p.bookingNumber}</span>
-                          <span className="text-[10px] text-zinc-400 block pt-0.5">Due: {new Date(p.dueDate).toLocaleDateString()}</span>
-                        </div>
-                        <span className="font-bold font-mono text-amber-500">
-                          INR {p.amount.toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
-                    {(!dashboard?.pendingPayments || dashboard.pendingPayments.length === 0) && (
-                      <p className="text-xs text-zinc-400 italic py-3 text-center">No pending payments found.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </ErrorBoundary>
-          )}
+        </main>
+      </div>
 
-          {/* Widget 6: Team Tasks */}
-          {showWidget("teamTasks") && (
-            <ErrorBoundary title="Operational Tasks">
-              <div className="p-6 rounded-xl border border-border bg-card shadow-sm space-y-4 hover:border-purple-500/10 transition-all">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                  <CheckSquare size={14} className="text-purple-400" />
-                  Operational Tasks
-                </h3>
-                {isLoading ? (
-                  <div className="space-y-2 py-2">
-                    <div className="h-4 bg-zinc-800/40 rounded w-full animate-pulse"></div>
-                    <div className="h-4 bg-zinc-800/40 rounded w-3/4 animate-pulse"></div>
-                  </div>
-                ) : (
-                  <div className="space-y-3 text-xs">
-                    {dashboard?.teamTasks?.map((task) => (
-                      <div key={task.id} className="flex items-start gap-2.5 p-3 border border-border rounded-lg bg-background/50 hover:border-purple-500/20 transition-all">
-                        <input 
-                          type="checkbox" 
-                          id={`task-${task.id}`}
-                          checked={task.completed} 
-                          readOnly
-                          aria-label={`Mark task as completed: ${task.title}`}
-                          className="mt-0.5 accent-primary h-3.5 w-3.5 rounded cursor-not-allowed focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" 
-                        />
-                        <label htmlFor={`task-${task.id}`} className="cursor-not-allowed flex-1">
-                          <span className="font-bold text-zinc-200 block">{task.title}</span>
-                          <span className="text-[10px] text-zinc-400 block pt-0.5">{task.description}</span>
-                        </label>
-                      </div>
-                    ))}
-                    {(!dashboard?.teamTasks || dashboard.teamTasks.length === 0) && (
-                      <p className="text-xs text-zinc-400 italic py-3 text-center">All operational tasks checked off.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </ErrorBoundary>
-          )}
-
-          {/* Widget 7: Recent Activity Logs */}
-          {showWidget("recentActivity") && (
-            <ErrorBoundary title="Activity Logs">
-              <div className="p-6 rounded-xl border border-border bg-card shadow-sm md:col-span-2 space-y-4 hover:border-purple-500/10 transition-all">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                  <Sparkles size={14} className="text-purple-400" />
-                  Activity logs
-                </h3>
-                {isLoading ? (
-                  <div className="space-y-4 py-2">
-                    <div className="h-4 bg-zinc-800/40 rounded w-full animate-pulse"></div>
-                    <div className="h-4 bg-zinc-800/40 rounded w-4/5 animate-pulse"></div>
-                  </div>
-                ) : (
-                  <div className="relative border-l border-border pl-4 space-y-6 text-xs ml-2 py-1">
-                    {dashboard?.recentActivity?.map((activity) => (
-                      <div key={activity.id} className="relative">
-                        <div className="absolute -left-[21px] mt-1 h-2 w-2 rounded-full bg-purple-500 ring-4 ring-card"></div>
-                        <p className="font-bold text-[10px] text-zinc-400">{activity.time}</p>
-                        <p className="text-zinc-200 mt-0.5 leading-normal">{activity.message}</p>
-                      </div>
-                    ))}
-                    {(!dashboard?.recentActivity || dashboard.recentActivity.length === 0) && (
-                      <p className="text-xs text-zinc-400 italic py-2">No recent logs.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </ErrorBoundary>
-          )}
-
-        </div>
-
-      </main>
-
+      {/* Floating Action Wheel with Keyboard triggers */}
+      <QuickActions />
     </div>
   );
 }

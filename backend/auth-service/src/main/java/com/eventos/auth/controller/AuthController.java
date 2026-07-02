@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -31,6 +32,9 @@ public class AuthController {
 
     private final AuthService authService;
     private final RecaptchaService recaptchaService;
+
+    @Autowired
+    private com.eventos.auth.service.JwtService jwtService;
 
     public AuthController(AuthService authService, RecaptchaService recaptchaService) {
         this.authService = authService;
@@ -137,6 +141,100 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/login/google")
+    public ResponseEntity<?> loginWithGoogle(@RequestBody GoogleLoginRequestDto request, HttpServletRequest httpRequest,
+            HttpServletResponse response) {
+        try {
+            String idToken = request.getIdToken();
+            String accessToken = request.getAccessToken();
+            UUID selectTenantId = request.getSelectTenantId();
+
+            if ((idToken == null || idToken.isEmpty()) && (accessToken == null || accessToken.isEmpty())) {
+                return ResponseEntity.badRequest()
+                        .body(createErrorResponse("BAD_REQUEST", "Google ID Token or Access Token is required"));
+            }
+
+            // Extract client metadata
+            String ipAddress = httpRequest.getRemoteAddr();
+            String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
+            if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+                ipAddress = xForwardedFor.split(",")[0].trim();
+            }
+            String userAgent = httpRequest.getHeader("User-Agent");
+            String deviceModel = "Browser";
+            String osName = "Web Client";
+            String browser = "Unknown Browser";
+            if (userAgent != null) {
+                if (userAgent.contains("Windows"))
+                    osName = "Windows";
+                else if (userAgent.contains("Macintosh"))
+                    osName = "macOS";
+                else if (userAgent.contains("Linux"))
+                    osName = "Linux";
+                else if (userAgent.contains("Android"))
+                    osName = "Android";
+                else if (userAgent.contains("iPhone") || userAgent.contains("iPad"))
+                    osName = "iOS";
+
+                if (userAgent.contains("Chrome")) {
+                    browser = "Chrome";
+                    deviceModel = "Chrome Browser";
+                } else if (userAgent.contains("Safari")) {
+                    browser = "Safari";
+                    deviceModel = "Safari Browser";
+                } else if (userAgent.contains("Firefox")) {
+                    browser = "Firefox";
+                    deviceModel = "Firefox Browser";
+                } else if (userAgent.contains("Edge")) {
+                    browser = "Edge";
+                    deviceModel = "Edge Browser";
+                }
+            }
+
+            Map<String, Object> authData = authService.loginOrRegisterWithGoogle(
+                    idToken, accessToken, selectTenantId, ipAddress, deviceModel, osName, browser, userAgent);
+            String refreshToken = (String) authData.get("refreshToken");
+
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                    .httpOnly(true)
+                    .secure(false) // Set to true in prod with SSL
+                    .path("/api/v1/auth")
+                    .maxAge(7 * 24 * 60 * 60)
+                    .sameSite("Lax")
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            authData.remove("refreshToken");
+
+            Map<String, Object> successResponse = new HashMap<>();
+            successResponse.put("success", true);
+            successResponse.put("data", authData);
+
+            return ResponseEntity.ok(successResponse);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("INVALID_GOOGLE_TOKEN", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[GOOGLE_LOGIN] Google login execution failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("GOOGLE_LOGIN_FAILED", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
+        try {
+            Map<String, Object> result = authService.verifyEmail(token);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("INVALID_TOKEN", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[VERIFY_EMAIL] Email verification failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("VERIFICATION_FAILED", e.getMessage()));
+        }
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(
             @CookieValue(name = "refreshToken", required = false) String cookieToken,
@@ -235,6 +333,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             @CookieValue(name = "refreshToken", required = false) String cookieToken,
             @RequestBody(required = false) Map<String, String> request,
             HttpServletResponse response) {
@@ -244,6 +343,13 @@ public class AuthController {
             authService.logout(email);
         } else if (cookieToken != null) {
             authService.logoutByToken(cookieToken);
+        }
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (jwtService != null) {
+                jwtService.blacklistToken(token);
+            }
         }
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")

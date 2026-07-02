@@ -361,6 +361,21 @@ spec:
                 secretKeyRef:
                   name: eventos-secrets
                   key: jwt-secret
+            - name: CLOUDINARY_CLOUD_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-secrets
+                  key: cloudinary-cloud-name
+            - name: CLOUDINARY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-secrets
+                  key: cloudinary-api-key
+            - name: CLOUDINARY_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-secrets
+                  key: cloudinary-api-secret
           resources:
             limits:
               cpu: "500m"

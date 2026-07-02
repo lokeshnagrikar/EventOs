@@ -30,6 +30,9 @@ public class DashboardService {
     @org.springframework.beans.factory.annotation.Value("${service.event.base-url:http://localhost:8083/api/v1/events}")
     private String eventServiceBaseUrl;
 
+    @org.springframework.beans.factory.annotation.Value("${app.gateway.secret:eventos_gateway_secure_shared_secret}")
+    private String gatewaySecret;
+
     public DashboardService(LeadRepository leadRepository,
             StringRedisTemplate redisTemplate,
             ObjectMapper objectMapper) {
@@ -61,7 +64,7 @@ public class DashboardService {
         double conversionRate = totalLeads > 0 ? (wonLeads * 100.0 / totalLeads) : 0.0;
 
         BigDecimal pipelineValue = leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(tenantId,
-                List.of(LeadStatus.NEW, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION));
+                List.of(LeadStatus.NEW, LeadStatus.CONTACTED, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION));
         BigDecimal wonValue = leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(tenantId,
                 List.of(LeadStatus.WON));
         BigDecimal revenueForecast = wonValue.add(pipelineValue.multiply(BigDecimal.valueOf(conversionRate / 100.0)));
@@ -240,7 +243,9 @@ public class DashboardService {
         try {
             return webClient.get()
                     .uri(eventServiceBaseUrl + "/dashboard/metrics")
-                    .header("Authorization", authHeader)
+                    .header("Authorization", authHeader != null ? authHeader : "")
+                    .header("X-Tenant-ID", tenantId.toString())
+                    .header("X-Gateway-Secret", gatewaySecret != null ? gatewaySecret : "")
                     .retrieve()
                     .bodyToMono(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {})
                     .timeout(Duration.ofMillis(2000))

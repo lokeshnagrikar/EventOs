@@ -35,6 +35,51 @@ public class Company {
     @Column(name = "gst_number")
     private String gstNumber;
 
+    @Column(name = "slug")
+    private String slug;
+
+    @Column(name = "cover_url")
+    private String coverUrl;
+
+    @Column(name = "favicon_url")
+    private String faviconUrl;
+
+    @Column(name = "accent_color")
+    private String accentColor;
+
+    @Column(name = "gradient_presets")
+    private String gradientPresets;
+
+    @Column(name = "font_selection")
+    private String fontSelection;
+
+    @Column(name = "dark_theme_logo")
+    private String darkThemeLogo;
+
+    @Column(name = "registration_number")
+    private String registrationNumber;
+
+    @Column(name = "pan_number")
+    private String panNumber;
+
+    @Column(name = "business_hours")
+    private String businessHours;
+
+    @Column(name = "date_format")
+    private String dateFormat;
+
+    @Column(name = "language")
+    private String language;
+
+    @Column(name = "email_branding", columnDefinition = "TEXT")
+    private String emailBranding;
+
+    @Column(name = "invoice_branding", columnDefinition = "TEXT")
+    private String invoiceBranding;
+
+    @Column(name = "pdf_branding", columnDefinition = "TEXT")
+    private String pdfBranding;
+
     @Column(nullable = false)
     private String timezone;
 
@@ -64,6 +109,12 @@ public class Company {
         currency = "INR";
         primaryColor = "#9333ea";
         secondaryColor = "#18181b";
+        accentColor = "#db2777";
+        gradientPresets = "purple-pink";
+        fontSelection = "Inter";
+        language = "en";
+        dateFormat = "DD/MM/YYYY";
+        businessHours = "9:00 AM - 6:00 PM";
         isDeleted = false;
     }
 

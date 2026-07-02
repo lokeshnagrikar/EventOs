@@ -14,6 +14,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
@@ -29,6 +30,8 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
 
+    private final ReactiveStringRedisTemplate redisTemplate;
+
     @Value("${app.jwt.public-key:}")
     private String rawPublicKey;
 
@@ -38,6 +41,10 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     private RSAPublicKey publicKey;
     private volatile io.jsonwebtoken.JwtParser jwtParser;
 
+    public JwtAuthFilter(ReactiveStringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
     // Public endpoints that bypass authentication
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/api/v1/auth/login",
@@ -46,8 +53,10 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/switch",
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
+            "/api/v1/auth/verify-email",
             "/api/v1/auth/accept-invite",
             "/api/v1/auth/captcha",
+            "/api/v1/auth/ws",
             "/api/v1/gallery/share/public/",
             "/actuator"
     );
@@ -138,6 +147,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
                     headers.remove("X-User-ID");
                     headers.remove("X-User-Email");
                     headers.remove("X-User-Roles");
+                    headers.remove("X-User-Permissions");
                     headers.remove("X-Trace-ID");
                     headers.remove("X-Gateway-Secret");
                 })
@@ -161,34 +171,44 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
         String token = authHeader.substring(7);
 
-        try {
-            Claims claims = validateTokenAndGetClaims(token);
+        // Check if token is blacklisted in Redis
+        return redisTemplate.hasKey("blacklist:" + token)
+                .flatMap(isBlacklisted -> {
+                    if (Boolean.TRUE.equals(isBlacklisted)) {
+                        return onError(cleanExchange, "Authorization token is blacklisted", HttpStatus.UNAUTHORIZED);
+                    }
 
-            String tenantId = claims.get("tenantId", String.class);
-            String userId = claims.get("userId", String.class);
-            String email = claims.getSubject();
-            Object roles = claims.get("roles");
+                    try {
+                        Claims claims = validateTokenAndGetClaims(token);
 
-            if (tenantId == null || userId == null) {
-                return onError(cleanExchange, "Invalid token claims", HttpStatus.UNAUTHORIZED);
-            }
+                        String tenantId = claims.get("tenantId", String.class);
+                        String userId = claims.get("userId", String.class);
+                        String email = claims.getSubject();
+                        Object roles = claims.get("roles");
+                        Object permissions = claims.get("permissions");
 
-            // Mutate request headers to forward info downstream
-            ServerHttpRequest authenticatedRequest = cleanRequest.mutate()
-                    .header("X-Tenant-ID", tenantId)
-                    .header("X-User-ID", userId)
-                    .header("X-User-Email", email != null ? email : "")
-                    .header("X-User-Roles", roles != null ? roles.toString() : "")
-                    .header("X-Trace-ID", traceId)
-                    .header("X-Gateway-Secret", gatewaySecret != null ? gatewaySecret : "")
-                    .build();
+                        if (tenantId == null || userId == null) {
+                            return onError(cleanExchange, "Invalid token claims", HttpStatus.UNAUTHORIZED);
+                        }
 
-            return chain.filter(cleanExchange.mutate().request(authenticatedRequest).build());
+                        // Mutate request headers to forward info downstream
+                        ServerHttpRequest authenticatedRequest = cleanRequest.mutate()
+                                .header("X-Tenant-ID", tenantId)
+                                .header("X-User-ID", userId)
+                                .header("X-User-Email", email != null ? email : "")
+                                .header("X-User-Roles", roles != null ? roles.toString() : "")
+                                .header("X-User-Permissions", permissions != null ? permissions.toString() : "")
+                                .header("X-Trace-ID", traceId)
+                                .header("X-Gateway-Secret", gatewaySecret != null ? gatewaySecret : "")
+                                .build();
 
-        } catch (Exception e) {
-            return onError(cleanExchange, "JWT token verification failed: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
-        }
-    }
+                        return chain.filter(cleanExchange.mutate().request(authenticatedRequest).build());
+
+                    } catch (Exception e) {
+                        return onError(cleanExchange, "JWT token verification failed: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
+                    }
+                });
+    } 
 
     private Claims validateTokenAndGetClaims(String token) {
         return jwtParser

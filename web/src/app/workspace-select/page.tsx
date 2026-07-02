@@ -36,7 +36,7 @@ export default function WorkspaceSelectPage() {
     try {
       const response = await apiClient.post("/auth/switch", { tenantId });
       
-      const { accessToken, userId, role, firstName, memberships: newMemberships } = response.data.data;
+      const { accessToken, userId, role, firstName, memberships: newMemberships, permissions } = response.data.data;
       
       // Update session flag cookie for middleware routing guards
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
@@ -48,7 +48,7 @@ export default function WorkspaceSelectPage() {
       // Save state in Zustand store
       setAuth(
         accessToken,
-        { id: userId, email: user?.email || "", firstName, role },
+        { id: userId, email: user?.email || "", firstName, role, permissions: permissions || [] },
         tenantId,
         newMemberships
       );

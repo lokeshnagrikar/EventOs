@@ -36,7 +36,11 @@ spring:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:eventos_guest}
-    password: ${RABBITMQ_PASSWORD:eventos_guest_pass}
+    password: ${RABBITMQ_PASS:eventos_guest_pass}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:demo}
@@ -58,7 +62,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,prometheus
+        include: health,prometheus,info
   endpoint:
     health:
       show-details: always
@@ -67,6 +71,12 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo:4318/v1/traces}
+  tracing:
+    sampling:
+      probability: 1.0
 
 resilience4j:
   circuitbreaker:

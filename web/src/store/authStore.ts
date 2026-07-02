@@ -5,6 +5,7 @@ export interface UserProfile {
   email: string;
   firstName: string;
   role: string;
+  permissions: string[];
 }
 
 export interface WorkspaceMembership {
@@ -23,7 +24,7 @@ interface AuthState {
   isAuthenticated: boolean;
   
   setAuth: (accessToken: string, user: UserProfile, activeTenantId: string, memberships: WorkspaceMembership[]) => void;
-  updateActiveTenant: (tenantId: string, accessToken: string, role: string) => void;
+  updateActiveTenant: (tenantId: string, accessToken: string, role: string, permissions: string[]) => void;
   clearAuth: () => void;
 }
 
@@ -80,9 +81,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  updateActiveTenant: (tenantId, accessToken, role) => {
+  updateActiveTenant: (tenantId, accessToken, role, permissions) => {
     set((state) => {
-      const updatedUser = state.user ? { ...state.user, role } : null;
+      const updatedUser = state.user ? { ...state.user, role, permissions } : null;
       if (typeof window !== 'undefined' && updatedUser) {
         sessionStorage.setItem('activeTenantId', tenantId);
         sessionStorage.setItem('user', JSON.stringify(updatedUser));

@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
+import { LiquidButton } from "@/components/ui/liquid-glass-button";
+
 
 interface NavbarProps {
   activeSection?: string;
@@ -18,6 +20,7 @@ export function Navbar({ activeSection }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -83,61 +86,106 @@ export function Navbar({ activeSection }: NavbarProps) {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 border-b",
         scrolled || isOpen
-          ? "bg-[#09090B]/95 backdrop-blur-md border-zinc-800/80 shadow-lg shadow-black/10 py-3"
-          : "bg-[#09090B]/10 backdrop-blur-xs border-transparent py-5"
+          ? "bg-gradient-to-r from-purple-950/15 via-[#09090B]/80 to-cyan-950/15 backdrop-blur-xl border-zinc-800/30 shadow-lg shadow-black/10 py-2.5"
+          : "bg-transparent border-transparent py-2.5"
       )}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        
+
         {/* Logo */}
         <div
-          className="flex items-center gap-2.5 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-lg p-1"
+          className="group flex items-center gap-3 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-lg p-1"
           onClick={() => router.push("/")}
           tabIndex={0}
           onKeyDown={(e) => e.key === "Enter" && router.push("/")}
           aria-label="EventOS Home"
         >
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-purple-500/20">
-            E
-          </div>
-          <div>
-            <h1 className="font-extrabold text-base leading-none tracking-tight text-white flex items-center gap-1 font-heading">
-              EventOS
+          {/* Logo Emblem (From public/logo/logo.png) */}
+          <img
+            src="/logo/logo.png"
+            alt="EO"
+            className="h-11 w-11 object-contain transition-all duration-300 ease-out group-hover:scale-105 group-hover:rotate-[3deg] group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]"
+          />
+
+          {/* Vertical Separator */}
+          <div className="h-9 w-[1px] bg-zinc-800 transition-colors duration-300 group-hover:bg-purple-500/40" />
+
+          {/* Brand Text styled in code */}
+          <div className="flex flex-col justify-center text-left transition-all duration-300 group-hover:translate-x-0.5">
+            <h1 className="font-extrabold text-lg leading-none tracking-tight text-white font-heading flex items-center transition-all duration-300 group-hover:text-purple-100">
+              Event
+              <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent ml-0.5 transition-all duration-300 group-hover:brightness-110">
+                OS
+              </span>
             </h1>
-            <span className="text-[10px] text-zinc-500 font-bold tracking-wider uppercase block">
-              Business Suite
+            <span className="text-[8px] text-[#8E8A9F] font-bold tracking-[0.16em] uppercase block mt-1 leading-none transition-colors duration-300 group-hover:text-zinc-300">
+              MANAGE. ENGAGE. ELEVATE.
             </span>
           </div>
         </div>
 
+
+
+
+
         {/* Desktop Nav Items */}
-        <nav className="hidden md:flex items-center gap-6" aria-label="Main Navigation">
-          
+        <nav
+          className="hidden md:flex items-center gap-1.5 relative"
+          aria-label="Main Navigation"
+          onMouseLeave={() => setHoveredIndex(null)}
+        >
+
           <a
             href="#features"
             onClick={(e) => handleNavClick(e, "#features")}
+            onMouseEnter={() => setHoveredIndex(0)}
             className={cn(
-              "text-xs font-bold tracking-wide uppercase transition-colors py-1 px-0.5 text-zinc-400 hover:text-zinc-100",
+              "text-[13px] font-semibold tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-zinc-400 hover:text-zinc-100",
               activeSection === "features" && "text-white"
             )}
           >
             Features
+            {hoveredIndex === 0 && (
+              <motion.div
+                layoutId="nav-hover-capsule"
+                className="absolute inset-0 rounded-full bg-white/[0.04] border border-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_2px_8px_rgba(0,0,0,0.2)] -z-10"
+                transition={{
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 30,
+                }}
+              />
+            )}
           </a>
 
           {/* Solutions Dropdown Menu */}
           <div
             className="relative"
-            onMouseEnter={() => setActiveDropdown("solutions")}
+            onMouseEnter={() => {
+              setActiveDropdown("solutions");
+              setHoveredIndex(1);
+            }}
             onMouseLeave={() => setActiveDropdown(null)}
           >
             <button
               className={cn(
-                "text-xs font-bold tracking-wide uppercase flex items-center gap-1 transition-colors py-1 px-0.5 text-zinc-400 hover:text-zinc-100 focus:outline-none",
+                "text-[13px] font-semibold tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-zinc-400 hover:text-zinc-100 focus:outline-none",
                 activeDropdown === "solutions" && "text-white"
               )}
             >
               Solutions
-              <Icon icon="solar:alt-arrow-down-bold" className={cn("text-[10px] transition-transform duration-200", activeDropdown === "solutions" && "rotate-180")} />
+              <Icon icon="solar:alt-arrow-down-bold" className={cn("text-[10px] transition-transform duration-205", activeDropdown === "solutions" && "rotate-180")} />
+              {hoveredIndex === 1 && (
+                <motion.div
+                  layoutId="nav-hover-capsule"
+                  className="absolute inset-0 rounded-full bg-white/[0.04] border border-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_2px_8px_rgba(0,0,0,0.2)] -z-10"
+                  transition={{
+                    type: "spring",
+                    stiffness: 380,
+                    damping: 30,
+                  }}
+                />
+              )}
             </button>
 
             <AnimatePresence>
@@ -175,28 +223,54 @@ export function Navbar({ activeSection }: NavbarProps) {
           <a
             href="#pricing"
             onClick={(e) => handleNavClick(e, "#pricing")}
+            onMouseEnter={() => setHoveredIndex(2)}
             className={cn(
-              "text-xs font-bold tracking-wide uppercase transition-colors py-1 px-0.5 text-zinc-400 hover:text-zinc-100",
+              "text-[13px] font-semibold tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-zinc-400 hover:text-zinc-100",
               activeSection === "pricing" && "text-white"
             )}
           >
             Pricing
+            {hoveredIndex === 2 && (
+              <motion.div
+                layoutId="nav-hover-capsule"
+                className="absolute inset-0 rounded-full bg-white/[0.04] border border-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_2px_8px_rgba(0,0,0,0.2)] -z-10"
+                transition={{
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 30,
+                }}
+              />
+            )}
           </a>
 
           {/* Resources Dropdown Menu */}
           <div
             className="relative"
-            onMouseEnter={() => setActiveDropdown("resources")}
+            onMouseEnter={() => {
+              setActiveDropdown("resources");
+              setHoveredIndex(3);
+            }}
             onMouseLeave={() => setActiveDropdown(null)}
           >
             <button
               className={cn(
-                "text-xs font-bold tracking-wide uppercase flex items-center gap-1 transition-colors py-1 px-0.5 text-zinc-400 hover:text-zinc-100 focus:outline-none",
+                "text-[13px] font-semibold tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-zinc-400 hover:text-zinc-100 focus:outline-none",
                 activeDropdown === "resources" && "text-white"
               )}
             >
               Resources
               <Icon icon="solar:alt-arrow-down-bold" className={cn("text-[10px] transition-transform duration-200", activeDropdown === "resources" && "rotate-180")} />
+              {hoveredIndex === 3 && (
+                <motion.div
+                  layoutId="nav-hover-capsule"
+                  className="absolute inset-0 rounded-full bg-white/[0.04] border border-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_2px_8px_rgba(0,0,0,0.2)] -z-10"
+                  transition={{
+                    type: "spring",
+                    stiffness: 380,
+                    damping: 30,
+                  }}
+                />
+              )}
             </button>
 
             <AnimatePresence>
@@ -234,20 +308,39 @@ export function Navbar({ activeSection }: NavbarProps) {
         </nav>
 
         {/* Desktop CTAs */}
-        <div className="hidden md:flex items-center gap-4">
-          <Button
-            variant="ghost"
+        <div 
+          className="hidden md:flex items-center gap-4"
+          onMouseLeave={() => setHoveredIndex(null)}
+        >
+          <button
             onClick={handleSignIn}
-            className="text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60"
+            onMouseEnter={() => setHoveredIndex(4)}
+            className={cn(
+              "text-[13px] font-semibold tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-zinc-400 hover:text-zinc-100 focus:outline-none",
+              hoveredIndex === 4 && "text-white"
+            )}
           >
             Login
-          </Button>
-          <Button
+            {hoveredIndex === 4 && (
+              <motion.div
+                layoutId="nav-hover-capsule"
+                className="absolute inset-0 rounded-full bg-white/[0.04] border border-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_2px_8px_rgba(0,0,0,0.2)] -z-10"
+                transition={{
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 30,
+                }}
+              />
+            )}
+          </button>
+          <LiquidButton
+            variant="brandNavbar"
             onClick={handleStartTrial}
-            className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:opacity-95 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md shadow-purple-600/10 active:scale-[0.98] transition-all py-5 px-5"
+            className="rounded-full text-xs font-bold uppercase tracking-wider active:scale-[0.98]"
+            size="default"
           >
             Get Started
-          </Button>
+          </LiquidButton>
         </div>
 
         {/* Mobile menu toggle */}
@@ -310,7 +403,7 @@ export function Navbar({ activeSection }: NavbarProps) {
               </nav>
 
               <div className="h-px bg-zinc-850 my-1" />
-              
+
               <div className="flex flex-col gap-3">
                 <Button
                   variant="outline"
@@ -322,15 +415,17 @@ export function Navbar({ activeSection }: NavbarProps) {
                 >
                   Login
                 </Button>
-                <Button
+                <LiquidButton
+                  variant="brandNavbar"
                   onClick={() => {
                     setIsOpen(false);
                     handleStartTrial();
                   }}
-                  className="w-full bg-gradient-to-r from-purple-600 to-cyan-600 hover:opacity-95 text-white py-5 font-bold shadow-md text-xs uppercase tracking-wider"
+                  className="w-full rounded-full font-bold text-xs uppercase tracking-wider"
+                  size="lg"
                 >
                   Get Started
-                </Button>
+                </LiquidButton>
               </div>
             </div>
           </motion.div>

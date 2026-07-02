@@ -100,7 +100,7 @@ export function AuthModal() {
               </motion.button>
 
               {/* Padded Content Area to fix colored line overlap */}
-              <div className="p-6 sm:p-8 pt-10 sm:pt-12">
+              <div className="p-6 sm:p-8 pt-8 sm:pt-10">
                 {/* Modal Forms inside Suspense to support useSearchParams in LoginForm */}
                 <Suspense fallback={<div className="text-xs text-zinc-400 text-center py-12">Loading form...</div>}>
                   {mode === "login" ? (

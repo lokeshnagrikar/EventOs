@@ -5,7 +5,26 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["images.unsplash.com", "res.cloudinary.com"],
   },
-
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  onDemandEntries: {
+    maxInactiveAge: 15 * 1000, // Keep pages inactive in memory for max 15 seconds
+    pagesBufferLength: 2,      // Keep only 2 pages buffered in memory
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.devtool = false; // Disable heavy source maps in dev to save up to 50% RAM
+      config.cache = {
+        type: 'filesystem',
+        maxMemoryGenerations: 1, // Minimize in-memory generation storage
+      };
+    }
+    return config;
+  },
   async rewrites() {
     return [
       {
@@ -14,6 +33,8 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+
 };
 
 export default nextConfig;

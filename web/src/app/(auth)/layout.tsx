@@ -29,13 +29,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Auth Card Container */}
-      <div className="w-full max-w-[420px] z-10 relative">
+      <div className="w-full max-w-[380px] z-10 relative">
         <BlurFade duration={0.4} delay={0.05} direction="down" offset={10}>
           <SpotlightCard className="bg-white/[0.01] border border-white/[0.08] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.3)] shadow-purple-500/[0.03] backdrop-blur-xl relative overflow-hidden transition-all duration-300">
             {/* Top Accent Gradient Line */}
             <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#06B6D4] opacity-90 z-20" />
             
-            <div className="p-6 sm:p-8 pt-10 sm:pt-12">
+            <div className="p-5 sm:p-6 pt-8 sm:pt-10">
               {children}
             </div>
           </SpotlightCard>

@@ -36,4 +36,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
     @Query("SELECT COUNT(i) FROM Invoice i WHERE i.tenantId = :tenantId AND i.status NOT IN ('PAID', 'VOIDED', 'CANCELLED')")
     long countOutstandingByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT i FROM Invoice i WHERE i.status NOT IN ('PAID', 'VOIDED', 'CANCELLED') AND i.dueDate < :now")
+    List<Invoice> findOverdueInvoices(@Param("now") java.time.LocalDateTime now);
 }

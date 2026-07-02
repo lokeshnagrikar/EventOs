@@ -24,13 +24,23 @@
 **Do NOT use `mvn spring-boot:run` directly in PowerShell.**
 It causes PowerShell terminal conflicts and fails silently.
 
-**✅ Always use this 2-step method:**
+**✅ Always use this 3-step method:**
+
+### Step 1: Build first (run once, or after any code change)
 ```powershell
-# Step 1: Build first (run once, or after any code change)
 cd D:\EventOs\backend
 mvn clean package -DskipTests
+```
 
-# Step 2: Run each service with java -jar directly (limiting memory is crucial for local stability)
+### Step 2: Load Environment Variables (Run once in EACH new PowerShell terminal)
+Before launching any jar file, load the `.env` variables into the terminal's environment so that Java can read them (e.g. database password, Cloudinary credentials, etc.):
+```powershell
+cd D:\EventOs
+.\load_env.ps1
+```
+
+### Step 3: Run each service with java -jar directly (limiting memory is crucial for local stability)
+```powershell
 java -Xmx128m -Xss256k -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=40m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -jar D:\EventOs\backend\auth-service\target\auth-service-1.0.0.jar
 ```
 
@@ -62,6 +72,8 @@ Write-Host "All ports cleared."
 ### 🔵 Terminal 2 — API Gateway (Port 8080)
 
 ```powershell
+cd D:\EventOs
+.\load_env.ps1
 java -Xmx128m -Xss256k -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=40m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -jar D:\EventOs\backend\api-gateway\target\api-gateway-1.0.0.jar
 ```
 
@@ -76,6 +88,8 @@ Started ApiGatewayApplication
 ### 🔵 Terminal 3 — Auth Service (Port 8081)
 
 ```powershell
+cd D:\EventOs
+.\load_env.ps1
 java -Xmx128m -Xss256k -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=40m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -jar D:\EventOs\backend\auth-service\target\auth-service-1.0.0.jar
 ```
 
@@ -94,6 +108,8 @@ Started AuthApplication
 ### 🔵 Terminal 4 — CRM Service (Port 8082)
 
 ```powershell
+cd D:\EventOs
+.\load_env.ps1
 java -Xmx128m -Xss256k -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=40m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -jar D:\EventOs\backend\crm-service\target\crm-service-1.0.0.jar
 ```
 
@@ -104,6 +120,8 @@ java -Xmx128m -Xss256k -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=40m -XX
 ### 🔵 Terminal 5 — Event Service (Port 8083)
 
 ```powershell
+cd D:\EventOs
+.\load_env.ps1
 java -Xmx128m -Xss256k -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=40m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -jar D:\EventOs\backend\event-service\target\event-service-1.0.0.jar
 ```
 
@@ -114,6 +132,8 @@ java -Xmx128m -Xss256k -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=40m -XX
 ### 🔵 Terminal 6 — Gallery Service (Port 8084)
 
 ```powershell
+cd D:\EventOs
+.\load_env.ps1
 java -Xmx128m -Xss256k -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=40m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -jar D:\EventOs\backend\gallery-service\target\gallery-service-1.0.0.jar
 ```
 

@@ -73,4 +73,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             @Param("endDate")   LocalDateTime endDate,
             @Param("eventIds")  List<UUID> eventIds,
             Pageable pageable);
+
+    List<Event> findAllByBookingIdInAndTenantId(List<UUID> bookingIds, UUID tenantId);
+    Page<Event> findAllByBookingIdInAndTenantId(List<UUID> bookingIds, UUID tenantId, Pageable pageable);
 }

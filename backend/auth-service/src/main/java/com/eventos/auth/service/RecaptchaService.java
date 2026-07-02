@@ -14,7 +14,8 @@ public class RecaptchaService {
     @Value("${app.recaptcha.secret-key:}")
     private String secretKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private RestTemplate restTemplate = new RestTemplate();
     private static final String VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
 
     public boolean isEnabled() {

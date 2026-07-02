@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 
+
 export function Footer() {
   const router = useRouter();
 
@@ -54,19 +55,35 @@ export function Footer() {
         {/* Brand Column */}
         <div className="md:col-span-2 space-y-5">
           <div
-            className="flex items-center gap-2.5 cursor-pointer select-none focus:outline-none rounded-lg p-1 w-fit hover:opacity-90 transition-opacity"
+            className="group flex items-center gap-3 cursor-pointer select-none focus:outline-none rounded-lg p-1 w-fit transition-all duration-300"
             onClick={() => router.push("/")}
             role="link"
             tabIndex={0}
             onKeyDown={(e) => e.key === "Enter" && router.push("/")}
             aria-label="EventOS Home"
           >
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md shadow-purple-500/25">
-              <Icon icon="solar:calendar-bold-duotone" className="text-white text-lg" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm leading-none tracking-tight text-white">EventOS</h4>
-              <span className="text-[9px] text-zinc-500 font-bold tracking-wider uppercase">Business Suite</span>
+            {/* Logo Emblem (From public/logo/logo.png) */}
+            <img 
+              src="/logo/logo.png" 
+              alt="EO" 
+              className="h-11 w-11 object-contain transition-all duration-300 ease-out group-hover:scale-105 group-hover:rotate-[3deg] group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]"
+            />
+
+            
+            {/* Vertical Separator */}
+            <div className="h-9 w-[1px] bg-zinc-800 transition-colors duration-300 group-hover:bg-purple-500/40" />
+
+            {/* Brand Text styled in code */}
+            <div className="flex flex-col justify-center text-left transition-all duration-300 group-hover:translate-x-0.5">
+              <h4 className="font-extrabold text-sm leading-none tracking-tight text-white flex items-center transition-all duration-300 group-hover:text-purple-100">
+                Event
+                <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent ml-0.5 transition-all duration-300 group-hover:brightness-110">
+                  OS
+                </span>
+              </h4>
+              <span className="text-[7px] text-[#8E8A9F] font-bold tracking-[0.14em] uppercase block mt-1 leading-none transition-colors duration-300 group-hover:text-zinc-300">
+                MANAGE. ENGAGE. ELEVATE.
+              </span>
             </div>
           </div>
 

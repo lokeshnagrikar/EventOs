@@ -293,12 +293,12 @@ export function ClientPortalPreview() {
             </div>
 
             {/* CTA */}
-            <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-all shadow-md shadow-indigo-500/10">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-all shadow-md shadow-indigo-500/10 w-full sm:w-auto">
                 <Icon icon="solar:arrow-right-bold" className="text-base" />
                 Try the Portal Demo
               </button>
-              <button className="px-5 py-3 rounded-xl border border-zinc-800 text-zinc-400 text-sm font-bold hover:text-white hover:border-zinc-700 transition-all">
+              <button className="px-5 py-3 rounded-xl border border-zinc-800 text-zinc-400 text-sm font-bold hover:text-white hover:border-zinc-700 transition-all w-full sm:w-auto">
                 Learn More
               </button>
             </div>

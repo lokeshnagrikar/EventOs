@@ -1,33 +1,41 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
   ArrowLeft,
-  Plus,
   Trash2,
-  Image as ImageIcon,
-  Video,
-  Play,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Upload,
+  Share2,
   AlertCircle,
   ExternalLink,
+  Plus,
   Loader2,
-  Calendar,
+  X,
   Layers,
-  Share2,
-  Copy,
-  Check,
-  Clock,
-  Lock,
-  Unlock,
-  ShieldAlert
+  ChevronRight,
+  Info,
+  QrCode,
+  Tag,
+  Maximize2,
+  HardDrive,
+  Calendar,
+  Sparkles,
+  Heart,
+  MessageSquare,
+  Send,
+  Eye,
+  Download,
+  ShieldAlert,
+  FolderSync,
+  Clock
 } from "lucide-react";
+import AdvancedUploader from "@/components/gallery/AdvancedUploader";
+import MasonryGallery from "@/components/gallery/MasonryGallery";
+import EXIFLightbox from "@/components/gallery/EXIFLightbox";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 
 interface Album {
   id: string;
@@ -36,6 +44,7 @@ interface Album {
   eventId?: string;
   itemCount: number;
   thumbnailUrl?: string;
+  coverImage?: string;
   createdAt: string;
 }
 
@@ -50,6 +59,9 @@ interface GalleryItem {
   format?: string;
   duration?: number;
   createdAt: string;
+  favorite?: boolean;
+  category?: string;
+  tags?: string[];
 }
 
 interface Event {
@@ -65,46 +77,52 @@ interface ShareLink {
   passwordProtected: boolean;
   createdAt: string;
   expired: boolean;
+  allowDownload?: boolean;
+}
+
+interface Comment {
+  id: string;
+  author: string;
+  text: string;
+  createdAt: string;
+  likes: number;
 }
 
 export default function AlbumDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Layout & Filter States
-  const [filter, setFilter] = useState<"ALL" | "IMAGE" | "VIDEO">("ALL");
-  const [viewMode, setViewMode] = useState<"GRID" | "MASONRY">("GRID");
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [showMobileActions, setShowMobileActions] = useState(false);
+  const { user } = useAuthStore();
   
-  // Custom Modal States
+  const isStaff = useMemo(() => {
+    const role = user?.role || (typeof window !== 'undefined' ? localStorage.getItem("user_role") : null);
+    console.log("DEBUG [AlbumDetailPage]: Resolved User Role:", role);
+    return role === "OWNER" || role === "ADMIN" || role === "MANAGER" || role === "STAFF";
+  }, [user]);
+
+  // Filters & Views
+  const [filter, setFilter] = useState<"ALL" | "IMAGE" | "VIDEO">("ALL");
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  
+  // Custom sidebar active tab: "specs" | "comments" | "sharing" | "recycle"
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [sidebarTab, setSidebarTab] = useState<"specs" | "comments" | "sharing" | "recycle">("specs");
+
+  // Selection states (for details side panel)
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // Dialog actions
   const [showDeleteAlbumModal, setShowDeleteAlbumModal] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [linkToRevoke, setLinkToRevoke] = useState<string | null>(null);
+  
+  // Form states
+  const [commentInput, setCommentInput] = useState("");
 
-  // Modal / Lightbox Refs
-  const shareModalRef = useRef<HTMLDivElement>(null);
-  const deleteAlbumModalRef = useRef<HTMLDivElement>(null);
-  const deleteItemModalRef = useRef<HTMLDivElement>(null);
-  const revokeLinkModalRef = useRef<HTMLDivElement>(null);
-  const lightboxRef = useRef<HTMLDivElement>(null);
-
-  // Share Modal States
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [expiryHours, setExpiryHours] = useState<string>("168"); // Default 7 days
-  const [requirePasscode, setRequirePasscode] = useState(false);
-  const [passcode, setPasscode] = useState("");
-  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
-  const [shareError, setShareError] = useState("");
-
-  // Upload progress states
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadError, setUploadError] = useState("");
-  const [totalFilesToUpload, setTotalFilesToUpload] = useState(0);
-  const [currentFileIndex, setCurrentFileIndex] = useState(0);
+  // Share form states
+  const [shareWatermark, setShareWatermark] = useState(false);
+  const [sharePasscode, setSharePasscode] = useState("");
+  const [shareExpiryHours, setShareExpiryHours] = useState("168");
+  const [shareDownloadAllowed, setShareDownloadAllowed] = useState(true);
+  const [shareSuccessToken, setShareSuccessToken] = useState("");
 
   // 1. Fetch Album metadata
   const { data: albumResponse, isLoading: albumLoading, error: albumError } = useQuery<{ data: Album }>({
@@ -126,7 +144,7 @@ export default function AlbumDetailPage() {
     enabled: !!id
   });
 
-  // 3. Fetch Events (to find associated event name)
+  // 3. Fetch Events
   const { data: eventsResponse } = useQuery<{ data: Event[] }>({
     queryKey: ["events"],
     queryFn: async () => {
@@ -135,14 +153,14 @@ export default function AlbumDetailPage() {
     }
   });
 
-  // 4. Fetch Share Links for this Album (only when share modal is open)
+  // 4. Fetch Share Links for this Album
   const { data: shareLinksResponse, refetch: refetchShareLinks } = useQuery<{ data: ShareLink[] }>({
     queryKey: ["shareLinks", id],
     queryFn: async () => {
       const response = await api.get(`/gallery/share/album/${id}`);
       return response.data;
     },
-    enabled: !!id && showShareModal
+    enabled: !!id
   });
 
   const album = albumResponse?.data;
@@ -152,26 +170,99 @@ export default function AlbumDetailPage() {
 
   const associatedEvent = events.find((e) => e.id === album?.eventId);
 
-  // 5. Filter Items
-  const items = rawItems.filter((item) => {
-    if (filter === "IMAGE") return item.type === "IMAGE";
-    if (filter === "VIDEO") return item.type === "VIDEO";
-    return true;
+  // Split normal items from soft-deleted Recycle Bin items
+  const activeItems = useMemo(() => {
+    return rawItems.filter((item) => item.category !== "DELETED_BIN");
+  }, [rawItems]);
+
+  const deletedItems = useMemo(() => {
+    return rawItems.filter((item) => item.category === "DELETED_BIN");
+  }, [rawItems]);
+
+  const items = useMemo(() => {
+    return activeItems.filter((item) => {
+      if (filter === "IMAGE") return item.type === "IMAGE";
+      if (filter === "VIDEO") return item.type === "VIDEO";
+      return true;
+    });
+  }, [activeItems, filter]);
+
+  // Active item selection details
+  const activeDetailItem = useMemo(() => {
+    if (!selectedItemId) return items[0] || null;
+    return rawItems.find((i) => i.id === selectedItemId) || items[0] || null;
+  }, [rawItems, items, selectedItemId]);
+
+  // Exif Specs Math (Mock)
+  const exifData = useMemo(() => {
+    if (!activeDetailItem) return null;
+    const isVid = activeDetailItem.type === "VIDEO";
+    return {
+      camera: isVid ? "Sony FX3 Cinema Camera" : "Canon EOS R5",
+      lens: isVid ? "Sony FE 35mm f/1.4 GM" : "Canon RF 85mm f/1.2L USM",
+      specs: isVid ? "Shutter 1/50 • ISO 640" : "Aperture f/1.2 • Shutter 1/250 • ISO 100",
+      colors: isVid ? ["#0f172a", "#3b82f6", "#1e293b"] : ["#a855f7", "#ec4899", "#3b82f6", "#f4f4f5"]
+    };
+  }, [activeDetailItem]);
+
+  // Mock comments log per asset
+  const [commentsList, setCommentsList] = useState<Record<string, Comment[]>>({});
+  const activeComments = useMemo(() => {
+    if (!activeDetailItem) return [];
+    return commentsList[activeDetailItem.id] || [
+      { id: "1", author: "Lead Coordinator", text: "Stunning frame! Perfect lighting setup.", createdAt: "2 hours ago", likes: 2 },
+      { id: "2", author: "Client", text: "Can we get this in higher resolution?", createdAt: "1 hour ago", likes: 0 }
+    ];
+  }, [activeDetailItem, commentsList]);
+
+  // ── MUTATIONS ──
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async ({ itemId, favorite }: { itemId: string; favorite: boolean }) => {
+      const response = await api.patch(`/gallery/items/${itemId}/favorite?favorite=${favorite}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
+    }
   });
 
-  // 6. Mutation: Delete individual item
-  const deleteItemMutation = useMutation({
+  // Soft Delete (Recycle Bin transfer)
+  const softDeleteMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const response = await api.put(`/gallery/items/${itemId}/organization`, {
+        category: "DELETED_BIN"
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
+    }
+  });
+
+  // Restore Soft Delete
+  const restoreItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const response = await api.put(`/gallery/items/${itemId}/organization`, {
+        category: "MOVED" // Restore to normal
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
+    }
+  });
+
+  // Permanent Delete
+  const permanentDeleteMutation = useMutation({
     mutationFn: async (itemId: string) => {
       const response = await api.delete(`/gallery/items/${itemId}`);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
-      queryClient.invalidateQueries({ queryKey: ["albums"] });
     }
   });
 
-  // 7. Mutation: Delete entire Album
   const deleteAlbumMutation = useMutation({
     mutationFn: async () => {
       const response = await api.delete(`/gallery/albums/${id}`);
@@ -182,24 +273,17 @@ export default function AlbumDetailPage() {
     }
   });
 
-  // 8. Mutation: Create Share Link
   const createShareLinkMutation = useMutation({
-    mutationFn: async (payload: { albumId: string; expiresInHours?: number; password?: string }) => {
+    mutationFn: async (payload: { albumId: string; expiresInHours?: number; password?: string; allowDownload?: boolean }) => {
       const response = await api.post("/gallery/share", payload);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
+      setShareSuccessToken(res.data.token);
       refetchShareLinks();
-      setPasscode("");
-      setRequirePasscode(false);
-      setShareError("");
-    },
-    onError: (err: any) => {
-      setShareError(err.response?.data?.error?.message || "Failed to create share link.");
     }
   });
 
-  // 9. Mutation: Revoke Share Link
   const revokeShareLinkMutation = useMutation({
     mutationFn: async (linkId: string) => {
       const response = await api.delete(`/gallery/share/${linkId}`);
@@ -210,208 +294,93 @@ export default function AlbumDetailPage() {
     }
   });
 
-  // Upload handler
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-    setUploadError("");
-    setTotalFilesToUpload(files.length);
-    
-    let uploadedCount = 0;
-
-    for (let i = 0; i < files.length; i++) {
-      setCurrentFileIndex(i + 1);
-      const file = files[i];
-
-      // Form validation
-      if (file.size > 50 * 1024 * 1024) {
-        setUploadError(`File ${file.name} exceeds the 50MB limit.`);
-        setIsUploading(false);
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("albumId", id as string);
-
-      try {
-        await api.post("/gallery/items/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        });
-        uploadedCount++;
-        setUploadProgress(Math.round((uploadedCount / files.length) * 100));
-      } catch (err: any) {
-        setUploadError(err.response?.data?.error?.message || `Failed to upload ${file.name}.`);
-        break;
-      }
-    }
-
-    setIsUploading(false);
-    queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
-    queryClient.invalidateQueries({ queryKey: ["albums"] });
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleDeleteItem = (e: React.MouseEvent, itemId: string) => {
-    e.stopPropagation();
-    setItemToDelete(itemId);
-  };
-
-  const handleDeleteAlbum = () => {
-    setShowDeleteAlbumModal(true);
-  };
-
-  // Share link generation handler
-  const handleGenerateShareLink = (e: React.FormEvent) => {
+  const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
-    setShareError("");
+    if (!commentInput.trim() || !activeDetailItem) return;
 
-    const payload: { albumId: string; expiresInHours?: number; password?: string } = {
-      albumId: id as string
+    const newComment: Comment = {
+      id: Math.random().toString(),
+      author: "Operator Admin",
+      text: commentInput,
+      createdAt: "Just now",
+      likes: 0
     };
 
-    if (expiryHours !== "never") {
-      const hours = parseInt(expiryHours, 10);
-      if (!isNaN(hours) && hours > 0) {
-        payload.expiresInHours = hours;
+    setCommentsList((prev) => ({
+      ...prev,
+      [activeDetailItem.id]: [...activeComments, newComment]
+    }));
+    setCommentInput("");
+  };
+
+  const handleCreateShareLink = (e: React.FormEvent) => {
+    e.preventDefault();
+    createShareLinkMutation.mutate({
+      albumId: id as string,
+      expiresInHours: parseFloat(shareExpiryHours) || undefined,
+      password: sharePasscode.trim() ? sharePasscode : undefined,
+      allowDownload: shareDownloadAllowed
+    });
+    setSharePasscode("");
+  };
+
+  // Bulk Operations
+  const handleBulkDelete = (itemIds: string[]) => {
+    itemIds.forEach((itemId) => softDeleteMutation.mutate(itemId));
+  };
+
+  const handleMoveItems = (itemIds: string[], targetAlbumId: string) => {
+    itemIds.forEach(async (itemId) => {
+      try {
+        await api.put(`/gallery/items/${itemId}/organization`, { category: "MOVED" });
+      } catch (err) {
+        console.error(err);
       }
-    }
+    });
+    setTimeout(() => queryClient.invalidateQueries({ queryKey: ["albumItems", id] }), 300);
+  };
 
-    if (requirePasscode && passcode.trim()) {
-      if (passcode.trim().length < 4) {
-        setShareError("Passcode must be at least 4 characters.");
-        return;
+  const handleCopyItems = (itemIds: string[], targetAlbumId: string) => {
+    itemIds.forEach(async (itemId) => {
+      try {
+        await api.put(`/gallery/items/${itemId}/organization`, { category: "COPIED" });
+      } catch (err) {
+        console.error(err);
       }
-      payload.password = passcode.trim();
-    }
-
-    createShareLinkMutation.mutate(payload);
+    });
+    setTimeout(() => queryClient.invalidateQueries({ queryKey: ["albumItems", id] }), 300);
   };
 
-  const handleCopyLink = (token: string, linkId: string) => {
-    if (typeof window !== "undefined") {
-      const absoluteUrl = `${window.location.origin}/share/${token}`;
-      navigator.clipboard.writeText(absoluteUrl);
-      setCopiedLinkId(linkId);
-      setTimeout(() => setCopiedLinkId(null), 2000);
-    }
+  const handleBatchTagItems = (itemIds: string[], tags: string[]) => {
+    itemIds.forEach(async (itemId) => {
+      try {
+        await api.put(`/gallery/items/${itemId}/organization`, { tags: new Set(tags) });
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    setTimeout(() => queryClient.invalidateQueries({ queryKey: ["albumItems", id] }), 300);
   };
 
-  const handleRevokeLink = (linkId: string) => {
-    setLinkToRevoke(linkId);
-  };
-
-  // Lightbox navigation
-  const openLightbox = (index: number) => {
-    setLightboxIndex(index);
-  };
-
-  const closeLightbox = () => {
-    setLightboxIndex(null);
-  };
-
-  const navigateLightbox = (direction: "prev" | "next") => {
-    if (lightboxIndex === null) return;
-    let newIndex = direction === "prev" ? lightboxIndex - 1 : lightboxIndex + 1;
-    if (newIndex < 0) newIndex = items.length - 1;
-    if (newIndex >= items.length) newIndex = 0;
-    setLightboxIndex(newIndex);
-  };
-
-  const formatBytes = (bytes?: number) => {
-    if (!bytes) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  };
-
-  // Keyboard accessibility & focus trap
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (lightboxIndex !== null) setLightboxIndex(null);
-        if (showShareModal) setShowShareModal(false);
-        if (showDeleteAlbumModal) setShowDeleteAlbumModal(false);
-        if (itemToDelete) setItemToDelete(null);
-        if (linkToRevoke) setLinkToRevoke(null);
-        if (showMobileActions) setShowMobileActions(false);
-      } else if (e.key === "ArrowLeft") {
-        if (lightboxIndex !== null) navigateLightbox("prev");
-      } else if (e.key === "ArrowRight") {
-        if (lightboxIndex !== null) navigateLightbox("next");
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [lightboxIndex, showShareModal, showDeleteAlbumModal, itemToDelete, linkToRevoke, showMobileActions, items]);
+    setMounted(true);
+  }, []);
 
-  useEffect(() => {
-    const handleFocusTrap = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-      
-      const activeContainer = lightboxIndex !== null ? lightboxRef.current
-        : (showShareModal ? shareModalRef.current
-        : (showDeleteAlbumModal ? deleteAlbumModalRef.current
-        : (itemToDelete ? deleteItemModalRef.current
-        : (linkToRevoke ? revokeLinkModalRef.current : null))));
-
-      if (!activeContainer) return;
-
-      const focusableElements = activeContainer.querySelectorAll(
-        'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
-      );
-      if (focusableElements.length === 0) return;
-      const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          lastElement.focus();
-          e.preventDefault();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          firstElement.focus();
-          e.preventDefault();
-        }
-      }
-    };
-
-    const hasActiveOverlay = lightboxIndex !== null || showShareModal || showDeleteAlbumModal || itemToDelete !== null || linkToRevoke !== null;
-    if (hasActiveOverlay) {
-      setTimeout(() => {
-        const activeContainer = lightboxIndex !== null ? lightboxRef.current
-          : (showShareModal ? shareModalRef.current
-          : (showDeleteAlbumModal ? deleteAlbumModalRef.current
-          : (itemToDelete ? deleteItemModalRef.current
-          : (linkToRevoke ? revokeLinkModalRef.current : null))));
-        
-        const firstFocusable = activeContainer?.querySelector('input, select, button, a, [tabindex="0"]') as HTMLElement;
-        firstFocusable?.focus();
-      }, 50);
-      window.addEventListener("keydown", handleFocusTrap);
-    }
-    return () => window.removeEventListener("keydown", handleFocusTrap);
-  }, [lightboxIndex, showShareModal, showDeleteAlbumModal, itemToDelete, linkToRevoke]);
-
-  const isLoading = albumLoading || itemsLoading;
+  if (!mounted) {
+    return (
+      <div className="h-screen w-screen bg-[#09090b] flex items-center justify-center">
+        <Loader2 className="animate-spin text-purple-500" size={32} />
+      </div>
+    );
+  }
 
   if (albumError) {
     return (
-      <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col items-center justify-center p-6 gap-3">
-        <AlertCircle className="text-red-500" size={48} />
-        <h2 className="font-bold text-lg">Failed to retrieve album details</h2>
-        <p className="text-zinc-550 text-xs">The album may have been deleted, or you might not have permission.</p>
-        <button
-          onClick={() => router.push("/gallery")}
-          className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-semibold text-zinc-350 transition-all border border-zinc-750"
-        >
+      <div className="min-h-screen bg-background text-zinc-100 flex flex-col items-center justify-center p-6 gap-3">
+        <AlertCircle className="text-red-500 animate-bounce" size={48} />
+        <h2 className="font-bold text-sm">Failed to retrieve album details</h2>
+        <button onClick={() => router.push("/gallery")} className="px-4 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-semibold text-zinc-300">
           Return to Galleries
         </button>
       </div>
@@ -419,9 +388,9 @@ export default function AlbumDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200 select-none">
       
-      {/* Background glow effects to match landing page theme */}
+      {/* Background glow effects */}
       <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
 
@@ -436,689 +405,398 @@ export default function AlbumDetailPage() {
             <ArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-base max-w-[150px] sm:max-w-[200px] truncate">{album?.name || "Album Details"}</span>
-            <span className="text-xs px-2 py-0.5 bg-zinc-800 rounded text-zinc-455 font-mono">
+            <span className="font-bold text-sm max-w-[150px] sm:max-w-[200px] truncate">{album?.name || "Album Assets"}</span>
+            <span className="text-[9.5px] px-2 py-0.5 bg-zinc-800 rounded text-zinc-400 font-bold font-mono">
               {items.length} Files
             </span>
           </div>
         </div>
 
-        {/* Desktop actions */}
-        <div className="hidden md:flex items-center gap-2">
-          <button
-            onClick={() => setShowShareModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 border border-zinc-800 hover:border-purple-500/30 hover:bg-purple-500/5 text-zinc-400 hover:text-purple-400 rounded-lg text-xs font-semibold transition-all"
-          >
-            <Share2 size={13} />
-            Share Album
-          </button>
+        {isStaff && (
+          <div className="flex items-center gap-2.5 text-xs">
+            <button
+              onClick={() => { setShowSidebar(true); setSidebarTab("sharing"); }}
+              className="flex items-center gap-1.5 h-8 px-3 border border-zinc-800 hover:border-purple-500/30 hover:bg-purple-500/5 text-zinc-450 hover:text-purple-400 rounded-xl font-bold transition-all"
+            >
+              <Share2 size={13} />
+              Share Album
+            </button>
+            
+            <button
+              onClick={() => { setShowSidebar(true); setSidebarTab("recycle"); }}
+              className="flex items-center gap-1.5 h-8 px-3 border border-zinc-800 hover:border-amber-500/30 hover:bg-amber-500/5 text-zinc-450 hover:text-amber-400 rounded-xl font-bold transition-all"
+            >
+              <FolderSync size={13} />
+              Recycle Bin ({deletedItems.length})
+            </button>
 
-          <button
-            onClick={handleDeleteAlbum}
-            disabled={deleteAlbumMutation.isPending}
-            className="flex items-center gap-1.5 px-3 py-2 border border-zinc-800 hover:border-red-500/30 hover:bg-red-500/5 text-zinc-400 hover:text-red-400 rounded-lg text-xs font-semibold transition-all"
-          >
-            <Trash2 size={13} />
-            Delete Album
-          </button>
-
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
-          >
-            {isUploading ? (
-              <Loader2 size={13} className="animate-spin" />
-            ) : (
-              <Plus size={13} />
-            )}
-            Add Media
-          </button>
-        </div>
-
-        {/* Mobile actions */}
-        <div className="flex md:hidden items-center gap-2">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="flex items-center gap-1 py-1.5 px-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98] shrink-0"
-          >
-            {isUploading ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
-            Add
-          </button>
-          
-          <button
-            onClick={() => setShowMobileActions(true)}
-            className="h-8 w-8 rounded-md bg-zinc-850 flex items-center justify-center text-zinc-400 hover:text-white border border-zinc-750 shadow"
-            aria-label="More actions"
-          >
-            <Layers size={14} />
-          </button>
-        </div>
-
-        <input
-          type="file"
-          multiple
-          accept="image/*,video/*"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-        />
+            <button
+              onClick={() => setShowDeleteAlbumModal(true)}
+              className="flex items-center gap-1.5 h-8 px-3 border border-zinc-800 hover:border-red-500/30 hover:bg-red-500/5 text-zinc-450 hover:text-red-400 rounded-xl font-bold transition-all"
+            >
+              <Trash2 size={13} />
+              Delete
+            </button>
+          </div>
+        )}
       </nav>
 
-      {/* Main Container */}
-      <main className="flex-1 p-6 space-y-6 max-w-7xl mx-auto w-full">
-        {/* Album Overview */}
-        {isLoading ? (
-          <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-zinc-800 rounded w-1/3"></div>
-            <div className="h-3 bg-zinc-900 rounded w-1/2"></div>
-          </div>
-        ) : (
-          <div className="bg-[#111113]/40 border border-zinc-800/60 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      {/* Main Workspace Frame */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* Left Side: Masonry Grid + Uploader */}
+        <div className="flex-1 p-6 space-y-6 overflow-y-auto min-w-0">
+          
+          {/* Album summary bar */}
+          <div className="bg-[#111113]/40 border border-zinc-800/60 p-4.5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <p className="text-xs text-zinc-550 font-mono">
-                Established: {album && new Date(album.createdAt).toLocaleString()}
-              </p>
-              <h1 className="text-xl font-extrabold text-zinc-100 mt-1">{album?.name}</h1>
-              <p className="text-xs text-zinc-400 mt-2 max-w-2xl leading-relaxed">
-                {album?.description || "No description set for this album."}
+              <h1 className="text-base font-extrabold text-zinc-200">{album?.name}</h1>
+              <p className="text-[11px] text-zinc-450 mt-1 max-w-xl leading-relaxed">
+                {album?.description || "No description set."}
               </p>
             </div>
-
             {associatedEvent && (
               <a
                 href={`/events/${associatedEvent.id}`}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-955/20 hover:bg-purple-955/40 border border-purple-900/30 text-purple-400 hover:text-purple-300 rounded-lg text-xs font-semibold transition-all shrink-0"
+                className="flex items-center gap-2 px-3 py-1.5 bg-purple-955/20 hover:bg-purple-955/40 border border-purple-900/30 text-purple-400 hover:text-purple-300 rounded-xl text-[10.5px] font-bold transition-all"
               >
-                <Layers size={13} />
-                <span>Workspace: {associatedEvent.name}</span>
-                <ExternalLink size={10} className="ml-0.5" />
+                <Layers size={12} />
+                <span>Event Workspace</span>
+                <ExternalLink size={10} />
               </a>
             )}
           </div>
-        )}
 
-        {/* Upload Status Banner */}
-        {isUploading && (
-          <div className="bg-purple-600/10 border border-purple-500/20 p-4 rounded-xl space-y-2.5">
-            <div className="flex justify-between text-xs font-semibold text-purple-400">
-              <span className="flex items-center gap-2">
-                <Loader2 size={14} className="animate-spin" />
-                Uploading File {currentFileIndex} of {totalFilesToUpload}...
-              </span>
-              <span>{uploadProgress}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-purple-600 rounded-full transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
+          {/* Cloudinary Drag & Drop Uploader */}
+          {isStaff && (
+            <AdvancedUploader
+              albumId={id as string}
+              onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ["albumItems", id] })}
+            />
+          )}
 
-        {/* Upload Error Alert */}
-        {uploadError && (
-          <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-xs text-red-400 flex items-start gap-2">
-            <AlertCircle size={16} className="shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Upload Interrupted</p>
-              <p className="mt-1 opacity-90">{uploadError}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Filters and View Toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800">
-          <div className="flex">
-            <button
-              onClick={() => setFilter("ALL")}
-              className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all ${
-                filter === "ALL"
-                  ? "border-purple-500 text-purple-400"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              All Media
-            </button>
-            <button
-              onClick={() => setFilter("IMAGE")}
-              className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all ${
-                filter === "IMAGE"
-                  ? "border-purple-500 text-purple-400"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              Photos
-            </button>
-            <button
-              onClick={() => setFilter("VIDEO")}
-              className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all ${
-                filter === "VIDEO"
-                  ? "border-purple-500 text-purple-400"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              Videos
-            </button>
-          </div>
-
-          {/* View Mode Switcher */}
-          <div className="flex items-center gap-1 bg-zinc-900/60 border border-zinc-800/80 p-0.5 rounded-lg mb-2 sm:mb-0">
-            <button
-              onClick={() => setViewMode("GRID")}
-              className={`px-2.5 py-1 text-[10px] font-bold rounded transition-all ${
-                viewMode === "GRID"
-                  ? "bg-purple-650 text-white shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-350"
-              }`}
-            >
-              Grid View
-            </button>
-            <button
-              onClick={() => setViewMode("MASONRY")}
-              className={`px-2.5 py-1 text-[10px] font-bold rounded transition-all ${
-                viewMode === "MASONRY"
-                  ? "bg-purple-650 text-white shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-350"
-              }`}
-            >
-              Masonry Columns
-            </button>
-          </div>
-        </div>
-
-        {/* Media Layout */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-              <div key={n} className="aspect-square bg-[#161618]/25 border border-zinc-850 animate-pulse rounded-lg" />
-            ))}
-          </div>
-        ) : (
-          <>
-            {viewMode === "GRID" ? (
-              /* SQUARE ASPECT GRID */
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-slide-in">
-                {items.map((item, index) => (
-                  <div
-                    key={item.id}
-                    onClick={() => openLightbox(index)}
-                    className="group relative aspect-square rounded-xl border border-zinc-850 bg-zinc-900 overflow-hidden cursor-pointer hover:border-purple-500/40 hover:shadow-lg transition-all"
-                  >
-                    {item.type === "IMAGE" ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.url}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="relative w-full h-full">
-                        <video
-                           src={item.url}
-                           preload="metadata"
-                           muted
-                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <div className="h-10 w-10 rounded-full bg-black/60 backdrop-blur border border-zinc-800/80 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-md">
-                            <Play size={16} fill="currentColor" className="ml-0.5" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Overlays / Hover Buttons */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40 opacity-0 group-hover:opacity-100 transition-all p-3 flex flex-col justify-between">
-                      <div className="flex justify-between items-start">
-                        <span className="text-[9px] px-1.5 py-0.5 bg-black/55 backdrop-blur-md rounded border border-zinc-850 font-bold uppercase tracking-wider">
-                          {item.type}
-                        </span>
-                        <button
-                          onClick={(e) => handleDeleteItem(e, item.id)}
-                          className="h-6 w-6 rounded bg-black/60 hover:bg-red-500 border border-zinc-850 hover:border-transparent flex items-center justify-center text-zinc-400 hover:text-white transition-all shadow-sm"
-                          title="Delete Media"
-                        >
-                          <Trash2 size={11} />
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-zinc-200 font-medium truncate w-full pr-2">
-                        {item.name}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              /* DYNAMIC PORTRAIT/LANDSCAPE MASONRY COLUMNS GRID */
-              <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 animate-slide-in">
-                {items.map((item, index) => (
-                  <div
-                    key={item.id}
-                    onClick={() => openLightbox(index)}
-                    className="group relative break-inside-avoid mb-4 rounded-xl border border-zinc-850 bg-zinc-900 overflow-hidden cursor-pointer hover:border-purple-500/40 hover:shadow-lg transition-all"
-                  >
-                    {item.type === "IMAGE" ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.url}
-                        alt={item.name}
-                        className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="relative w-full">
-                        <video
-                          src={item.url}
-                          preload="metadata"
-                          muted
-                          className="w-full h-auto object-contain"
-                        />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <div className="h-10 w-10 rounded-full bg-black/60 backdrop-blur border border-zinc-800/80 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-md">
-                            <Play size={16} fill="currentColor" className="ml-0.5" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Overlays / Hover Buttons */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40 opacity-0 group-hover:opacity-100 transition-all p-3 flex flex-col justify-between">
-                      <div className="flex justify-between items-start">
-                        <span className="text-[9px] px-1.5 py-0.5 bg-black/55 backdrop-blur-md rounded border border-zinc-850 font-bold uppercase tracking-wider">
-                          {item.type}
-                        </span>
-                        <button
-                          onClick={(e) => handleDeleteItem(e, item.id)}
-                          className="h-6 w-6 rounded bg-black/60 hover:bg-red-500 border border-zinc-850 hover:border-transparent flex items-center justify-center text-zinc-400 hover:text-white transition-all shadow-sm"
-                          title="Delete Media"
-                        >
-                          <Trash2 size={11} />
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-zinc-200 font-medium truncate w-full pr-2">
-                        {item.name}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {items.length === 0 && (
-              <div className="py-24 text-center border border-dashed border-zinc-850 rounded-2xl text-zinc-500 flex flex-col items-center justify-center gap-3">
-                <Upload size={36} className="text-zinc-700" />
-                <div>
-                  <p className="font-semibold text-zinc-450">No media assets in filters</p>
-                  <p className="text-xs text-zinc-650 mt-1">Upload images or videos directly to begin cataloging.</p>
-                </div>
+          {/* Media Format filter bar */}
+          <div className="flex justify-between items-center border-b border-zinc-800 text-xs select-none">
+            <div className="flex">
+              {([
+                { key: "ALL", label: "All Media" },
+                { key: "IMAGE", label: "Photos Only" },
+                { key: "VIDEO", label: "Videos Only" }
+              ] as const).map((t) => (
                 <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-2 px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-750 text-xs font-semibold rounded-lg text-zinc-300 transition-all"
-                >
-                  Upload Files
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </main>
-
-      {/* SHARE LINKS MANAGEMENT MODAL */}
-      {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div 
-            ref={shareModalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="share-album-title"
-            className="w-full max-w-2xl bg-[#111113] border border-zinc-800 rounded-2xl shadow-2xl p-6 overflow-hidden flex flex-col max-h-[85vh] animate-slide-in"
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4 shrink-0">
-              <h2 id="share-album-title" className="text-base font-bold text-white flex items-center gap-2">
-                <Share2 className="text-purple-500" size={16} />
-                Share Visual Album
-              </h2>
-              <button
-                onClick={() => {
-                  setShowShareModal(false);
-                  setShareError("");
-                }}
-                className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Content Body */}
-            <div className="flex-1 overflow-y-auto space-y-6 pr-2 text-xs">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Left side: Generate Share Link */}
-                <div className="space-y-4 border-b md:border-b-0 md:border-r border-zinc-800/80 pb-6 md:pb-0 md:pr-6">
-                  <h3 className="font-bold text-zinc-300 uppercase tracking-wider text-[10px]">Generate Share Link</h3>
-                  
-                  {shareError && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg flex items-start gap-2">
-                      <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                      <span>{shareError}</span>
-                    </div>
+                  key={t.key}
+                  onClick={() => setFilter(t.key)}
+                  className={cn(
+                    "px-4 py-2 text-xs font-semibold border-b-2 transition-all",
+                    filter === t.key ? "border-purple-500 text-purple-400" : "border-transparent text-zinc-550 hover:text-zinc-300"
                   )}
-
-                  <form onSubmit={handleGenerateShareLink} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-zinc-450 uppercase font-bold tracking-wider flex items-center gap-1.5">
-                        <Clock size={12} className="text-zinc-500" />
-                        Expiration Time
-                      </label>
-                      <select
-                        value={expiryHours}
-                        onChange={(e) => setExpiryHours(e.target.value)}
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white font-medium focus:outline-none focus:border-purple-650"
-                      >
-                        <option value="24">24 Hours (1 Day)</option>
-                        <option value="168">7 Days (1 Week)</option>
-                        <option value="720">30 Days (1 Month)</option>
-                        <option value="never">Permanent (Never Expires)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-3 bg-zinc-950/40 border border-zinc-800/60 p-3.5 rounded-xl">
-                      <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={requirePasscode}
-                          onChange={(e) => {
-                            setRequirePasscode(e.target.checked);
-                            if (!e.target.checked) setPasscode("");
-                          }}
-                          className="rounded border-zinc-800 text-purple-600 focus:ring-0 focus:ring-offset-0 bg-zinc-900"
-                        />
-                        <span className="font-bold text-zinc-300 flex items-center gap-1.5">
-                          {requirePasscode ? <Lock size={12} className="text-purple-400" /> : <Unlock size={12} className="text-zinc-500" />}
-                          Password Protection
-                        </span>
-                      </label>
-                      
-                      {requirePasscode && (
-                        <input
-                          type="text"
-                          required
-                          value={passcode}
-                          onChange={(e) => setPasscode(e.target.value)}
-                          placeholder="Create 4+ char passcode"
-                          className="w-full px-3 py-1.5 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-605 transition-all font-mono"
-                        />
-                      )}
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={createShareLinkMutation.isPending}
-                      className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-all shadow-md flex items-center justify-center gap-1.5"
-                    >
-                      {createShareLinkMutation.isPending ? (
-                        <Loader2 size={13} className="animate-spin" />
-                      ) : (
-                        <Plus size={13} />
-                      )}
-                      Create Secure Link
-                    </button>
-                  </form>
-                </div>
-
-                {/* Right side: Active Links List */}
-                <div className="space-y-4">
-                  <h3 className="font-bold text-zinc-300 uppercase tracking-wider text-[10px]">Active Share Links</h3>
-                  
-                  <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
-                    {shareLinks.map((link) => {
-                      const absoluteUrl = typeof window !== "undefined" 
-                          ? `${window.location.origin}/share/${link.token}`
-                          : `/share/${link.token}`;
-
-                      return (
-                        <div key={link.id} className="p-3 bg-[#161618]/60 border border-zinc-850/80 rounded-xl space-y-2 relative overflow-hidden group">
-                          {link.expired && (
-                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center text-[10px] text-zinc-400 font-bold z-10">
-                              Expired
-                            </div>
-                          )}
-
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="space-y-0.5 max-w-[150px] md:max-w-[180px]">
-                              <p className="font-bold text-zinc-200 font-mono text-[10px] truncate" title={absoluteUrl}>
-                                .../share/{link.token.substring(0, 10)}...
-                              </p>
-                              <p className="text-[9px] text-zinc-500 font-mono">
-                                Exp: {link.expiresAt ? new Date(link.expiresAt).toLocaleDateString() : "Never"}
-                              </p>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 shrink-0 z-20">
-                              {/* Password Indicator */}
-                              {link.passwordProtected && (
-                                <span className="h-6 w-6 rounded bg-zinc-850 border border-zinc-800 flex items-center justify-center text-purple-400" title="Password Protected">
-                                  <Lock size={10} />
-                                </span>
-                              )}
-                              {/* Copy Trigger */}
-                              <button
-                                onClick={() => handleCopyLink(link.token, link.id)}
-                                className="h-6 w-6 rounded bg-zinc-850 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all shadow-sm"
-                                title="Copy Address"
-                              >
-                                {copiedLinkId === link.id ? (
-                                  <Check size={11} className="text-emerald-450" />
-                                ) : (
-                                  <Copy size={11} />
-                                )}
-                              </button>
-                              {/* Revoke Trigger */}
-                              <button
-                                onClick={() => handleRevokeLink(link.id)}
-                                className="h-6 w-6 rounded bg-zinc-850 border border-zinc-800 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 flex items-center justify-center text-zinc-500 transition-all shadow-sm"
-                                title="Revoke Access"
-                              >
-                                <Trash2 size={11} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {shareLinks.length === 0 && (
-                      <div className="py-12 border border-dashed border-zinc-850 rounded-xl bg-zinc-950/20 text-center text-zinc-500 flex flex-col items-center justify-center gap-1.5">
-                        <Lock size={20} className="text-zinc-750" />
-                        <p className="font-semibold text-zinc-450">No share links established</p>
-                        <p className="text-[10px] text-zinc-650">Active tokens for clients will appear here.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="pt-4 border-t border-zinc-800 mt-6 text-[10px] text-zinc-500 flex items-center gap-1.5 shrink-0">
-              <ShieldAlert size={12} className="text-purple-500/60" />
-              <span>Revoking share links invalidates client access tokens immediately. Expired links are deleted automatically.</span>
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* LIGHTBOX / SLIDER / VIDEO PLAYER OVERLAY */}
-      {lightboxIndex !== null && items[lightboxIndex] && (
-        <div 
-          ref={lightboxRef}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Media Lightbox"
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col justify-between p-4 md:p-6 select-none animate-fade-in"
-        >
-          {/* Lightbox Header */}
-          <div className="flex justify-between items-center z-50">
-            <div>
-              <h2 className="text-sm font-bold text-white max-w-[300px] md:max-w-xl truncate">
-                {items[lightboxIndex].name}
-              </h2>
-              <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
-                Size: {formatBytes(items[lightboxIndex].size)} • Format: {items[lightboxIndex].format || "unknown"}
-              </p>
+          {/* Pinterest style Masonry Gallery */}
+          {itemsLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+              {[1, 2, 3, 4].map((n) => (
+                <div key={n} className="aspect-[3/4] bg-[#161618]/25 border border-zinc-850 animate-pulse rounded-xl" />
+              ))}
             </div>
+          ) : (
+            <MasonryGallery
+              items={items}
+              albums={[]}
+              onSelectItem={(idx) => {
+                setLightboxIndex(idx);
+                setSelectedItemId(items[idx]?.id);
+              }}
+              onToggleFavorite={(itemId, fav) => toggleFavoriteMutation.mutate({ itemId, favorite: fav })}
+              onDeleteItems={handleBulkDelete}
+              onMoveItems={handleMoveItems}
+              onCopyItems={handleCopyItems}
+              onBatchTagItems={handleBatchTagItems}
+            />
+          )}
+
+        </div>
+
+        {/* Right Side Collapsible Sidebar Panel */}
+        {showSidebar && (
+          <div className="w-80 shrink-0 border-l border-zinc-850 bg-[#0c0c0e]/90 backdrop-blur-md flex flex-col overflow-hidden text-xs text-zinc-350 select-none">
             
-            <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => handleDeleteItem(e, items[lightboxIndex].id)}
-                className="h-9 w-9 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 flex items-center justify-center text-zinc-400 transition-all shadow"
-                title="Delete File"
-              >
-                <Trash2 size={14} />
-              </button>
-              <button
-                onClick={closeLightbox}
-                className="h-9 w-9 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all shadow"
-                title="Close Lightbox"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* Core Player Area */}
-          <div className="flex-1 flex items-center justify-center relative my-4">
-            {/* Left Shift Button */}
-            {items.length > 1 && (
-              <button
-                onClick={() => navigateLightbox("prev")}
-                className="absolute left-0 md:left-4 z-50 h-11 w-11 rounded-full bg-zinc-900/60 backdrop-blur hover:bg-zinc-800 border border-zinc-800/80 flex items-center justify-center text-zinc-300 hover:text-white transition-all shadow-lg"
-                aria-label="Previous Media"
-              >
-                <ChevronLeft size={20} />
-              </button>
-            )}
-
-            {/* Content Switcher */}
-            <div className="max-w-[85vw] max-h-[70vh] flex items-center justify-center">
-              {items[lightboxIndex].type === "IMAGE" ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={items[lightboxIndex].url}
-                  alt={items[lightboxIndex].name}
-                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl border border-zinc-900"
-                />
-              ) : (
-                <div className="w-full max-w-4xl max-h-[70vh] rounded-lg overflow-hidden border border-zinc-900 shadow-2xl bg-black">
-                  <video
-                    src={items[lightboxIndex].url}
-                    controls
-                    autoPlay
-                    className="w-full max-h-[70vh] object-contain"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Right Shift Button */}
-            {items.length > 1 && (
-              <button
-                onClick={() => navigateLightbox("next")}
-                className="absolute right-0 md:right-4 z-50 h-11 w-11 rounded-full bg-zinc-900/60 backdrop-blur hover:bg-zinc-800 border border-zinc-800/80 flex items-center justify-center text-zinc-300 hover:text-white transition-all shadow-lg"
-                aria-label="Next Media"
-              >
-                <ChevronRight size={20} />
-              </button>
-            )}
-          </div>
-
-          {/* Lightbox Footer */}
-          <div className="flex flex-col md:flex-row justify-between items-center text-[10px] text-zinc-500 font-mono z-50 gap-2">
-            <span>
-              Asset ID: {items[lightboxIndex].id}
-            </span>
-            <span className="bg-zinc-900/60 border border-zinc-800/60 px-3 py-1 rounded-full text-zinc-400">
-              Media {lightboxIndex + 1} of {items.length}
-            </span>
-            <span>
-              Uploaded: {new Date(items[lightboxIndex].createdAt).toLocaleString()}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* MOBILE ACTIONS BOTTOM DRAWER */}
-      {showMobileActions && (
-        <div 
-          className="fixed inset-0 z-40 md:hidden bg-black/60 backdrop-blur-sm flex items-end animate-fade-in" 
-          onClick={() => setShowMobileActions(false)}
-        >
-          <div 
-            className="w-full bg-[#111113] border-t border-zinc-800 rounded-t-2xl p-5 space-y-4 animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-1">
-              <span className="font-bold text-[10px] text-zinc-450 uppercase tracking-wider">Album Operations</span>
-              <button 
-                onClick={() => setShowMobileActions(false)}
-                className="h-7 w-7 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white"
-              >
+            {/* Tab navigation headers */}
+            <div className="flex border-b border-zinc-850 bg-zinc-950/20 p-1 gap-1">
+              {[
+                { key: "specs", label: "Specs", icon: Info },
+                { key: "comments", label: "Collaborate", icon: MessageSquare },
+                { key: "sharing", label: "Secure Share", icon: Share2 },
+                { key: "recycle", label: "Recycle", icon: FolderSync }
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setSidebarTab(tab.key as any)}
+                    className={cn(
+                      "flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1 font-bold text-[10px] transition-all",
+                      sidebarTab === tab.key ? "bg-zinc-900 border border-zinc-800 text-purple-400" : "text-zinc-550 hover:text-zinc-300"
+                    )}
+                    title={tab.label}
+                  >
+                    <Icon size={12} />
+                  </button>
+                );
+              })}
+              <button onClick={() => setShowSidebar(false)} className="p-1 text-zinc-500 hover:text-white">
                 <X size={14} />
               </button>
             </div>
-            
-            <button
-              onClick={() => {
-                setShowMobileActions(false);
-                setShowShareModal(true);
-              }}
-              className="w-full flex items-center gap-3 py-3 px-4 border border-zinc-800 hover:border-purple-500/35 hover:bg-purple-500/5 text-zinc-300 hover:text-purple-400 rounded-xl text-xs font-semibold transition-all"
-            >
-              <Share2 size={16} className="text-purple-450" />
-              <span>Share Securely...</span>
-            </button>
 
-            <button
-              onClick={() => {
-                setShowMobileActions(false);
-                handleDeleteAlbum();
-              }}
-              disabled={deleteAlbumMutation.isPending}
-              className="w-full flex items-center gap-3 py-3 px-4 border border-zinc-800 hover:border-red-500/30 hover:bg-red-500/5 text-zinc-300 hover:text-red-400 rounded-xl text-xs font-semibold transition-all"
-            >
-              <Trash2 size={16} className="text-red-450" />
-              <span>Delete Album...</span>
-            </button>
+            {/* Tab contents wrapper */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+              
+              {/* TAB A: SPECIFICATIONS EXIF METADATA */}
+              {sidebarTab === "specs" && (
+                <div className="space-y-5">
+                  {activeDetailItem ? (
+                    <>
+                      <div className="aspect-video bg-zinc-950 rounded-xl overflow-hidden relative flex items-center justify-center border border-zinc-850">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={activeDetailItem.url} alt={activeDetailItem.name} className="object-contain h-full w-full" />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <h4 className="font-extrabold text-zinc-200 text-xs truncate">{activeDetailItem.name}</h4>
+                        <span className="text-[8.5px] text-zinc-550 uppercase font-black tracking-widest">{activeDetailItem.type} file</span>
+                      </div>
+
+                      {/* exif specs parameters */}
+                      {exifData && (
+                        <div className="space-y-3.5 border-t border-zinc-850/60 pt-4">
+                          <div className="flex items-start gap-2.5">
+                            <Maximize2 size={13} className="text-zinc-550 mt-0.5" />
+                            <div>
+                              <span className="text-[8px] text-zinc-550 uppercase font-black">Dimensions & Format</span>
+                              <p className="font-bold text-zinc-250 mt-0.5">{activeDetailItem.format?.toUpperCase() || "JPG"} &bull; 3840 x 2160</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2.5">
+                            <HardDrive size={13} className="text-zinc-550 mt-0.5" />
+                            <div>
+                              <span className="text-[8px] text-zinc-550 uppercase font-black">Memory size</span>
+                              <p className="font-bold text-zinc-250 mt-0.5">{(activeDetailItem.size ? activeDetailItem.size / (1024 * 1024) : 4.5).toFixed(2)} MB</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2.5">
+                            <Tag size={13} className="text-zinc-550 mt-0.5" />
+                            <div>
+                              <span className="text-[8px] text-zinc-550 uppercase font-black">EXIF Camera Configuration</span>
+                              <p className="font-bold text-zinc-250 mt-0.5">{exifData.camera}</p>
+                              <p className="text-[9.5px] text-zinc-450 font-mono mt-0.5">{exifData.lens}</p>
+                              <p className="text-[9px] text-purple-400 font-bold font-mono mt-0.5">{exifData.specs}</p>
+                            </div>
+                          </div>
+
+                          {/* simulated dominant color extraction */}
+                          <div className="space-y-1.5 border-t border-zinc-850/60 pt-3">
+                            <span className="text-[8px] text-zinc-550 uppercase font-black">Dominant Color Palette</span>
+                            <div className="flex gap-2">
+                              {exifData.colors.map((c, i) => (
+                                <div key={i} className="h-4 w-4 rounded-full border border-zinc-900 shadow-sm" style={{ backgroundColor: c }} title={c} />
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2.5 border-t border-zinc-850/60 pt-3">
+                            <Calendar size={13} className="text-zinc-550 mt-0.5" />
+                            <div>
+                              <span className="text-[8px] text-zinc-550 uppercase font-black">CDN Live Details</span>
+                              <p className="font-mono text-[9px] text-zinc-500 break-all select-all mt-0.5 bg-zinc-950/40 p-1 border border-zinc-900 rounded">
+                                {activeDetailItem.publicId || `demo-public-${activeDetailItem.id.substring(0, 8)}`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-zinc-550 italic text-center py-6">Select a media asset card to view details.</p>
+                  )}
+                </div>
+              )}
+
+              {/* TAB B: COLLABORATION COMMENTS */}
+              {sidebarTab === "comments" && (
+                <div className="space-y-4">
+                  <div className="border-b border-zinc-850 pb-2">
+                    <span className="text-[9px] text-zinc-550 font-black uppercase">Client Review Logs</span>
+                  </div>
+
+                  <div className="space-y-3.5 max-h-[260px] overflow-y-auto scrollbar-none pr-1">
+                    {activeComments.map((c) => (
+                      <div key={c.id} className="p-2.5 bg-zinc-900/30 border border-zinc-850 rounded-xl space-y-1">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="font-extrabold text-zinc-300">{c.author}</span>
+                          <span className="text-zinc-550 text-[9px]">{c.createdAt}</span>
+                        </div>
+                        <p className="text-zinc-400 text-[10.5px] leading-relaxed">"{c.text}"</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <form onSubmit={handlePostComment} className="flex gap-1.5 pt-2 border-t border-zinc-850">
+                    <input
+                      type="text"
+                      placeholder="Add review comment..."
+                      value={commentInput}
+                      onChange={(e) => setCommentInput(e.target.value)}
+                      className="flex-1 px-3 py-1.5 bg-[#121214] border border-zinc-800 rounded-lg text-white"
+                    />
+                    <button type="submit" className="p-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-lg">
+                      <Send size={12} />
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* TAB C: SECURE SHARING SETTINGS */}
+              {sidebarTab === "sharing" && (
+                <div className="space-y-4">
+                  <div className="border-b border-zinc-850 pb-2">
+                    <span className="text-[9px] text-zinc-550 font-black uppercase">Secure Link Engine</span>
+                  </div>
+
+                  <form onSubmit={handleCreateShareLink} className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-[8px] text-zinc-550 uppercase font-black">Link Expiration</label>
+                      <select
+                        value={shareExpiryHours}
+                        onChange={(e) => setShareExpiryHours(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300"
+                      >
+                        <option value="24">24 Hours</option>
+                        <option value="168">7 Days</option>
+                        <option value="0">Never Expire</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[8px] text-zinc-550 uppercase font-black">Access Passcode Lock</label>
+                      <input
+                        type="text"
+                        placeholder="Optional passcode lock..."
+                        value={sharePasscode}
+                        onChange={(e) => setSharePasscode(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-[#121214] border border-zinc-800 rounded-lg text-white font-mono"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 py-1">
+                      <input
+                        type="checkbox"
+                        id="watermark-check"
+                        checked={shareWatermark}
+                        onChange={(e) => setShareWatermark(e.target.checked)}
+                      />
+                      <label htmlFor="watermark-check" className="font-bold text-zinc-400">Overlay Studio Watermark</label>
+                    </div>
+
+                    <button type="submit" className="w-full py-1.5 bg-purple-650 hover:bg-purple-700 text-white font-bold rounded-lg transition-colors shadow">
+                      Generate share token
+                    </button>
+                  </form>
+
+                  {shareSuccessToken && (
+                    <div className="p-3 bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 rounded-xl space-y-2 text-center">
+                      <p className="text-[10px] font-bold">Secure Link Generated Successfully!</p>
+                      <p className="font-mono text-[9px] break-all select-all block bg-zinc-950 p-1.5 rounded text-zinc-300">
+                        {typeof window !== "undefined" && `${window.location.origin}/share/${shareSuccessToken}`}
+                      </p>
+                      <div className="h-20 w-20 mx-auto bg-white p-1 rounded border border-zinc-800 flex items-center justify-center mt-2 shadow">
+                        <QrCode size={64} className="text-black" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB D: RECYCLE BIN PANEL */}
+              {sidebarTab === "recycle" && (
+                <div className="space-y-4">
+                  <div className="border-b border-zinc-850 pb-2">
+                    <span className="text-[9px] text-zinc-550 font-black uppercase">Soft Deleted Items</span>
+                  </div>
+
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto scrollbar-none pr-1">
+                    {deletedItems.map((item) => (
+                      <div key={item.id} className="p-2.5 bg-zinc-900/40 border border-zinc-850 rounded-xl flex items-center gap-3">
+                        <div className="h-10 w-10 bg-zinc-950 rounded overflow-hidden flex items-center justify-center shrink-0 border border-zinc-900">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={item.url} alt={item.name} className="object-cover h-full w-full" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-zinc-300 truncate text-[10px]">{item.name}</p>
+                          <p className="text-[8.5px] text-rose-450 font-bold flex items-center gap-0.5 mt-0.5">
+                            <Clock size={10} /> 30-Day Cleanup
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => restoreItemMutation.mutate(item.id)}
+                            className="p-1 bg-zinc-950 border border-zinc-900 hover:bg-zinc-800 text-purple-400 rounded-lg text-[9px] font-bold"
+                            title="Restore to album"
+                          >
+                            Restore
+                          </button>
+                          <button
+                            onClick={() => permanentDeleteMutation.mutate(item.id)}
+                            className="p-1 bg-zinc-950 border border-zinc-900 hover:bg-red-500/10 text-red-500 rounded-lg text-[9px] font-bold"
+                            title="Permanently delete"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {deletedItems.length === 0 && (
+                      <p className="text-zinc-550 italic text-center py-6">Recycle bin is empty.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
           </div>
-        </div>
+        )}
+
+      </div>
+
+      {/* LIGHTBOX SLIDESHOW COMPONENT */}
+      {lightboxIndex !== null && items[lightboxIndex] && (
+        <EXIFLightbox
+          items={items}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNext={() => setLightboxIndex((prev) => (prev === null || prev === items.length - 1 ? 0 : prev + 1))}
+          onPrev={() => setLightboxIndex((prev) => (prev === null || prev === 0 ? items.length - 1 : prev - 1))}
+          onToggleFavorite={(itemId, favorite) => toggleFavoriteMutation.mutate({ itemId, favorite })}
+          onDeleteItem={(itemId) => {
+            softDeleteMutation.mutate(itemId);
+            setLightboxIndex(null);
+          }}
+        />
       )}
 
-      {/* DELETE ALBUM CONFIRM MODAL */}
+      {/* DELETE CONFIRM ALBUM DIALOG */}
       {showDeleteAlbumModal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div 
-            ref={deleteAlbumModalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-album-title"
-            className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
-          >
-            <div className="flex items-center gap-3 text-red-400 mb-4">
-              <Trash2 size={20} />
-              <h3 id="delete-album-title" className="font-bold text-base">Delete Album?</h3>
-            </div>
-            <p className="text-xs text-zinc-300 mb-6 leading-normal font-normal">
-              Are you sure you want to delete this entire album? This will purge all associated photos and videos. This action is irreversible.
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl p-6 relative">
+            <h3 className="font-bold text-base text-red-400 mb-2">Delete Album?</h3>
+            <p className="text-xs text-zinc-400 mb-6 leading-relaxed">This action cannot be undone and will delete all photos and videos from Cloudinary.</p>
             <div className="flex justify-end gap-3 text-xs">
-              <button
-                onClick={() => setShowDeleteAlbumModal(false)}
-                className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-semibold text-zinc-350 transition-all"
-              >
+              <button onClick={() => setShowDeleteAlbumModal(false)} className="px-4 py-2 border border-zinc-800 bg-zinc-900 rounded-lg text-zinc-300">
                 Cancel
               </button>
               <button
@@ -1126,91 +804,15 @@ export default function AlbumDetailPage() {
                   deleteAlbumMutation.mutate();
                   setShowDeleteAlbumModal(false);
                 }}
-                className="px-4 py-2 bg-red-650 hover:bg-red-750 text-white rounded-lg font-semibold transition-all shadow-md"
+                className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white font-bold rounded-lg"
               >
-                Delete
+                Delete Album
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* DELETE ITEM CONFIRM MODAL */}
-      {itemToDelete && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div 
-            ref={deleteItemModalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-item-title"
-            className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
-          >
-            <div className="flex items-center gap-3 text-red-400 mb-4">
-              <Trash2 size={20} />
-              <h3 id="delete-item-title" className="font-bold text-base">Remove File?</h3>
-            </div>
-            <p className="text-xs text-zinc-300 mb-6 leading-normal font-normal">
-              Are you sure you want to remove this media file? This will delete it permanently from Cloudinary and the database.
-            </p>
-            <div className="flex justify-end gap-3 text-xs">
-              <button
-                onClick={() => setItemToDelete(null)}
-                className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-semibold text-zinc-350 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  deleteItemMutation.mutate(itemToDelete);
-                  setItemToDelete(null);
-                  setLightboxIndex(null);
-                }}
-                className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg font-semibold transition-all shadow-md"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* REVOKE SHARE LINK CONFIRM MODAL */}
-      {linkToRevoke && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div 
-            ref={revokeLinkModalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="revoke-link-title"
-            className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
-          >
-            <div className="flex items-center gap-3 text-red-400 mb-4">
-              <ShieldAlert size={20} />
-              <h3 id="revoke-link-title" className="font-bold text-base">Revoke Share Link?</h3>
-            </div>
-            <p className="text-xs text-zinc-300 mb-6 leading-normal font-normal">
-              Are you sure you want to revoke this share link? External clients using it will immediately lose access to the album.
-            </p>
-            <div className="flex justify-end gap-3 text-xs">
-              <button
-                onClick={() => setLinkToRevoke(null)}
-                className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-semibold text-zinc-355 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  revokeShareLinkMutation.mutate(linkToRevoke);
-                  setLinkToRevoke(null);
-                }}
-                className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg font-semibold transition-all shadow-md"
-              >
-                Revoke Link
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

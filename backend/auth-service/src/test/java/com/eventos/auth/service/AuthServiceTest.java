@@ -51,6 +51,8 @@ public class AuthServiceTest {
     private AuditLogService auditLogService;
     @Mock
     private RecaptchaService recaptchaService;
+    @Mock
+    private GoogleAuthService googleAuthService;
 
     @InjectMocks
     private AuthService authService;

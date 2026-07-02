@@ -136,6 +136,57 @@ export default function PublicSharePage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
+  // Keyboard navigation & Esc key listeners
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (lightboxIndex !== null) setLightboxIndex(null);
+      } else if (e.key === "ArrowLeft") {
+        if (lightboxIndex !== null) navigateLightbox("prev");
+      } else if (e.key === "ArrowRight") {
+        if (lightboxIndex !== null) navigateLightbox("next");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxIndex, album]);
+
+  // Focus Trap for Lightbox
+  useEffect(() => {
+    const handleFocusTrap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      if (lightboxIndex === null || !lightboxRef.current) return;
+
+      const focusableElements = lightboxRef.current.querySelectorAll(
+        'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
+      );
+      if (focusableElements.length === 0) return;
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    if (lightboxIndex !== null) {
+      setTimeout(() => {
+        const firstFocusable = lightboxRef.current?.querySelector('input, select, button, a, [tabindex="0"]') as HTMLElement;
+        firstFocusable?.focus();
+      }, 50);
+      window.addEventListener("keydown", handleFocusTrap);
+    }
+    return () => window.removeEventListener("keydown", handleFocusTrap);
+  }, [lightboxIndex]);
+
   // Render loading state
   if (loading && errorStatus === "LOADING") {
     return (
@@ -235,57 +286,6 @@ export default function PublicSharePage() {
   }
 
   const items = album.items || [];
-
-  // Keyboard navigation & Esc key listeners
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (lightboxIndex !== null) setLightboxIndex(null);
-      } else if (e.key === "ArrowLeft") {
-        if (lightboxIndex !== null) navigateLightbox("prev");
-      } else if (e.key === "ArrowRight") {
-        if (lightboxIndex !== null) navigateLightbox("next");
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [lightboxIndex, album]);
-
-  // Focus Trap for Lightbox
-  useEffect(() => {
-    const handleFocusTrap = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-      if (lightboxIndex === null || !lightboxRef.current) return;
-
-      const focusableElements = lightboxRef.current.querySelectorAll(
-        'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
-      );
-      if (focusableElements.length === 0) return;
-      const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          lastElement.focus();
-          e.preventDefault();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          firstElement.focus();
-          e.preventDefault();
-        }
-      }
-    };
-
-    if (lightboxIndex !== null) {
-      setTimeout(() => {
-        const firstFocusable = lightboxRef.current?.querySelector('input, select, button, a, [tabindex="0"]') as HTMLElement;
-        firstFocusable?.focus();
-      }, 50);
-      window.addEventListener("keydown", handleFocusTrap);
-    }
-    return () => window.removeEventListener("keydown", handleFocusTrap);
-  }, [lightboxIndex]);
 
   return (
     <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col selection:bg-purple-650 selection:text-white">

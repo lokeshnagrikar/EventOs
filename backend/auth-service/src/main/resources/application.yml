@@ -54,12 +54,14 @@ app:
   recaptcha:
     enabled: ${RECAPTCHA_ENABLED:false}
     secret-key: ${RECAPTCHA_SECRET_KEY:}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:1234567890-example.apps.googleusercontent.com}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,prometheus
+        include: health,prometheus,info
   endpoint:
     health:
       show-details: always
@@ -68,3 +70,9 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo:4318/v1/traces}
+  tracing:
+    sampling:
+      probability: 1.0

@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { LoadingScreen } from "@/components/ui/skeletons";
 import {
   TrendingUp,
   Users,
@@ -18,8 +20,40 @@ import {
   Award,
   Layers,
   ArrowUpRight,
-  Target
+  Target,
+  Download
 } from "lucide-react";
+
+function AnimatedCounter({ value, prefix = "" }: { value: number; prefix?: string }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = Math.floor(value);
+    if (start === end) {
+      setCount(end);
+      return;
+    }
+
+    const duration = 1.0;
+    const stepTime = Math.max(16, Math.abs(Math.floor((duration * 1000) / (end || 1))));
+    const increment = Math.max(1, Math.ceil(end / 40));
+    
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        clearInterval(timer);
+        setCount(end);
+      } else {
+        setCount(start);
+      }
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [value]);
+
+  return <span>{prefix}{count.toLocaleString()}</span>;
+}
 
 // Interfaces for API Stats Data
 interface LeadStats {
@@ -65,6 +99,7 @@ interface PaymentStats {
 }
 
 export default function ReportsPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"revenue" | "leads" | "events" | "conversion">("revenue");
 
   // Queries for stats
@@ -136,14 +171,57 @@ export default function ReportsPage() {
   const conversionRate = totalLeads > 0 ? (bookedLeads / totalLeads) * 100 : 0;
   const averageDealSize = leadsStats?.averageBookedBudget || 0;
 
+  const handleExport = (type: "csv" | "excel" | "pdf") => {
+    if (type === "pdf") {
+      window.print();
+      return;
+    }
+
+    let content = "";
+    let filename = `eventos_report_${activeTab}`;
+
+    if (activeTab === "revenue") {
+      content = "Month,Revenue Volume\n" +
+        Object.entries(paymentsStats?.monthlyRevenue || {})
+          .map(([m, r]) => `${m},${r}`)
+          .join("\n");
+    } else if (activeTab === "leads") {
+      content = "Stage,Count\n" +
+        Object.entries(leadsStats?.byStatus || {})
+          .map(([s, c]) => `${s},${c}`)
+          .join("\n");
+    } else if (activeTab === "events") {
+      content = "Status,Count\n" +
+        Object.entries(eventsStats?.byStatus || {})
+          .map(([s, c]) => `${s},${c}`)
+          .join("\n");
+    } else {
+      content = `Metric,Value\nConversion Rate,${conversionRate.toFixed(2)}%\nAverage Deal Size,INR ${averageDealSize}`;
+    }
+
+    if (type === "csv") {
+      const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${filename}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (type === "excel") {
+      const blob = new Blob([content.replace(/,/g, "\t")], { type: "application/vnd.ms-excel;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${filename}.xls`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col items-center justify-center p-6 gap-3">
-        <Loader2 className="animate-spin text-purple-500" size={32} />
-        <h2 className="font-bold text-sm">Aggregating Workspace Records...</h2>
-        <p className="text-zinc-550 text-xs">This takes a second to query multi-service ledger balances.</p>
-      </div>
-    );
+    return <LoadingScreen message="Aggregating Workspace Records..." />;
   }
 
   return (
@@ -157,7 +235,7 @@ export default function ReportsPage() {
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-25 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => (window.location.href = "/dashboard")}
+            onClick={() => router.push("/dashboard")}
             className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
             aria-label="Back to dashboard"
           >
@@ -179,6 +257,30 @@ export default function ReportsPage() {
             <p className="text-xs text-zinc-400 mt-1">
               Analyze business metrics, lead acquisitions, budget conversions, and event operation pipelines.
             </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-start md:self-auto">
+            <button
+              onClick={() => handleExport("csv")}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-450 hover:text-zinc-200 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              <Download size={13} />
+              Export CSV
+            </button>
+            <button
+              onClick={() => handleExport("excel")}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-450 hover:text-zinc-200 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              <Download size={13} />
+              Export Excel
+            </button>
+            <button
+              onClick={() => handleExport("pdf")}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-905 border border-zinc-800 hover:bg-zinc-850 text-zinc-450 hover:text-zinc-200 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              <Download size={13} />
+              Print PDF
+            </button>
           </div>
         </div>
 
@@ -233,18 +335,18 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="p-5 bg-[#111113]/40 border border-zinc-850 rounded-xl space-y-2">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Total Received Revenue</span>
-                <p className="text-2xl font-extrabold font-mono text-emerald-400">INR {totalRevenueBooked.toLocaleString()}</p>
+                <p className="text-2xl font-extrabold font-mono text-emerald-400">INR <AnimatedCounter value={totalRevenueBooked} /></p>
                 <p className="text-[10px] text-zinc-400">From successful transactions</p>
               </div>
               <div className="p-5 bg-[#111113]/40 border border-zinc-850 rounded-xl space-y-2">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Outstanding Receivable</span>
-                <p className="text-2xl font-extrabold font-mono text-amber-500">INR {outstandingInvoiced.toLocaleString()}</p>
+                <p className="text-2xl font-extrabold font-mono text-amber-500">INR <AnimatedCounter value={outstandingInvoiced} /></p>
                 <p className="text-[10px] text-zinc-400">From unpaid or draft statements</p>
               </div>
               <div className="p-5 bg-[#111113]/40 border border-zinc-850 rounded-xl space-y-2">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Total Invoice Statement Volume</span>
                 <p className="text-2xl font-extrabold font-mono text-purple-400">
-                  INR {(totalRevenueBooked + outstandingInvoiced).toLocaleString()}
+                  INR <AnimatedCounter value={totalRevenueBooked + outstandingInvoiced} />
                 </p>
                 <p className="text-[10px] text-zinc-400">Total generated billing amount</p>
               </div>
@@ -303,19 +405,19 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="p-4 bg-[#111113]/40 border border-zinc-850 rounded-xl space-y-1">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Total Leads Acquired</span>
-                <p className="text-2xl font-extrabold font-mono text-purple-400">{totalLeads}</p>
+                <p className="text-2xl font-extrabold font-mono text-purple-400"><AnimatedCounter value={totalLeads} /></p>
               </div>
               <div className="p-4 bg-[#111113]/40 border border-zinc-850 rounded-xl space-y-1">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Converted (Booked)</span>
-                <p className="text-2xl font-extrabold font-mono text-emerald-400">{bookedLeads}</p>
+                <p className="text-2xl font-extrabold font-mono text-emerald-400"><AnimatedCounter value={bookedLeads} /></p>
               </div>
               <div className="p-4 bg-[#111113]/40 border border-zinc-850 rounded-xl space-y-1">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Active Pipeline</span>
-                <p className="text-2xl font-extrabold font-mono text-amber-500">{activeLeads}</p>
+                <p className="text-2xl font-extrabold font-mono text-amber-500"><AnimatedCounter value={activeLeads} /></p>
               </div>
               <div className="p-4 bg-[#111113]/40 border border-zinc-850 rounded-xl space-y-1">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Lost / Dropped</span>
-                <p className="text-2xl font-extrabold font-mono text-red-500">{lostLeads}</p>
+                <p className="text-2xl font-extrabold font-mono text-red-500"><AnimatedCounter value={lostLeads} /></p>
               </div>
             </div>
 

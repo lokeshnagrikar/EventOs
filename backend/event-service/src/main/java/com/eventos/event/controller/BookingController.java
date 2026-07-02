@@ -48,7 +48,8 @@ public class BookingController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
             UUID tenantId = principal.getTenantId();
-            if (tenantId != null) return tenantId;
+            if (tenantId != null)
+                return tenantId;
         }
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tenant context is missing");
     }
@@ -121,20 +122,13 @@ public class BookingController {
     }
 
     @Operation(summary = "Update booking status", description = "Changes the booking lifecycle status. Valid values: PENDING, CONFIRMED, DEPOSIT_PAID, IN_PROGRESS, COMPLETED, CANCELLED")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        required = true,
-        content = @Content(
-            mediaType = "application/json",
-            schema = @Schema(type = "object"),
-            examples = {
-                @ExampleObject(name = "Confirm booking",   value = "{\"status\": \"CONFIRMED\"}"),
-                @ExampleObject(name = "Deposit received",  value = "{\"status\": \"DEPOSIT_PAID\"}"),
-                @ExampleObject(name = "Mark in progress", value = "{\"status\": \"IN_PROGRESS\"}"),
-                @ExampleObject(name = "Mark completed",   value = "{\"status\": \"COMPLETED\"}"),
-                @ExampleObject(name = "Cancel booking",   value = "{\"status\": \"CANCELLED\"}")
-            }
-        )
-    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(type = "object"), examples = {
+            @ExampleObject(name = "Confirm booking", value = "{\"status\": \"CONFIRMED\"}"),
+            @ExampleObject(name = "Deposit received", value = "{\"status\": \"DEPOSIT_PAID\"}"),
+            @ExampleObject(name = "Mark in progress", value = "{\"status\": \"IN_PROGRESS\"}"),
+            @ExampleObject(name = "Mark completed", value = "{\"status\": \"COMPLETED\"}"),
+            @ExampleObject(name = "Cancel booking", value = "{\"status\": \"CANCELLED\"}")
+    }))
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
     public ResponseEntity<?> updateStatus(@PathVariable UUID id, @RequestBody Map<String, String> request) {
@@ -161,18 +155,11 @@ public class BookingController {
     }
 
     @Operation(summary = "Update paid amount", description = "Records an additional payment against the booking balance. amount is the new cumulative total paid (not an increment). Enter as a plain number string e.g. '200000.00'")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        required = true,
-        content = @Content(
-            mediaType = "application/json",
-            schema = @Schema(type = "object"),
-            examples = {
-                @ExampleObject(name = "Advance payment received",  value = "{\"amount\": \"200000.00\"}"),
-                @ExampleObject(name = "Mid-term instalment",       value = "{\"amount\": \"426600.00\"}"),
-                @ExampleObject(name = "Full payment settled",      value = "{\"amount\": \"853200.00\"}")
-            }
-        )
-    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(type = "object"), examples = {
+            @ExampleObject(name = "Advance payment received", value = "{\"amount\": \"200000.00\"}"),
+            @ExampleObject(name = "Mid-term instalment", value = "{\"amount\": \"426600.00\"}"),
+            @ExampleObject(name = "Full payment settled", value = "{\"amount\": \"853200.00\"}")
+    }))
     @PatchMapping("/{id}/payment")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
     public ResponseEntity<?> updatePayment(@PathVariable UUID id, @RequestBody Map<String, String> request) {
@@ -202,7 +189,8 @@ public class BookingController {
 
     @PostMapping("/{id}/timeline")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
-    public ResponseEntity<?> addMilestone(@PathVariable UUID id, @Valid @RequestBody CreateBookingTimelineEventDto dto) {
+    public ResponseEntity<?> addMilestone(@PathVariable UUID id,
+            @Valid @RequestBody CreateBookingTimelineEventDto dto) {
         UUID tenantId = getTenantId();
         BookingTimelineEvent milestone = bookingService.addTimelineEvent(id, dto, tenantId);
 

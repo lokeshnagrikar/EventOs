@@ -70,10 +70,21 @@ apiClient.interceptors.response.use(
           { withCredentials: true }
         );
         
-        const newAccessToken = refreshResponse.data.data.accessToken;
+        const { accessToken: newAccessToken, role, firstName, permissions } = refreshResponse.data.data;
         
-        // Update store with new access token
-        useAuthStore.setState({ accessToken: newAccessToken });
+        // Update store with new access token and updated user metadata
+        const currentState = useAuthStore.getState();
+        const updatedUser = currentState.user ? {
+          ...currentState.user,
+          role: role || currentState.user.role,
+          firstName: firstName || currentState.user.firstName,
+          permissions: permissions || currentState.user.permissions || []
+        } : null;
+
+        useAuthStore.setState({ 
+          accessToken: newAccessToken,
+          user: updatedUser
+        });
         
         processQueue(null, newAccessToken);
         isRefreshing = false;

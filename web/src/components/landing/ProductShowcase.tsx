@@ -165,7 +165,7 @@ export function ProductShowcase() {
                         </div>
                       </div>
 
-                      <div className={`grid ${deviceMode === "mobile" ? "grid-cols-1" : "grid-cols-3"} gap-4`}>
+                      <div className={`grid grid-cols-1 ${deviceMode === "mobile" ? "" : "sm:grid-cols-3"} gap-4`}>
                         {kanbanColumns.map((col) => (
                           <div key={col.title} className="p-3 bg-zinc-950/60 border border-zinc-900 rounded-xl space-y-3">
                             <div className="flex justify-between items-center px-1">

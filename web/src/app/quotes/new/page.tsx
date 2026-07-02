@@ -23,7 +23,17 @@ interface Lead {
   name: string;
   eventType?: string;
   budget: number;
+  phone?: string;
+  email?: string;
+  contact?: {
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+  };
 }
+
 
 interface QuoteItemInput {
   itemName: string;
@@ -80,6 +90,11 @@ export default function QuoteBuilderPage() {
   ]);
   const [errorText, setErrorText] = useState("");
   
+  // Custom Multi-Currency & Coupon Discount
+  const [currency, setCurrency] = useState("INR");
+  const [couponCode, setCouponCode] = useState("");
+  const [couponMessage, setCouponMessage] = useState("");
+  
   // Mobile UI States
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
   const [showSummaryDetails, setShowSummaryDetails] = useState(false);
@@ -88,6 +103,13 @@ export default function QuoteBuilderPage() {
   const [subtotal, setSubtotal] = useState(0);
   const [taxAmount, setTaxAmount] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
+
+  const getCurrencySymbol = (cur: string) => {
+    if (cur === "USD") return "$";
+    if (cur === "EUR") return "€";
+    if (cur === "GBP") return "£";
+    return "₹";
+  };
 
   useEffect(() => {
     // Recompute totals

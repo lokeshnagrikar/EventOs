@@ -82,14 +82,9 @@ public class GlobalExceptionHandler {
     // ─── Response builder ──────────────────────────────────────────────────────
 
     private ResponseEntity<?> error(HttpStatus status, String code, String message) {
-        Map<String, Object> errorDetails = new HashMap<>();
-        errorDetails.put("code", code);
-        errorDetails.put("message", message);
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("success", false);
-        body.put("error", errorDetails);
-
-        return ResponseEntity.status(status).body(body);
+        org.springframework.http.ProblemDetail detail = org.springframework.http.ProblemDetail.forStatusAndDetail(status, message);
+        detail.setTitle(code);
+        detail.setProperty("success", false);
+        return ResponseEntity.status(status).body(detail);
     }
 }

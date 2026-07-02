@@ -16,4 +16,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     void deleteByUser(User user);
     
     void deleteByToken(String token);
+
+    @Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query("DELETE FROM RefreshToken rt WHERE rt.expiryDate < :now")
+    void deleteExpiredTokens(@org.springframework.data.repository.query.Param("now") java.time.LocalDateTime now);
 }

@@ -50,12 +50,33 @@ public class User {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts;
+
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
+
+    @Column(name = "is_email_verified", nullable = false)
+    private boolean isEmailVerified;
+
+    @Column(name = "email_verification_token")
+    private String emailVerificationToken;
+
+    @Column(name = "email_verification_token_expiry")
+    private LocalDateTime emailVerificationTokenExpiry;
+
+    @Column(name = "password_updated_at", nullable = false)
+    private LocalDateTime passwordUpdatedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        passwordUpdatedAt = LocalDateTime.now();
         status = "ACTIVE";
         isDeleted = false;
+        isEmailVerified = false;
+        failedLoginAttempts = 0;
     }
 
     @PreUpdate

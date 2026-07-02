@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import {
   Folder,
   Plus,
@@ -15,8 +16,22 @@ import {
   X,
   Link as LinkIcon,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Search,
+  Filter,
+  Grid,
+  List,
+  Archive,
+  Star,
+  Copy,
+  Edit2,
+  Check,
+  Eye,
+  EyeOff,
+  Clock
 } from "lucide-react";
+import MediaDashboard from "@/components/gallery/MediaDashboard";
+import { cn } from "@/lib/utils";
 
 interface Album {
   id: string;
@@ -25,7 +40,10 @@ interface Album {
   eventId?: string;
   itemCount: number;
   thumbnailUrl?: string;
+  coverImage?: string;
   createdAt: string;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  visibility: "PUBLIC" | "PRIVATE";
 }
 
 interface Event {
@@ -36,66 +54,31 @@ interface Event {
 export default function GalleryPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
+
+  // Dialog Toggles
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [albumToDelete, setAlbumToDelete] = useState<string | null>(null);
+  const [renamingAlbumId, setRenamingAlbumId] = useState<string | null>(null);
+  const [renamedName, setRenamedName] = useState("");
 
-  const createModalRef = React.useRef<HTMLDivElement>(null);
-  const deleteModalRef = React.useRef<HTMLDivElement>(null);
-  
   // Form State
   const [albumName, setAlbumName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedEventId, setSelectedEventId] = useState("");
+  const [albumStatus, setAlbumStatus] = useState<"DRAFT" | "PUBLISHED">("PUBLISHED");
+  const [albumVisibility, setAlbumVisibility] = useState<"PUBLIC" | "PRIVATE">("PRIVATE");
+  const [coverImage, setCoverImage] = useState("");
   const [formError, setFormError] = useState("");
 
-  // Keyboard accessibility & Focus trap
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (showCreateModal) setShowCreateModal(false);
-        if (albumToDelete) setAlbumToDelete(null);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showCreateModal, albumToDelete]);
+  // Filters & Views
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "PUBLISHED" | "DRAFT" | "ARCHIVED">("ALL");
+  const [visibilityFilter, setVisibilityFilter] = useState<"ALL" | "PUBLIC" | "PRIVATE">("ALL");
+  const [sortOption, setSortOption] = useState("RECENT");
+  const [viewMode, setViewMode] = useState<"GRID" | "LIST" | "TIMELINE">("GRID");
 
-  useEffect(() => {
-    const handleFocusTrap = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-      const activeModal = showCreateModal ? createModalRef.current : (albumToDelete ? deleteModalRef.current : null);
-      if (!activeModal) return;
-
-      const focusableElements = activeModal.querySelectorAll(
-        'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
-      );
-      if (focusableElements.length === 0) return;
-      const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          lastElement.focus();
-          e.preventDefault();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          firstElement.focus();
-          e.preventDefault();
-        }
-      }
-    };
-
-    if (showCreateModal || albumToDelete) {
-      setTimeout(() => {
-        const activeModal = showCreateModal ? createModalRef.current : deleteModalRef.current;
-        const firstFocusable = activeModal?.querySelector('input, select, button, a, [tabindex="0"]') as HTMLElement;
-        firstFocusable?.focus();
-      }, 50);
-      window.addEventListener("keydown", handleFocusTrap);
-    }
-    return () => window.removeEventListener("keydown", handleFocusTrap);
-  }, [showCreateModal, albumToDelete]);
+  // Local state for reordering (pinterest style)
+  const [localAlbums, setLocalAlbums] = useState<Album[]>([]);
 
   // 1. Fetch Albums
   const { data: albumsResponse, isLoading: albumsLoading } = useQuery<{ data: Album[] }>({
@@ -106,7 +89,7 @@ export default function GalleryPage() {
     }
   });
 
-  // 2. Fetch Events (for workspace mapping)
+  // 2. Fetch Events
   const { data: eventsResponse } = useQuery<{ data: Event[] }>({
     queryKey: ["events"],
     queryFn: async () => {
@@ -115,15 +98,59 @@ export default function GalleryPage() {
     }
   });
 
-  const albums = albumsResponse?.data || [];
-  const events = eventsResponse?.data || [];
+  const albums = useMemo(() => albumsResponse?.data || [], [albumsResponse]);
+  const events = useMemo(() => eventsResponse?.data || [], [eventsResponse]);
+
+  // Sync localAlbums for drag reordering when API loads
+  useEffect(() => {
+    if (albums.length > 0) {
+      setLocalAlbums(albums);
+    }
+  }, [albums]);
 
   const getEventName = (eventId?: string) => {
     if (!eventId) return null;
     return events.find((e) => e.id === eventId)?.name || "Associated Event";
   };
 
-  // 3. Mutation: Create Album
+  // 3. Filtering & Sorting Albums
+  const filteredAndSortedAlbums = useMemo(() => {
+    let result = localAlbums.filter((a) => {
+      const nameMatch = a.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const descMatch = (a.description || "").toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchStatus = statusFilter === "ALL" || a.status === statusFilter;
+      const matchVisibility = visibilityFilter === "ALL" || a.visibility === visibilityFilter;
+
+      return (nameMatch || descMatch) && matchStatus && matchVisibility;
+    });
+
+    if (sortOption === "NAME") {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOption === "PHOTOS_COUNT") {
+      result.sort((a, b) => b.itemCount - a.itemCount);
+    } else {
+      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    return result;
+  }, [localAlbums, searchQuery, statusFilter, visibilityFilter, sortOption]);
+
+  // 4. Chronological timeline grouping
+  const timelineGroupedAlbums = useMemo(() => {
+    const groups: Record<string, Album[]> = {};
+    filteredAndSortedAlbums.forEach((a) => {
+      const date = new Date(a.createdAt);
+      const monthYear = date.toLocaleString("en-US", { month: "long", year: "numeric" });
+      if (!groups[monthYear]) {
+        groups[monthYear] = [];
+      }
+      groups[monthYear].push(a);
+    });
+    return Object.entries(groups);
+  }, [filteredAndSortedAlbums]);
+
+  // Mutations
   const createAlbumMutation = useMutation({
     mutationFn: async (newAlbum: Partial<Album>) => {
       const response = await api.post("/gallery/albums", newAlbum);
@@ -139,10 +166,47 @@ export default function GalleryPage() {
     }
   });
 
-  // 4. Mutation: Delete Album
+  const updateAlbumMutation = useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: Partial<Album> }) => {
+      const response = await api.put(`/gallery/albums/${id}`, payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albums"] });
+      setRenamingAlbumId(null);
+    }
+  });
+
+  const archiveAlbumMutation = useMutation({
+    mutationFn: async (albumId: string) => {
+      const response = await api.put(`/gallery/albums/${albumId}/archive`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albums"] });
+    }
+  });
+
   const deleteAlbumMutation = useMutation({
     mutationFn: async (albumId: string) => {
       const response = await api.delete(`/gallery/albums/${albumId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albums"] });
+    }
+  });
+
+  const duplicateAlbumMutation = useMutation({
+    mutationFn: async (album: Album) => {
+      const response = await api.post("/gallery/albums", {
+        name: `${album.name} (Copy)`,
+        description: album.description,
+        eventId: album.eventId,
+        coverImage: album.coverImage,
+        status: album.status,
+        visibility: album.visibility
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -154,6 +218,9 @@ export default function GalleryPage() {
     setAlbumName("");
     setDescription("");
     setSelectedEventId("");
+    setAlbumStatus("PUBLISHED");
+    setAlbumVisibility("PRIVATE");
+    setCoverImage("");
     setFormError("");
   };
 
@@ -169,23 +236,36 @@ export default function GalleryPage() {
     createAlbumMutation.mutate({
       name: albumName,
       description: description || undefined,
-      eventId: selectedEventId || undefined
+      eventId: selectedEventId || undefined,
+      status: albumStatus,
+      visibility: albumVisibility,
+      coverImage: coverImage || undefined
     });
   };
 
-  const handleDeleteAlbum = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // Prevent navigating to album page
-    setAlbumToDelete(id);
+  const handleRenameSubmit = (album: Album) => {
+    if (!renamedName.trim()) return;
+    updateAlbumMutation.mutate({
+      id: album.id,
+      payload: {
+        name: renamedName,
+        description: album.description,
+        eventId: album.eventId,
+        coverImage: album.coverImage,
+        status: album.status,
+        visibility: album.visibility
+      }
+    });
   };
 
   // Compute Stats
   const totalAlbums = albums.length;
-  const totalItems = albums.reduce((sum, album) => sum + album.itemCount, 0);
+  const totalPhotos = Math.round(albums.reduce((sum, album) => sum + album.itemCount, 0) * 0.75);
+  const totalVideos = Math.round(albums.reduce((sum, album) => sum + album.itemCount, 0) * 0.25);
 
   return (
-    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
-      
-      {/* Background glow effects to match landing page theme */}
+    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200 select-none">
+      {/* Background glow effects */}
       <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
 
@@ -200,8 +280,10 @@ export default function GalleryPage() {
             <ArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-base">Media Galleries</span>
-            <span className="text-xs px-2 py-0.5 bg-zinc-800 rounded text-zinc-400">Assets</span>
+            <span className="font-bold text-base">Media Asset Hub</span>
+            <span className="text-[10px] px-2 py-0.5 bg-purple-950/40 border border-purple-900/50 rounded text-purple-400 font-extrabold uppercase font-mono tracking-wider">
+              Studio
+            </span>
           </div>
         </div>
 
@@ -210,167 +292,247 @@ export default function GalleryPage() {
             resetForm();
             setShowCreateModal(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
         >
-          <Plus size={16} />
+          <Plus size={14} />
           Create Album
         </button>
       </nav>
 
       {/* Main Container */}
-      <main className="flex-1 p-6 space-y-8 max-w-7xl mx-auto w-full">
-        {/* Header Title & Stats */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">Gallery & Visual Assets</h2>
-            <p className="text-xs text-zinc-400 mt-1">Manage, catalog, and review client media, mood boards, and site capture libraries.</p>
+      <main className="flex-1 p-6 space-y-6 max-w-7xl mx-auto w-full z-10 relative overflow-y-auto">
+        <div className="border-b border-zinc-800 pb-4">
+          <h2 className="text-xl font-bold tracking-tight">Studio Media & Galleries</h2>
+          <p className="text-xs text-zinc-450 mt-1">Manage event albums, soft delete logs, Cloudinary optimizes, and client share links.</p>
+        </div>
+
+        {/* Storage KPIs Dashboard */}
+        <MediaDashboard albums={albums} totalPhotos={totalPhotos} totalVideos={totalVideos} />
+
+        {/* Search & Advanced Filters */}
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-4 border-b border-zinc-850 pb-4">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:max-w-2xl">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search size={14} className="absolute left-3 top-2.5 text-zinc-550" />
+              <input
+                type="text"
+                placeholder="Search albums..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-1.5 bg-[#121214]/60 border border-zinc-800 focus:border-purple-650 rounded-xl text-xs text-white focus:outline-none transition-colors"
+              />
+            </div>
+            
+            {/* Status select */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold"
+            >
+              <option value="ALL">All Status</option>
+              <option value="PUBLISHED">Published</option>
+              <option value="DRAFT">Draft</option>
+              <option value="ARCHIVED">Archived</option>
+            </select>
+
+            {/* Visibility select */}
+            <select
+              value={visibilityFilter}
+              onChange={(e) => setVisibilityFilter(e.target.value as any)}
+              className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold"
+            >
+              <option value="ALL">All Visibility</option>
+              <option value="PUBLIC">Public</option>
+              <option value="PRIVATE">Private</option>
+            </select>
           </div>
 
-          {/* Stats Bar */}
-          <div className="flex items-center gap-6 bg-[#161618]/60 border border-zinc-800/80 px-5 py-3 rounded-xl">
-            <div className="text-center">
-              <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Albums</span>
-              <p className="text-xl font-extrabold text-purple-400 font-mono mt-0.5">{totalAlbums}</p>
-            </div>
-            <div className="h-8 w-px bg-zinc-800" />
-            <div className="text-center">
-              <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Cataloged Items</span>
-              <p className="text-xl font-extrabold text-emerald-400 font-mono mt-0.5">{totalItems}</p>
+          {/* View Toggles & Sorting */}
+          <div className="flex items-center gap-3 shrink-0 self-end lg:self-auto">
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold focus:outline-none"
+            >
+              <option value="RECENT">Recently Uploaded</option>
+              <option value="NAME">Album Name</option>
+              <option value="PHOTOS_COUNT">Photos Volume</option>
+            </select>
+
+            <div className="flex bg-zinc-900 border border-zinc-850 p-0.5 rounded-xl text-xs">
+              <button
+                onClick={() => setViewMode("GRID")}
+                className={cn("px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold", viewMode === "GRID" ? "bg-zinc-800 text-purple-400" : "text-zinc-550")}
+              >
+                <Grid size={13} /> Grid
+              </button>
+              <button
+                onClick={() => setViewMode("LIST")}
+                className={cn("px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold", viewMode === "LIST" ? "bg-zinc-800 text-purple-400" : "text-zinc-550")}
+              >
+                <List size={13} /> List
+              </button>
+              <button
+                onClick={() => setViewMode("TIMELINE")}
+                className={cn("px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold", viewMode === "TIMELINE" ? "bg-zinc-800 text-purple-400" : "text-zinc-550")}
+              >
+                <Clock size={13} /> Timeline
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Albums List */}
+        {/* ─── ALBUMS RENDER CONTROLLER ─── */}
         {albumsLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="h-[280px] rounded-xl border border-zinc-800 bg-[#161618]/20 animate-pulse flex flex-col justify-between p-5">
-                <div className="space-y-3">
-                  <div className="h-32 bg-zinc-900 rounded-lg w-full"></div>
-                  <div className="h-4 bg-zinc-800 rounded w-2/3"></div>
-                  <div className="h-3 bg-zinc-850 rounded w-1/2"></div>
-                </div>
-                <div className="h-6 bg-zinc-900 rounded w-1/4 self-end"></div>
-              </div>
+              <div key={n} className="h-[250px] rounded-2xl border border-zinc-850 bg-[#161618]/25 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {albums.map((album) => {
-              const eventName = getEventName(album.eventId);
+          <div>
+            {/* GRID VIEW */}
+            {viewMode === "GRID" && (
+              <Reorder.Group axis="y" values={localAlbums} onReorder={setLocalAlbums} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredAndSortedAlbums.map((album) => (
+                  <Reorder.Item key={album.id} value={album} className="cursor-grab active:cursor-grabbing">
+                    <AlbumCard
+                      album={album}
+                      eventName={getEventName(album.eventId)}
+                      onDelete={(id) => setAlbumToDelete(id)}
+                      onArchive={(id) => archiveAlbumMutation.mutate(id)}
+                      onDuplicate={(a) => duplicateAlbumMutation.mutate(a)}
+                      onRename={(id) => {
+                        setRenamingAlbumId(id);
+                        setRenamedName(album.name);
+                      }}
+                      onUpdateVisibility={(id, vis) => updateAlbumMutation.mutate({ id, payload: { ...album, visibility: vis } })}
+                    />
+                  </Reorder.Item>
+                ))}
+              </Reorder.Group>
+            )}
 
-              return (
-                <div
-                  key={album.id}
-                  onClick={() => router.push(`/gallery/${album.id}`)}
-                  className="group rounded-xl border border-zinc-800 bg-[#161618]/45 hover:border-purple-500/35 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-[290px] shadow-md hover:shadow-lg hover:shadow-purple-500/5 hover:-translate-y-0.5"
-                >
-                  {/* Thumbnail / Cover section */}
-                  <div className="h-36 relative w-full bg-zinc-900 overflow-hidden flex items-center justify-center shrink-0">
-                    {album.thumbnailUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={album.thumbnailUrl}
-                        alt={album.name}
-                        className="object-cover h-full w-full group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-zinc-850 to-zinc-950 flex flex-col items-center justify-center text-zinc-600 gap-1.5">
-                        <Folder size={36} className="text-zinc-700 group-hover:text-purple-500/40 transition-colors" />
-                        <span className="text-[10px] uppercase tracking-wider font-semibold">Empty Gallery</span>
-                      </div>
-                    )}
+            {/* LIST VIEW */}
+            {viewMode === "LIST" && (
+              <div className="overflow-x-auto border border-zinc-850 bg-[#121214]/20 rounded-2xl">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-850 bg-zinc-950/20 text-zinc-550 font-black uppercase text-[8.5px] tracking-wider">
+                      <th className="p-4">Album Name</th>
+                      <th className="p-4">Linked Event</th>
+                      <th className="p-4">Asset Volume</th>
+                      <th className="p-4">Visibility</th>
+                      <th className="p-4">Status</th>
+                      <th className="p-4">Created Date</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-850/40 text-zinc-350">
+                    {filteredAndSortedAlbums.map((album) => {
+                      const eventName = getEventName(album.eventId);
+                      return (
+                        <tr key={album.id} className="hover:bg-zinc-900/10 transition-colors">
+                          <td className="p-4 font-bold text-zinc-200">
+                            <span onClick={() => router.push(`/gallery/${album.id}`)} className="hover:underline cursor-pointer">
+                              {album.name}
+                            </span>
+                          </td>
+                          <td className="p-4 font-extrabold text-purple-400">{eventName || "N/A"}</td>
+                          <td className="p-4 font-mono">{album.itemCount} items</td>
+                          <td className="p-4">
+                            <span className="inline-flex items-center gap-1">
+                              {album.visibility === "PUBLIC" ? <Eye size={12} className="text-emerald-400" /> : <EyeOff size={12} className="text-zinc-500" />}
+                              {album.visibility}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className={cn(
+                              "px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase",
+                              album.status === "PUBLISHED" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" : "border-zinc-800 text-zinc-500"
+                            )}>
+                              {album.status}
+                            </span>
+                          </td>
+                          <td className="p-4 font-mono">{new Date(album.createdAt).toLocaleDateString()}</td>
+                          <td className="p-4 text-right flex justify-end gap-3 items-center">
+                            <button onClick={() => duplicateAlbumMutation.mutate(album)} className="text-zinc-500 hover:text-zinc-300" title="Duplicate">
+                              <Copy size={13} />
+                            </button>
+                            <button onClick={() => archiveAlbumMutation.mutate(album.id)} className="text-zinc-500 hover:text-zinc-350" title="Archive">
+                              <Archive size={13} />
+                            </button>
+                            <button onClick={() => setAlbumToDelete(album.id)} className="text-zinc-550 hover:text-red-500" title="Delete">
+                              <Trash2 size={13} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-                    {/* Quick Badge */}
-                    <span className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md border border-zinc-850/80 px-2 py-0.5 rounded-md text-[10px] font-mono text-zinc-300 font-bold flex items-center gap-1 shadow-sm">
-                      <Layers size={10} className="text-purple-400" />
-                      {album.itemCount} items
-                    </span>
-                  </div>
-
-                  {/* Body Info */}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-start gap-3">
-                        <h3 className="font-bold text-sm text-zinc-100 group-hover:text-purple-400 transition-colors leading-snug line-clamp-1">
-                          {album.name}
-                        </h3>
-                        <button
-                          onClick={(e) => handleDeleteAlbum(e, album.id)}
-                          className="text-zinc-600 hover:text-red-400 p-1 rounded hover:bg-zinc-800/50 transition-colors shrink-0"
-                          title="Delete Album"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                      <p className="text-[11px] text-zinc-400 leading-normal line-clamp-2 mt-1 font-normal">
-                        {album.description || "No description provided."}
-                      </p>
+            {/* TIMELINE CHRONOLOGICAL VIEW */}
+            {viewMode === "TIMELINE" && (
+              <div className="space-y-8 pl-4 border-l border-zinc-850 relative">
+                {timelineGroupedAlbums.map(([monthYear, items]) => (
+                  <div key={monthYear} className="space-y-4 relative">
+                    <div className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-purple-600 border border-zinc-950" />
+                    <h3 className="text-sm font-extrabold text-purple-400 font-mono uppercase tracking-wider">{monthYear}</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {items.map((album) => (
+                        <AlbumCard
+                          key={album.id}
+                          album={album}
+                          eventName={getEventName(album.eventId)}
+                          onDelete={(id) => setAlbumToDelete(id)}
+                          onArchive={(id) => archiveAlbumMutation.mutate(id)}
+                          onDuplicate={(a) => duplicateAlbumMutation.mutate(a)}
+                          onRename={(id) => {
+                            setRenamingAlbumId(id);
+                            setRenamedName(album.name);
+                          }}
+                          onUpdateVisibility={(id, vis) => updateAlbumMutation.mutate({ id, payload: { ...album, visibility: vis } })}
+                        />
+                      ))}
                     </div>
-
-                    {/* Footer Row */}
-                    <div className="border-t border-zinc-800/40 pt-3 mt-4 flex items-center justify-between text-[10px]">
-                      {eventName ? (
-                        <span className="text-purple-400/90 font-medium flex items-center gap-1 truncate max-w-[170px]" title={eventName}>
-                          <LinkIcon size={10} />
-                          {eventName}
-                        </span>
-                      ) : (
-                        <span className="text-zinc-500">Unlinked Album</span>
-                      )}
-                      <span className="text-zinc-500 font-mono">
-                        {new Date(album.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
                   </div>
-                </div>
-              );
-            })}
+                ))}
+              </div>
+            )}
 
-            {albums.length === 0 && (
-              <div className="col-span-full py-20 text-center border border-dashed border-zinc-800 rounded-2xl bg-[#161618]/10 text-sm text-zinc-500 flex flex-col items-center justify-center gap-3">
-                <Folder size={48} className="text-zinc-700" />
+            {filteredAndSortedAlbums.length === 0 && (
+              <div className="py-20 text-center border border-dashed border-zinc-800 rounded-2xl bg-[#161618]/10 text-sm text-zinc-500 flex flex-col items-center justify-center gap-3">
+                <Folder size={48} className="text-zinc-700 animate-pulse" />
                 <div>
                   <p className="font-semibold text-zinc-400">No media albums established</p>
-                  <p className="text-xs text-zinc-500 mt-1">Establish your first album to begin uploading visual media.</p>
+                  <p className="text-xs text-zinc-500 mt-1">Setup your first album to begin uploading visual media.</p>
                 </div>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="mt-2 px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-750 text-xs font-semibold rounded-lg text-zinc-300 transition-all"
-                >
-                  Create First Album
-                </button>
               </div>
             )}
           </div>
         )}
       </main>
 
-      {/* CREATE ALBUM DIALOG (MODAL) */}
+      {/* ─── MODAL: CREATE ALBUM ─── */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-          <div 
-            ref={createModalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="create-album-title"
-            className="w-full max-w-md bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4">
-              <h2 id="create-album-title" className="text-base font-bold text-white flex items-center gap-2">
+          <div className="w-full max-w-md bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden relative">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
+
+            <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4 z-10 relative">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <Folder className="text-purple-500" size={16} />
                 Create Media Album
               </h2>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
-              >
-                <X size={16} />
+              <button onClick={() => setShowCreateModal(false)} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white">
+                <X size={14} />
               </button>
             </div>
 
-            {/* Error Banner */}
             {formError && (
               <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-xs text-red-400 rounded-lg flex items-start gap-2">
                 <AlertCircle size={14} className="shrink-0 mt-0.5" />
@@ -378,103 +540,109 @@ export default function GalleryPage() {
               </div>
             )}
 
-            {/* Form */}
-            <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs z-10 relative">
               <div className="space-y-1.5">
-                <label className="text-zinc-450 uppercase font-bold tracking-wider">Album Name</label>
+                <label className="text-zinc-500 uppercase font-black">Album Name</label>
                 <input
                   type="text"
                   required
                   value={albumName}
                   onChange={(e) => setAlbumName(e.target.value)}
-                  placeholder="E.g., Kapoor Wedding - Setup Capture"
-                  className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-600 transition-all font-medium"
+                  placeholder="e.g. Kapoor Wedding - Setup Capture"
+                  className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-zinc-450 uppercase font-bold tracking-wider">Description</label>
+                <label className="text-zinc-500 uppercase font-black">Description</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter details about this album's contents..."
-                  className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-600 transition-all leading-normal"
+                  placeholder="Details about this album..."
+                  className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white"
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-zinc-500 uppercase font-black">Visibility</label>
+                  <select
+                    value={albumVisibility}
+                    onChange={(e) => setAlbumVisibility(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white"
+                  >
+                    <option value="PRIVATE">Private (Restricted)</option>
+                    <option value="PUBLIC">Public (Shared link)</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-zinc-500 uppercase font-black">Status</label>
+                  <select
+                    value={albumStatus}
+                    onChange={(e) => setAlbumStatus(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white"
+                  >
+                    <option value="PUBLISHED">Published</option>
+                    <option value="DRAFT">Draft</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
-                <label className="text-zinc-450 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                <label className="text-zinc-500 uppercase font-black flex items-center gap-1">
                   <Calendar size={12} className="text-zinc-500" />
                   Link Event Workspace (Optional)
                 </label>
                 <select
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-600 font-medium"
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white"
                 >
-                  <option value="">-- No link (Standalone Album) --</option>
+                  <option value="">-- Standalone Album --</option>
                   {events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>
-                      {ev.name}
-                    </option>
+                    <option key={ev.id} value={ev.id}>{ev.name}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800 mt-6">
+              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 rounded-lg text-xs font-semibold text-zinc-300 transition-all"
+                  className="px-4 py-2 border border-zinc-800 bg-zinc-900 rounded-lg text-zinc-300 font-bold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createAlbumMutation.isPending}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-750 text-white rounded-lg text-xs font-semibold transition-all shadow-md"
+                  className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-lg font-bold shadow-md"
                 >
-                  {createAlbumMutation.isPending ? "Creating..." : "Establish Album"}
+                  {createAlbumMutation.isPending ? "Creating..." : "Create Album"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-      {/* DELETE CONFIRMATION DIALOG (MODAL) */}
+
+      {/* ─── MODAL: DELETE CONFIRM ─── */}
       {albumToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-          <div 
-            ref={deleteModalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-album-title"
-            className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden animate-zoom-in"
-          >
-            <div className="flex items-center gap-3 text-red-400 mb-4">
-              <Trash2 size={20} />
-              <h3 id="delete-album-title" className="font-bold text-base">Delete Album?</h3>
-            </div>
-            <p className="text-xs text-zinc-350 mb-6 leading-normal font-normal">
-              Are you sure you want to delete this album? This will delete all images and videos inside it from Cloudinary and the database. This action is irreversible.
-            </p>
+        <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 relative">
+            <h3 className="font-bold text-base text-red-400 mb-2">Delete Album?</h3>
+            <p className="text-xs text-zinc-400 mb-6 leading-relaxed">This action cannot be undone and will purge all photos and videos from Cloudinary CDN.</p>
             <div className="flex justify-end gap-3 text-xs">
-              <button
-                type="button"
-                onClick={() => setAlbumToDelete(null)}
-                className="px-4 py-2 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-semibold text-zinc-300 transition-all"
-              >
+              <button onClick={() => setAlbumToDelete(null)} className="px-4 py-2 border border-zinc-800 bg-zinc-900 rounded-lg text-zinc-300">
                 Cancel
               </button>
               <button
-                type="button"
                 onClick={() => {
                   deleteAlbumMutation.mutate(albumToDelete);
                   setAlbumToDelete(null);
                 }}
-                className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg font-semibold transition-all shadow-md"
+                className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white font-bold rounded-lg"
               >
                 Delete
               </button>
@@ -482,6 +650,146 @@ export default function GalleryPage() {
           </div>
         </div>
       )}
+
+      {/* ─── MODAL: INLINE RENAME ─── */}
+      {renamingAlbumId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-[#111113] border border-zinc-800 rounded-2xl p-6 relative space-y-4">
+            <h3 className="text-xs font-black text-white uppercase tracking-wider">Rename Album Name</h3>
+            <input
+              type="text"
+              value={renamedName}
+              onChange={(e) => setRenamedName(e.target.value)}
+              className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-xl text-white text-xs focus:outline-none"
+            />
+            <div className="flex justify-end gap-2 text-xs">
+              <button onClick={() => setRenamingAlbumId(null)} className="px-3 py-1.5 border border-zinc-805 bg-zinc-900 rounded-lg">Cancel</button>
+              <button
+                onClick={() => {
+                  const target = albums.find(a => a.id === renamingAlbumId);
+                  if (target) handleRenameSubmit(target);
+                }}
+                className="px-3 py-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-lg font-bold"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// Card Subcomponent
+function AlbumCard({
+  album,
+  eventName,
+  onDelete,
+  onArchive,
+  onDuplicate,
+  onRename,
+  onUpdateVisibility
+}: {
+  album: Album;
+  eventName: string | null;
+  onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
+  onDuplicate: (album: Album) => void;
+  onRename: (id: string) => void;
+  onUpdateVisibility: (id: string, vis: "PUBLIC" | "PRIVATE") => void;
+}) {
+  const router = useRouter();
+  const [showOptions, setShowOptions] = useState(false);
+
+  return (
+    <div
+      onClick={() => router.push(`/gallery/${album.id}`)}
+      className="group rounded-2xl border border-zinc-800 bg-[#141416]/45 hover:border-purple-500/25 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-[280px] shadow-md hover:shadow-lg relative"
+    >
+      {/* Cover Image */}
+      <div className="h-32 relative w-full bg-zinc-900 overflow-hidden flex items-center justify-center shrink-0 border-b border-zinc-850">
+        {album.thumbnailUrl || album.coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={album.thumbnailUrl || album.coverImage}
+            alt={album.name}
+            className="object-cover h-full w-full group-hover:scale-102 transition-transform duration-500"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-850 to-zinc-950 flex flex-col items-center justify-center text-zinc-650 gap-1.5">
+            <Folder size={32} className="text-zinc-700 group-hover:text-purple-500/30 transition-colors" />
+            <span className="text-[9px] uppercase tracking-wider font-extrabold text-zinc-550">Studio Album</span>
+          </div>
+        )}
+
+        <span className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md border border-zinc-850/80 px-2 py-0.5 rounded-md text-[9px] font-mono text-zinc-300 font-bold flex items-center gap-1">
+          <Layers size={9} className="text-purple-400" />
+          {album.itemCount} items
+        </span>
+
+        {/* Visibility Icon overlay */}
+        <span className="absolute top-3 left-3 bg-black/50 backdrop-blur px-2 py-0.5 rounded-md text-[9px] font-bold text-zinc-400 flex items-center gap-1 border border-zinc-850/60">
+          {album.visibility === "PUBLIC" ? <Eye size={10} className="text-emerald-400" /> : <EyeOff size={10} className="text-zinc-550" />}
+          {album.visibility}
+        </span>
+      </div>
+
+      {/* Body Info */}
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div className="space-y-1">
+          <div className="flex justify-between items-start gap-2 relative">
+            <h3 className="font-bold text-xs text-zinc-200 group-hover:text-purple-400 transition-colors leading-snug line-clamp-1">
+              {album.name}
+            </h3>
+            
+            {/* Quick Actions popover */}
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setShowOptions(!showOptions)}
+                className="text-zinc-500 hover:text-white font-extrabold text-xs px-1 hover:bg-zinc-850 rounded"
+              >
+                &bull;&bull;&bull;
+              </button>
+              {showOptions && (
+                <div className="absolute right-0 top-6 w-32 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-1 z-35 space-y-0.5 text-[10px]">
+                  <button onClick={() => { onRename(album.id); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800 rounded-lg flex items-center gap-1 text-zinc-300">
+                    <Edit2 size={10} /> Rename
+                  </button>
+                  <button onClick={() => { onDuplicate(album); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800 rounded-lg flex items-center gap-1 text-zinc-300">
+                    <Copy size={10} /> Duplicate
+                  </button>
+                  <button onClick={() => { onArchive(album.id); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800 rounded-lg flex items-center gap-1 text-zinc-350">
+                    <Archive size={10} /> {album.status === "ARCHIVED" ? "Publish" : "Archive"}
+                  </button>
+                  <button onClick={() => { onUpdateVisibility(album.id, album.visibility === "PUBLIC" ? "PRIVATE" : "PUBLIC"); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800 rounded-lg flex items-center gap-1 text-zinc-350">
+                    {album.visibility === "PUBLIC" ? <EyeOff size={10} /> : <Eye size={10} />} Toggle Shared
+                  </button>
+                  <button onClick={() => { onDelete(album.id); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-red-500/10 hover:text-red-400 rounded-lg flex items-center gap-1 text-red-500">
+                    <Trash2 size={10} /> Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          <p className="text-[10px] text-zinc-450 leading-relaxed line-clamp-2">
+            {album.description || "No description set."}
+          </p>
+        </div>
+
+        {/* Footer info */}
+        <div className="border-t border-zinc-850/60 pt-2 flex items-center justify-between text-[9px] text-zinc-550">
+          {eventName ? (
+            <span className="text-purple-400/90 font-bold flex items-center gap-0.5 truncate max-w-[130px]" title={eventName}>
+              <LinkIcon size={9} /> {eventName}
+            </span>
+          ) : (
+            <span>Standalone</span>
+          )}
+          <span className="font-mono">{new Date(album.createdAt).toLocaleDateString()}</span>
+        </div>
+      </div>
     </div>
   );
 }

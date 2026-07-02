@@ -78,6 +78,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String tenantIdHeader = request.getHeader("X-Tenant-ID");
         final String userIdHeader = request.getHeader("X-User-ID");
         final String userRolesHeader = request.getHeader("X-User-Roles");
+        final String userPermissionsHeader = request.getHeader("X-User-Permissions");
         final String userEmailHeader = request.getHeader("X-User-Email");
         final String gatewaySecretHeader = request.getHeader("X-Gateway-Secret");
 
@@ -97,11 +98,19 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 String email = userEmailHeader != null ? userEmailHeader : "";
                 String rolesStr = userRolesHeader != null ? userRolesHeader : "";
 
-                List<SimpleGrantedAuthority> authorities = Collections.emptyList();
+                List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
                 if (!rolesStr.isEmpty()) {
-                    authorities = Stream.of(rolesStr.split(","))
-                            .map(r -> new SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()))
-                            .collect(Collectors.toList());
+                    for (String r : rolesStr.split(",")) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()));
+                    }
+                }
+                if (userPermissionsHeader != null && !userPermissionsHeader.trim().isEmpty()) {
+                    String cleaned = userPermissionsHeader.replace("[", "").replace("]", "");
+                    for (String p : cleaned.split(",")) {
+                        if (!p.trim().isEmpty()) {
+                            authorities.add(new SimpleGrantedAuthority(p.trim()));
+                        }
+                    }
                 }
 
                 UserPrincipal principal = new UserPrincipal(userId, tenantId, email, rolesStr);
@@ -146,16 +155,25 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             String userIdStr = claims.get("userId", String.class);
             String email = claims.getSubject();
             String rolesStr = claims.get("roles", String.class);
+            Object permissionsObj = claims.get("permissions");
 
             if (tenantIdStr != null && userIdStr != null) {
                 UUID tenantId = UUID.fromString(tenantIdStr);
                 UUID userId = UUID.fromString(userIdStr);
 
-                List<SimpleGrantedAuthority> authorities = Collections.emptyList();
+                List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
                 if (rolesStr != null && !rolesStr.isEmpty()) {
-                    authorities = Stream.of(rolesStr.split(","))
-                            .map(r -> new SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()))
-                            .collect(Collectors.toList());
+                    for (String r : rolesStr.split(",")) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()));
+                    }
+                }
+                if (permissionsObj != null) {
+                    String cleaned = permissionsObj.toString().replace("[", "").replace("]", "");
+                    for (String p : cleaned.split(",")) {
+                        if (!p.trim().isEmpty()) {
+                            authorities.add(new SimpleGrantedAuthority(p.trim()));
+                        }
+                    }
                 }
 
                 UserPrincipal principal = new UserPrincipal(userId, tenantId, email, rolesStr);

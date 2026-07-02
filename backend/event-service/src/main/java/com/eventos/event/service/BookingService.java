@@ -39,6 +39,7 @@ import java.util.Optional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,9 @@ import java.util.concurrent.CompletableFuture;
 @Transactional
 @SuppressWarnings({"null", "rawtypes"})
 public class BookingService {
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.eventos.event.config.DistributedLockService distributedLockService;
 
     private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
@@ -71,6 +75,8 @@ public class BookingService {
     private final ExpenseRepository expenseRepository;
     private final WebClient webClient;
     private final RabbitTemplate rabbitTemplate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private RestTemplate restTemplate = new RestTemplate();
 
     @Value("${service.crm.base-url:http://localhost:8082/api/v1}")
@@ -245,94 +251,104 @@ public class BookingService {
     }
 
     public Booking createBooking(CreateBookingDto dto, UUID tenantId) {
-        Event event = eventRepository.findByIdAndTenantId(dto.getEventId(), tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Associated event not found or access denied"));
+        String lockKey = "lock:booking:event:" + dto.getEventId().toString();
+        if (distributedLockService != null && !distributedLockService.acquireLock(lockKey, Duration.ofSeconds(10))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Another booking request for this event is currently in progress. Please try again.");
+        }
+        try {
+            Event event = eventRepository.findByIdAndTenantId(dto.getEventId(), tenantId)
+                    .orElseThrow(() -> new IllegalArgumentException("Associated event not found or access denied"));
 
-        TenantSequence seq = tenantSequenceRepository
-                .findByTenantIdAndSequenceTypeForUpdate(tenantId, "BOOKING")
-                .orElse(null);
+            TenantSequence seq = tenantSequenceRepository
+                    .findByTenantIdAndSequenceTypeForUpdate(tenantId, "BOOKING")
+                    .orElse(null);
 
-        long nextVal;
-        if (seq == null) {
-            seq = TenantSequence.builder()
-                    .tenantId(tenantId)
-                    .sequenceType("BOOKING")
-                    .currentValue(1)
-                    .build();
-            try {
-                seq = tenantSequenceRepository.saveAndFlush(seq);
-                nextVal = 1;
-            } catch (Exception e) {
-                seq = tenantSequenceRepository
-                        .findByTenantIdAndSequenceTypeForUpdate(tenantId, "BOOKING")
-                        .orElseThrow(() -> new IllegalStateException("Failed to initialize or lock sequence for BOOKING"));
+            long nextVal;
+            if (seq == null) {
+                seq = TenantSequence.builder()
+                        .tenantId(tenantId)
+                        .sequenceType("BOOKING")
+                        .currentValue(1)
+                        .build();
+                try {
+                    seq = tenantSequenceRepository.saveAndFlush(seq);
+                    nextVal = 1;
+                } catch (Exception e) {
+                    seq = tenantSequenceRepository
+                            .findByTenantIdAndSequenceTypeForUpdate(tenantId, "BOOKING")
+                            .orElseThrow(() -> new IllegalStateException("Failed to initialize or lock sequence for BOOKING"));
+                    nextVal = seq.getCurrentValue() + 1;
+                    seq.setCurrentValue(nextVal);
+                    tenantSequenceRepository.saveAndFlush(seq);
+                }
+            } else {
                 nextVal = seq.getCurrentValue() + 1;
                 seq.setCurrentValue(nextVal);
                 tenantSequenceRepository.saveAndFlush(seq);
             }
-        } else {
-            nextVal = seq.getCurrentValue() + 1;
-            seq.setCurrentValue(nextVal);
-            tenantSequenceRepository.saveAndFlush(seq);
+
+            int currentYear = java.time.LocalDate.now().getYear();
+            String bookingNumber = "EVT-" + currentYear + "-" + String.format("%06d", nextVal);
+
+            BookingStatus initialStatus = BookingStatus.PENDING;
+            if (dto.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+                initialStatus = BookingStatus.CONFIRMED;
+            }
+
+            Booking booking = Booking.builder()
+                    .eventId(dto.getEventId())
+                    .leadId(dto.getLeadId())
+                    .bookingNumber(bookingNumber)
+                    .status(initialStatus)
+                    .totalAmount(dto.getTotalAmount())
+                    .paidAmount(dto.getPaidAmount())
+                    .contractUrl(dto.getContractUrl())
+                    .build();
+            booking.setTenantId(tenantId);
+
+            List<BookingTimelineEvent> milestones = new ArrayList<>();
+            boolean advancePaid = dto.getPaidAmount().compareTo(dto.getTotalAmount().multiply(BigDecimal.valueOf(0.5))) >= 0;
+            milestones.add(BookingTimelineEvent.builder()
+                    .tenantId(tenantId)
+                    .title("50% Advance Booking Payment")
+                    .description("Initial operational reserve lock fee")
+                    .eventDate(LocalDateTime.now())
+                    .status(advancePaid ? "COMPLETED" : "PENDING")
+                    .build());
+
+            boolean contractSigned = dto.getContractUrl() != null && !dto.getContractUrl().isEmpty();
+            milestones.add(BookingTimelineEvent.builder()
+                    .tenantId(tenantId)
+                    .title("Contract Agreement Signature")
+                    .description("Mutually executed planners contract")
+                    .eventDate(LocalDateTime.now().plusDays(2))
+                    .status(contractSigned ? "COMPLETED" : "PENDING")
+                    .build());
+
+            milestones.add(BookingTimelineEvent.builder()
+                    .tenantId(tenantId)
+                    .title("Final Balance Settlement")
+                    .description("25% final settlement payment invoice clearance")
+                    .eventDate(event.getStartDate() != null ? event.getStartDate().minusDays(1) : LocalDateTime.now().plusDays(29))
+                    .status("PENDING")
+                    .build());
+
+            for (BookingTimelineEvent milestone : milestones) {
+                milestone.setTenantId(tenantId);
+            }
+            booking.setTimelineEvents(milestones);
+
+            Booking saved = bookingRepository.save(booking);
+            
+            logAudit(saved.getId(), saved.getTenantId(), "CREATED", "Booking locked manually for Event: " + event.getName(), getRequestingUserEmail());
+            
+            invalidateDashboardCache(tenantId);
+            return saved;
+        } finally {
+            if (distributedLockService != null) {
+                distributedLockService.releaseLock(lockKey);
+            }
         }
-
-        int currentYear = java.time.LocalDate.now().getYear();
-        String bookingNumber = "EVT-" + currentYear + "-" + String.format("%06d", nextVal);
-
-        BookingStatus initialStatus = BookingStatus.PENDING;
-        if (dto.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
-            initialStatus = BookingStatus.CONFIRMED;
-        }
-
-        Booking booking = Booking.builder()
-                .eventId(dto.getEventId())
-                .leadId(dto.getLeadId())
-                .bookingNumber(bookingNumber)
-                .status(initialStatus)
-                .totalAmount(dto.getTotalAmount())
-                .paidAmount(dto.getPaidAmount())
-                .contractUrl(dto.getContractUrl())
-                .build();
-        booking.setTenantId(tenantId);
-
-        List<BookingTimelineEvent> milestones = new ArrayList<>();
-        boolean advancePaid = dto.getPaidAmount().compareTo(dto.getTotalAmount().multiply(BigDecimal.valueOf(0.5))) >= 0;
-        milestones.add(BookingTimelineEvent.builder()
-                .tenantId(tenantId)
-                .title("50% Advance Booking Payment")
-                .description("Initial operational reserve lock fee")
-                .eventDate(LocalDateTime.now())
-                .status(advancePaid ? "COMPLETED" : "PENDING")
-                .build());
-
-        boolean contractSigned = dto.getContractUrl() != null && !dto.getContractUrl().isEmpty();
-        milestones.add(BookingTimelineEvent.builder()
-                .tenantId(tenantId)
-                .title("Contract Agreement Signature")
-                .description("Mutually executed planners contract")
-                .eventDate(LocalDateTime.now().plusDays(2))
-                .status(contractSigned ? "COMPLETED" : "PENDING")
-                .build());
-
-        milestones.add(BookingTimelineEvent.builder()
-                .tenantId(tenantId)
-                .title("Final Balance Settlement")
-                .description("25% final settlement payment invoice clearance")
-                .eventDate(event.getStartDate() != null ? event.getStartDate().minusDays(1) : LocalDateTime.now().plusDays(29))
-                .status("PENDING")
-                .build());
-
-        for (BookingTimelineEvent milestone : milestones) {
-            milestone.setTenantId(tenantId);
-        }
-        booking.setTimelineEvents(milestones);
-
-        Booking saved = bookingRepository.save(booking);
-        
-        logAudit(saved.getId(), saved.getTenantId(), "CREATED", "Booking locked manually for Event: " + event.getName(), getRequestingUserEmail());
-        
-        invalidateDashboardCache(tenantId);
-        return saved;
     }
 
     public Booking createBookingFromQuote(UUID quoteId, UUID tenantId) {

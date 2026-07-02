@@ -2,10 +2,15 @@
 
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams, useRouter } from "next/navigation";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
+import { useToastStore } from "@/lib/toastStore";
+import { apiClient } from "@/lib/api-client";
+import { Preloader } from "@/components/landing/preloader/Preloader";
 
 // Above-the-fold sections loaded eagerly for fast LCP
 import { Navbar } from "@/components/landing/Navbar";
@@ -38,8 +43,20 @@ function SectionSkeleton() {
   );
 }
 
-export default function Home() {
+function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
   const [activeSection, setActiveSection] = useState<string>("hero");
+  const searchParams = useSearchParams();
+  const openModal = useAuthModalStore((state) => state.openModal);
+
+  useEffect(() => {
+    if (searchParams) {
+      if (searchParams.get("login") === "true") {
+        openModal("login");
+      } else if (searchParams.get("register") === "true") {
+        openModal("register");
+      }
+    }
+  }, [searchParams, openModal]);
 
   useEffect(() => {
     // Initialize CTA analytics
@@ -80,10 +97,54 @@ export default function Home() {
 
   const isAuthModalOpen = useAuthModalStore((state) => state.isOpen);
 
+  const router = useRouter();
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const addToast = useToastStore((state) => state.addToast);
+
+  const handleGoogleSuccess = async (credential: string) => {
+    try {
+      const response = await apiClient.post("/auth/login/google", {
+        idToken: credential,
+      });
+
+      const { accessToken, firstName, role, userId, tenantId, memberships, permissions } = response.data.data;
+      
+      // Store session cookies
+      document.cookie = "hasSession=true; path=/; SameSite=Lax";
+      document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
+      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      localStorage.setItem("user_name", firstName);
+      localStorage.setItem("user_role", role);
+      
+      // Save state in Zustand store
+      setAuth(
+        accessToken,
+        { id: userId, email: response.data.data.email || "", firstName, role, permissions: permissions || [] },
+        tenantId,
+        memberships
+      );
+
+      addToast("Successfully authenticated via Google One-Tap!", "success");
+
+      // Redirect
+      if (role === "CLIENT") {
+        router.push("/portal");
+      } else {
+        router.push("/workspace-select");
+      }
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error?.message || "Google One-Tap authentication failed.";
+      addToast(errMsg, "error");
+    }
+  };
+
+
+
   return (
     <>
       <div className={cn(
-        "min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-600/35 selection:text-white transition-all duration-500 ease-out origin-center",
+        "min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-650 selection:text-white transition-all duration-500 ease-out origin-center",
         isAuthModalOpen ? "blur-md scale-[0.99] pointer-events-none" : ""
       )}>
         {/* Sticky Navigation */}
@@ -176,6 +237,32 @@ export default function Home() {
       </div>
 
       <AuthModal />
+    </>
+  );
+}
+
+export default function Home() {
+  const [preloaderActive, setPreloaderActive] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return (
+    <>
+      <div 
+        className={cn(
+          "fixed inset-0 z-[9999] bg-[#09090B] transition-opacity duration-300 pointer-events-none",
+          mounted ? "opacity-0" : "opacity-100"
+        )} 
+      />
+      {mounted && preloaderActive && (
+        <Preloader onComplete={() => setPreloaderActive(false)} />
+      )}
+      <Suspense fallback={<div className="min-h-screen bg-[#09090B] flex items-center justify-center text-xs text-zinc-555">Loading EventOS...</div>}>
+        <HomeContent preloaderActive={preloaderActive} />
+      </Suspense>
     </>
   );
 }

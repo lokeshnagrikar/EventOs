@@ -58,13 +58,16 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         "/login",
+                        "/login/google",
                         "/register",
                         "/refresh",
                         "/switch",
                         "/forgot-password",
                         "/reset-password",
+                        "/verify-email",
                         "/accept-invite",
                         "/captcha",
+                        "/ws/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",

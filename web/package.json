@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
-    "build": "next build",
-    "start": "next start -p 3000",
+    "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" next dev -p 3000",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" next build",
+    "start": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" next start -p 3000",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -14,6 +14,7 @@
     "@iconify/react": "^6.0.2",
     "@radix-ui/react-avatar": "^1.2.0",
     "@radix-ui/react-slot": "^1.3.0",
+    "@react-oauth/google": "^0.13.5",
     "@tanstack/react-query": "^5.45.0",
     "@tsparticles/engine": "^4.2.0",
     "@tsparticles/react": "^4.2.0",
@@ -34,9 +35,11 @@
     "react-google-recaptcha": "3.1.0",
     "react-hook-form": "^7.51.5",
     "react-intersection-observer": "^10.0.3",
+    "recharts": "^2.15.4",
     "shadcn": "^4.11.0",
     "tailwind-merge": "^2.6.1",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.185.0",
     "tw-animate-css": "^1.4.0",
     "zod": "^3.23.8",
     "zustand": "^4.5.2"
@@ -46,6 +49,7 @@
     "@types/node": "^20.14.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.185.0",
     "@typescript-eslint/eslint-plugin": "^8.62.0",
     "@typescript-eslint/parser": "^8.62.0",
     "autoprefixer": "^10.4.19",

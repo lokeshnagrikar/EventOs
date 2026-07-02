@@ -20,4 +20,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     // Used for cascade cancellation when an event is cancelled
     List<Booking> findAllByEventIdAndTenantId(UUID eventId, UUID tenantId);
+
+    List<Booking> findAllByClientEmailIgnoreCaseAndTenantIdOrderByCreatedAtDesc(String clientEmail, UUID tenantId);
+    org.springframework.data.domain.Page<Booking> findAllByClientEmailIgnoreCaseAndTenantIdOrderByCreatedAtDesc(String clientEmail, UUID tenantId, org.springframework.data.domain.Pageable pageable);
 }
