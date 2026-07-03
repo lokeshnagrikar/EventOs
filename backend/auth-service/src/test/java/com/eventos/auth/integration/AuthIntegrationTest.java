@@ -48,6 +48,9 @@ public class AuthIntegrationTest {
     @MockBean
     private ValueOperations<String, String> valueOperations;
 
+    @MockBean
+    private com.eventos.auth.service.EmailService emailService;
+
     private Role ownerRole;
 
     @BeforeEach
@@ -81,12 +84,29 @@ public class AuthIntegrationTest {
                 .phone("9999999999")
                 .build();
 
-        mockMvc.perform(post("/register")
+        org.springframework.test.web.servlet.MvcResult regResult = mockMvc.perform(post("/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(regRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success", is(true)))
-                .andExpect(jsonPath("$.message", containsString("registered successfully")));
+                .andExpect(jsonPath("$.message", containsString("registered successfully")))
+                .andReturn();
+
+        String regResponseBody = regResult.getResponse().getContentAsString();
+        String verificationToken = objectMapper.readTree(regResponseBody).get("verificationToken").asText();
+
+        // 1b. Verify Email using OTP POST endpoint
+        VerifyOtpRequestDto otpRequest = VerifyOtpRequestDto.builder()
+                .email("integration@test.com")
+                .otp(verificationToken)
+                .build();
+
+        mockMvc.perform(post("/verify-otp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(otpRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.message", containsString("Email verification successful")));
 
         // 2. Login
         LoginRequestDto loginRequest = LoginRequestDto.builder()

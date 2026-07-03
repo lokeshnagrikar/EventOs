@@ -65,6 +65,8 @@ public class SecurityConfig {
                         "/forgot-password",
                         "/reset-password",
                         "/verify-email",
+                        "/verify-otp",
+                        "/resend-verification",
                         "/accept-invite",
                         "/captcha",
                         "/ws/**",

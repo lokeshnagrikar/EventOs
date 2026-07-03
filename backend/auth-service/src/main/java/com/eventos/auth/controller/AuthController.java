@@ -132,6 +132,10 @@ public class AuthController {
                         .body(createErrorResponse("CAPTCHA_REQUIRED",
                                 "CAPTCHA verification is required after 3 failed attempts"));
             }
+            if ("EMAIL_UNVERIFIED".equals(e.getMessage())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createErrorResponse("EMAIL_UNVERIFIED", "Please verify your email address before logging in."));
+            }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(createErrorResponse("INVALID_CREDENTIALS", e.getMessage()));
         } catch (Exception e) {
@@ -234,6 +238,44 @@ public class AuthController {
                     .body(createErrorResponse("VERIFICATION_FAILED", e.getMessage()));
         }
     }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendVerification(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Email is required"));
+        }
+        try {
+            Map<String, Object> result = authService.resendVerification(email);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("RESEND_FAILED", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[RESEND_VERIFICATION] Failed to resend verification email", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("RESEND_FAILED", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequestDto request) {
+        String email = request.getEmail();
+        String otp = request.getOtp();
+        if (email == null || email.isEmpty() || otp == null || otp.isEmpty()) {
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Email and OTP are required"));
+        }
+        try {
+            Map<String, Object> result = authService.verifyOtp(email, otp);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("INVALID_OTP", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[VERIFY_OTP] OTP verification failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("VERIFICATION_FAILED", e.getMessage()));
+        }
+    }
+
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(

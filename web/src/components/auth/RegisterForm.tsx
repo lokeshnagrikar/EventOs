@@ -84,6 +84,15 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [googleAuthenticating, setGoogleAuthenticating] = useState(false);
 
+  // 6-digit OTP States
+  const [showOtpScreen, setShowOtpScreen] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(""));
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpSuccess, setOtpSuccess] = useState(false);
+  const [resendTimer, setResendTimer] = useState(120);
+
   const handleGoogleSuccess = async ({ idToken, accessToken }: { idToken?: string; accessToken?: string }) => {
     setError(null);
     setLoading(true);
@@ -185,6 +194,107 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
     setStep(1);
   };
 
+  useEffect(() => {
+    if (showOtpScreen && resendTimer > 0) {
+      const timer = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [showOtpScreen, resendTimer]);
+
+  const handleOtpChange = (index: number, val: string) => {
+    if (val !== "" && !/^[0-9]$/.test(val)) return;
+
+    const newValues = [...otpValues];
+    newValues[index] = val;
+    setOtpValues(newValues);
+    setOtpError(null);
+
+    if (val !== "" && index < 5) {
+      const nextInput = document.getElementById(`otp-input-${index + 1}`) as HTMLInputElement;
+      if (nextInput) nextInput.focus();
+    }
+
+    const fullCode = newValues.join("");
+    if (fullCode.length === 6) {
+      verifyOtpCode(fullCode);
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace") {
+      const newValues = [...otpValues];
+      if (otpValues[index] !== "") {
+        newValues[index] = "";
+        setOtpValues(newValues);
+      } else if (index > 0) {
+        newValues[index - 1] = "";
+        setOtpValues(newValues);
+        const prevInput = document.getElementById(`otp-input-${index - 1}`) as HTMLInputElement;
+        if (prevInput) prevInput.focus();
+      }
+      setOtpError(null);
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData("text").trim();
+    if (!/^\d{6}$/.test(pastedText)) return;
+
+    const newValues = pastedText.split("");
+    setOtpValues(newValues);
+    setOtpError(null);
+
+    const lastInput = document.getElementById(`otp-input-5`) as HTMLInputElement;
+    if (lastInput) lastInput.focus();
+
+    verifyOtpCode(pastedText);
+  };
+
+  const verifyOtpCode = async (code: string) => {
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      await apiClient.post("/auth/verify-otp", {
+        email: otpEmail,
+        otp: code
+      });
+      setOtpSuccess(true);
+      addToast("Account verified successfully!", "success");
+      setTimeout(() => {
+        if (isModal && onSwitchMode) {
+          onSwitchMode("login");
+        } else {
+          router.push("/?login=true");
+        }
+      }, 1500);
+    } catch (err: any) {
+      const serverMsg = err.response?.data?.error?.message || "Invalid or expired OTP code.";
+      setOtpError(serverMsg);
+      addToast(serverMsg, "error");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setResendTimer(120);
+    setOtpError(null);
+    setOtpValues(Array(6).fill(""));
+    try {
+      await apiClient.post("/auth/resend-verification", {
+        email: otpEmail
+      });
+      addToast("Verification code resent successfully!", "success");
+    } catch (err: any) {
+      const serverMsg = err.response?.data?.error?.message || "Failed to resend verification code.";
+      setOtpError(serverMsg);
+      addToast(serverMsg, "error");
+    }
+  };
+
   const onSubmit = async (data: RegisterInputs) => {
     if (step === 1) {
       await nextStep();
@@ -203,7 +313,8 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
       });
 
       addToast("Workspace created successfully!", "success");
-      setSuccess(true);
+      setOtpEmail(data.email);
+      setShowOtpScreen(true);
     } catch (err: any) {
       const serverMsg = err.response?.data?.error?.message;
       const status = err.response?.status;
@@ -237,32 +348,74 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
     }),
   };
 
-  if (success) {
+  if (showOtpScreen) {
     return (
-      <div className="text-center space-y-6 animate-slide-in">
-        <div className="mx-auto h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shadow-md">
-          <CheckCircle2 size={24} />
+      <div className="space-y-6 animate-slide-in text-center select-none">
+        <div className="mx-auto h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 shadow-md">
+          {otpSuccess ? <CheckCircle2 size={24} className="text-emerald-400 animate-scale-in" /> : <Mail size={24} className="animate-pulse" />}
         </div>
-        <div className="space-y-2">
+        
+        <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
-            Workspace Created!
+            {otpSuccess ? "Verification Successful!" : "Verify Your Account"}
           </h2>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            Your company tenant has been registered. You can now log into your EventOS admin workspace.
+          <p className="text-xs text-zinc-450 leading-relaxed max-w-[280px] mx-auto">
+            {otpSuccess 
+              ? "Your account is now activated. Redirecting you to sign in..." 
+              : `We've sent a 6-digit verification code to ${otpEmail}`}
           </p>
         </div>
-        <Button
-          onClick={() => {
-            if (isModal && onSwitchMode) {
-              onSwitchMode("login");
-            } else {
-              router.push("/login");
-            }
-          }}
-          className="w-full py-5 bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all"
-        >
-          Go to Login
-        </Button>
+
+        {otpError && (
+          <div className="flex items-start gap-2.5 p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-300 animate-slide-in text-left">
+            <AlertCircle size={14} className="shrink-0 mt-0.5" />
+            <span>{otpError}</span>
+          </div>
+        )}
+
+        {otpSuccess ? (
+          <div className="py-4 flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* 6 Digit Input Group */}
+            <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+              {otpValues.map((val, idx) => (
+                <input
+                  key={idx}
+                  id={`otp-input-${idx}`}
+                  type="text"
+                  maxLength={1}
+                  value={val}
+                  disabled={otpLoading}
+                  onChange={(e) => handleOtpChange(idx, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                  className="w-10 h-12 text-center text-lg font-bold bg-white/[0.03] border border-white/[0.08] focus:border-[#8B5CF6] focus:bg-[#09090b]/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all"
+                />
+              ))}
+            </div>
+
+            <div className="text-[10px] text-zinc-550 italic">
+              Note: In development, check the backend console log for the 6-digit OTP code.
+            </div>
+
+            <div className="pt-2 border-t border-zinc-900 flex justify-between items-center text-xs text-zinc-450">
+              <span>Didn't get the code?</span>
+              {resendTimer > 0 ? (
+                <span className="text-[11px] text-zinc-550">Resend in {Math.floor(resendTimer / 60)}:{(resendTimer % 60).toString().padStart(2, "0")}</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  className="text-purple-400 hover:text-purple-300 font-bold transition-all underline"
+                >
+                  Resend Code
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }

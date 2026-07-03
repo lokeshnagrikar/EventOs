@@ -50,6 +50,7 @@ public class AuthService {
     private final AuditLogService auditLogService;
     private final RecaptchaService recaptchaService;
     private final GoogleAuthService googleAuthService;
+    private final EmailService emailService;
 
     @Value("${app.jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
@@ -64,7 +65,8 @@ public class AuthService {
             PasswordHistoryRepository passwordHistoryRepository,
             PasswordEncoder passwordEncoder, JwtService jwtService,
             StringRedisTemplate stringRedisTemplate, AuditLogService auditLogService,
-            RecaptchaService recaptchaService, GoogleAuthService googleAuthService) {
+            RecaptchaService recaptchaService, GoogleAuthService googleAuthService,
+            EmailService emailService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tenantRepository = tenantRepository;
@@ -80,6 +82,7 @@ public class AuthService {
         this.auditLogService = auditLogService;
         this.recaptchaService = recaptchaService;
         this.googleAuthService = googleAuthService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -112,16 +115,16 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalStateException("Default OWNER role not found"));
 
         // 4. Create Owner User
-        String verificationToken = UUID.randomUUID().toString();
+        String verificationToken = String.format("%06d", secureRandom.nextInt(1000000));
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(email)
                 .phone(request.getPhone())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .isEmailVerified(true)  // Auto-verified for dev; set to false when email server is configured
+                .isEmailVerified(false)  // Disabled auto-verified for dev; verify email first
                 .emailVerificationToken(verificationToken)
-                .emailVerificationTokenExpiry(LocalDateTime.now().plusHours(24))
+                .emailVerificationTokenExpiry(LocalDateTime.now().plusMinutes(15))
                 .build();
         user = userRepository.save(user);
 
@@ -137,6 +140,9 @@ public class AuthService {
                 .status("ACTIVE")
                 .build();
         membershipRepository.save(membership);
+
+        // Send Email Verification
+        emailService.sendVerificationEmail(email, verificationToken);
 
         auditLogService.logEvent(tenant.getId(), user.getId(), "TENANT_REGISTRATION", null, null,
                 "Tenant and Owner User registered successfully: " + tenantName);
@@ -242,11 +248,11 @@ public class AuthService {
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        // Email Verification Check (skipped — auto-verified on registration)
-        // Re-enable when a real mail server is configured:
-        // if (!user.isEmailVerified()) {
-        //     throw new IllegalArgumentException("EMAIL_UNVERIFIED");
-        // }
+        // Email Verification Check
+        if (!user.isEmailVerified()) {
+            throw new IllegalArgumentException("EMAIL_UNVERIFIED");
+        }
+
 
         // Password Expiration Check (90 days)
         if (user.getPasswordUpdatedAt() != null && user.getPasswordUpdatedAt().plusDays(90).isBefore(LocalDateTime.now())) {
@@ -476,6 +482,9 @@ public class AuthService {
 
         auditLogService.logEvent(null, user.getId(), "PASSWORD_RESET_REQUEST", null, null,
                 "Password reset token generated for user: " + email);
+
+        // Send Password Reset Email
+        emailService.sendPasswordResetEmail(email, resetToken);
 
         if (logTokens) {
             System.out.println("=================================================");
@@ -953,6 +962,76 @@ public class AuthService {
         response.put("message", "Email verification successful");
         return response;
     }
+
+    @Transactional
+    public Map<String, Object> verifyOtp(String email, String otp) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User with this email does not exist"));
+
+        if (user.isEmailVerified()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Email is already verified");
+            return response;
+        }
+
+        if (user.getEmailVerificationToken() == null || !user.getEmailVerificationToken().equals(otp)) {
+            throw new IllegalArgumentException("Invalid verification code");
+        }
+
+        if (user.getEmailVerificationTokenExpiry() == null || 
+            user.getEmailVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Verification code has expired");
+        }
+
+        user.setEmailVerified(true);
+        user.setEmailVerificationToken(null);
+        user.setEmailVerificationTokenExpiry(null);
+        userRepository.save(user);
+
+        auditLogService.logEvent(null, user.getId(), "EMAIL_VERIFIED", null, null,
+                "Email verification completed successfully for: " + user.getEmail());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Email verification successful");
+        return response;
+    }
+
+
+    @Transactional
+    public Map<String, Object> resendVerification(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User with this email does not exist"));
+
+        if (user.isEmailVerified()) {
+            throw new IllegalArgumentException("Email is already verified");
+        }
+
+        String verificationToken = String.format("%06d", secureRandom.nextInt(1000000));
+        user.setEmailVerificationToken(verificationToken);
+        user.setEmailVerificationTokenExpiry(LocalDateTime.now().plusMinutes(15));
+        userRepository.save(user);
+
+        // Send Email Verification
+        emailService.sendVerificationEmail(email, verificationToken);
+
+        if (logTokens) {
+            System.out.println("=================================================");
+            System.out.println("RESENT EMAIL VERIFICATION FOR: " + email);
+            System.out.println("NEW VERIFICATION TOKEN: " + verificationToken);
+            System.out.println("=================================================");
+        }
+
+        auditLogService.logEvent(null, user.getId(), "VERIFICATION_RESENT", null, null,
+                "Email verification token resent successfully for: " + email);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Verification token resent successfully");
+        return response;
+    }
+
 
     @Transactional
     public Map<String, Object> changePassword(UUID userId, String currentPassword, String newPassword) {

@@ -49,6 +49,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
+  // Email Verification State
+  const [emailUnverified, setEmailUnverified] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+
   const fetchCaptchaDetails = async () => {
     try {
       const response = await apiClient.get("/auth/captcha");
@@ -92,8 +97,31 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     }
   }, [searchParams, addToast, isModal]);
 
+  const handleResendVerification = async () => {
+    const emailVal = watch("email");
+    if (!emailVal) {
+      setError("Please enter your email address first.");
+      return;
+    }
+    setResending(true);
+    setResendMessage(null);
+    try {
+      await apiClient.post("/auth/resend-verification", { email: emailVal });
+      setResendMessage("Verification link has been resent successfully!");
+      addToast("Verification email resent!", "success");
+    } catch (err: any) {
+      const serverMsg = err.response?.data?.error?.message || "Failed to resend verification email.";
+      setError(serverMsg);
+      addToast(serverMsg, "error");
+    } finally {
+      setResending(false);
+    }
+  };
+
   const onSubmit = async (data: LoginInputs) => {
     setError(null);
+    setEmailUnverified(false);
+    setResendMessage(null);
     setLoading(true);
 
     if (showCaptcha) {
@@ -157,6 +185,9 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         if (showCaptcha) {
           fetchCaptchaDetails();
         }
+      }
+      if (errCode === "EMAIL_UNVERIFIED") {
+        setEmailUnverified(true);
       }
       setError(errMsg);
       addToast(errMsg, "error");
@@ -242,11 +273,36 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
 
       {/* Global Error Banner */}
       {error && (
-        <div className="flex items-start gap-2.5 p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-300 animate-slide-in">
-          <AlertCircle size={14} className="shrink-0 mt-0.5" />
-          <span>{error}</span>
+        <div className="flex flex-col gap-2 p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-300 animate-slide-in">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle size={14} className="shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span>{error}</span>
+              {emailUnverified && (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resending}
+                    className="text-purple-400 hover:text-purple-300 font-bold underline transition-colors focus:outline-none disabled:opacity-50 disabled:no-underline"
+                  >
+                    {resending ? "Resending..." : "Click here to resend verification link."}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Resend success banner */}
+      {resendMessage && (
+        <div className="flex items-start gap-2.5 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300 animate-slide-in">
+          <Check size={14} className="shrink-0 mt-0.5" />
+          <span>{resendMessage}</span>
+        </div>
+      )}
+
 
       {/* Form elements */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">

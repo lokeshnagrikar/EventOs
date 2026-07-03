@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -55,6 +56,8 @@ public class AuthServiceTest {
     private GoogleAuthService googleAuthService;
     @Mock
     private PasswordHistoryRepository passwordHistoryRepository;
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private AuthService authService;
@@ -77,6 +80,7 @@ public class AuthServiceTest {
                 .email("lokesh@myevents.com")
                 .passwordHash("hashedPassword")
                 .status("ACTIVE")
+                .isEmailVerified(true)
                 .build();
 
         ownerRole = Role.builder()
@@ -198,5 +202,75 @@ public class AuthServiceTest {
         verify(refreshTokenRepository, times(1)).deleteByUser(testUser);
         verify(auditLogService, times(1)).logEvent(isNull(), eq(testUser.getId()), eq("PASSWORD_RESET_SUCCESS"),
                 isNull(), isNull(), anyString());
+    }
+
+    @Test
+    void testLogin_Failure_UnverifiedEmail() {
+        testUser.setEmailVerified(false);
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("password", testUser.getPasswordHash())).thenReturn(true);
+        when(membershipRepository.findAllByUserId(testUser.getId())).thenReturn(List.of(membership));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            authService.login(testUser.getEmail(), "password", tenantId, "127.0.0.1",
+                    "Chrome", "Windows", "Chrome", "UserAgent")
+        );
+        assertEquals("EMAIL_UNVERIFIED", exception.getMessage());
+    }
+
+    @Test
+    void testResendVerification_Success() {
+        testUser.setEmailVerified(false);
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        Map<String, Object> response = authService.resendVerification(testUser.getEmail());
+
+        assertTrue((Boolean) response.get("success"));
+        assertEquals("Verification token resent successfully", response.get("message"));
+        verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void testVerifyOtp_Success() {
+        testUser.setEmailVerified(false);
+        testUser.setEmailVerificationToken("123456");
+        testUser.setEmailVerificationTokenExpiry(LocalDateTime.now().plusMinutes(15));
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        Map<String, Object> response = authService.verifyOtp(testUser.getEmail(), "123456");
+
+        assertTrue((Boolean) response.get("success"));
+        assertEquals("Email verification successful", response.get("message"));
+        assertTrue(testUser.isEmailVerified());
+        assertNull(testUser.getEmailVerificationToken());
+        verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void testVerifyOtp_Failure_InvalidOtp() {
+        testUser.setEmailVerified(false);
+        testUser.setEmailVerificationToken("123456");
+        testUser.setEmailVerificationTokenExpiry(LocalDateTime.now().plusMinutes(15));
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            authService.verifyOtp(testUser.getEmail(), "654321")
+        );
+        assertEquals("Invalid verification code", exception.getMessage());
+    }
+
+    @Test
+    void testVerifyOtp_Failure_ExpiredOtp() {
+        testUser.setEmailVerified(false);
+        testUser.setEmailVerificationToken("123456");
+        testUser.setEmailVerificationTokenExpiry(LocalDateTime.now().minusMinutes(1));
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            authService.verifyOtp(testUser.getEmail(), "123456")
+        );
+        assertEquals("Verification code has expired", exception.getMessage());
     }
 }
