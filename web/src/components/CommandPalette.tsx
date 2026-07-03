@@ -53,12 +53,12 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; o
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4 bg-black/65 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4 bg-black/65 backdrop-blur-md">
       {/* Background click handler */}
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Palette Container */}
-      <div className="relative w-full max-w-lg bg-[#111113] border border-zinc-850 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[450px] animate-in fade-in slide-in-from-top-4 duration-200">
+      <div className="relative w-full max-w-lg bg-zinc-950/80 border border-white/[0.08] backdrop-blur-xl rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col max-h-[450px] animate-in fade-in slide-in-from-top-4 duration-200">
         
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-zinc-850 bg-zinc-900/10">

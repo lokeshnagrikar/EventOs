@@ -84,10 +84,10 @@ export function Navbar({ activeSection }: NavbarProps) {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 border-b",
+        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300",
         scrolled || isOpen
-          ? "bg-gradient-to-r from-purple-950/15 via-[#09090B]/80 to-cyan-950/15 backdrop-blur-xl border-zinc-800/30 shadow-lg shadow-black/10 py-2.5"
-          : "bg-transparent border-transparent py-2.5"
+          ? "bg-zinc-950/70 backdrop-blur-md border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.4)] py-2"
+          : "bg-transparent border-b border-transparent py-2.5"
       )}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -197,7 +197,7 @@ export function Navbar({ activeSection }: NavbarProps) {
                   transition={{ duration: 0.18 }}
                   className="absolute left-1/2 -translate-x-1/2 top-full pt-4 w-[480px] z-50 pointer-events-auto"
                 >
-                  <div className="grid grid-cols-2 gap-2 p-4 bg-[#0c0c0e] border border-zinc-800 rounded-2xl shadow-xl backdrop-blur-md">
+                  <div className="grid grid-cols-2 gap-2 p-4 bg-zinc-950/80 border border-white/[0.08] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl">
                     {solutions.map((item) => (
                       <a
                         key={item.title}
@@ -282,7 +282,7 @@ export function Navbar({ activeSection }: NavbarProps) {
                   transition={{ duration: 0.18 }}
                   className="absolute left-1/2 -translate-x-1/2 top-full pt-4 w-[280px] z-50 pointer-events-auto"
                 >
-                  <div className="flex flex-col gap-1 p-2 bg-[#0c0c0e] border border-zinc-800 rounded-2xl shadow-xl backdrop-blur-md">
+                  <div className="flex flex-col gap-1 p-2 bg-zinc-950/80 border border-white/[0.08] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl">
                     {resources.map((item) => (
                       <a
                         key={item.title}
@@ -362,7 +362,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="md:hidden border-t border-zinc-800 bg-[#09090B] w-full absolute left-0 right-0 overflow-hidden"
+            className="md:hidden border-t border-white/[0.08] bg-zinc-950/95 backdrop-blur-xl w-full absolute left-0 right-0 overflow-hidden shadow-2xl"
           >
             <div className="px-6 py-6 flex flex-col gap-5">
               <nav className="flex flex-col gap-4" aria-label="Mobile Navigation">

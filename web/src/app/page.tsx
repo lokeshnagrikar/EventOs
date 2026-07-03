@@ -144,7 +144,8 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
   return (
     <>
       <div className={cn(
-        "min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-650 selection:text-white transition-all duration-500 ease-out origin-center",
+        "min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-650 selection:text-white transition-all duration-1000 ease-out origin-center",
+        preloaderActive ? "opacity-0 scale-[0.97] blur-md" : "opacity-100 scale-100 blur-none",
         isAuthModalOpen ? "blur-md scale-[0.99] pointer-events-none" : ""
       )}>
         {/* Sticky Navigation */}
@@ -155,7 +156,7 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
 
           {/* 1. Hero — above fold, eager loaded */}
           <div id="hero">
-            <Hero />
+            <Hero preloaderActive={preloaderActive} />
           </div>
 
           {/* 2. Trusted By Brand Marquee */}

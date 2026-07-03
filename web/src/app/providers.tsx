@@ -35,6 +35,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     const isLandingPage = pathname === "/";
     let lenis: Lenis | null = null;
     let animationFrameId: number;
+    let observer: MutationObserver | null = null;
 
     if (isLandingPage) {
       lenis = new Lenis({
@@ -46,6 +47,29 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         wheelMultiplier: 1.0,
         touchMultiplier: 1.5,
       });
+
+      // Synchronize Lenis state with body overflow style (locks scroll during preloader or modals)
+      if (document.body.style.overflow === "hidden") {
+        lenis.stop();
+      }
+
+      observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === "style") {
+            const overflow = document.body.style.overflow;
+            if (overflow === "hidden") {
+              lenis?.stop();
+            } else {
+              // Reset window and Lenis scroll position to top on preloader exit
+              window.scrollTo(0, 0);
+              lenis?.scrollTo(0, { immediate: true });
+              lenis?.start();
+            }
+          }
+        });
+      });
+
+      observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
 
       const raf = (time: number) => {
         lenis?.raf(time);
@@ -99,6 +123,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       if (lenis) {
         cancelAnimationFrame(animationFrameId);
         lenis.destroy();
+      }
+      if (observer) {
+        observer.disconnect();
       }
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("open-global-search", handleOpenSearch);

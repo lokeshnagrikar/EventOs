@@ -264,7 +264,7 @@ export default function AiAssistant() {
             exit={{ opacity: 0, x: 100, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             ref={containerRef}
-            className="fixed top-16 bottom-20 left-4 right-4 sm:left-auto sm:right-6 sm:top-20 sm:bottom-24 w-auto sm:w-full sm:max-w-md bg-gradient-to-b from-purple-950/25 via-pink-950/15 to-[#09090b]/85 border border-purple-500/20 rounded-xl sm:rounded-2xl shadow-[0_0_40px_rgba(139,92,246,0.15)] backdrop-blur-xl flex flex-col overflow-hidden z-[9999]"
+            className="fixed top-16 bottom-20 left-4 right-4 sm:left-auto sm:right-6 sm:top-20 sm:bottom-24 w-auto sm:w-full sm:max-w-md bg-zinc-950/80 border border-white/[0.08] rounded-xl sm:rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl flex flex-col overflow-hidden z-[9999]"
           >
             {/* Header */}
             <div className="px-4 py-3.5 border-b border-zinc-850 bg-zinc-900/25 flex items-center justify-between">

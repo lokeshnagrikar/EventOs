@@ -82,7 +82,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
       animate={{ width: isCollapsed ? 76 : 256 }}
       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "flex flex-col justify-between shrink-0 border-r border-zinc-800 bg-[#09090b]/80 backdrop-blur-md sticky top-0 h-screen z-40 select-none overflow-hidden",
+        "flex flex-col justify-between shrink-0 border-r border-white/[0.08] bg-zinc-950/70 backdrop-blur-md sticky top-0 h-screen z-40 select-none overflow-hidden shadow-[4px_0_30px_rgba(0,0,0,0.3)]",
         className
       )}
     >

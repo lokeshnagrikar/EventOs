@@ -151,7 +151,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
   const crumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-30 h-16 w-full border-b border-zinc-800 bg-[#09090b]/70 backdrop-blur-md px-6 flex items-center justify-between transition-colors">
+    <header className="sticky top-0 z-30 h-16 w-full border-b border-white/[0.08] bg-zinc-950/70 backdrop-blur-md px-6 flex items-center justify-between transition-colors shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
       
       {/* Breadcrumbs / Back button */}
       <div className="flex items-center gap-3">
@@ -247,7 +247,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute right-0 mt-2.5 w-80 border border-zinc-800 bg-[#0c0c0e] rounded-2xl shadow-2xl p-4 z-50 overflow-hidden text-xs"
+                  className="absolute right-0 mt-2.5 w-80 border border-white/[0.08] bg-zinc-950/80 backdrop-blur-xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-4 z-50 overflow-hidden text-xs"
                 >
                   <div className="flex items-center justify-between border-b border-zinc-855 pb-3">
                     <span className="font-extrabold text-zinc-200">System Activity notifications</span>

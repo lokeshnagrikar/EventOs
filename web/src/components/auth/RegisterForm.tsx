@@ -13,6 +13,7 @@ import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { AuthLoader } from "./AuthLoader";
+import { cn } from "@/lib/utils";
 import {
   AlertCircle,
   ArrowLeft,
@@ -25,7 +26,9 @@ import {
   Phone,
   Loader2,
   Check,
-  Sparkles
+  Sparkles,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 const registerSchema = z
@@ -33,7 +36,7 @@ const registerSchema = z
     firstName: z.string().min(2, { message: "First name must be at least 2 characters." }),
     lastName: z.string().optional(),
     email: z.string().email({ message: "Please enter a valid email address." }),
-    phone: z.string().min(10, { message: "Please enter a valid phone number (min 10 digits)." }),
+    phone: z.string().regex(/^\+91 \d{10}$/, { message: "Please enter a valid 10-digit phone number." }),
     companyName: z.string().min(3, { message: "Company name must be at least 3 characters." }),
     password: z.string().min(6, { message: "Password must be at least 6 characters." }),
     confirmPassword: z.string(),
@@ -83,6 +86,12 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
   const [success, setSuccess] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [googleAuthenticating, setGoogleAuthenticating] = useState(false);
+  const [shouldShake, setShouldShake] = useState(false);
+
+  const triggerShake = () => {
+    setShouldShake(true);
+    setTimeout(() => setShouldShake(false), 400);
+  };
 
   // 6-digit OTP States
   const [showOtpScreen, setShowOtpScreen] = useState(false);
@@ -92,6 +101,9 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpSuccess, setOtpSuccess] = useState(false);
   const [resendTimer, setResendTimer] = useState(120);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleGoogleSuccess = async ({ idToken, accessToken }: { idToken?: string; accessToken?: string }) => {
     setError(null);
@@ -136,6 +148,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
       const errMsg = err.response?.data?.error?.message || "Google registration failed. Please try again.";
       setError(errMsg);
       addToast(errMsg, "error");
+      triggerShake();
     } finally {
       setLoading(false);
       setGoogleAuthenticating(false);
@@ -149,6 +162,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
     onError: () => {
       setError("Google Sign-Up was cancelled or failed.");
       addToast("Google Sign-Up failed.", "error");
+      triggerShake();
     }
   });
 
@@ -274,6 +288,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
       const serverMsg = err.response?.data?.error?.message || "Invalid or expired OTP code.";
       setOtpError(serverMsg);
       addToast(serverMsg, "error");
+      triggerShake();
     } finally {
       setOtpLoading(false);
     }
@@ -292,6 +307,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
       const serverMsg = err.response?.data?.error?.message || "Failed to resend verification code.";
       setOtpError(serverMsg);
       addToast(serverMsg, "error");
+      triggerShake();
     }
   };
 
@@ -325,6 +341,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
         : "Registration failed. Email might already be registered.";
       setError(errMsg);
       addToast(errMsg, "error");
+      triggerShake();
       setStep(1); // Go back to start
     } finally {
       setLoading(false);
@@ -350,7 +367,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
 
   if (showOtpScreen) {
     return (
-      <div className="space-y-6 animate-slide-in text-center select-none">
+      <div className={cn("space-y-6 animate-slide-in text-center select-none", shouldShake ? "animate-shake" : "")}>
         <div className="mx-auto h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 shadow-md">
           {otpSuccess ? <CheckCircle2 size={24} className="text-emerald-400 animate-scale-in" /> : <Mail size={24} className="animate-pulse" />}
         </div>
@@ -421,7 +438,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
   }
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", shouldShake ? "animate-shake" : "")}>
       {/* Progress header */}
       <div className="text-center space-y-1.5 select-none">
         <div className="mx-auto h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-xl shadow-purple-500/10 select-none transform hover:rotate-12 hover:scale-105 transition-all duration-300">
@@ -432,42 +449,26 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
         </h2>
         <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">The Operating System for Event Businesses</p>
         
-        {/* Step Indicator Bubbles */}
-        <div className="flex items-center justify-between w-full max-w-[280px] mx-auto pt-3 pb-1 select-none relative">
-          {/* Connecting Line background */}
-          <div className="absolute top-[14px] left-0 right-0 h-[2px] bg-zinc-800 z-0 rounded-full" />
-          {/* Active Line background */}
-          <div 
-            className="absolute top-[14px] left-0 h-[2px] bg-gradient-to-r from-purple-500 to-pink-500 z-0 rounded-full transition-all duration-500 ease-out" 
-            style={{ width: step === 1 ? "50%" : "100%" }}
-          />
-          
-          {/* Step 1 Bubble */}
-          <div className="z-10 flex flex-col items-center gap-1.5">
-            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-bold border transition-all duration-300 ${
-              step === 1 
-                ? "bg-purple-600 border-purple-500 text-white shadow-[0_0_12px_rgba(139,92,246,0.4)]" 
-                : "bg-emerald-500/15 border-emerald-500 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
+        {/* Step Indicator */}
+        <div className="w-full max-w-[280px] mx-auto pt-3 pb-1 select-none">
+          <div className="flex justify-between items-center text-[9px] uppercase font-bold tracking-wider mb-2 select-none">
+            <span className={`transition-all duration-300 ${
+              step === 1 ? "text-purple-400 font-extrabold" : "text-emerald-400 font-semibold"
             }`}>
-              {step > 1 ? <Check className="h-3 w-3 stroke-[3]" /> : "1"}
-            </div>
-            <span className={`text-[8px] font-extrabold uppercase tracking-wider transition-colors duration-300 ${
-              step === 1 ? "text-purple-400" : "text-emerald-400"
-            }`}>Owner Info</span>
+              {step > 1 ? "✓ Owner Details" : "1. Owner Details"}
+            </span>
+            <span className={`transition-all duration-300 ${
+              step === 2 ? "text-pink-400 font-extrabold" : "text-zinc-500"
+            }`}>
+              2. Workspace
+            </span>
           </div>
-
-          {/* Step 2 Bubble */}
-          <div className="z-10 flex flex-col items-center gap-1.5">
-            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-bold border transition-all duration-300 ${
-              step === 2 
-                ? "bg-pink-600 border-pink-500 text-white shadow-[0_0_12px_rgba(236,72,153,0.4)]" 
-                : "bg-zinc-900 border-zinc-800 text-zinc-500"
-            }`}>
-              2
-            </div>
-            <span className={`text-[8px] font-extrabold uppercase tracking-wider transition-colors duration-300 ${
-              step === 2 ? "text-pink-400" : "text-zinc-500"
-            }`}>Workspace</span>
+          {/* Progress bar track */}
+          <div className="h-1 w-full bg-zinc-900 rounded-full overflow-hidden border border-white/[0.04]">
+            <div 
+              className="h-full bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#8B5CF6] transition-all duration-500 ease-out rounded-full" 
+              style={{ width: step === 1 ? "50%" : "100%" }}
+            />
           </div>
         </div>
       </div>
@@ -622,7 +623,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   <input
                     id="phone"
                     type="text"
-                    placeholder="9876543210"
+                    placeholder="+91 98765 43210"
                     className={`w-full pl-9 pr-3 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.phone 
                         ? "border-rose-500/50" 
@@ -630,7 +631,17 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                         ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
                         : "border-white/[0.08] hover:border-white/[0.15]"
                     }`}
-                    {...register("phone")}
+                    {...register("phone", {
+                      onChange: (e) => {
+                        let digits = e.target.value.replace(/\D/g, "");
+                        if (digits.startsWith("91")) {
+                          digits = digits.slice(2);
+                        }
+                        digits = digits.slice(0, 10);
+                        const formatted = digits.length > 0 ? `+91 ${digits}` : "";
+                        setValue("phone", formatted, { shouldValidate: true });
+                      }
+                    })}
                     onFocus={() => setFocusedField("phone")}
                     onBlur={(e) => {
                       register("phone").onBlur(e);
@@ -705,9 +716,9 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   }`} />
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className={`w-full pl-9 pr-3 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`w-full pl-9 pr-10 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.password 
                         ? "border-rose-500/50" 
                         : focusedField === "password"
@@ -721,6 +732,13 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                       setFocusedField(null);
                     }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-2 text-zinc-500 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
                 </div>
                 {errors.password && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.password.message}</p>}
                 
@@ -756,9 +774,9 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   }`} />
                   <input
                     id="confirmPassword"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className={`w-full pl-9 pr-3 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`w-full pl-9 pr-10 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.confirmPassword 
                         ? "border-rose-500/50" 
                         : focusedField === "confirmPassword"
@@ -772,6 +790,13 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                       setFocusedField(null);
                     }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-2 text-zinc-500 hover:text-white transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
                 </div>
                 {errors.confirmPassword && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.confirmPassword.message}</p>}
               </div>

@@ -15,7 +15,7 @@ import { useAuthModalStore } from "@/store/authModalStore";
 import { WebGLShader } from "@/components/ui/web-gl-shader";
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 
-export function Hero() {
+export function Hero({ preloaderActive = false }: { preloaderActive?: boolean }) {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const heroRef = useRef<HTMLDivElement>(null);
@@ -53,7 +53,7 @@ export function Hero() {
 
   // GSAP Text Sequence Animation
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || preloaderActive) return;
 
     if (shouldReduceMotion) {
       gsap.set(".gsap-fade", { opacity: 1, y: 0 });
@@ -108,7 +108,7 @@ export function Hero() {
     return () => {
       tl.kill();
     };
-  }, [shouldReduceMotion]);
+  }, [shouldReduceMotion, preloaderActive]);
 
   const openModal = useAuthModalStore((state) => state.openModal);
 

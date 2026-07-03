@@ -8,7 +8,7 @@ import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useToastStore } from "@/lib/toastStore";
 import { Button } from "@/components/ui/button";
-import { KeyRound, ShieldCheck, AlertCircle, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
+import { KeyRound, ShieldCheck, AlertCircle, CheckCircle2, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 const resetSchema = z
   .object({
@@ -23,6 +23,25 @@ const resetSchema = z
 
 type ResetInputs = z.infer<typeof resetSchema>;
 
+const checkPasswordStrength = (password: string) => {
+  if (!password) return { score: 0, label: "", colorClass: "bg-transparent", barWidth: "0%" };
+  let score = 0;
+  if (password.length >= 6) score += 1;
+  if (password.length >= 8) score += 1;
+  if (/[A-Z]/.test(password) && /[0-9]/.test(password)) score += 1;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+  if (score <= 1) {
+    return { score: 1, label: "Weak", colorClass: "bg-rose-500 shadow-rose-500/30", barWidth: "25%" };
+  } else if (score === 2) {
+    return { score: 2, label: "Fair", colorClass: "bg-amber-500 shadow-amber-500/30", barWidth: "50%" };
+  } else if (score === 3) {
+    return { score: 3, label: "Strong", colorClass: "bg-emerald-500 shadow-emerald-500/30", barWidth: "75%" };
+  } else {
+    return { score: 4, label: "Excellent", colorClass: "bg-cyan-500 shadow-cyan-500/30", barWidth: "100%" };
+  }
+};
+
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -31,11 +50,14 @@ function ResetPasswordForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ResetInputs>({
     resolver: zodResolver(resetSchema),
@@ -45,6 +67,9 @@ function ResetPasswordForm() {
       confirmPassword: "",
     },
   });
+
+  const passwordValue = watch("password", "");
+  const strength = checkPasswordStrength(passwordValue);
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -143,15 +168,43 @@ function ResetPasswordForm() {
             <KeyRound className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
             <input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
-              className={`w-full pl-10 pr-4 py-2.5 bg-zinc-950/50 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+              className={`w-full pl-10 pr-10 py-2.5 bg-zinc-950/50 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                 errors.password ? "border-rose-500/50" : "border-zinc-800 focus:border-[#8B5CF6]"
               }`}
               {...register("password")}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3 text-zinc-500 hover:text-white transition-colors"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
           {errors.password && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.password.message}</p>}
+          
+          {passwordValue && (
+            <div className="space-y-1 pt-1 animate-slide-in">
+              <div className="flex justify-between items-center text-[9px] select-none">
+                <span className="text-zinc-500 font-bold uppercase tracking-wider">Password Strength</span>
+                <span className={`font-black uppercase tracking-wider transition-colors duration-300 ${
+                  strength.score === 1 ? "text-rose-400" :
+                  strength.score === 2 ? "text-amber-400" :
+                  strength.score === 3 ? "text-emerald-400" : "text-cyan-400"
+                }`}>
+                  {strength.label}
+                </span>
+              </div>
+              <div className="w-full bg-white/[0.04] border border-white/[0.08] h-1 rounded-full relative overflow-hidden">
+                <div
+                  className={`absolute top-0 left-0 h-full transition-all duration-350 ease-out shadow-[0_0_8px_rgba(139,92,246,0.3)] ${strength.colorClass}`}
+                  style={{ width: strength.barWidth }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Confirm password input */}
@@ -163,13 +216,20 @@ function ResetPasswordForm() {
             <KeyRound className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
             <input
               id="confirmPassword"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               placeholder="••••••••"
-              className={`w-full pl-10 pr-4 py-2.5 bg-zinc-950/50 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+              className={`w-full pl-10 pr-10 py-2.5 bg-zinc-950/50 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                 errors.confirmPassword ? "border-rose-500/50" : "border-zinc-800 focus:border-[#8B5CF6]"
               }`}
               {...register("confirmPassword")}
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-3 text-zinc-500 hover:text-white transition-colors"
+            >
+              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
           {errors.confirmPassword && (
             <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.confirmPassword.message}</p>

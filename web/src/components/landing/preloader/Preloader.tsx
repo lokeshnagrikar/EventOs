@@ -6,8 +6,6 @@ import { AnimatedBackground } from "./AnimatedBackground";
 import { ParticleField } from "./ParticleField";
 import { GlassOrb } from "./GlassOrb";
 import { ProgressRing } from "./ProgressRing";
-import { LoadingStages } from "./LoadingStages";
-import { BootTerminal } from "./BootTerminal";
 import { useLoadingProgress } from "./useLoadingProgress";
 import { EASE_PREMIUM } from "./animations";
 
@@ -28,8 +26,9 @@ export function Preloader({ onComplete }: PreloaderProps) {
   const parallaxY = useTransform(mouseY, [-400, 400], [-8, 8]);
 
   useEffect(() => {
-    // Lock scrolling on mount
+    // Lock scrolling and force top on mount
     document.body.style.overflow = "hidden";
+    window.scrollTo(0, 0);
 
     const isMouseDevice = window.matchMedia("(pointer: fine)").matches;
 
@@ -82,7 +81,6 @@ export function Preloader({ onComplete }: PreloaderProps) {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{
-            y: "-8%",
             opacity: 0,
             transition: { duration: 0.8, ease: EASE_PREMIUM }
           }}
@@ -97,76 +95,67 @@ export function Preloader({ onComplete }: PreloaderProps) {
           {/* Parallax Container holding the UI layout */}
           <motion.div
             style={{ x: parallaxX, y: parallaxY }}
-            className="flex flex-col items-center z-10 max-w-sm w-full px-6 text-center space-y-9"
+            exit={{
+              scale: 2.5,
+              opacity: 0,
+              filter: "blur(10px)",
+              transition: { duration: 0.75, ease: EASE_PREMIUM }
+            }}
+            className="flex flex-col items-center justify-center z-10 max-w-sm w-full px-6 text-center space-y-7"
           >
-            {/* Centerpiece Assembly */}
-            <div className="relative flex items-center justify-center h-56 w-56">
+            {/* 1. Large Brand Mark Silhouette with Shimmer Effect */}
+            <div className="relative flex flex-col items-center gap-4">
               
-              {/* ORBIT SYSTEM (Rings Layered Behind Orb) */}
-              
-              {/* Ring 1: solid thin line */}
-              <div className="absolute h-[132px] w-[132px] rounded-full border border-white/[0.04] pointer-events-none" />
-
-              {/* Ring 2: dashed rotating ring */}
+              {/* Floating Sparkles Icon Silhouette */}
               <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-                className="absolute h-[168px] w-[168px] rounded-full border border-dashed border-purple-500/10 pointer-events-none"
-              />
-
-              {/* Ring 3: glowing gradient arc */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
-                className="absolute h-[190px] w-[190px] rounded-full border-t border-r border-transparent border-t-cyan-500/20 border-r-pink-500/20 pointer-events-none filter blur-[0.5px]"
-              />
-
-              {/* Ring 4: tiny orbit particles */}
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
-                className="absolute h-[220px] w-[220px] rounded-full pointer-events-none"
+                animate={{ 
+                  y: [0, -6, 0],
+                  filter: ["drop-shadow(0 0 10px rgba(168,85,247,0.25))", "drop-shadow(0 0 20px rgba(236,72,153,0.45))", "drop-shadow(0 0 10px rgba(168,85,247,0.25))"]
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-cyan-500 flex items-center justify-center text-white shadow-xl relative overflow-hidden"
               >
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[3.5px] w-[3.5px] rounded-full bg-cyan-400/40 shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[3.5px] w-[3.5px] rounded-full bg-pink-400/40 shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
+                {/* Diagonal shine line sweeping on the icon */}
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent w-[40%] -skew-x-12"
+                  style={{
+                    left: `${(progress * 1.5) - 40}%`
+                  }}
+                />
+                <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M12 3v18M3 12h18M12 3l3.5 5.5L21 12l-5.5 3.5L12 21l-3.5-5.5L3 12l5.5-3.5L12 3z" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </motion.div>
 
-              {/* SVG Spring Progress Ring */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <ProgressRing progress={progress} />
-              </div>
-
-              {/* Floating Glass Orb centerpiece */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <GlassOrb />
+              {/* Shimmering Text Logo */}
+              <div className="space-y-1">
+                <h1 
+                  className="text-4xl font-black tracking-tighter bg-clip-text text-transparent select-none bg-gradient-to-r from-[#18181b] via-purple-300 via-pink-300 via-cyan-300 to-[#18181b] bg-[length:200%_auto] transition-all"
+                  style={{
+                    backgroundPositionX: `${100 - progress}%`
+                  }}
+                >
+                  EventOS
+                </h1>
+                <p className="text-[8px] text-zinc-500 uppercase tracking-[0.25em] font-black pl-[0.25em]">
+                  The Operating System for Event Businesses
+                </p>
               </div>
             </div>
 
-            {/* Typography Header */}
-            <div className="space-y-1.5 pt-1">
-              <motion.h1
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.5, ease: EASE_PREMIUM }}
-                className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white via-purple-100 to-purple-300 drop-shadow-md select-none"
-              >
-                Event<span className="text-purple-400">OS</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.45 }}
-                transition={{ delay: 0.25, duration: 0.5, ease: EASE_PREMIUM }}
-                className="text-[8px] text-zinc-400 uppercase tracking-[0.25em] font-black pl-[0.25em]"
-              >
-                The Operating System for Event Businesses
-              </motion.p>
+            {/* 2. Minimalist Monospace Progress Value */}
+            <div className="space-y-2 pt-1 flex flex-col items-center">
+              <span className="font-mono text-[9px] text-zinc-500 font-bold select-none tracking-wider">
+                {Math.round(progress)}%
+              </span>
+              
+              <div className="w-24 h-[1px] bg-white/[0.04] rounded-full overflow-hidden relative">
+                <div 
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
-
-            {/* Dynamic Loading Stages */}
-            <LoadingStages progress={progress} />
-
-            {/* Live Boot logs console */}
-            <BootTerminal progress={progress} />
           </motion.div>
         </motion.div>
       )}
