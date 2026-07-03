@@ -11,6 +11,8 @@ spring:
       port: ${REDIS_PORT:6379}
   cloud:
     gateway:
+      default-filters:
+        - DeduplicateResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
       globalcors:
         cors-configurations:
           '[/**]':
