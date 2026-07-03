@@ -38,6 +38,7 @@ import {
 } from "@/components/dashboard/DashboardWidgets";
 import CommandPalette from "@/components/CommandPalette";
 import { PageSkeleton, TableSkeleton } from "@/components/ui/skeletons";
+import { BlurFade } from "@/components/ui/blur-fade";
 
 // ─── Error Boundary ────────────────────────────────────────────────────────────
 interface ErrorBoundaryProps {
@@ -365,230 +366,247 @@ export default function DashboardPage() {
 
           {/* ─── KPI METRIC CARDS ─── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visibleKpis.map((kpi) => (
-              <ErrorBoundary key={kpi.id} title={`${kpi.title} Card`}>
-                <KpiCard
-                  title={kpi.title}
-                  value={kpi.value}
-                  subtitle={kpi.subtitle}
-                  icon={kpi.icon}
-                  trend={kpi.trend}
-                  sparklineData={kpi.sparklineData}
-                  gradientAccent={kpi.gradientAccent}
-                  onClick={kpi.onClick}
-                />
-              </ErrorBoundary>
+            {visibleKpis.map((kpi, idx) => (
+              <BlurFade key={kpi.id} spring delay={idx * 0.04} direction="up" offset={10}>
+                <ErrorBoundary title={`${kpi.title} Card`}>
+                  <KpiCard
+                    title={kpi.title}
+                    value={kpi.value}
+                    subtitle={kpi.subtitle}
+                    icon={kpi.icon}
+                    trend={kpi.trend}
+                    sparklineData={kpi.sparklineData}
+                    gradientAccent={kpi.gradientAccent}
+                    onClick={kpi.onClick}
+                  />
+                </ErrorBoundary>
+              </BlurFade>
             ))}
           </div>
 
           {/* ─── AI ENTERPRISE CO-PILOT INSIGHTS ─── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Column 1: Priority Tasks & Overdue Alerts */}
-            <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                <Sparkles size={13} className="text-purple-400" />
-                AI Priorities & Alert Radar
-              </h3>
-              <div className="space-y-3">
-                <div className="p-3 border border-purple-950/20 bg-purple-550/[0.02] rounded-xl text-xs">
-                  <span className="font-bold text-purple-400 block mb-1">Today's Priority</span>
-                  <p className="text-zinc-300 font-medium">Coordinate florist ingress for Rohan & Meera Grand Ballroom setup by 9:00 AM.</p>
-                </div>
-                <div className="p-3 border border-amber-950/20 bg-amber-500/[0.01] rounded-xl text-xs">
-                  <span className="font-bold text-amber-500 block mb-1">Upcoming Deadline</span>
-                  <p className="text-zinc-300 font-medium">Finalize quote estimates for Varun Mehta (Corporate Gala) — expires in 48 hours.</p>
-                </div>
-                <div className="p-3 border border-red-950/20 bg-red-500/[0.01] rounded-xl text-xs">
-                  <span className="font-bold text-red-400 block mb-1">Milestone Payment Overdue</span>
-                  <p className="text-zinc-300 font-medium">INV-2026-042 (Amit Shah) is overdue by 6 days. Client reminder recommended.</p>
+            <BlurFade spring delay={0.12} direction="up" offset={15}>
+              <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all space-y-4 h-full">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                  <Sparkles size={13} className="text-purple-400" />
+                  AI Priorities & Alert Radar
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 border border-purple-950/20 bg-purple-550/[0.02] rounded-xl text-xs">
+                    <span className="font-bold text-purple-400 block mb-1">Today's Priority</span>
+                    <p className="text-zinc-300 font-medium">Coordinate florist ingress for Rohan & Meera Grand Ballroom setup by 9:00 AM.</p>
+                  </div>
+                  <div className="p-3 border border-amber-950/20 bg-amber-500/[0.01] rounded-xl text-xs">
+                    <span className="font-bold text-amber-500 block mb-1">Upcoming Deadline</span>
+                    <p className="text-zinc-300 font-medium">Finalize quote estimates for Varun Mehta (Corporate Gala) — expires in 48 hours.</p>
+                  </div>
+                  <div className="p-3 border border-red-950/20 bg-red-500/[0.01] rounded-xl text-xs">
+                    <span className="font-bold text-red-400 block mb-1">Milestone Payment Overdue</span>
+                    <p className="text-zinc-300 font-medium">INV-2026-042 (Amit Shah) is overdue by 6 days. Client reminder recommended.</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </BlurFade>
 
             {/* Column 2: AI Predictive Analytics / Scheduling Forecasts */}
-            {userRole === "COORDINATOR" ? (
-              <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                  <TrendingUp size={13} className="text-cyan-400" />
-                  AI Logistics Forecasts
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
-                    <span className="text-[10px] text-zinc-500 font-bold block">Venue Utilization</span>
-                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">84.5%</span>
-                    <span className="text-[9px] text-emerald-500 font-bold">↑ Peak slots full</span>
+            <BlurFade spring delay={0.16} direction="up" offset={15}>
+              {userRole === "COORDINATOR" ? (
+                <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all space-y-4 h-full">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                    <TrendingUp size={13} className="text-cyan-400" />
+                    AI Logistics Forecasts
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-bold block">Venue Utilization</span>
+                      <span className="font-mono font-extrabold text-zinc-200 block text-sm">84.5%</span>
+                      <span className="text-[9px] text-emerald-500 font-bold">↑ Peak slots full</span>
+                    </div>
+                    <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-bold block">Staff Efficiency</span>
+                      <span className="font-mono font-extrabold text-zinc-200 block text-sm">92.4%</span>
+                      <span className="text-[9px] text-purple-400 font-bold">Optimal allocation</span>
+                    </div>
+                    <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-bold block">Vendor Lead Time</span>
+                      <span className="font-mono font-extrabold text-zinc-200 block text-sm">1.8 Days</span>
+                      <span className="text-[9px] text-emerald-500 font-bold">↓ 0.4d response</span>
+                    </div>
+                    <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-bold block">Avg Task Completion</span>
+                      <span className="font-mono font-extrabold text-zinc-200 block text-sm">98.2%</span>
+                      <span className="text-[9px] text-emerald-500 font-bold">On schedule</span>
+                    </div>
                   </div>
-                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
-                    <span className="text-[10px] text-zinc-500 font-bold block">Staff Efficiency</span>
-                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">92.4%</span>
-                    <span className="text-[9px] text-purple-400 font-bold">Optimal allocation</span>
-                  </div>
-                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
-                    <span className="text-[10px] text-zinc-500 font-bold block">Vendor Lead Time</span>
-                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">1.8 Days</span>
-                    <span className="text-[9px] text-emerald-500 font-bold">↓ 0.4d response</span>
-                  </div>
-                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
-                    <span className="text-[10px] text-zinc-500 font-bold block">Avg Task Completion</span>
-                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">98.2%</span>
-                    <span className="text-[9px] text-emerald-500 font-bold">On schedule</span>
-                  </div>
-                </div>
-                <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between text-xs">
-                  <div>
-                    <span className="text-[10px] text-zinc-500 font-bold block">Top Performing Category</span>
-                    <span className="font-extrabold text-zinc-250 mt-0.5 block">Staff Coordination (5/5)</span>
-                  </div>
-                  <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-                </div>
-              </div>
-            ) : (
-              <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                  <TrendingUp size={13} className="text-cyan-400" />
-                  AI Business Forecasts
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
-                    <span className="text-[10px] text-zinc-500 font-bold block">Revenue Predict (Q3)</span>
-                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">₹12,40,000</span>
-                    <span className="text-[9px] text-emerald-500 font-bold">↑ 14.5% forecast</span>
-                  </div>
-                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
-                    <span className="text-[10px] text-zinc-500 font-bold block">Booking Pipeline</span>
-                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">+4 Contracts</span>
-                    <span className="text-[9px] text-purple-400 font-bold">High probability</span>
-                  </div>
-                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
-                    <span className="text-[10px] text-zinc-500 font-bold block">Lead Conversion</span>
-                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">34.2%</span>
-                    <span className="text-[9px] text-emerald-500 font-bold">↑ 2.4% this month</span>
-                  </div>
-                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
-                    <span className="text-[10px] text-zinc-500 font-bold block">Average Delay</span>
-                    <span className="font-mono font-extrabold text-zinc-200 block text-sm">4.2 Days</span>
-                    <span className="text-[9px] text-amber-500 font-bold">Payment clearance</span>
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] text-zinc-500 font-bold block">Top Performing Category</span>
+                      <span className="font-extrabold text-zinc-250 mt-0.5 block">Staff Coordination (5/5)</span>
+                    </div>
+                    <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
                   </div>
                 </div>
-                <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between text-xs">
-                  <div>
-                    <span className="text-[10px] text-zinc-500 font-bold block">Top Performing Category</span>
-                    <span className="font-extrabold text-zinc-250 mt-0.5 block">Weddings & Receptions (45%)</span>
+              ) : (
+                <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all space-y-4 h-full">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                    <TrendingUp size={13} className="text-cyan-400" />
+                    AI Business Forecasts
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-bold block">Revenue Predict (Q3)</span>
+                      <span className="font-mono font-extrabold text-zinc-200 block text-sm">₹12,40,000</span>
+                      <span className="text-[9px] text-emerald-500 font-bold">↑ 14.5% forecast</span>
+                    </div>
+                    <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-bold block">Booking Pipeline</span>
+                      <span className="font-mono font-extrabold text-zinc-200 block text-sm">+4 Contracts</span>
+                      <span className="text-[9px] text-purple-400 font-bold">High probability</span>
+                    </div>
+                    <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-bold block">Lead Conversion</span>
+                      <span className="font-mono font-extrabold text-zinc-200 block text-sm">34.2%</span>
+                      <span className="text-[9px] text-emerald-500 font-bold">↑ 2.4% this month</span>
+                    </div>
+                    <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-bold block">Average Delay</span>
+                      <span className="font-mono font-extrabold text-zinc-200 block text-sm">4.2 Days</span>
+                      <span className="text-[9px] text-amber-500 font-bold">Payment clearance</span>
+                    </div>
                   </div>
-                  <span className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+                  <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] text-zinc-500 font-bold block">Top Performing Category</span>
+                      <span className="font-extrabold text-zinc-250 mt-0.5 block">Weddings & Receptions (45%)</span>
+                    </div>
+                    <span className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </BlurFade>
 
             {/* Column 3: Daily Business / Operations Health Index */}
-            <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all flex flex-col justify-between space-y-4">
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                  <CheckCircle size={13} className="text-emerald-450" />
-                  {userRole === "COORDINATOR" ? "Operations Health Index" : "Business Health Index"}
-                </h3>
-                <p className="text-[10px] text-zinc-500 mt-1 font-medium">
-                  {userRole === "COORDINATOR"
-                    ? "Aggregated operational score based on calendar completion, logistics status, & vendor reviews."
-                    : "Aggregated operational score based on cashflows, feedback, & delivery."}
-                </p>
-              </div>
+            <BlurFade spring delay={0.20} direction="up" offset={15}>
+              <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-all flex flex-col justify-between space-y-4 h-full">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                    <CheckCircle size={13} className="text-emerald-450" />
+                    {userRole === "COORDINATOR" ? "Operations Health Index" : "Business Health Index"}
+                  </h3>
+                  <p className="text-[10px] text-zinc-500 mt-1 font-medium">
+                    {userRole === "COORDINATOR"
+                      ? "Aggregated operational score based on calendar completion, logistics status, & vendor reviews."
+                      : "Aggregated operational score based on cashflows, feedback, & delivery."}
+                  </p>
+                </div>
 
-              <div className="flex items-center justify-around py-2">
-                <div className="relative flex items-center justify-center">
-                  {/* Gauge SVG Circle */}
-                  <svg className="w-24 h-24 transform -rotate-90">
-                    <circle cx="48" cy="48" r="40" stroke="#1f1f23" strokeWidth="6" fill="transparent" />
-                    <circle cx="48" cy="48" r="40" stroke="url(#healthGradient)" strokeWidth="6" fill="transparent"
-                      strokeDasharray={251.2} strokeDashoffset={251.2 * (1 - 0.94)} strokeLinecap="round"
-                      className="transition-all duration-1000 ease-out" />
-                    <defs>
-                      <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#c084fc" />
-                        <stop offset="100%" stopColor="#38bdf8" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div className="absolute text-center">
-                    <span className="font-mono text-2xl font-black text-white">94</span>
-                    <span className="text-[10px] text-zinc-550 block font-bold">/100</span>
+                <div className="flex items-center justify-around py-2">
+                  <div className="relative flex items-center justify-center">
+                    {/* Gauge SVG Circle */}
+                    <svg className="w-24 h-24 transform -rotate-90">
+                      <circle cx="48" cy="48" r="40" stroke="#1f1f23" strokeWidth="6" fill="transparent" />
+                      <circle cx="48" cy="48" r="40" stroke="url(#healthGradient)" strokeWidth="6" fill="transparent"
+                        strokeDasharray={251.2} strokeDashoffset={251.2 * (1 - 0.94)} strokeLinecap="round"
+                        className="transition-all duration-1000 ease-out" />
+                      <defs>
+                        <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#c084fc" />
+                          <stop offset="100%" stopColor="#38bdf8" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute text-center">
+                      <span className="font-mono text-2xl font-black text-white">94</span>
+                      <span className="text-[10px] text-zinc-550 block font-bold">/100</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
+                      <span className="text-zinc-400">Ledger Health: <strong className="text-zinc-200">Excellent</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                      <span className="text-zinc-400">Operations: <strong className="text-zinc-200">On Track</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      <span className="text-zinc-400">Client CSAT: <strong className="text-zinc-200">98.2%</strong></span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
-                    <span className="text-zinc-400">Ledger Health: <strong className="text-zinc-200">Excellent</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-                    <span className="text-zinc-400">Operations: <strong className="text-zinc-200">On Track</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    <span className="text-zinc-400">Client CSAT: <strong className="text-zinc-200">98.2%</strong></span>
-                  </div>
+                <div className="text-[10px] text-zinc-500 text-center font-bold uppercase tracking-wider bg-zinc-950/40 py-1.5 rounded-lg border border-zinc-900/60">
+                  Score updated 10m ago
                 </div>
               </div>
-
-              <div className="text-[10px] text-zinc-500 text-center font-bold uppercase tracking-wider bg-zinc-950/40 py-1.5 rounded-lg border border-zinc-900/60">
-                Score updated 10m ago
-              </div>
-            </div>
+            </BlurFade>
           </div>
 
           {/* ─── CHARTS SECTION ─── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
+            <BlurFade spring delay={0.25} direction="up" offset={15} className="lg:col-span-2">
               <ErrorBoundary title="Revenue Stream Graph">
                 <RevenueOverview />
               </ErrorBoundary>
-            </div>
-            <div className="lg:col-span-1">
+            </BlurFade>
+            <BlurFade spring delay={0.29} direction="up" offset={15} className="lg:col-span-1">
               <ErrorBoundary title="Leads Funnel Share">
                 <BookingStatus />
               </ErrorBoundary>
-            </div>
+            </BlurFade>
           </div>
 
           {/* ─── CORE WIDGETS GRID ─── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ErrorBoundary title="Upcoming Event list">
-              <UpcomingEventsWidget 
-                events={dashboard?.upcomingEvents} 
-                isLoading={isLoading} 
-              />
-            </ErrorBoundary>
+            <BlurFade spring delay={0.33} direction="up" offset={15}>
+              <ErrorBoundary title="Upcoming Event list">
+                <UpcomingEventsWidget 
+                  events={dashboard?.upcomingEvents} 
+                  isLoading={isLoading} 
+                />
+              </ErrorBoundary>
+            </BlurFade>
 
-            <ErrorBoundary title="Activity Feed list">
-              <TeamActivityFeedWidget 
-                logs={dashboard?.recentActivity} 
-                isLoading={isLoading} 
-              />
-            </ErrorBoundary>
+            <BlurFade spring delay={0.37} direction="up" offset={15}>
+              <ErrorBoundary title="Activity Feed list">
+                <TeamActivityFeedWidget 
+                  logs={dashboard?.recentActivity} 
+                  isLoading={isLoading} 
+                />
+              </ErrorBoundary>
+            </BlurFade>
 
-            <div className="md:col-span-2">
+            <BlurFade spring delay={0.41} direction="up" offset={15} className="md:col-span-2">
               <ErrorBoundary title="Booking Milestone Timeline">
                 <BookingTimelineWidget isLoading={isLoading} />
               </ErrorBoundary>
-            </div>
+            </BlurFade>
 
-            <ErrorBoundary title="Leads Funnel Analysis">
-              <QuotePipelineWidget isLoading={isLoading} />
-            </ErrorBoundary>
+            <BlurFade spring delay={0.45} direction="up" offset={15}>
+              <ErrorBoundary title="Leads Funnel Analysis">
+                <QuotePipelineWidget isLoading={isLoading} />
+              </ErrorBoundary>
+            </BlurFade>
 
-            <ErrorBoundary title="Recent Enquiries list">
-              <RecentLeadsWidget 
-                leads={dashboard?.upcomingEvents?.slice(0, 3).map((e, idx) => ({
-                  id: e.id,
-                  name: `Client #${idx + 101}`,
-                  phone: "+91 98765 43210",
-                  eventType: e.type,
-                  budget: 85000 + idx * 15000
-                }))}
-                isLoading={isLoading}
-              />
-            </ErrorBoundary>
+            <BlurFade spring delay={0.49} direction="up" offset={15}>
+              <ErrorBoundary title="Recent Enquiries list">
+                <RecentLeadsWidget 
+                  leads={dashboard?.upcomingEvents?.slice(0, 3).map((e, idx) => ({
+                    id: e.id,
+                    name: `Client #${idx + 101}`,
+                    phone: "+91 98765 43210",
+                    eventType: e.type,
+                    shadowColor: "shadow-purple-500/10",
+                    budget: 85000 + idx * 15000
+                  }))}
+                  isLoading={isLoading}
+                />
+              </ErrorBoundary>
+            </BlurFade>
           </div>
 
         </main>

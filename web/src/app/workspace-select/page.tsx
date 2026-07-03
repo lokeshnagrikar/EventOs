@@ -106,7 +106,7 @@ export default function WorkspaceSelectPage() {
 
       <div className="w-full max-w-2xl z-10 space-y-6">
         {/* Header section card */}
-        <BlurFade duration={0.4} delay={0.05} direction="down" offset={10}>
+        <BlurFade spring delay={0.05} direction="down" offset={10}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-zinc-800/80">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-[#8B5CF6] to-[#EC4899] flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-purple-550/20 transform hover:rotate-6 transition-transform select-none">
@@ -154,7 +154,7 @@ export default function WorkspaceSelectPage() {
               .toUpperCase();
 
             return (
-              <BlurFade key={membership.tenantId} duration={0.4} delay={0.1 + idx * 0.05} direction="up" offset={15}>
+              <BlurFade key={membership.tenantId} spring delay={0.1 + idx * 0.05} direction="up" offset={15}>
                 <button
                   disabled={loadingTenantId !== null}
                   onClick={() => handleSwitch(membership.tenantId)}
@@ -209,7 +209,7 @@ export default function WorkspaceSelectPage() {
 
         {/* Empty State */}
         {memberships.length === 0 && (
-          <BlurFade duration={0.4} delay={0.1} direction="up" offset={15}>
+          <BlurFade spring delay={0.1} direction="up" offset={15}>
             <div className="text-center py-12 bg-[#111113]/70 border border-zinc-800/80 rounded-2xl space-y-4 backdrop-blur-md">
               <Building2 size={36} className="mx-auto text-zinc-500 animate-pulse" />
               <div className="space-y-1">
@@ -223,7 +223,7 @@ export default function WorkspaceSelectPage() {
         )}
 
         {/* Footer info */}
-        <BlurFade duration={0.4} delay={0.2} direction="up" offset={10}>
+        <BlurFade spring delay={0.2} direction="up" offset={10}>
           <div className="text-center pt-2 select-none">
             <p className="text-xs text-zinc-500">
               Logged in as <span className="text-zinc-400 font-semibold">{user?.email}</span>

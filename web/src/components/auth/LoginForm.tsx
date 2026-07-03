@@ -14,6 +14,8 @@ import ReCAPTCHA from "react-google-recaptcha";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 import { AuthLoader } from "./AuthLoader";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -40,6 +42,36 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [googleAuthenticating, setGoogleAuthenticating] = useState(false);
+  const [shouldShake, setShouldShake] = useState(false);
+
+  const triggerShake = () => {
+    setShouldShake(true);
+    setTimeout(() => setShouldShake(false), 400);
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.08
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 26
+      }
+    }
+  };
 
   // CAPTCHA State
   const [showCaptcha, setShowCaptcha] = useState(false);
@@ -131,6 +163,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         setError(errorMsg);
         addToast(errorMsg, "error");
         setLoading(false);
+        triggerShake();
         return;
       }
     }
@@ -191,6 +224,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       }
       setError(errMsg);
       addToast(errMsg, "error");
+      triggerShake();
     } finally {
       setLoading(false);
     }
@@ -259,9 +293,14 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   });
 
   return (
-    <div className="space-y-4">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className={cn("space-y-4", shouldShake ? "animate-shake" : "")}
+    >
       {/* Header logo */}
-      <div className="text-center space-y-1.5 select-none">
+      <motion.div variants={itemVariants} className="text-center space-y-1.5 select-none">
         <div className="mx-auto h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-xl shadow-purple-500/10 select-none transform hover:rotate-12 hover:scale-105 transition-all duration-300">
           <Sparkles size={16} className="text-white animate-pulse" />
         </div>
@@ -269,11 +308,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           Event<span className="text-purple-400">OS</span>
         </h2>
         <p className="text-[8px] text-zinc-400 uppercase tracking-widest font-extrabold">The Operating System for Event Businesses</p>
-      </div>
+      </motion.div>
 
       {/* Global Error Banner */}
       {error && (
-        <div className="flex flex-col gap-2 p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-300 animate-slide-in">
+        <motion.div variants={itemVariants} className="flex flex-col gap-2 p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-300 animate-slide-in">
           <div className="flex items-start gap-2.5">
             <AlertCircle size={14} className="shrink-0 mt-0.5" />
             <div className="flex-1">
@@ -292,22 +331,22 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Resend success banner */}
       {resendMessage && (
-        <div className="flex items-start gap-2.5 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300 animate-slide-in">
+        <motion.div variants={itemVariants} className="flex items-start gap-2.5 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300 animate-slide-in">
           <Check size={14} className="shrink-0 mt-0.5" />
           <span>{resendMessage}</span>
-        </div>
+        </motion.div>
       )}
 
 
       {/* Form elements */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         {/* Email input */}
-        <div className="space-y-1">
+        <motion.div variants={itemVariants} className="space-y-1">
           <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="email">
             Email Address
           </label>
@@ -335,10 +374,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             />
           </div>
           {errors.email && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.email.message}</p>}
-        </div>
+        </motion.div>
 
         {/* Password input */}
-        <div className="space-y-1">
+        <motion.div variants={itemVariants} className="space-y-1">
           <div className="flex justify-between items-center">
             <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="password">
               Password
@@ -378,10 +417,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             </button>
           </div>
           {errors.password && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.password.message}</p>}
-        </div>
+        </motion.div>
 
         {/* Remember me option */}
-        <div className="flex items-center space-x-2 py-0.5 select-none">
+        <motion.div variants={itemVariants} className="flex items-center space-x-2 py-0.5 select-none">
           <button
             type="button"
             role="checkbox"
@@ -398,11 +437,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           <span className="text-[11px] text-zinc-400 font-medium cursor-pointer" onClick={() => setValue("rememberMe", !rememberMeValue)}>
             Remember me
           </span>
-        </div>
+        </motion.div>
 
         {/* CAPTCHA challenges */}
         {showCaptcha && (
-          <div className="space-y-2 p-2.5 bg-white/[0.02] border border-white/[0.08] rounded-xl animate-slide-in">
+          <motion.div variants={itemVariants} className="space-y-2 p-2.5 bg-white/[0.02] border border-white/[0.08] rounded-xl animate-slide-in">
             <div className="flex justify-between items-center">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                 Security Verification
@@ -452,35 +491,37 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Action button */}
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-1.5"
-        >
-          {loading ? (
-            <>
-              <Loader2 size={12} className="animate-spin" />
-              <span>Verifying...</span>
-            </>
-          ) : (
-            "Sign In"
-          )}
-        </Button>
+        <motion.div variants={itemVariants}>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-1.5"
+          >
+            {loading ? (
+              <>
+                <Loader2 size={12} className="animate-spin" />
+                <span>Verifying...</span>
+              </>
+            ) : (
+              "Sign In"
+            )}
+          </Button>
+        </motion.div>
       </form>
 
       {/* Social login separator */}
-      <div className="relative flex py-1 items-center">
+      <motion.div variants={itemVariants} className="relative flex py-1 items-center">
         <div className="flex-grow border-t border-zinc-850"></div>
         <span className="flex-shrink mx-3 text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Or continue with</span>
         <div className="flex-grow border-t border-zinc-850"></div>
-      </div>
+      </motion.div>
 
       {/* Social buttons */}
-      <div className="w-full flex justify-center py-1">
+      <motion.div variants={itemVariants} className="w-full flex justify-center py-1">
         <button
           type="button"
           disabled={loading || googleAuthenticating}
@@ -507,10 +548,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           </svg>
           <span>{googleAuthenticating ? "Authenticating..." : "Continue with Google"}</span>
         </button>
-      </div>
+      </motion.div>
 
       {/* Footer sign up redirection */}
-      <div className="text-center pt-3 border-t border-zinc-850">
+      <motion.div variants={itemVariants} className="text-center pt-3 border-t border-zinc-850">
         <p className="text-[11px] text-zinc-400">
           Don't have an account?{" "}
           {isModal ? (
@@ -527,8 +568,8 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             </a>
           )}
         </p>
-      </div>
+      </motion.div>
       <AuthLoader isOpen={googleAuthenticating} type="login" />
-    </div>
+    </motion.div>
   );
 }

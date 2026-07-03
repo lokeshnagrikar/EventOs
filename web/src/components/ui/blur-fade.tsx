@@ -26,6 +26,7 @@ interface BlurFadeProps extends MotionProps {
   inView?: boolean
   inViewMargin?: MarginType
   blur?: string
+  spring?: boolean
 }
 
 const getFilter = (v: Variants[string]) =>
@@ -42,6 +43,7 @@ export function BlurFade({
   inView = false,
   inViewMargin = "-50px",
   blur = "6px",
+  spring = false,
   ...props
 }: BlurFadeProps) {
   const ref = useRef(null)
@@ -80,9 +82,18 @@ export function BlurFade({
         variants={combinedVariants}
         transition={{
           delay: 0.04 + delay,
-          duration,
-          ease: "easeOut",
-          ...(shouldTransitionFilter ? { filter: { duration } } : {}),
+          ...(spring
+            ? {
+                type: "spring",
+                stiffness: 260,
+                damping: 26,
+                mass: 1,
+              }
+            : {
+                duration,
+                ease: "easeOut",
+                ...(shouldTransitionFilter ? { filter: { duration } } : {}),
+              }),
         }}
         className={className}
         {...props}
