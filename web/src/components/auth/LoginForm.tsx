@@ -12,7 +12,7 @@ import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles } fr
 import { Button } from "@/components/ui/button";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useAuthModalStore } from "@/store/authModalStore";
-import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import { AuthLoader } from "./AuthLoader";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -66,7 +66,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
         damping: 26
       }
