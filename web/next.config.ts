@@ -26,10 +26,16 @@ const nextConfig: NextConfig = {
     return config;
   },
   async rewrites() {
+    const gatewayUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+    // Strip trailing '/api/v1' if present so destination can append it cleanly
+    const gatewayBase = gatewayUrl.endsWith("/api/v1") 
+      ? gatewayUrl.slice(0, -7) 
+      : gatewayUrl;
+    
     return [
       {
         source: "/api/v1/:path*",
-        destination: "http://localhost:8080/api/v1/:path*", // Route requests through API Gateway
+        destination: `${gatewayBase}/api/v1/:path*`,
       },
     ];
   },
