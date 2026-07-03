@@ -7,7 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "spring.data.redis.repositories.enabled=false"
+        "spring.data.redis.repositories.enabled=false",
+        "spring.data.redis.url=redis://localhost:6379"
 })
 public class ApiGatewayApplicationTest {
 
