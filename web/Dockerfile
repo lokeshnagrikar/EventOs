@@ -1,5 +1,16 @@
 # Stage 1: Build Next.js project
 FROM node:20-alpine AS builder
+
+# Declare build arguments so Render environment variables are passed to next build
+ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
+# Set them as environment variables during build time
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_RECAPTCHA_SITE_KEY=$NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
 WORKDIR /app
 COPY package*.json ./
 COPY .npmrc ./
