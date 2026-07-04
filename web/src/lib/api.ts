@@ -1,9 +1,18 @@
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname.includes('onrender.com')) {
+      return 'https://eventos-api-gateway.onrender.com/api/v1';
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+};
+
 // Axios client pointed to next.config.ts rewrites path (/api/v1 -> Gateway port 8080)
 export const api = axios.create({
-  baseURL: "/api/v1",
+  baseURL: getBaseURL(),
   headers: {
     "Content-Type": "application/json",
   },
@@ -75,7 +84,7 @@ api.interceptors.response.use(
 
       return new Promise((resolve, reject) => {
         axios.post(
-          "/api/v1/auth/refresh",
+          `${getBaseURL()}/auth/refresh`,
           {},
           { withCredentials: true }
         )
@@ -93,7 +102,7 @@ api.interceptors.response.use(
             }
             // Clear baseURL override if Axios set it to an absolute url during redirect
             if (originalRequest.baseURL && originalRequest.baseURL.startsWith("http://localhost:8")) {
-              originalRequest.baseURL = "/api/v1";
+              originalRequest.baseURL = getBaseURL();
             }
 
             if (originalRequest.headers) {

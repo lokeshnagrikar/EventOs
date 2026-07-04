@@ -1,8 +1,17 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../store/authStore';
 
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname.includes('onrender.com')) {
+      return 'https://eventos-api-gateway.onrender.com/api/v1';
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+};
+
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1',
+  baseURL: getBaseURL(),
   withCredentials: true, // Auto attach HttpOnly refresh token cookie
 });
 
