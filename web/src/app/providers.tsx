@@ -78,10 +78,16 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       animationFrameId = requestAnimationFrame(raf);
     }
 
-    // Register PWA Service Worker on client-side mount (production only to avoid dev HMR caching issues)
-    if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
-      navigator.serviceWorker.register("/sw.js").catch((err) => {
-        console.warn("PWA ServiceWorker registration skipped/failed: ", err);
+    // Unregister active Service Workers to prevent caching and redirect issues in production
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister().then((success) => {
+            if (success) console.log("Unregistered stale service worker successfully.");
+          });
+        }
+      }).catch((err) => {
+        console.warn("Failed to unregister service worker: ", err);
       });
     }
 

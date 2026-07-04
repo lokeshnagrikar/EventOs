@@ -36,19 +36,23 @@ public class AuthController {
     @Autowired
     private com.eventos.auth.service.JwtService jwtService;
 
-    @org.springframework.beans.factory.annotation.Value("${app.security.cookie.secure:true}")
-    private boolean secureCookie;
+    @org.springframework.beans.factory.annotation.Value("${app.security.cookie.secure:#{null}}")
+    private Boolean secureCookieOverride;
 
-    @org.springframework.beans.factory.annotation.Value("${app.security.cookie.samesite:None}")
-    private String sameSitePolicy;
+    @org.springframework.beans.factory.annotation.Value("${app.security.cookie.samesite:#{null}}")
+    private String sameSitePolicyOverride;
 
     private ResponseCookie createRefreshTokenCookie(String token, long maxAge) {
+        boolean isRender = System.getenv("RENDER") != null;
+        boolean secure = secureCookieOverride != null ? secureCookieOverride : isRender;
+        String sameSite = sameSitePolicyOverride != null ? sameSitePolicyOverride : (isRender ? "None" : "Lax");
+
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
-                .secure(secureCookie)
+                .secure(secure)
                 .path("/api/v1/auth")
                 .maxAge(maxAge)
-                .sameSite(sameSitePolicy)
+                .sameSite(sameSite)
                 .build();
     }
 

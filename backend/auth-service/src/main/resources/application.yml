@@ -69,8 +69,8 @@ app:
   security:
     log-tokens: ${LOG_SENSITIVE_TOKENS:true}
     cookie:
-      secure: ${COOKIE_SECURE:false}
-      samesite: ${COOKIE_SAMESITE:Lax}
+      secure: ${COOKIE_SECURE:}
+      samesite: ${COOKIE_SAMESITE:}
   recaptcha:
     enabled: ${RECAPTCHA_ENABLED:false}
     secret-key: ${RECAPTCHA_SECRET_KEY:}
