@@ -61,13 +61,15 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
-      const port = window.location.port;
       
-      if (hostname === "localhost" && port === "3000") {
+      if (hostname.includes("onrender.com")) {
+        // Production Render: connect directly to API Gateway WebSocket endpoint
+        wsUrl = `wss://eventos-api-gateway.onrender.com/api/v1/auth/ws`;
+      } else if (hostname === "localhost") {
         // Local development: connect directly to API Gateway port 8080
         wsUrl = `${protocol}//localhost:8080/api/v1/auth/ws`;
       } else {
-        // Production / Docker: route via the API Gateway endpoint
+        // Other environments: route via host
         wsUrl = `${protocol}//${window.location.host}/api/v1/auth/ws`;
       }
     }
