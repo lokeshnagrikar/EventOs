@@ -36,6 +36,22 @@ public class AuthController {
     @Autowired
     private com.eventos.auth.service.JwtService jwtService;
 
+    @org.springframework.beans.factory.annotation.Value("${app.security.cookie.secure:true}")
+    private boolean secureCookie;
+
+    @org.springframework.beans.factory.annotation.Value("${app.security.cookie.samesite:None}")
+    private String sameSitePolicy;
+
+    private ResponseCookie createRefreshTokenCookie(String token, long maxAge) {
+        return ResponseCookie.from("refreshToken", token)
+                .httpOnly(true)
+                .secure(secureCookie)
+                .path("/api/v1/auth")
+                .maxAge(maxAge)
+                .sameSite(sameSitePolicy)
+                .build();
+    }
+
     public AuthController(AuthService authService, RecaptchaService recaptchaService) {
         this.authService = authService;
         this.recaptchaService = recaptchaService;
@@ -110,13 +126,7 @@ public class AuthController {
                     request.getCaptchaId(), request.getCaptchaValue());
             String refreshToken = (String) authData.get("refreshToken");
 
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-                    .httpOnly(true)
-                    .secure(false) // Set to true in prod with SSL
-                    .path("/api/v1/auth")
-                    .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Lax")
-                    .build();
+            ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             authData.remove("refreshToken");
@@ -199,13 +209,7 @@ public class AuthController {
                     idToken, accessToken, selectTenantId, ipAddress, deviceModel, osName, browser, userAgent);
             String refreshToken = (String) authData.get("refreshToken");
 
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-                    .httpOnly(true)
-                    .secure(false) // Set to true in prod with SSL
-                    .path("/api/v1/auth")
-                    .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Lax")
-                    .build();
+            ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             authData.remove("refreshToken");
@@ -338,13 +342,7 @@ public class AuthController {
             String newRefreshToken = (String) result.get("refreshToken");
 
             // Set rotated refresh token cookie
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
-                    .httpOnly(true)
-                    .secure(false) // Set to true in prod with SSL
-                    .path("/api/v1/auth")
-                    .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Lax")
-                    .build();
+            ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             result.remove("refreshToken");
@@ -355,11 +353,7 @@ public class AuthController {
             return ResponseEntity.ok(successResponse);
         } catch (SecurityException e) {
             // Replay attack detected. Invalidate cookies.
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                    .httpOnly(true)
-                    .path("/api/v1/auth")
-                    .maxAge(0)
-                    .build();
+            ResponseCookie cookie = createRefreshTokenCookie("", 0);
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(createErrorResponse("REPLAY_ATTACK_DETECTED", e.getMessage()));
@@ -394,11 +388,7 @@ public class AuthController {
             }
         }
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .path("/api/v1/auth")
-                .maxAge(0)
-                .build();
+        ResponseCookie cookie = createRefreshTokenCookie("", 0);
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         Map<String, Object> successResponse = new HashMap<>();
@@ -674,13 +664,7 @@ public class AuthController {
             String newRefreshToken = (String) result.get("refreshToken");
 
             // Set new refresh token cookie
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
-                    .httpOnly(true)
-                    .secure(false) // Set to true in prod with SSL
-                    .path("/api/v1/auth")
-                    .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Lax")
-                    .build();
+            ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             result.remove("refreshToken");

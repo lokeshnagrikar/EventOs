@@ -62,10 +62,15 @@ app:
     secret: ${JWT_SECRET_KEY:9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d}
     expiration-ms: ${JWT_EXPIRATION_MS:900000}          # 15 mins
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
+    private-key: ${JWT_PRIVATE_KEY:}
+    public-key: ${JWT_PUBLIC_KEY:}
   gateway:
     secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
   security:
     log-tokens: ${LOG_SENSITIVE_TOKENS:true}
+    cookie:
+      secure: ${COOKIE_SECURE:false}
+      samesite: ${COOKIE_SAMESITE:Lax}
   recaptcha:
     enabled: ${RECAPTCHA_ENABLED:false}
     secret-key: ${RECAPTCHA_SECRET_KEY:}

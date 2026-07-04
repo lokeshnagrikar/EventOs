@@ -40,6 +40,12 @@ public class JwtService {
     private RSAPublicKey publicKey;
     private io.jsonwebtoken.JwtParser jwtParser;
 
+    @Value("${app.jwt.secret:}")
+    private String jwtSecret;
+
+    private javax.crypto.SecretKey symmetricKey;
+    private boolean useSymmetric = false;
+
     @jakarta.annotation.PostConstruct
     public void init() {
         try {
@@ -75,39 +81,30 @@ public class JwtService {
                     String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
                     this.privateKey = parsePrivateKey(privatePem);
                     this.publicKey = parsePublicKey(publicPem);
+                } else if (jwtSecret != null && !jwtSecret.trim().isEmpty() && jwtSecret.length() >= 32) {
+                    byte[] secretBytes = jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                    this.symmetricKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretBytes);
+                    this.useSymmetric = true;
                 } else {
                     KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
                     keyGen.initialize(2048);
                     KeyPair keyPair = keyGen.generateKeyPair();
                     this.privateKey = (RSAPrivateKey) keyPair.getPrivate();
                     this.publicKey = (RSAPublicKey) keyPair.getPublic();
-
-                    // Ensure directory exists
-                    java.io.File parentDir = privateKeyFile.getParentFile();
-                    if (parentDir != null && !parentDir.exists()) {
-                        parentDir.mkdirs();
-                    }
-
-                    // Write them to files
-                    String privatePem = "-----BEGIN PRIVATE KEY-----\n" +
-                            Base64.getMimeEncoder(64, new byte[]{'\n'}).encodeToString(privateKey.getEncoded()) +
-                            "\n-----END PRIVATE KEY-----";
-                    java.nio.file.Files.writeString(privateKeyFile.toPath(), privatePem);
-
-                    String publicPem = "-----BEGIN PUBLIC KEY-----\n" +
-                            Base64.getMimeEncoder(64, new byte[]{'\n'}).encodeToString(publicKey.getEncoded()) +
-                            "\n-----END PUBLIC KEY-----";
-                    java.nio.file.Files.writeString(publicKeyFile.toPath(), publicPem);
                 }
             } else {
                 this.privateKey = parsePrivateKey(rawPrivateKey);
                 this.publicKey = parsePublicKey(rawPublicKey);
             }
-            this.jwtParser = Jwts.parser()
-                    .verifyWith(publicKey)
-                    .build();
+            io.jsonwebtoken.JwtParserBuilder parserBuilder = Jwts.parser();
+            if (useSymmetric) {
+                parserBuilder.verifyWith(symmetricKey);
+            } else {
+                parserBuilder.verifyWith(publicKey);
+            }
+            this.jwtParser = parserBuilder.build();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize RS256 Cryptographic Keys", e);
+            throw new RuntimeException("Failed to initialize JWT Cryptographic Keys", e);
         }
     }
 
@@ -132,13 +129,23 @@ public class JwtService {
         claims.put("email", user.getEmail());
         claims.put("impersonated", false);
 
-        return Jwts.builder()
-                .claims(claims)
-                .subject(user.getEmail())
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(privateKey, Jwts.SIG.RS256)
-                .compact();
+        if (useSymmetric) {
+            return Jwts.builder()
+                    .claims(claims)
+                    .subject(user.getEmail())
+                    .issuedAt(new Date())
+                    .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                    .signWith(symmetricKey, Jwts.SIG.HS256)
+                    .compact();
+        } else {
+            return Jwts.builder()
+                    .claims(claims)
+                    .subject(user.getEmail())
+                    .issuedAt(new Date())
+                    .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                    .signWith(privateKey, Jwts.SIG.RS256)
+                    .compact();
+        }
     }
 
     public String getEmailFromToken(String token) {

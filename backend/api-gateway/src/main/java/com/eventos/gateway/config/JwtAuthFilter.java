@@ -61,6 +61,12 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/actuator"
     );
 
+    @Value("${app.jwt.secret:}")
+    private String jwtSecret;
+
+    private javax.crypto.SecretKey symmetricKey;
+    private boolean useSymmetric = false;
+
     @jakarta.annotation.PostConstruct
     public void init() {
         try {
@@ -95,40 +101,32 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
                     String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
                     this.publicKey = parsePublicKey(publicPem);
                     log.info("Successfully loaded shared JWT RSA public key from file.");
+                } else if (jwtSecret != null && !jwtSecret.trim().isEmpty() && jwtSecret.length() >= 32) {
+                    byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+                    this.symmetricKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretBytes);
+                    this.useSymmetric = true;
+                    log.info("Gateway: Fallback to symmetric HS256 JWT validation enabled.");
                 } else {
                     java.security.KeyPairGenerator keyGen = java.security.KeyPairGenerator.getInstance("RSA");
                     keyGen.initialize(2048);
                     java.security.KeyPair keyPair = keyGen.generateKeyPair();
                     this.publicKey = (RSAPublicKey) keyPair.getPublic();
-
-                    // Ensure directory exists
-                    java.io.File parentDir = privateKeyFile.getParentFile();
-                    if (parentDir != null && !parentDir.exists()) {
-                        parentDir.mkdirs();
-                    }
-
-                    // Write public and private keys so Auth Service can load the private key
-                    String privatePem = "-----BEGIN PRIVATE KEY-----\n" +
-                            Base64.getMimeEncoder(64, new byte[]{'\n'}).encodeToString(keyPair.getPrivate().getEncoded()) +
-                            "\n-----END PRIVATE KEY-----";
-                    java.nio.file.Files.writeString(privateKeyFile.toPath(), privatePem);
-
-                    String publicPem = "-----BEGIN PUBLIC KEY-----\n" +
-                            Base64.getMimeEncoder(64, new byte[]{'\n'}).encodeToString(keyPair.getPublic().getEncoded()) +
-                            "\n-----END PUBLIC KEY-----";
-                    java.nio.file.Files.writeString(publicKeyFile.toPath(), publicPem);
-                    log.info("Generated and wrote shared JWT RSA keypair to file.");
                 }
             } else {
                 this.publicKey = parsePublicKey(rawPublicKey);
                 log.info("Successfully loaded JWT RSA public key for RS256 validation.");
             }
-            this.jwtParser = Jwts.parser()
-                    .verifyWith(publicKey)
-                    .build();
+
+            io.jsonwebtoken.JwtParserBuilder parserBuilder = Jwts.parser();
+            if (useSymmetric) {
+                parserBuilder.verifyWith(symmetricKey);
+            } else {
+                parserBuilder.verifyWith(publicKey);
+            }
+            this.jwtParser = parserBuilder.build();
         } catch (Exception e) {
-            log.error("Failed to initialize RS256 Cryptographic Key Parser", e);
-            throw new RuntimeException("Failed to initialize RS256 public key validation", e);
+            log.error("Failed to initialize JWT Cryptographic Key Parser", e);
+            throw new RuntimeException("Failed to initialize JWT public key validation", e);
         }
     }
 
