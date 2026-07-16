@@ -201,6 +201,15 @@ public class GalleryItemService {
                 .build();
     }
 
+    /**
+     * Uploads a profile avatar image to Cloudinary without needing an albumId.
+     * Used exclusively for the user profile picture upload feature.
+     * Returns the raw Cloudinary upload result map (secure_url, public_id, etc.)
+     */
+    public Map<String, Object> uploadAvatarToCloudinary(org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+        return cloudinaryService.upload(file);
+    }
+
     @Transactional
     public GalleryItemResponseDto confirmUpload(ConfirmUploadDto dto, UUID tenantId) {
         Album album = albumRepository.findByIdAndTenantId(dto.getAlbumId(), tenantId)

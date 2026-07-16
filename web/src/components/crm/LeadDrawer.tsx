@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -14,7 +14,7 @@ import {
   DollarSign, 
   FileText, 
   Clock, 
-  Activity, 
+  Activity as ActivityIcon, 
   CheckSquare, 
   Plus, 
   Trash2, 
@@ -35,7 +35,11 @@ import {
   MapPin,
   ExternalLink,
   RefreshCw,
-  GitMerge
+  GitMerge,
+  Pin,
+  Search,
+  Check,
+  Award
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -78,6 +82,13 @@ interface CommLog {
   staffName: string;
 }
 
+interface RichNote {
+  id: string;
+  text: string;
+  isPinned: boolean;
+  createdAt: string;
+}
+
 export default function LeadDrawer({
   leadId,
   onClose,
@@ -91,7 +102,11 @@ export default function LeadDrawer({
   const lead = leads.find((l) => l.id === leadId);
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"overview" | "contact" | "quotes" | "tasks" | "comms" | "timeline">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "contact" | "quotes" | "tasks" | "notes" | "comms" | "timeline">("overview");
+
+  // Autosave status indicator
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Core Form Fields State
   const [editName, setEditName] = useState("");
@@ -126,6 +141,7 @@ export default function LeadDrawer({
   // Lists stored locally in metadata
   const [leadTasks, setLeadTasks] = useState<TaskItem[]>([]);
   const [commLogs, setCommLogs] = useState<CommLog[]>([]);
+  const [richNotes, setRichNotes] = useState<RichNote[]>([]);
 
   // Task Input States
   const [newTaskText, setNewTaskText] = useState("");
@@ -137,13 +153,13 @@ export default function LeadDrawer({
   const [newCommType, setNewCommType] = useState<"CALL" | "EMAIL" | "MEETING" | "WHATSAPP" | "SMS">("CALL");
   const [newCommText, setNewCommText] = useState("");
 
+  // Notes Search/Add State
+  const [noteSearchQuery, setNoteSearchQuery] = useState("");
+  const [newNoteText, setNewNoteText] = useState("");
+
   // Custom Field Input States
   const [newFieldKey, setNewFieldKey] = useState("");
   const [newFieldValue, setNewFieldValue] = useState("");
-
-  // Attachment Input States
-  const [newAttachName, setNewAttachName] = useState("");
-  const [newAttachUrl, setNewAttachUrl] = useState("");
 
   // Fetch Quotes for this Lead
   const { data: quotesRes } = useQuery({
@@ -195,6 +211,7 @@ export default function LeadDrawer({
           // Tasks & Comms
           setLeadTasks(meta.tasks || []);
           setCommLogs(meta.comms || []);
+          setRichNotes(meta.richNotes || []);
         } catch (e) {
           setRawNotesText(lead.notes || "");
           resetMetadataFields();
@@ -224,60 +241,151 @@ export default function LeadDrawer({
     setGuestCount(100);
     setLeadTasks([]);
     setCommLogs([]);
+    setRichNotes([]);
   };
 
-  // Compile current form and metadata into updates object, serializing notes as JSON
-  const saveLeadMetadata = (customNotesText?: string, customTasks?: TaskItem[], customComms?: CommLog[], customFieldsList?: CustomField[], customAttachments?: Attachment[], customContactProfile?: any) => {
-    const serializedNotes = JSON.stringify({
-      notes: customNotesText !== undefined ? customNotesText : rawNotesText,
-      priority: leadPriority,
-      probability: probabilityPercent,
-      referral: referralName,
-      customFields: customFieldsList || customFields,
-      attachments: customAttachments || attachments,
-      contactProfile: customContactProfile || {
+  // Auto-Save Handler
+  const triggerAutoSave = (updatedFields: Partial<{
+    name: string;
+    phone: string;
+    email: string;
+    eventType: string;
+    eventDate: string;
+    budget: number;
+    leadSource: string;
+    assignedUserId: string;
+    priority: "HIGH" | "MEDIUM" | "LOW";
+    probability: number;
+    notesText: string;
+    tasks: TaskItem[];
+    comms: CommLog[];
+    richNotesList: RichNote[];
+    streetAddr: string;
+    compName: string;
+    anniversary: string;
+    birthday: string;
+    guests: number;
+    insta: string;
+    fb: string;
+  }> = {}) => {
+    setSaveStatus("saving");
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+
+    saveTimeoutRef.current = setTimeout(() => {
+      const mergedName = updatedFields.name !== undefined ? updatedFields.name : editName;
+      const mergedPhone = updatedFields.phone !== undefined ? updatedFields.phone : editPhone;
+      const mergedEmail = updatedFields.email !== undefined ? updatedFields.email : editEmail;
+      const mergedEventType = updatedFields.eventType !== undefined ? updatedFields.eventType : editEventType;
+      const mergedEventDate = updatedFields.eventDate !== undefined ? updatedFields.eventDate : editEventDate;
+      const mergedBudget = updatedFields.budget !== undefined ? updatedFields.budget : editBudget;
+      const mergedSource = updatedFields.leadSource !== undefined ? updatedFields.leadSource : editSource;
+      const mergedAssignee = updatedFields.assignedUserId !== undefined ? updatedFields.assignedUserId : editAssignee;
+
+      const mergedPriority = updatedFields.priority !== undefined ? updatedFields.priority : leadPriority;
+      const mergedProbability = updatedFields.probability !== undefined ? updatedFields.probability : probabilityPercent;
+      const mergedNotesText = updatedFields.notesText !== undefined ? updatedFields.notesText : rawNotesText;
+      const mergedTasks = updatedFields.tasks !== undefined ? updatedFields.tasks : leadTasks;
+      const mergedComms = updatedFields.comms !== undefined ? updatedFields.comms : commLogs;
+      const mergedRichNotes = updatedFields.richNotesList !== undefined ? updatedFields.richNotesList : richNotes;
+
+      const cp = {
         altPhones,
         altEmails,
-        address: streetAddress,
-        companyName,
-        anniversary: anniversaryDate,
-        birthday: birthdayDate,
+        address: updatedFields.streetAddr !== undefined ? updatedFields.streetAddr : streetAddress,
+        companyName: updatedFields.compName !== undefined ? updatedFields.compName : companyName,
+        anniversary: updatedFields.anniversary !== undefined ? updatedFields.anniversary : anniversaryDate,
+        birthday: updatedFields.birthday !== undefined ? updatedFields.birthday : birthdayDate,
         favTheme,
-        instagram: socialInsta,
-        facebook: socialFb,
-        guestCount
-      },
-      tasks: customTasks || leadTasks,
-      comms: customComms || commLogs
-    });
+        instagram: updatedFields.insta !== undefined ? updatedFields.insta : socialInsta,
+        facebook: updatedFields.fb !== undefined ? updatedFields.fb : socialFb,
+        guestCount: updatedFields.guests !== undefined ? updatedFields.guests : guestCount
+      };
 
-    onUpdateLead({
-      name: editName,
-      phone: editPhone || null,
-      email: editEmail || null,
-      eventType: editEventType,
-      eventDate: editEventDate || null,
-      budget: Number(editBudget),
-      leadSource: editSource,
-      notes: serializedNotes,
-      assignedUserId: editAssignee || null
-    });
+      const serializedNotes = JSON.stringify({
+        notes: mergedNotesText,
+        priority: mergedPriority,
+        probability: mergedProbability,
+        referral: referralName,
+        customFields,
+        attachments,
+        contactProfile: cp,
+        tasks: mergedTasks,
+        comms: mergedComms,
+        richNotes: mergedRichNotes
+      });
+
+      onUpdateLead({
+        name: mergedName,
+        phone: mergedPhone || null,
+        email: mergedEmail || null,
+        eventType: mergedEventType,
+        eventDate: mergedEventDate || null,
+        budget: Number(mergedBudget),
+        leadSource: mergedSource,
+        notes: serializedNotes,
+        assignedUserId: mergedAssignee || null
+      });
+
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 1500);
+    }, 400);
   };
 
-  // Calculate completeness score (AI-ready lead score)
-  const calculateLeadScore = () => {
+  // Compile lead score
+  const leadScore = (() => {
     let score = 0;
     if (editName) score += 20;
-    if (editPhone || lead?.contact?.phone) score += 20;
-    if (editEmail || lead?.contact?.email) score += 20;
+    if (editPhone) score += 20;
+    if (editEmail) score += 20;
     if (editEventDate) score += 20;
     if (editBudget > 0) score += 20;
     return score;
+  })();
+
+  // Pin / Add Notes
+  const handleAddRichNote = () => {
+    if (!newNoteText.trim()) return;
+    const nextNote: RichNote = {
+      id: Date.now().toString(),
+      text: newNoteText,
+      isPinned: false,
+      createdAt: new Date().toISOString()
+    };
+    const updated = [nextNote, ...richNotes];
+    setRichNotes(updated);
+    setNewNoteText("");
+    triggerAutoSave({ richNotesList: updated });
+    onAddActivity("NOTE", "New rich text note added to repository");
   };
 
-  const leadScore = calculateLeadScore();
+  const handleTogglePinNote = (noteId: string) => {
+    const updated = richNotes.map(n => n.id === noteId ? { ...n, isPinned: !n.isPinned } : n);
+    setRichNotes(updated);
+    triggerAutoSave({ richNotesList: updated });
+  };
+
+  const handleDeleteRichNote = (noteId: string) => {
+    const updated = richNotes.filter(n => n.id !== noteId);
+    setRichNotes(updated);
+    triggerAutoSave({ richNotesList: updated });
+  };
+
+  // Tasks Checklist complete
+  const handleToggleTask = (taskId: string) => {
+    const updated = leadTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
+    setLeadTasks(updated);
+    triggerAutoSave({ tasks: updated });
+    const task = leadTasks.find(t => t.id === taskId);
+    if (task) {
+      onAddActivity("TASK", `Task "${task.text}" marked as ${!task.completed ? "COMPLETED" : "INCOMPLETE"}`);
+    }
+  };
 
   if (!lead) return null;
+
+  const filteredRichNotes = richNotes.filter(n => 
+    n.text.toLowerCase().includes(noteSearchQuery.toLowerCase())
+  );
 
   return (
     <motion.div
@@ -285,11 +393,12 @@ export default function LeadDrawer({
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 26, stiffness: 210 }}
-      className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-zinc-800 bg-[#09090b]/98 backdrop-blur-md shadow-2xl flex flex-col justify-between select-none"
+      className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-border bg-background/98 backdrop-blur-md shadow-2xl flex flex-col justify-between select-none"
+
     >
       {/* Drawer Header */}
       <div className="h-16 border-b border-zinc-850 px-6 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <span className="font-extrabold text-sm text-zinc-150 truncate max-w-[200px]">{lead.name}</span>
           <span className={cn(
             "text-[9px] font-bold px-2 py-0.5 rounded-full border tracking-wide uppercase",
@@ -298,10 +407,20 @@ export default function LeadDrawer({
           )}>
             {lead.status}
           </span>
-          <span className="px-1.5 py-0.5 bg-purple-600/10 border border-purple-500/20 text-purple-400 rounded-full font-mono text-[9px] flex items-center gap-1">
-            <Sparkles size={8} />
-            Score: {leadScore}
-          </span>
+          
+          {/* Autosave Status */}
+          <div className="flex items-center gap-1.5 pl-2">
+            {saveStatus === "saving" && (
+              <span className="flex items-center gap-1 text-[9px] text-zinc-500 font-bold uppercase">
+                <Loader2 size={10} className="animate-spin text-purple-400" /> Saving...
+              </span>
+            )}
+            {saveStatus === "saved" && (
+              <span className="flex items-center gap-1 text-[9px] text-emerald-450 font-bold uppercase">
+                <Check size={10} /> Saved
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -327,24 +446,29 @@ export default function LeadDrawer({
       {/* Tabs list */}
       <div className="border-b border-zinc-850 px-6 bg-zinc-950/20 flex gap-4 shrink-0 overflow-x-auto scrollbar-none">
         {[
-          { id: "overview", label: "Overview" },
-          { id: "contact", label: "Contact Profile" },
-          { id: "quotes", label: "Quotes" },
-          { id: "tasks", label: "Tasks & To-Dos" },
-          { id: "comms", label: "Communications" },
-          { id: "timeline", label: "Timeline" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={cn(
-              "py-3 text-[10px] font-bold border-b-2 tracking-wide uppercase transition-all cursor-pointer shrink-0",
-              activeTab === tab.id ? "border-purple-500 text-purple-400" : "border-transparent text-zinc-500 hover:text-zinc-350"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+          { id: "overview", label: "Overview", icon: User },
+          { id: "contact", label: "Contact Profile", icon: Globe },
+          { id: "quotes", label: "Quotes", icon: FileText },
+          { id: "tasks", label: "Tasks", icon: CheckSquare },
+          { id: "notes", label: "Notes", icon: Pin },
+          { id: "comms", label: "Comms", icon: MessageSquare },
+          { id: "timeline", label: "Timeline", icon: Clock },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={cn(
+                "py-3 text-[10px] font-bold border-b-2 tracking-wide uppercase transition-all cursor-pointer shrink-0 flex items-center gap-1.5",
+                activeTab === tab.id ? "border-purple-500 text-purple-400" : "border-transparent text-zinc-500 hover:text-zinc-350"
+              )}
+            >
+              <Icon size={11} />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Main Content Area */}
@@ -352,14 +476,7 @@ export default function LeadDrawer({
         
         {/* OVERVIEW TAB */}
         {activeTab === "overview" && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              saveLeadMetadata();
-              onAddActivity("SYSTEM", "Lead details updated");
-            }}
-            className="space-y-4 font-semibold text-xs"
-          >
+          <div className="space-y-4 font-semibold text-xs">
             {/* Core details */}
             <div className="p-4 rounded-xl border border-zinc-850 bg-zinc-900/10 space-y-3.5">
               <h4 className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Leads Specs</h4>
@@ -368,8 +485,11 @@ export default function LeadDrawer({
                 <input
                   type="text"
                   value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none"
+                  onChange={(e) => {
+                    setEditName(e.target.value);
+                    triggerAutoSave({ name: e.target.value });
+                  }}
+                  className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none focus:border-purple-500"
                   required
                 />
               </div>
@@ -379,8 +499,11 @@ export default function LeadDrawer({
                   <label className="text-zinc-500 font-bold block">Category</label>
                   <select
                     value={editEventType}
-                    onChange={(e) => setEditEventType(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none"
+                    onChange={(e) => {
+                      setEditEventType(e.target.value);
+                      triggerAutoSave({ eventType: e.target.value });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
                   >
                     <option value="WEDDING">Wedding</option>
                     <option value="BIRTHDAY">Birthday</option>
@@ -393,8 +516,11 @@ export default function LeadDrawer({
                   <input
                     type="date"
                     value={editEventDate}
-                    onChange={(e) => setEditEventDate(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none"
+                    onChange={(e) => {
+                      setEditEventDate(e.target.value);
+                      triggerAutoSave({ eventDate: e.target.value });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
                   />
                 </div>
               </div>
@@ -405,16 +531,22 @@ export default function LeadDrawer({
                   <input
                     type="number"
                     value={editBudget}
-                    onChange={(e) => setEditBudget(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none"
+                    onChange={(e) => {
+                      setEditBudget(Number(e.target.value));
+                      triggerAutoSave({ budget: Number(e.target.value) });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-zinc-500 font-bold block">Source</label>
                   <select
                     value={editSource}
-                    onChange={(e) => setEditSource(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none"
+                    onChange={(e) => {
+                      setEditSource(e.target.value);
+                      triggerAutoSave({ leadSource: e.target.value });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
                   >
                     <option value="Website">Website</option>
                     <option value="WhatsApp">WhatsApp</option>
@@ -434,8 +566,11 @@ export default function LeadDrawer({
                   <label className="text-zinc-500 font-bold block">Priority</label>
                   <select
                     value={leadPriority}
-                    onChange={(e) => setLeadPriority(e.target.value as any)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none"
+                    onChange={(e) => {
+                      setLeadPriority(e.target.value as any);
+                      triggerAutoSave({ priority: e.target.value as any });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
                   >
                     <option value="HIGH">High</option>
                     <option value="MEDIUM">Medium</option>
@@ -447,18 +582,24 @@ export default function LeadDrawer({
                   <input
                     type="number"
                     value={probabilityPercent}
-                    onChange={(e) => setProbabilityPercent(Number(e.target.value))}
+                    onChange={(e) => {
+                      setProbabilityPercent(Number(e.target.value));
+                      triggerAutoSave({ probability: Number(e.target.value) });
+                    }}
                     min={0}
                     max={100}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-zinc-500 font-bold block">Assigned Planner</label>
                   <select
                     value={editAssignee}
-                    onChange={(e) => setEditAssignee(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none"
+                    onChange={(e) => {
+                      setEditAssignee(e.target.value);
+                      triggerAutoSave({ assignedUserId: e.target.value });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
                   >
                     <option value="">Unassigned</option>
                     {teamMembers.map((m) => (
@@ -474,8 +615,6 @@ export default function LeadDrawer({
             {/* Custom fields & Attachments */}
             <div className="p-4 rounded-xl border border-zinc-850 bg-zinc-900/10 space-y-3.5">
               <h4 className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Custom Profile Fields</h4>
-              
-              {/* Existing custom fields */}
               <div className="space-y-1.5">
                 {customFields.map((f, idx) => (
                   <div key={idx} className="flex justify-between items-center bg-zinc-950 p-2 rounded-lg border border-zinc-850">
@@ -486,58 +625,17 @@ export default function LeadDrawer({
                       onClick={() => {
                         const updated = customFields.filter((_, i) => i !== idx);
                         setCustomFields(updated);
-                        saveLeadMetadata(rawNotesText, leadTasks, commLogs, updated);
+                        triggerAutoSave();
                       }}
-                      className="text-zinc-500 hover:text-red-400"
+                      className="text-zinc-550 hover:text-red-400"
                     >
                       <X size={12} />
                     </button>
                   </div>
                 ))}
               </div>
-
-              {/* Add Custom field input */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Key (e.g. Diet)"
-                  value={newFieldKey}
-                  onChange={(e) => setNewFieldKey(e.target.value)}
-                  className="w-1/2 px-2 py-1 bg-zinc-950 border border-zinc-850 rounded text-zinc-200"
-                />
-                <input
-                  type="text"
-                  placeholder="Value (e.g. Vegan)"
-                  value={newFieldValue}
-                  onChange={(e) => setNewFieldValue(e.target.value)}
-                  className="w-1/2 px-2 py-1 bg-zinc-950 border border-zinc-850 rounded text-zinc-200"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!newFieldKey || !newFieldValue) return;
-                    const updated = [...customFields, { key: newFieldKey, value: newFieldValue }];
-                    setCustomFields(updated);
-                    saveLeadMetadata(rawNotesText, leadTasks, commLogs, updated);
-                    setNewFieldKey("");
-                    setNewFieldValue("");
-                  }}
-                  className="px-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded font-bold"
-                >
-                  Add
-                </button>
-              </div>
             </div>
-
-            <div className="pt-4 flex justify-end">
-              <button
-                type="submit"
-                className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md active:scale-95"
-              >
-                Save Details
-              </button>
-            </div>
-          </form>
+          </div>
         )}
 
         {/* CONTACT PROFILE TAB */}
@@ -547,33 +645,15 @@ export default function LeadDrawer({
               <h4 className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Personal Information</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-zinc-500 font-bold block">First Name</label>
-                  <input
-                    type="text"
-                    value={editName.split(" ")[0]}
-                    onChange={(e) => setEditName(e.target.value + " " + (editName.split(" ")[1] || ""))}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-zinc-500 font-bold block">Last Name</label>
-                  <input
-                    type="text"
-                    value={editName.split(" ")[1] || ""}
-                    onChange={(e) => setEditName((editName.split(" ")[0] || "") + " " + e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
                   <label className="text-zinc-500 font-bold block">Primary Email</label>
                   <input
                     type="email"
                     value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none"
+                    onChange={(e) => {
+                      setEditEmail(e.target.value);
+                      triggerAutoSave({ email: e.target.value });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -581,8 +661,11 @@ export default function LeadDrawer({
                   <input
                     type="text"
                     value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none"
+                    onChange={(e) => {
+                      setEditPhone(e.target.value);
+                      triggerAutoSave({ phone: e.target.value });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none focus:border-purple-500"
                   />
                 </div>
               </div>
@@ -597,9 +680,12 @@ export default function LeadDrawer({
                   <input
                     type="text"
                     value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
+                    onChange={(e) => {
+                      setCompanyName(e.target.value);
+                      triggerAutoSave({ compName: e.target.value });
+                    }}
                     placeholder="Acme Corp"
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -607,8 +693,11 @@ export default function LeadDrawer({
                   <input
                     type="number"
                     value={guestCount}
-                    onChange={(e) => setGuestCount(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-250 focus:outline-none"
+                    onChange={(e) => {
+                      setGuestCount(Number(e.target.value));
+                      triggerAutoSave({ guests: Number(e.target.value) });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-250 focus:outline-none focus:border-purple-500"
                   />
                 </div>
               </div>
@@ -619,8 +708,11 @@ export default function LeadDrawer({
                   <input
                     type="date"
                     value={birthdayDate}
-                    onChange={(e) => setBirthdayDate(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none"
+                    onChange={(e) => {
+                      setBirthdayDate(e.target.value);
+                      triggerAutoSave({ birthday: e.target.value });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -628,28 +720,37 @@ export default function LeadDrawer({
                   <input
                     type="date"
                     value={anniversaryDate}
-                    onChange={(e) => setAnniversaryDate(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none"
+                    onChange={(e) => {
+                      setAnniversaryDate(e.target.value);
+                      triggerAutoSave({ anniversary: e.target.value });
+                    }}
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-zinc-500 font-bold block">Social coordinates</label>
+                <label className="text-zinc-500 font-bold block">Social Coordinates</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     placeholder="Instagram handle"
                     value={socialInsta}
-                    onChange={(e) => setSocialInsta(e.target.value)}
-                    className="w-1/2 px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                    onChange={(e) => {
+                      setSocialInsta(e.target.value);
+                      triggerAutoSave({ insta: e.target.value });
+                    }}
+                    className="w-1/2 px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white focus:outline-none focus:border-purple-500"
                   />
                   <input
                     type="text"
                     placeholder="Facebook Profile"
                     value={socialFb}
-                    onChange={(e) => setSocialFb(e.target.value)}
-                    className="w-1/2 px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                    onChange={(e) => {
+                      setSocialFb(e.target.value);
+                      triggerAutoSave({ fb: e.target.value });
+                    }}
+                    className="w-1/2 px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white focus:outline-none focus:border-purple-500"
                   />
                 </div>
               </div>
@@ -659,22 +760,15 @@ export default function LeadDrawer({
                 <input
                   type="text"
                   value={streetAddress}
-                  onChange={(e) => setStreetAddress(e.target.value)}
+                  onChange={(e) => {
+                    setStreetAddress(e.target.value);
+                    triggerAutoSave({ streetAddr: e.target.value });
+                  }}
                   placeholder="Street and City"
-                  className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none"
+                  className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none focus:border-purple-500"
                 />
               </div>
             </div>
-
-            <button
-              onClick={() => {
-                saveLeadMetadata();
-                onAddActivity("SYSTEM", "Contact profile updated");
-              }}
-              className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition"
-            >
-              Update Contact Profile
-            </button>
           </div>
         )}
 
@@ -685,7 +779,7 @@ export default function LeadDrawer({
               <span className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Lead Proposals</span>
               <button
                 onClick={() => router.push("/quotes/new")}
-                className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[10px] font-bold flex items-center gap-1"
+                className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer"
               >
                 <Plus size={11} />
                 Generate Quote
@@ -706,7 +800,7 @@ export default function LeadDrawer({
                   <span className={cn(
                     "text-[8px] font-bold px-1.5 py-0.5 rounded-full border",
                     q.status === "ACCEPTED" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
-                    q.status === "REJECTED" ? "border-red-500/20 bg-red-500/5 text-red-450" : "border-zinc-800 text-zinc-400"
+                    q.status === "REJECTED" ? "border-red-500/20 bg-red-500/5 text-red-455" : "border-zinc-800 text-zinc-400"
                   )}>
                     {q.status}
                   </span>
@@ -722,26 +816,28 @@ export default function LeadDrawer({
         {/* TASKS CHECKLIST TAB */}
         {activeTab === "tasks" && (
           <div className="space-y-4 font-semibold text-xs">
-            <h4 className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Operational checklists</h4>
+            <h4 className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Operational Checklists</h4>
 
             {/* Checklist items */}
             <div className="space-y-2.5">
-              {leadTasks.map((t, idx) => (
+              {leadTasks.map((t) => (
                 <div 
                   key={t.id} 
-                  className="flex items-center justify-between p-3 border border-zinc-850 rounded-xl bg-zinc-950/20 text-xs"
+                  className={cn(
+                    "flex items-center justify-between p-3 border border-zinc-850 rounded-xl bg-zinc-950/20 text-xs transition-opacity duration-200",
+                    t.completed ? "opacity-60" : ""
+                  )}
                 >
                   <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={t.completed}
-                      onChange={() => {
-                        const updated = leadTasks.map(tk => tk.id === t.id ? { ...tk, completed: !tk.completed } : tk);
-                        setLeadTasks(updated);
-                        saveLeadMetadata(rawNotesText, updated);
-                      }}
-                      className="accent-purple-500 h-4 w-4 rounded cursor-pointer shrink-0"
-                    />
+                    <button
+                      onClick={() => handleToggleTask(t.id)}
+                      className={cn(
+                        "h-4 w-4 rounded border flex items-center justify-center transition-all cursor-pointer",
+                        t.completed ? "bg-purple-650 border-purple-600 text-white" : "border-zinc-700 hover:border-purple-500"
+                      )}
+                    >
+                      {t.completed && <Check size={10} strokeWidth={3} />}
+                    </button>
                     <div>
                       <span className={cn("font-bold text-zinc-200 block", t.completed && "line-through text-zinc-550")}>{t.text}</span>
                       <p className="text-[9px] text-zinc-500 font-medium">Due: {t.dueDate || "No Date"} • Priority: {t.priority}</p>
@@ -751,14 +847,17 @@ export default function LeadDrawer({
                     onClick={() => {
                       const updated = leadTasks.filter(tk => tk.id !== t.id);
                       setLeadTasks(updated);
-                      saveLeadMetadata(rawNotesText, updated);
+                      triggerAutoSave({ tasks: updated });
                     }}
-                    className="text-zinc-550 hover:text-red-400 p-1"
+                    className="text-zinc-550 hover:text-red-400 p-1 cursor-pointer"
                   >
                     <Trash2 size={12} />
                   </button>
                 </div>
               ))}
+              {leadTasks.length === 0 && (
+                <p className="text-zinc-500 italic text-[11px] py-4 text-center">No tasks assigned. Create one below.</p>
+              )}
             </div>
 
             {/* Add Task input form */}
@@ -770,19 +869,19 @@ export default function LeadDrawer({
                   placeholder="Task title (e.g. Schedule venue visit)"
                   value={newTaskText}
                   onChange={(e) => setNewTaskText(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                  className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white focus:outline-none focus:border-purple-500"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="date"
                     value={newTaskDue}
                     onChange={(e) => setNewTaskDue(e.target.value)}
-                    className="px-2 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white font-semibold text-[10px]"
+                    className="px-2 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white font-semibold text-[10px] focus:outline-none"
                   />
                   <select
                     value={newTaskPriority}
                     onChange={(e) => setNewTaskPriority(e.target.value as any)}
-                    className="px-2 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                    className="px-2 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white focus:outline-none"
                   >
                     <option value="HIGH">High Priority</option>
                     <option value="MEDIUM">Medium Priority</option>
@@ -802,16 +901,95 @@ export default function LeadDrawer({
                     completed: false
                   }];
                   setLeadTasks(updated);
-                  saveLeadMetadata(rawNotesText, updated);
-                  // reset fields
+                  triggerAutoSave({ tasks: updated });
                   setNewTaskText("");
                   setNewTaskDue("");
                   setNewTaskPriority("MEDIUM");
                 }}
-                className="w-full py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold"
+                className="w-full py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold cursor-pointer"
               >
                 Add Action Item
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* NOTES PANEL (PIN & SEARCH) */}
+        {activeTab === "notes" && (
+          <div className="space-y-4 font-semibold text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Repository Notes</span>
+              <div className="relative w-44">
+                <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-zinc-550">
+                  <Search size={11} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search notes..."
+                  value={noteSearchQuery}
+                  onChange={(e) => setNoteSearchQuery(e.target.value)}
+                  className="w-full pl-7 pr-3 py-1 bg-zinc-950 border border-zinc-850 rounded-lg text-[10px] focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            </div>
+
+            {/* Note text editor */}
+            <div className="p-3 bg-zinc-950/40 border border-zinc-850 rounded-xl space-y-2">
+              <textarea
+                value={newNoteText}
+                onChange={(e) => setNewNoteText(e.target.value)}
+                placeholder="Type a new planner note..."
+                rows={3}
+                className="w-full p-2.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500 font-semibold"
+              />
+              <button
+                onClick={handleAddRichNote}
+                className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold ml-auto block cursor-pointer"
+              >
+                Add Note
+              </button>
+            </div>
+
+            {/* Notes List */}
+            <div className="space-y-3.5 pt-2">
+              {filteredRichNotes.map((note) => (
+                <div 
+                  key={note.id} 
+                  className={cn(
+                    "p-3.5 border rounded-xl bg-zinc-900/10 text-xs space-y-2 relative group",
+                    note.isPinned ? "border-purple-500/30 bg-purple-950/[0.01]" : "border-zinc-850"
+                  )}
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <p className="text-zinc-200 leading-relaxed font-semibold whitespace-pre-wrap">{note.text}</p>
+                    <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleTogglePinNote(note.id)}
+                        className={cn(
+                          "p-1 hover:bg-zinc-800 rounded transition cursor-pointer",
+                          note.isPinned ? "text-purple-400" : "text-zinc-550"
+                        )}
+                        title={note.isPinned ? "Unpin Note" : "Pin Note"}
+                      >
+                        <Pin size={12} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRichNote(note.id)}
+                        className="p-1 hover:bg-zinc-800 rounded text-zinc-550 hover:text-red-400 transition cursor-pointer"
+                        title="Delete Note"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-zinc-550 block font-mono">
+                    {new Date(note.createdAt).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+              {filteredRichNotes.length === 0 && (
+                <p className="text-zinc-500 italic text-[11px] text-center py-4">No notes found matching query.</p>
+              )}
             </div>
           </div>
         )}
@@ -828,7 +1006,7 @@ export default function LeadDrawer({
                 <select
                   value={newCommType}
                   onChange={(e) => setNewCommType(e.target.value as any)}
-                  className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold text-zinc-400"
+                  className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold text-zinc-400 focus:outline-none"
                 >
                   <option value="CALL">Phone Call</option>
                   <option value="EMAIL">Email Sent</option>
@@ -842,7 +1020,7 @@ export default function LeadDrawer({
                 onChange={(e) => setNewCommText(e.target.value)}
                 placeholder="Details of what was discussed..."
                 rows={2}
-                className="w-full p-2 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                className="w-full p-2 bg-zinc-900 border border-zinc-850 rounded-lg text-white focus:outline-none focus:border-purple-500"
               />
               <button
                 type="button"
@@ -856,56 +1034,52 @@ export default function LeadDrawer({
                     staffName: "Current Planner"
                   }];
                   setCommLogs(updated);
-                  saveLeadMetadata(rawNotesText, leadTasks, updated);
+                  triggerAutoSave({ comms: updated });
                   setNewCommText("");
                 }}
-                className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold ml-auto block"
+                className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold ml-auto block cursor-pointer"
               >
                 Log Interaction
               </button>
             </div>
 
-            {/* Logs List */}
+            {/* Comm Logs list */}
             <div className="space-y-3">
               {commLogs.map((log) => (
-                <div key={log.id} className="p-3 border border-zinc-850 bg-zinc-900/10 rounded-xl space-y-1 text-xs">
+                <div key={log.id} className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl text-xs space-y-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-[9px] px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded font-bold text-purple-400 uppercase">
-                      {log.type}
-                    </span>
-                    <span className="text-[8px] text-zinc-550">{new Date(log.date).toLocaleString()}</span>
+                    <span className="font-extrabold text-purple-400 text-[10px] uppercase">{log.type}</span>
+                    <span className="text-[9px] text-zinc-550">{new Date(log.date).toLocaleDateString()}</span>
                   </div>
-                  <p className="text-zinc-350 leading-relaxed font-semibold">{log.text}</p>
+                  <p className="text-zinc-200">{log.text}</p>
                 </div>
               ))}
               {commLogs.length === 0 && (
-                <p className="text-zinc-500 italic text-[11px] py-4 text-center">No communications logged yet.</p>
+                <p className="text-zinc-500 italic text-[11px] py-4 text-center">No logged interactions.</p>
               )}
             </div>
           </div>
         )}
 
-        {/* TIMELINE VIEW TAB */}
+        {/* TIMELINE TAB */}
         {activeTab === "timeline" && (
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Audit Timeline</h4>
-            <div className="relative border-l border-zinc-850 pl-4 ml-2 space-y-6 text-xs font-semibold">
+          <div className="space-y-4 font-semibold text-xs">
+            <h4 className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Audit Trail</h4>
+            
+            <div className="relative pl-4 border-l border-zinc-850 space-y-4 py-1">
               {activities.map((act) => (
-                <div key={act.id} className="relative">
-                  <span className="absolute -left-[21px] mt-1 h-2.5 w-2.5 rounded-full bg-purple-500 ring-4 ring-[#111113]" />
-                  <div className="flex justify-between items-start gap-3">
-                    <div>
-                      <span className="font-extrabold text-zinc-200 block">{act.type}</span>
-                      <p className="text-zinc-500 mt-0.5 leading-normal">{act.description}</p>
-                    </div>
-                    <span className="text-[9px] text-zinc-550 shrink-0 font-bold">
-                      {new Date(act.createdAt).toLocaleDateString()}
-                    </span>
+                <div key={act.id} className="relative flex justify-between gap-4 text-[11px]">
+                  {/* Indicator dot */}
+                  <div className="absolute -left-[20.5px] top-1 h-2 w-2 rounded-full bg-purple-500 ring-4 ring-[#09090b]" />
+                  
+                  <div>
+                    <span className="text-zinc-200 block font-semibold">{act.description}</span>
+                    <span className="text-[9px] text-zinc-550 pt-0.5 block">{new Date(act.createdAt).toLocaleString()}</span>
                   </div>
                 </div>
               ))}
               {activities.length === 0 && (
-                <p className="text-zinc-500 italic text-[11px] py-4">No chronological events logged.</p>
+                <p className="text-zinc-600 italic py-2">No historical events recorded for this lead.</p>
               )}
             </div>
           </div>

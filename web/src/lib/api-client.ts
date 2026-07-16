@@ -12,8 +12,23 @@ const getBaseURL = () => {
 
 export const apiClient = axios.create({
   baseURL: getBaseURL(),
+  headers: {
+    "Content-Type": "application/json",
+  },
   withCredentials: true, // Auto attach HttpOnly refresh token cookie
+  timeout: 30000, // 30 seconds request timeout
 });
+
+// Alias for backwards compatibility
+export const api = apiClient;
+
+export const setAccessToken = (token: string | null) => {
+  useAuthStore.setState({ accessToken: token });
+};
+
+export const getAccessToken = () => {
+  return useAuthStore.getState().accessToken;
+};
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -38,10 +53,10 @@ apiClient.interceptors.request.use(
     const token = useAuthStore.getState().accessToken;
     const activeTenantId = useAuthStore.getState().activeTenantId;
     
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    if (activeTenantId) {
+    if (activeTenantId && config.headers) {
       config.headers['X-Tenant-ID'] = activeTenantId;
     }
     return config;
@@ -53,6 +68,19 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    // Intercept limit exceeded / payment required errors
+    if (error.response?.status === 402 || (error.response?.data && (error.response.data as any).error === 'LIMIT_EXCEEDED')) {
+      const data = (error.response.data as any).data || {};
+      const reason = (error.response.data as any).message || "You have reached your plan limit.";
+      const limitName = data.limitName || "Capacity Limit";
+      const limitValue = data.limitValue || "Max";
+      const currentValue = data.currentValue || "Current";
+
+      const { useLimitStore } = require('../store/limitStore');
+      useLimitStore.getState().openLimitModal(reason, limitName, limitValue, currentValue);
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
     // Check if error is 401 and request hasn't been retried yet, skipping auth endpoints
@@ -62,7 +90,9 @@ apiClient.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({
             resolve: (token: string) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+              }
               resolve(apiClient(originalRequest));
             },
             reject: (err: any) => reject(err),
@@ -75,12 +105,12 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshResponse = await axios.post(
-          `${apiClient.defaults.baseURL || '/api/v1'}/auth/refresh`,
+          `${getBaseURL()}/auth/refresh`,
           {},
           { withCredentials: true }
         );
         
-        const { accessToken: newAccessToken, role, firstName, permissions } = refreshResponse.data.data;
+        const { accessToken: newAccessToken, role, firstName, lastName, permissions } = refreshResponse.data.data;
         
         // Update store with new access token and updated user metadata
         const currentState = useAuthStore.getState();
@@ -88,6 +118,7 @@ apiClient.interceptors.response.use(
           ...currentState.user,
           role: role || currentState.user.role,
           firstName: firstName || currentState.user.firstName,
+          lastName: lastName || currentState.user.lastName,
           permissions: permissions || currentState.user.permissions || []
         } : null;
 
@@ -96,10 +127,25 @@ apiClient.interceptors.response.use(
           user: updatedUser
         });
         
+        // IMPORTANT: After a Spring Boot trailing-slash redirect, Axios mutates
+        // originalRequest.url to the absolute backend URL. Reset to relative path.
+        if (originalRequest.url && originalRequest.url.startsWith("http")) {
+          const match = originalRequest.url.match(/\/api\/v1(\/.*)/);
+          if (match) {
+            originalRequest.url = match[1]; // relative path like /events/
+          }
+        }
+        // Clear baseURL override if Axios set it to an absolute url during redirect
+        if (originalRequest.baseURL && originalRequest.baseURL.startsWith("http://localhost:8")) {
+          originalRequest.baseURL = getBaseURL();
+        }
+
         processQueue(null, newAccessToken);
         isRefreshing = false;
         
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        }
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);

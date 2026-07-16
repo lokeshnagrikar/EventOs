@@ -3,19 +3,20 @@ import { test, expect } from '@playwright/test';
 test.describe('EventOS Frontend Integration & Authentication Flow', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Clear cookies/session storage before each integration test
+    // Clear cookies/session storage and set bypass preloader flag before each integration test
     await page.goto('/');
     await page.evaluate(() => {
       sessionStorage.clear();
       localStorage.clear();
+      localStorage.setItem('nopreload', 'true');
     });
   });
 
   test('should display Landing Page with CTAs linking to Login and Register', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?nopreload=true');
 
     // Check Landing Page elements
-    await expect(page.locator('text=The Operating System for Events')).toBeVisible();
+    await expect(page.locator('text=The Operating System for Event Businesses')).toBeVisible();
     await expect(page.locator('text=Run your entire event business')).toBeVisible();
 
     // Check action buttons exist
@@ -96,6 +97,11 @@ test.describe('EventOS Frontend Integration & Authentication Flow', () => {
   });
 
   test('should switch workspace contexts and set appropriate HTTP headers', async ({ page }) => {
+    // Set cookie first to prevent middleware redirecting to login page
+    await page.context().addCookies([
+      { name: 'hasSession', value: 'true', domain: 'localhost', path: '/' }
+    ]);
+
     // Pre-populate authenticated state using cookie and sessionStorage simulation
     await page.goto('/workspace-select');
     await page.evaluate(() => {
@@ -120,12 +126,7 @@ test.describe('EventOS Frontend Integration & Authentication Flow', () => {
       ]));
     });
 
-    // Set cookie to simulate authenticated session for middleware
-    await page.context().addCookies([
-      { name: 'hasSession', value: 'true', domain: 'localhost', path: '/' }
-    ]);
-
-    // Reload switcher page
+    // Reload switcher page to bind sessionStorage values to UI state
     await page.reload();
 
     // Verify both workspace options are rendered
@@ -161,6 +162,11 @@ test.describe('EventOS Frontend Integration & Authentication Flow', () => {
   });
 
   test('should display active sessions list and revoke old sessions', async ({ page }) => {
+    // Set cookie first to prevent middleware redirecting to login page
+    await page.context().addCookies([
+      { name: 'hasSession', value: 'true', domain: 'localhost', path: '/' }
+    ]);
+
     // Setup authenticated state
     await page.goto('/settings/security');
     await page.evaluate(() => {
@@ -172,9 +178,9 @@ test.describe('EventOS Frontend Integration & Authentication Flow', () => {
         role: 'OWNER'
       }));
     });
-    await page.context().addCookies([
-      { name: 'hasSession', value: 'true', domain: 'localhost', path: '/' }
-    ]);
+
+    // Reload page to apply authenticated context
+    await page.reload();
 
     // Mock sessions query request
     await page.route('**/api/v1/auth/sessions', async (route) => {

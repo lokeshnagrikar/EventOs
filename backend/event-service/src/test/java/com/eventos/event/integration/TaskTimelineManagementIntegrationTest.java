@@ -69,6 +69,7 @@ public class TaskTimelineManagementIntegrationTest {
                 auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                                 principal, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_OWNER")));
                 org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+                com.eventos.event.config.TenantContext.setTenantId(tenantId);
 
                 // Pre-initialize sequence values to prevent constraints/null failures
                 tenantSequenceRepository.save(TenantSequence.builder()

@@ -20,10 +20,13 @@ import com.eventos.auth.repository.SessionRepository;
 import com.eventos.auth.repository.InvitationRepository;
 import com.eventos.auth.repository.PasswordHistoryRepository;
 import com.eventos.auth.entity.PasswordHistory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -35,7 +38,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @SuppressWarnings("null")
 public class AuthService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     private final UserRepository userRepository;
+
     private final RoleRepository roleRepository;
     private final TenantRepository tenantRepository;
     private final CompanyRepository companyRepository;
@@ -51,6 +57,7 @@ public class AuthService {
     private final RecaptchaService recaptchaService;
     private final GoogleAuthService googleAuthService;
     private final EmailService emailService;
+    private final BillingService billingService;
 
     @Value("${app.jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
@@ -66,7 +73,7 @@ public class AuthService {
             PasswordEncoder passwordEncoder, JwtService jwtService,
             StringRedisTemplate stringRedisTemplate, AuditLogService auditLogService,
             RecaptchaService recaptchaService, GoogleAuthService googleAuthService,
-            EmailService emailService) {
+            EmailService emailService, BillingService billingService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tenantRepository = tenantRepository;
@@ -83,6 +90,7 @@ public class AuthService {
         this.recaptchaService = recaptchaService;
         this.googleAuthService = googleAuthService;
         this.emailService = emailService;
+        this.billingService = billingService;
     }
 
     @Transactional
@@ -110,6 +118,9 @@ public class AuthService {
                 .build();
         company = companyRepository.save(company);
 
+        // Initialize default trial subscription and usage counters
+        billingService.initDefaultTenantSubscription(tenant.getId());
+
         // 3. Load OWNER role
         Role ownerRole = roleRepository.findByName("OWNER")
                 .orElseThrow(() -> new IllegalStateException("Default OWNER role not found"));
@@ -122,7 +133,7 @@ public class AuthService {
                 .email(email)
                 .phone(request.getPhone())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .isEmailVerified(false)  // Disabled auto-verified for dev; verify email first
+                .isEmailVerified(false) // Disabled auto-verified for dev; verify email first
                 .emailVerificationToken(verificationToken)
                 .emailVerificationTokenExpiry(LocalDateTime.now().plusMinutes(15))
                 .build();
@@ -253,9 +264,9 @@ public class AuthService {
             throw new IllegalArgumentException("EMAIL_UNVERIFIED");
         }
 
-
         // Password Expiration Check (90 days)
-        if (user.getPasswordUpdatedAt() != null && user.getPasswordUpdatedAt().plusDays(90).isBefore(LocalDateTime.now())) {
+        if (user.getPasswordUpdatedAt() != null
+                && user.getPasswordUpdatedAt().plusDays(90).isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("PASSWORD_EXPIRED");
         }
 
@@ -265,9 +276,9 @@ public class AuthService {
             if (selectedMembership.getRole().getPermissionsJson() != null) {
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                 permissions = mapper.readValue(
-                    selectedMembership.getRole().getPermissionsJson(), 
-                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>(){}
-                );
+                        selectedMembership.getRole().getPermissionsJson(),
+                        new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                        });
             }
         } catch (Exception e) {
             // fallback empty
@@ -283,15 +294,14 @@ public class AuthService {
 
         // Access Token
         String accessToken = jwtService.generateToken(
-            user, 
-            selectedMembership.getTenantId(), 
-            selectedMembership.getRole().getName(),
-            permissions,
-            primaryCompanyName,
-            selectedMembership.getTenantId(),
-            deviceId,
-            sessionId.toString()
-        );
+                user,
+                selectedMembership.getTenantId(),
+                selectedMembership.getRole().getName(),
+                permissions,
+                primaryCompanyName,
+                selectedMembership.getTenantId(),
+                deviceId,
+                sessionId.toString());
 
         // Refresh Token
         String rawToken = UUID.randomUUID().toString();
@@ -334,6 +344,7 @@ public class AuthService {
         response.put("tenantId", selectedMembership.getTenantId().toString());
         response.put("role", selectedMembership.getRole().getName());
         response.put("firstName", user.getFirstName());
+        response.put("lastName", user.getLastName());
         response.put("memberships", membershipList);
         response.put("permissions", permissions);
         return response;
@@ -348,9 +359,26 @@ public class AuthService {
         if (activeTokenOpt.isEmpty()) {
             // Replay Attack Detection: check Redis for breach history
             String redisKey = "rotated:token:" + presentedHash;
-            String userIdStr = stringRedisTemplate.opsForValue().get(redisKey);
-            if (userIdStr != null) {
-                UUID userId = UUID.fromString(userIdStr);
+            String redisValue = stringRedisTemplate.opsForValue().get(redisKey);
+            if (redisValue != null) {
+                String[] parts = redisValue.split(":", 4);
+                if (parts.length == 4) {
+                    try {
+                        long rotationTime = Long.parseLong(parts[1]);
+                        long now = System.currentTimeMillis();
+                        if (now - rotationTime <= 5000L) { // 5-second grace period
+                            log.info("Token refresh race condition detected for user within grace period. Returning cached tokens.");
+                            Map<String, Object> response = new HashMap<>();
+                            response.put("accessToken", parts[3]);
+                            response.put("refreshToken", parts[2]);
+                            return response;
+                        }
+                    } catch (NumberFormatException e) {
+                        // fallback to replay attack handling
+                    }
+                }
+                
+                UUID userId = UUID.fromString(parts[0]);
                 sessionRepository.deleteAllByUserId(userId);
                 refreshTokenRepository.deleteByUser(User.builder().id(userId).build());
                 auditLogService.logEvent(null, userId, "REPLAY_ATTACK_COMPROMISE", ipAddress, userAgent,
@@ -389,9 +417,9 @@ public class AuthService {
             if (membership.getRole().getPermissionsJson() != null) {
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                 permissions = mapper.readValue(
-                    membership.getRole().getPermissionsJson(), 
-                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>(){}
-                );
+                        membership.getRole().getPermissionsJson(),
+                        new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                        });
             }
         } catch (Exception e) {
             // fallback empty
@@ -404,23 +432,23 @@ public class AuthService {
                 .orElse("Unknown Company");
 
         String accessToken = jwtService.generateToken(
-            user, 
-            tenantId, 
-            membership.getRole().getName(),
-            permissions,
-            companyName,
-            tenantId,
-            deviceId,
-            sessionId.toString()
-        );
+                user,
+                tenantId,
+                membership.getRole().getName(),
+                permissions,
+                companyName,
+                tenantId,
+                deviceId,
+                sessionId.toString());
 
         // Rotate Refresh Token
         String newRawToken = UUID.randomUUID().toString();
         String newHash = sha256(newRawToken);
 
-        // Store old hash in Redis for breach history (1 hour TTL)
+        // Store old hash in Redis for breach history with a 5-second grace period payload (1 hour TTL)
         String redisKey = "rotated:token:" + presentedHash;
-        stringRedisTemplate.opsForValue().set(redisKey, user.getId().toString(), 1, TimeUnit.HOURS);
+        String redisValue = user.getId().toString() + ":" + System.currentTimeMillis() + ":" + newRawToken + ":" + accessToken;
+        stringRedisTemplate.opsForValue().set(redisKey, redisValue, 1, TimeUnit.HOURS);
 
         refreshToken.setToken(newHash);
         refreshToken.setExpiryDate(LocalDateTime.now().plusNanos(refreshExpirationMs * 1_000_000));
@@ -537,6 +565,19 @@ public class AuthService {
         List<Company> companies = companyRepository.findByTenantId(tenantId);
         UUID companyId = companies.isEmpty() ? tenantId : companies.get(0).getId();
 
+        // Resolve sender's display name for the invitation email
+        String senderDisplayName = "Your team admin";
+        if (senderId != null) {
+            Optional<User> senderOpt = userRepository.findById(senderId);
+            if (senderOpt.isPresent()) {
+                User sender = senderOpt.get();
+                String fn = sender.getFirstName() != null ? sender.getFirstName() : "";
+                String ln = sender.getLastName() != null ? sender.getLastName() : "";
+                String fullName = (fn + " " + ln).trim();
+                if (!fullName.isEmpty()) senderDisplayName = fullName;
+            }
+        }
+
         String rawToken;
         if (userRepository.existsByEmail(email)) {
             User existingUser = userRepository.findByEmail(email).get();
@@ -556,6 +597,11 @@ public class AuthService {
             membershipRepository.save(membership);
 
             rawToken = generateInvitationToken(tenantId, email, role, senderId);
+
+            // Send invitation email to existing user
+            String inviteeName = ((existingUser.getFirstName() != null ? existingUser.getFirstName() : "") + " " +
+                    (existingUser.getLastName() != null ? existingUser.getLastName() : "")).trim();
+            emailService.sendInvitationEmail(email, rawToken, inviteeName, senderDisplayName, roleName, null);
 
             auditLogService.logEvent(tenantId, senderId, "INVITATION_SENT", null, null,
                     "Invitation sent to existing user email: " + email + " for role: " + roleName);
@@ -586,6 +632,10 @@ public class AuthService {
             membershipRepository.save(membership);
 
             rawToken = generateInvitationToken(tenantId, email, role, senderId);
+
+            // Send invitation email to new pending user
+            String inviteeName = ((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "")).trim();
+            emailService.sendInvitationEmail(email, rawToken, inviteeName, senderDisplayName, roleName, null);
 
             auditLogService.logEvent(tenantId, senderId, "INVITATION_SENT", null, null,
                     "Invitation sent to new pending user: " + email + " for role: " + roleName);
@@ -767,9 +817,9 @@ public class AuthService {
             if (membership.getRole().getPermissionsJson() != null) {
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                 permissions = mapper.readValue(
-                    membership.getRole().getPermissionsJson(), 
-                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>(){}
-                );
+                        membership.getRole().getPermissionsJson(),
+                        new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                        });
             }
         } catch (Exception e) {
             // fallback empty
@@ -785,15 +835,14 @@ public class AuthService {
         String deviceId = sha256(userAgent != null ? userAgent + ipAddress : ipAddress);
 
         String accessToken = jwtService.generateToken(
-            user, 
-            targetTenantId, 
-            membership.getRole().getName(),
-            permissions,
-            targetCompanyName,
-            targetTenantId,
-            deviceId,
-            sessionId.toString()
-        );
+                user,
+                targetTenantId,
+                membership.getRole().getName(),
+                permissions,
+                targetCompanyName,
+                targetTenantId,
+                deviceId,
+                sessionId.toString());
 
         String newRawToken = UUID.randomUUID().toString();
         String newHash = sha256(newRawToken);
@@ -845,6 +894,7 @@ public class AuthService {
         response.put("tenantId", targetTenantId.toString());
         response.put("role", membership.getRole().getName());
         response.put("firstName", user.getFirstName());
+        response.put("lastName", user.getLastName());
         response.put("memberships", membershipList);
         response.put("permissions", permissions);
         return response;
@@ -979,8 +1029,8 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid verification code");
         }
 
-        if (user.getEmailVerificationTokenExpiry() == null || 
-            user.getEmailVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getEmailVerificationTokenExpiry() == null ||
+                user.getEmailVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Verification code has expired");
         }
 
@@ -997,7 +1047,6 @@ public class AuthService {
         response.put("message", "Email verification successful");
         return response;
     }
-
 
     @Transactional
     public Map<String, Object> resendVerification(String email) {
@@ -1028,10 +1077,10 @@ public class AuthService {
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
+        response.put("verificationToken", verificationToken);
         response.put("message", "Verification token resent successfully");
         return response;
     }
-
 
     @Transactional
     public Map<String, Object> changePassword(UUID userId, String currentPassword, String newPassword) {
@@ -1090,7 +1139,8 @@ public class AuthService {
         List<PasswordHistory> history = passwordHistoryRepository.findTop3ByUserIdOrderByCreatedAtDesc(user.getId());
         for (PasswordHistory ph : history) {
             if (passwordEncoder.matches(newPassword, ph.getPasswordHash())) {
-                throw new IllegalArgumentException("Password has been used recently. Please choose a different password.");
+                throw new IllegalArgumentException(
+                        "Password has been used recently. Please choose a different password.");
             }
         }
         if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
@@ -1113,14 +1163,18 @@ public class AuthService {
             String email = null;
             String firstName = "Google";
             String lastName = "User";
+            String picture = null;
 
             if (idToken != null && !idToken.isEmpty()) {
                 GoogleIdToken.Payload payload = googleAuthService.verifyToken(idToken);
                 email = payload.getEmail();
                 String givenName = (String) payload.get("given_name");
                 String familyName = (String) payload.get("family_name");
-                if (givenName != null) firstName = givenName;
-                if (familyName != null) lastName = familyName;
+                picture = (String) payload.get("picture");
+                if (givenName != null)
+                    firstName = givenName;
+                if (familyName != null)
+                    lastName = familyName;
             } else if (googleAccessToken != null && !googleAccessToken.isEmpty()) {
                 org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
                 String userInfoUrl = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + googleAccessToken;
@@ -1131,8 +1185,11 @@ public class AuthService {
                 email = (String) userInfo.get("email");
                 String givenName = (String) userInfo.get("given_name");
                 String familyName = (String) userInfo.get("family_name");
-                if (givenName != null) firstName = givenName;
-                if (familyName != null) lastName = familyName;
+                picture = (String) userInfo.get("picture");
+                if (givenName != null)
+                    firstName = givenName;
+                if (familyName != null)
+                    lastName = familyName;
             } else {
                 throw new IllegalArgumentException("Google ID Token or Access Token is required");
             }
@@ -1163,17 +1220,22 @@ public class AuthService {
                         .build();
                 company = companyRepository.save(company);
 
+                // Initialize default trial subscription and usage counters
+                billingService.initDefaultTenantSubscription(tenant.getId());
+
                 // 3. Load default OWNER role
                 Role ownerRole = roleRepository.findByName("OWNER")
                         .orElseThrow(() -> new IllegalStateException("Default OWNER role not found"));
 
-                // 4. Create User with random password hash
+                // 4. Create User with random password hash and Google profile picture
                 user = User.builder()
                         .firstName(firstName)
                         .lastName(lastName)
                         .email(email)
                         .phone("")
-                        .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString())) // Random strong password hash
+                        .profileImage(picture) // Save Google profile picture URL
+                        .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString())) // Random strong password
+                                                                                            // hash
                         .isEmailVerified(true) // Google accounts are pre-verified
                         .emailVerificationToken(UUID.randomUUID().toString())
                         .emailVerificationTokenExpiry(LocalDateTime.now().plusHours(24))
@@ -1193,7 +1255,8 @@ public class AuthService {
                         .build();
                 membershipRepository.save(membership);
 
-                auditLogService.logEvent(tenant.getId(), user.getId(), "TENANT_REGISTRATION_GOOGLE", ipAddress, userAgent,
+                auditLogService.logEvent(tenant.getId(), user.getId(), "TENANT_REGISTRATION_GOOGLE", ipAddress,
+                        userAgent,
                         "Tenant and Owner User registered successfully via Google OAuth: " + tenantName);
             } else {
                 user = userOpt.get();
@@ -1238,9 +1301,9 @@ public class AuthService {
                 if (selectedMembership.getRole().getPermissionsJson() != null) {
                     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                     permissions = mapper.readValue(
-                        selectedMembership.getRole().getPermissionsJson(),
-                        new com.fasterxml.jackson.core.type.TypeReference<List<String>>(){}
-                    );
+                            selectedMembership.getRole().getPermissionsJson(),
+                            new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                            });
                 }
             } catch (Exception e) {
                 // fallback empty
@@ -1255,15 +1318,14 @@ public class AuthService {
 
             // Generate Access Token
             String accessToken = jwtService.generateToken(
-                user,
-                selectedMembership.getTenantId(),
-                selectedMembership.getRole().getName(),
-                permissions,
-                primaryCompanyName,
-                selectedMembership.getTenantId(),
-                deviceId,
-                sessionId.toString()
-            );
+                    user,
+                    selectedMembership.getTenantId(),
+                    selectedMembership.getRole().getName(),
+                    permissions,
+                    primaryCompanyName,
+                    selectedMembership.getTenantId(),
+                    deviceId,
+                    sessionId.toString());
 
             // Generate Refresh Token
             String rawToken = UUID.randomUUID().toString();
@@ -1281,7 +1343,8 @@ public class AuthService {
             enforceSessionLimit(user, selectedMembership.getTenantId(), refreshToken, ipAddress, deviceModel, osName,
                     browser, sessionId);
 
-            auditLogService.logEvent(selectedMembership.getTenantId(), user.getId(), "LOGIN_SUCCESS_GOOGLE", ipAddress, userAgent,
+            auditLogService.logEvent(selectedMembership.getTenantId(), user.getId(), "LOGIN_SUCCESS_GOOGLE", ipAddress,
+                    userAgent,
                     "User logged in successfully via Google under tenant: " + selectedMembership.getTenantId());
 
             List<Map<String, Object>> membershipList = new ArrayList<>();
@@ -1303,9 +1366,11 @@ public class AuthService {
             response.put("accessToken", accessToken);
             response.put("refreshToken", rawToken);
             response.put("userId", user.getId().toString());
+            response.put("email", user.getEmail());
             response.put("tenantId", selectedMembership.getTenantId().toString());
             response.put("role", selectedMembership.getRole().getName());
             response.put("firstName", user.getFirstName());
+            response.put("lastName", user.getLastName());
             response.put("memberships", membershipList);
             response.put("permissions", permissions);
 

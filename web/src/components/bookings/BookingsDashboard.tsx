@@ -31,6 +31,8 @@ import {
 import KpiCard from "../dashboard/KpiCard";
 import BookingCard, { Booking } from "./BookingCard";
 import { cn } from "@/lib/utils";
+import GlobalEmptyState from "../ui/EmptyState";
+import { CardSkeleton, TableSkeleton, KanbanSkeleton, CalendarSkeleton } from "../ui/skeletons";
 
 const COLUMNS = [
   { id: "PENDING", label: "Pending", color: "border-zinc-800 bg-zinc-950/20 text-zinc-400" },
@@ -523,11 +525,19 @@ export default function BookingsDashboard() {
       {/* ─── MAIN CONTENT VIEW SWITCHER ─── */}
       <div className="min-h-[400px]">
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-[220px] rounded-2xl bg-zinc-900/10 border border-zinc-850 animate-pulse" />
-            ))}
-          </div>
+          activeTab === "kanban" ? (
+            <KanbanSkeleton />
+          ) : activeTab === "calendar" ? (
+            <CalendarSkeleton />
+          ) : activeTab === "list" || activeTab === "timeline" ? (
+            <TableSkeleton />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <CardSkeleton key={i} className="h-[220px]" />
+              ))}
+            </div>
+          )
         ) : (
           <AnimatePresence mode="wait">
             
@@ -784,14 +794,12 @@ export default function BookingsDashboard() {
 
 function EmptyState() {
   return (
-    <div className="col-span-full border border-dashed border-zinc-850 rounded-2xl p-16 flex flex-col items-center justify-center text-center space-y-3">
-      <div className="h-10 w-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
-        <Lock size={16} />
-      </div>
-      <div>
-        <p className="font-extrabold text-zinc-300 text-xs">No Contracts Found</p>
-        <p className="text-[10px] text-zinc-550 mt-1 max-w-[280px]">Try adjusting your search criteria, payment status filters, or amount tiers.</p>
-      </div>
+    <div className="col-span-full w-full">
+      <GlobalEmptyState
+        icon={Inbox}
+        title="No Contracts Found"
+        description="Try adjusting your search criteria, payment status filters, or amount tiers."
+      />
     </div>
   );
 }

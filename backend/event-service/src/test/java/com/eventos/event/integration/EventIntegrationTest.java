@@ -77,6 +77,7 @@ public class EventIntegrationTest {
                 auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                                 principal, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_OWNER")));
                 org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+                com.eventos.event.config.TenantContext.setTenantId(tenantId);
 
                 // Pre-initialize sequence values to prevent constraints/null failures
                 tenantSequenceRepository.saveAndFlush(TenantSequence.builder()
@@ -114,6 +115,7 @@ public class EventIntegrationTest {
                                 .build();
 
                 quoteAcceptedConsumer.consume(event);
+                com.eventos.event.config.TenantContext.setTenantId(tenantId);
 
                 // Verify Auto-booking
                 Booking booking = bookingRepository.findByQuoteIdAndTenantId(quoteId, tenantId)
@@ -133,6 +135,7 @@ public class EventIntegrationTest {
                 // Verify duplicate booking prevention
                 long bookingCountBefore = bookingRepository.count();
                 quoteAcceptedConsumer.consume(event);
+                com.eventos.event.config.TenantContext.setTenantId(tenantId);
                 long bookingCountAfter = bookingRepository.count();
                 assertEquals(bookingCountBefore, bookingCountAfter, "Should not create a duplicate booking");
 

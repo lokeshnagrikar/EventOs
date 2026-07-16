@@ -36,6 +36,8 @@ import MasonryGallery from "@/components/gallery/MasonryGallery";
 import EXIFLightbox from "@/components/gallery/EXIFLightbox";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import { useToastStore } from "@/lib/toastStore";
+import { LoadingScreen } from "@/components/ui/skeletons";
 
 interface Album {
   id: string;
@@ -93,6 +95,7 @@ export default function AlbumDetailPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const addToast = useToastStore((state) => state.addToast);
   
   const isStaff = useMemo(() => {
     const role = user?.role || (typeof window !== 'undefined' ? localStorage.getItem("user_role") : null);
@@ -221,8 +224,9 @@ export default function AlbumDetailPage() {
       const response = await api.patch(`/gallery/items/${itemId}/favorite?favorite=${favorite}`);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
+      addToast(variables.favorite ? "Item added to favorites" : "Item removed from favorites", "success");
     }
   });
 
@@ -236,6 +240,7 @@ export default function AlbumDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
+      addToast("Item moved to Recycle Bin", "success");
     }
   });
 
@@ -249,6 +254,7 @@ export default function AlbumDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
+      addToast("Item restored to album", "success");
     }
   });
 
@@ -260,6 +266,7 @@ export default function AlbumDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
+      addToast("Item permanently deleted", "success");
     }
   });
 
@@ -270,6 +277,7 @@ export default function AlbumDetailPage() {
     },
     onSuccess: () => {
       router.push("/gallery");
+      addToast("Album deleted", "success");
     }
   });
 
@@ -281,6 +289,7 @@ export default function AlbumDetailPage() {
     onSuccess: (res) => {
       setShareSuccessToken(res.data.token);
       refetchShareLinks();
+      addToast("Secure share link generated", "success");
     }
   });
 
@@ -291,6 +300,7 @@ export default function AlbumDetailPage() {
     },
     onSuccess: () => {
       refetchShareLinks();
+      addToast("Share link revoked", "success");
     }
   });
 
@@ -368,11 +378,7 @@ export default function AlbumDetailPage() {
   }, []);
 
   if (!mounted) {
-    return (
-      <div className="h-screen w-screen bg-[#09090b] flex items-center justify-center">
-        <Loader2 className="animate-spin text-purple-500" size={32} />
-      </div>
-    );
+    return <LoadingScreen message="Unlocking Album Vault..." />;
   }
 
   if (albumError) {

@@ -73,6 +73,7 @@ public class SecurityConfig {
                         "/accept-invite",
                         "/captcha",
                         "/ws/**",
+                        "/billing/webhook",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",

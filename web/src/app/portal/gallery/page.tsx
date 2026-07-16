@@ -23,6 +23,8 @@ import {
 import { cn } from "@/lib/utils";
 import MasonryGallery from "@/components/gallery/MasonryGallery";
 import EXIFLightbox from "@/components/gallery/EXIFLightbox";
+import EmptyState from "@/components/ui/EmptyState";
+import { GallerySkeleton } from "@/components/ui/skeletons";
 
 interface Album {
   id: string;
@@ -219,12 +221,7 @@ export default function PortalGalleryPage() {
   };
 
   if (loadingEvents || (loadingAlbums && eventIds.length > 0)) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <span className="h-8 w-8 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin" />
-        <span className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Accessing Galleries...</span>
-      </div>
-    );
+    return <GallerySkeleton />;
   }
 
   return (
@@ -322,13 +319,11 @@ export default function PortalGalleryPage() {
       {/* MAIN SWITCH LOGIC RENDER */}
       {!selectedAlbum ? (
         clientAlbums.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-zinc-850 rounded-2xl bg-[#161618]/10 text-zinc-500 flex flex-col items-center justify-center gap-3">
-            <Camera size={36} className="text-zinc-700" />
-            <div>
-              <p className="font-semibold text-zinc-450">No albums established</p>
-              <p className="text-xs text-zinc-650 mt-1">Captures and mood board photos will show here once uploaded.</p>
-            </div>
-          </div>
+          <EmptyState
+            icon={Camera}
+            title="No albums established"
+            description="Captures and mood board photos will show here once uploaded."
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {clientAlbums.map((album) => (

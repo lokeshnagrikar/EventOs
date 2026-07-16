@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { useOnboardingStore } from "@/store/onboardingStore";
 import {
   ArrowLeft,
   Printer,
@@ -145,6 +146,7 @@ export default function QuoteDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
       setShowSignModal(false);
+      useOnboardingStore.getState().completeStep("convert_booking");
     },
     onError: (err: any) => {
       setErrorText(err.response?.data?.error?.message || "Failed to approve quote.");
@@ -214,7 +216,8 @@ export default function QuoteDetailPage() {
 
   if (quoteLoading || leadLoading) {
     return (
-      <div className="min-h-screen bg-[#09090B] text-zinc-400 flex items-center justify-center animate-pulse text-sm">
+      <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center animate-pulse text-sm">
+
         Generating quote invoice template sheet...
       </div>
     );
@@ -222,7 +225,8 @@ export default function QuoteDetailPage() {
 
   if (quoteError || !quote) {
     return (
-      <div className="min-h-screen bg-[#09090B] text-zinc-150 flex flex-col items-center justify-center p-6 space-y-4">
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 space-y-4">
+
         <AlertCircle className="text-red-500 h-12 w-12" />
         <h2 className="text-lg font-bold">Quote not found</h2>
         <p className="text-zinc-500 text-xs">Verify that the quote exists and the backend microservices are running.</p>
@@ -272,14 +276,15 @@ export default function QuoteDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200 select-none">
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden transition-all duration-200 select-none">
       
       {/* Background glow effects to match landing page theme */}
       <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
 
       {/* Top Navbar Header */}
-      <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0 print:hidden">
+      <nav className="h-16 border-b border-border bg-card/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0 print:hidden">
+
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/quotes")}

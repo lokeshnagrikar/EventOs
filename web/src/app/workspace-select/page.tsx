@@ -36,7 +36,7 @@ export default function WorkspaceSelectPage() {
     try {
       const response = await apiClient.post("/auth/switch", { tenantId });
       
-      const { accessToken, userId, role, firstName, memberships: newMemberships, permissions } = response.data.data;
+      const { accessToken, userId, role, firstName, lastName, memberships: newMemberships, permissions } = response.data.data;
       
       // Update session flag cookie for middleware routing guards
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
@@ -48,7 +48,7 @@ export default function WorkspaceSelectPage() {
       // Save state in Zustand store
       setAuth(
         accessToken,
-        { id: userId, email: user?.email || "", firstName, role, permissions: permissions || [] },
+        { id: userId, email: user?.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
         newMemberships
       );
@@ -83,7 +83,8 @@ export default function WorkspaceSelectPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#09090B] text-white p-4 sm:p-6 relative overflow-hidden select-none selection:bg-purple-600/35 selection:text-white">
+    <main className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground p-4 sm:p-6 relative overflow-hidden select-none selection:bg-purple-650 selection:text-white">
+
       {/* Decorative Radial Grid / Dots */}
       <div className="absolute inset-0 bg-[radial-gradient(#1c1917_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-20 pointer-events-none z-0" />
 

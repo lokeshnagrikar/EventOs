@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthModalStore } from "@/store/authModalStore";
+import { analytics } from "@/lib/analytics";
 import { AuthLoader } from "./AuthLoader";
 import { cn } from "@/lib/utils";
 import {
@@ -115,7 +116,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
         accessToken,
       });
 
-      const { accessToken: jwtToken, firstName, role, userId, tenantId, memberships, permissions } = response.data.data;
+      const { accessToken: jwtToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
       
       // Store session cookies
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
@@ -127,7 +128,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
       // Save state in Zustand store
       setAuth(
         jwtToken,
-        { id: userId, email: response.data.data.email || "", firstName, role, permissions: permissions || [] },
+        { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
         memberships
       );
@@ -145,7 +146,10 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
         router.push("/workspace-select");
       }
     } catch (err: any) {
-      const errMsg = err.response?.data?.error?.message || "Google registration failed. Please try again.";
+      console.error("[GOOGLE_AUTH] Full error:", err?.response?.status, err?.response?.data, err?.message);
+      const errMsg = err.response?.data?.error?.message 
+        || err.response?.data?.message 
+        || (err.response?.status ? `Google registration failed (${err.response.status}). Please try again.` : "Google registration failed. Backend may be offline.")
       setError(errMsg);
       addToast(errMsg, "error");
       triggerShake();
@@ -328,6 +332,8 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
         password: data.password,
       });
 
+      analytics.trackAuth("register", data.email);
+      analytics.trackWorkspace("created", data.companyName);
       addToast("Workspace created successfully!", "success");
       setOtpEmail(data.email);
       setShowOtpScreen(true);
@@ -339,6 +345,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
         : status === 500
         ? "Registration failed due to a server error. Please try again."
         : "Registration failed. Email might already be registered.";
+      analytics.trackError("frontend", errMsg, { email: data.email, action: "register" });
       setError(errMsg);
       addToast(errMsg, "error");
       triggerShake();
@@ -543,12 +550,14 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     id="firstName"
                     type="text"
                     placeholder="Shubham"
-                    className={`w-full px-2.5 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    autoFocus
+                    autoComplete="given-name"
+                    className={`w-full px-2.5 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.firstName 
                         ? "border-rose-500/50" 
                         : focusedField === "firstName"
-                        ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                        : "border-white/[0.08] hover:border-white/[0.15]"
+                        ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                        : "border-border hover:border-zinc-700/30"
                     }`}
                     {...register("firstName")}
                     onFocus={() => setFocusedField("firstName")}
@@ -567,10 +576,11 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     id="lastName"
                     type="text"
                     placeholder="Decor"
-                    className={`w-full px-2.5 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    autoComplete="family-name"
+                    className={`w-full px-2.5 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       focusedField === "lastName"
-                        ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                        : "border-white/[0.08] hover:border-white/[0.15]"
+                        ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                        : "border-border hover:border-zinc-700/30"
                     }`}
                     {...register("lastName")}
                     onFocus={() => setFocusedField("lastName")}
@@ -594,12 +604,13 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     id="email"
                     type="email"
                     placeholder="name@agency.com"
-                    className={`w-full pl-9 pr-3 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    autoComplete="email"
+                    className={`w-full pl-9 pr-3 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.email 
                         ? "border-rose-500/50" 
                         : focusedField === "email"
-                        ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                        : "border-white/[0.08] hover:border-white/[0.15]"
+                        ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                        : "border-border hover:border-zinc-700/30"
                     }`}
                     {...register("email")}
                     onFocus={() => setFocusedField("email")}
@@ -624,12 +635,13 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     id="phone"
                     type="text"
                     placeholder="+91 98765 43210"
-                    className={`w-full pl-9 pr-3 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    autoComplete="tel"
+                    className={`w-full pl-9 pr-3 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.phone 
                         ? "border-rose-500/50" 
                         : focusedField === "phone"
-                        ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                        : "border-white/[0.08] hover:border-white/[0.15]"
+                        ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                        : "border-border hover:border-zinc-700/30"
                     }`}
                     {...register("phone", {
                       onChange: (e) => {
@@ -688,12 +700,13 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     id="companyName"
                     type="text"
                     placeholder="Shubham Weddings & Events"
-                    className={`w-full pl-9 pr-3 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    autoComplete="organization"
+                    className={`w-full pl-9 pr-3 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.companyName 
                         ? "border-rose-500/50" 
                         : focusedField === "companyName"
-                        ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                        : "border-white/[0.08] hover:border-white/[0.15]"
+                        ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                        : "border-border hover:border-zinc-700/30"
                     }`}
                     {...register("companyName")}
                     onFocus={() => setFocusedField("companyName")}
@@ -718,12 +731,13 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className={`w-full pl-9 pr-10 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    autoComplete="new-password"
+                    className={`w-full pl-9 pr-10 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.password 
                         ? "border-rose-500/50" 
                         : focusedField === "password"
-                        ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                        : "border-white/[0.08] hover:border-white/[0.15]"
+                        ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                        : "border-border hover:border-zinc-700/30"
                     }`}
                     {...register("password")}
                     onFocus={() => setFocusedField("password")}
@@ -776,12 +790,13 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className={`w-full pl-9 pr-10 py-1.5 bg-white/[0.03] border rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    autoComplete="new-password"
+                    className={`w-full pl-9 pr-10 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.confirmPassword 
                         ? "border-rose-500/50" 
                         : focusedField === "confirmPassword"
-                        ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                        : "border-white/[0.08] hover:border-white/[0.15]"
+                        ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                        : "border-border hover:border-zinc-700/30"
                     }`}
                     {...register("confirmPassword")}
                     onFocus={() => setFocusedField("confirmPassword")}

@@ -52,6 +52,9 @@ public class CrmIntegrationTest {
         @MockBean
         private ApplicationEventPublisher eventPublisher;
 
+        @MockBean
+        private com.eventos.crm.event.QuotePdfListener quotePdfListener;
+
         private UUID tenantA;
         private UUID tenantB;
         private Authentication authA;

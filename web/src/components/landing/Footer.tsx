@@ -18,7 +18,7 @@ export function Footer() {
     ],
     company: [
       { name: "About Us", href: "/about" },
-      { name: "Careers", href: "/careers" },
+      { name: "Templates Center", href: "/resources" },
       { name: "Platform Security", href: "/security" },
       { name: "System Status", href: "/status" },
     ],
@@ -41,10 +41,17 @@ export function Footer() {
     if (href.startsWith("#")) {
       e.preventDefault();
       const elem = document.getElementById(href.replace("#", ""));
-      if (elem) window.scrollTo({ top: elem.offsetTop - 80, behavior: "smooth" });
+      if (elem) {
+        const lenis = (window as any).lenis;
+        if (lenis) {
+          lenis.scrollTo(elem, { offset: -80, duration: 1.2 });
+        } else {
+          window.scrollTo({ top: elem.offsetTop - 80, behavior: "smooth" });
+        }
+      }
     } else {
       e.preventDefault();
-      router.push("/");
+      router.push(href);
     }
   };
 

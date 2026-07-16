@@ -174,46 +174,65 @@ export default function AiAssistant() {
     setIsTyping(true);
 
     try {
-      // Direct call to unified AI Provider Abstraction
-      const aiResponse = await generateAIResponse(pageContext.module, text);
-
       const query = text.toLowerCase();
+      let aiResponse = "";
       let type: Message["type"] = "text";
       let data: any = null;
+      let suggestions = [
+        { label: "Show unpaid invoices", action: () => handleSendText("Show unpaid overdue invoices") },
+        { label: "Generate event schedule checklist", action: () => handleSendText("Generate wedding checklist") }
+      ];
 
-      // Type checks to format visual widgets (Email, Quote, Checklist)
-      if (query.includes("email") || query.includes("draft") || query.includes("remind")) {
-        type = "email";
-        data = {
-          subject: "Clearence reminder: outstanding balance",
-          body: aiResponse
-        };
-      } else if (query.includes("timeline") || query.includes("schedule")) {
-        type = "timeline";
-        data = {
-          items: [
-            { time: "09:00 AM", event: "Vendor Setup Ingress", note: "Backdrop setup" },
-            { time: "04:30 PM", event: "Welcome Mocktails", note: "Guests reception" },
-            { time: "07:00 PM", event: "Ballroom Banquet dinner", note: "Curfew checklist" }
-          ]
-        };
-      } else if (query.includes("checklist")) {
-        type = "checklist";
-        data = {
-          items: [
-            "Confirm helium balloon bouquet supplier delivery",
-            "Pick up cake from bakery (2:00 PM)",
-            "Setup photobooth props and backdrop"
-          ]
-        };
-      } else if (query.includes("unpaid") || query.includes("weddings next month")) {
-        type = "search-result";
-        data = {
-          results: [
-            { id: "1", title: "Meera & Rohan Wedding Gala", date: "July 12, 2026", budget: "₹12,50,000", status: "CONFIRMED", link: "/events" },
-            { id: "2", title: "Siddharth & Ananya Destination Wedding", date: "July 22, 2026", budget: "₹28,00,000", status: "CONFIRMED", link: "/events" }
-          ]
-        };
+      // Documentation & Support escalation training context check
+      if (query.includes("help") || query.includes("how to") || query.includes("docs") || query.includes("support") || query.includes("invoice") || query.includes("invite team")) {
+        aiResponse = "I can guide you through the EventOS features directly from our documentation center:\n\n" +
+                     "• **Invoices & Payments**: Set up Stripe in Settings, create milestones, and dispatch invoices from the Invoices tab.\n" +
+                     "• **Invite Members**: Navigate to Settings -> Workspace settings and invite teammates with custom role scopes.\n" +
+                     "• **Proofing Galleries**: Enable password and download locks until payments are cleared via Galleries.\n\n" +
+                     "If you still need assistance, you can escalate this request directly to our support desk.";
+        suggestions = [
+          { label: "Open Help Center 📚", action: () => { router.push("/help"); setIsOpen(false); } },
+          { label: "Submit Support Ticket ✉️", action: () => { router.push("/help/support"); setIsOpen(false); } },
+          { label: "Start Live Chat 💬", action: () => { router.push("/help/chat"); setIsOpen(false); } }
+        ];
+      } else {
+        // Direct call to unified AI Provider Abstraction
+        aiResponse = await generateAIResponse(pageContext.module, text);
+
+        // Type checks to format visual widgets (Email, Quote, Checklist)
+        if (query.includes("email") || query.includes("draft") || query.includes("remind")) {
+          type = "email";
+          data = {
+            subject: "Clearance reminder: outstanding balance",
+            body: aiResponse
+          };
+        } else if (query.includes("timeline") || query.includes("schedule")) {
+          type = "timeline";
+          data = {
+            items: [
+              { time: "09:00 AM", event: "Vendor Setup Ingress", note: "Backdrop setup" },
+              { time: "04:30 PM", event: "Welcome Mocktails", note: "Guests reception" },
+              { time: "07:00 PM", event: "Ballroom Banquet dinner", note: "Curfew checklist" }
+            ]
+          };
+        } else if (query.includes("checklist")) {
+          type = "checklist";
+          data = {
+            items: [
+              "Confirm helium balloon bouquet supplier delivery",
+              "Pick up cake from bakery (2:00 PM)",
+              "Setup photobooth props and backdrop"
+            ]
+          };
+        } else if (query.includes("unpaid") || query.includes("weddings next month")) {
+          type = "search-result";
+          data = {
+            results: [
+              { id: "1", title: "Meera & Rohan Wedding Gala", date: "July 12, 2026", budget: "₹12,50,000", status: "CONFIRMED", link: "/events" },
+              { id: "2", title: "Siddharth & Ananya Destination Wedding", date: "July 22, 2026", budget: "₹28,00,000", status: "CONFIRMED", link: "/events" }
+            ]
+          };
+        }
       }
 
       const aiMsg: Message = {
@@ -223,10 +242,7 @@ export default function AiAssistant() {
         timestamp: new Date(),
         type,
         data,
-        suggestions: [
-          { label: "Show unpaid invoices", action: () => handleSendText("Show unpaid overdue invoices") },
-          { label: "Generate event schedule checklist", action: () => handleSendText("Generate wedding checklist") }
-        ]
+        suggestions
       };
 
       setMessages((prev) => [...prev, aiMsg]);

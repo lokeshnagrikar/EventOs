@@ -49,14 +49,18 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/api/v1/auth/login",
             "/api/v1/auth/register",
+            "/api/v1/auth/inquiries",
             "/api/v1/auth/refresh",
             "/api/v1/auth/switch",
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
             "/api/v1/auth/verify-email",
+            "/api/v1/auth/verify-otp",
+            "/api/v1/auth/resend-verification",
             "/api/v1/auth/accept-invite",
             "/api/v1/auth/captcha",
             "/api/v1/auth/ws",
+            "/api/v1/auth/billing/webhook",
             "/api/v1/gallery/share/public/",
             "/actuator"
     );

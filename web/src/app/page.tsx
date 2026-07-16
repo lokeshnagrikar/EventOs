@@ -26,8 +26,10 @@ const ClientPortalPreview = dynamic(() => import("@/components/landing/ClientPor
 const ProductShowcase = dynamic(() => import("@/components/landing/ProductShowcase").then(m => ({ default: m.ProductShowcase })), { ssr: true });
 const Testimonials = dynamic(() => import("@/components/landing/Testimonials").then(m => ({ default: m.Testimonials })), { ssr: true });
 const Pricing = dynamic(() => import("@/components/landing/Pricing").then(m => ({ default: m.Pricing })), { ssr: true });
+const Competitors = dynamic(() => import("@/components/landing/Competitors").then(m => ({ default: m.Competitors })), { ssr: true });
 const Faq = dynamic(() => import("@/components/landing/Faq").then(m => ({ default: m.Faq })), { ssr: false });
 const FinalCta = dynamic(() => import("@/components/landing/FinalCta").then(m => ({ default: m.FinalCta })), { ssr: true });
+const Contact = dynamic(() => import("@/components/landing/Contact").then(m => ({ default: m.Contact })), { ssr: true });
 const Footer = dynamic(() => import("@/components/landing/Footer").then(m => ({ default: m.Footer })), { ssr: true });
 
 // Simple fallback for dynamic sections
@@ -218,6 +220,11 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
             </Suspense>
           </div>
 
+          {/* Competitor Comparison */}
+          <Suspense fallback={<SectionSkeleton />}>
+            <Competitors />
+          </Suspense>
+
           {/* 11. FAQ Accordion */}
           <div id="faq">
             <Suspense fallback={<SectionSkeleton />}>
@@ -225,7 +232,14 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
             </Suspense>
           </div>
 
-          {/* 12. Final CTA with Email Capture */}
+          {/* 12. Contact Section */}
+          <div id="contact">
+            <Suspense fallback={<SectionSkeleton />}>
+              <Contact />
+            </Suspense>
+          </div>
+
+          {/* 13. Final CTA with Email Capture */}
           <Suspense fallback={<SectionSkeleton />}>
             <FinalCta />
           </Suspense>
@@ -236,18 +250,23 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
           <Footer />
         </Suspense>
       </div>
-
-      <AuthModal />
     </>
   );
 }
 
-export default function Home() {
-  const [preloaderActive, setPreloaderActive] = useState(true);
-  const [mounted, setMounted] = useState(false);
+let hasPreloaderPlayed = false;
 
+export default function Home() {
+  const [preloaderActive, setPreloaderActive] = useState(() => !hasPreloaderPlayed);
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("nopreload") === "true" || window.localStorage.getItem("nopreload") === "true") {
+        setPreloaderActive(false);
+      }
+    }
   }, []);
 
   return (
@@ -259,7 +278,10 @@ export default function Home() {
         )} 
       />
       {mounted && preloaderActive && (
-        <Preloader onComplete={() => setPreloaderActive(false)} />
+        <Preloader onComplete={() => {
+          hasPreloaderPlayed = true;
+          setPreloaderActive(false);
+        }} />
       )}
       <Suspense fallback={<div className="min-h-screen bg-[#09090B] flex items-center justify-center text-xs text-zinc-555">Loading EventOS...</div>}>
         <HomeContent preloaderActive={preloaderActive} />

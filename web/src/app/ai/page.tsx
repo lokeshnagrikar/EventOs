@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getAIConfig, saveAIConfig, getAIHistory, logAIActivity, AIProviderName, AIConfig, AIHistoryLog } from "@/lib/aiProvider";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { useOnboardingStore } from "@/store/onboardingStore";
 
 // Default Prompt Library Preset
 const DEFAULT_PROMPTS = [
@@ -40,6 +41,7 @@ export default function AICenterPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<"dashboard" | "prompts" | "history" | "settings">("dashboard");
+  const { completeStep } = useOnboardingStore();
 
   // Config State
   const [provider, setProvider] = useState<AIProviderName>("OPENAI");
@@ -60,6 +62,7 @@ export default function AICenterPage() {
 
   useEffect(() => {
     setMounted(true);
+    completeStep("explore_ai");
     const cfg = getAIConfig();
     setProvider(cfg.provider);
     setApiKey(cfg.apiKey);

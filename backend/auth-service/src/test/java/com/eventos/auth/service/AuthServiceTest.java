@@ -58,6 +58,8 @@ public class AuthServiceTest {
     private PasswordHistoryRepository passwordHistoryRepository;
     @Mock
     private EmailService emailService;
+    @Mock
+    private BillingService billingService;
 
     @InjectMocks
     private AuthService authService;
@@ -140,7 +142,8 @@ public class AuthServiceTest {
         when(sessionRepository.findAllByUserIdAndTenantId(testUser.getId(), tenantId))
                 .thenReturn(Collections.emptyList());
 
-        when(jwtService.generateToken(any(), any(), anyString(), any(), anyString(), any(), anyString(), anyString())).thenReturn("mockedAccessToken");
+        when(jwtService.generateToken(any(), any(), anyString(), any(), anyString(), any(), anyString(), anyString()))
+                .thenReturn("mockedAccessToken");
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(i -> i.getArguments()[0]);
 
         Map<String, Object> response = authService.login(testUser.getEmail(), "password", tenantId, "127.0.0.1",
@@ -211,10 +214,9 @@ public class AuthServiceTest {
         when(passwordEncoder.matches("password", testUser.getPasswordHash())).thenReturn(true);
         when(membershipRepository.findAllByUserId(testUser.getId())).thenReturn(List.of(membership));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-            authService.login(testUser.getEmail(), "password", tenantId, "127.0.0.1",
-                    "Chrome", "Windows", "Chrome", "UserAgent")
-        );
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> authService.login(testUser.getEmail(), "password", tenantId, "127.0.0.1",
+                        "Chrome", "Windows", "Chrome", "UserAgent"));
         assertEquals("EMAIL_UNVERIFIED", exception.getMessage());
     }
 
@@ -255,9 +257,8 @@ public class AuthServiceTest {
         testUser.setEmailVerificationTokenExpiry(LocalDateTime.now().plusMinutes(15));
         when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-            authService.verifyOtp(testUser.getEmail(), "654321")
-        );
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> authService.verifyOtp(testUser.getEmail(), "654321"));
         assertEquals("Invalid verification code", exception.getMessage());
     }
 
@@ -268,9 +269,8 @@ public class AuthServiceTest {
         testUser.setEmailVerificationTokenExpiry(LocalDateTime.now().minusMinutes(1));
         when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-            authService.verifyOtp(testUser.getEmail(), "123456")
-        );
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> authService.verifyOtp(testUser.getEmail(), "123456"));
         assertEquals("Verification code has expired", exception.getMessage());
     }
 }

@@ -181,4 +181,4 @@ Once the prerequisites are ready, follow this workflow:
 
 ---
 
-*Refer to the full [RUN_GUIDE.md](file:///D:/EventOs/RUN_GUIDE.md) in the project root for step-by-step startup order, verification scripts, and user registration flows.*
+*Refer to the full [local_run_guide.md](file:///D:/EventOs/docs/local_run_guide.md) in the project docs for step-by-step startup order, verification scripts, and user registration flows.*

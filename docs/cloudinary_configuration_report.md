@@ -9,10 +9,10 @@ This report summarizes the audit and fixes applied to the EventOS codebase regar
 | Component | Status | Config Source | Details / Actions Taken |
 | :--- | :---: | :--- | :--- |
 | **Root `.env` Configuration** | ✅ Valid | Root `.env` | Cloud Name, API Key, and API Secret are populated correctly. |
-| **Next.js Gallery Detail Page** | ✅ Resolved | [page.tsx](file:///d:/EventOs/web/src/app/gallery/%5Bid%5D/page.tsx) | Fixed missing `Clock` import from `lucide-react`. |
+| **Next.js Gallery Detail Page** | ✅ Resolved | page.tsx | Fixed missing `Clock` import from `lucide-react`. |
 | **Gallery Service** | ✅ Configured | `gallery-service` | Environment variables mapped correctly in both `docker-compose.yml` and Kubernetes configs. |
 | **CRM Service** | 🛠️ Fixed | `crm-service` | Added missing Cloudinary environment variables to both `docker-compose.yml` and `k8s/deployment.yaml`. |
-| **Manual Execution Helper** | 🚀 Added | [load_env.ps1](file:///d:/EventOs/load_env.ps1) | Created a PowerShell script to load `.env` variables for manual `java -jar` runs. |
+| **Manual Execution Helper** | 🚀 Added | load_env.ps1 | Created a PowerShell script to load `.env` variables for manual `java -jar` runs. |
 
 ---
 
@@ -43,7 +43,7 @@ This report summarizes the audit and fixes applied to the EventOS codebase regar
   ```
 
 ### 3. Created a PowerShell Environment Loader
-* **File:** [load_env.ps1](file:///d:/EventOs/load_env.ps1)
+* **File:** load_env.ps1
 * **Problem:** Running the backend microservices manually using `java -jar` inside PowerShell does not load `.env` file variables by default, causing them to run in Mock Mode.
 * **Fix:** Created a script that dynamically parses the `.env` file and populates the current PowerShell process environment.
 
@@ -107,4 +107,3 @@ cd D:\EventOs
 > Check the terminal output of `crm-service` and `gallery-service` when starting up. `CloudinaryService` will print:
 > `Cloudinary client initialized successfully for cloud: dqvwl8e13`
 > instead of the red/yellow warning fallback.
-

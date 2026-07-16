@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { cn } from "@/lib/utils";
@@ -17,55 +17,124 @@ interface NavbarProps {
 
 export function Navbar({ activeSection }: NavbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const lastScrollYRef = useRef(0);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
+    let timeoutId: NodeJS.Timeout;
+    const threshold = 120;
+
+    const handleActivity = (e?: Event) => {
+      const currentScrollY = window.scrollY;
+      const lastScrollY = lastScrollYRef.current;
+
+      setScrolled(currentScrollY > 40);
+
+      if (isOpen) {
+        setVisible(true);
+        clearTimeout(timeoutId);
+        return;
       }
+
+      // Always show at the top of the landing page hero section
+      if (pathname === "/" && currentScrollY <= threshold) {
+        setVisible(true);
+        clearTimeout(timeoutId);
+        lastScrollYRef.current = currentScrollY;
+        return;
+      }
+
+      let isScrollingDown = false;
+      if (e && e.type === "scroll") {
+        if (currentScrollY > lastScrollY && currentScrollY > threshold) {
+          isScrollingDown = true;
+        }
+      }
+
+      lastScrollYRef.current = currentScrollY;
+
+      if (isScrollingDown) {
+        setVisible(false);
+        clearTimeout(timeoutId);
+        return;
+      }
+
+      // Show instantly on scroll up or mousemove
+      setVisible(true);
+      clearTimeout(timeoutId);
+
+      // Auto-hide after 2.5 seconds of inactivity
+      timeoutId = setTimeout(() => {
+        if (window.scrollY > threshold && !isOpen) {
+          setVisible(false);
+        }
+      }, 2500);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+
+    handleActivity();
+
+    window.addEventListener("scroll", handleActivity);
+    window.addEventListener("mousemove", handleActivity);
+
+    return () => {
+      window.removeEventListener("scroll", handleActivity);
+      window.removeEventListener("mousemove", handleActivity);
+      clearTimeout(timeoutId);
+    };
+  }, [pathname, isOpen]);
 
   const solutions = [
-    { title: "Planner CRM", desc: "Manage client details, leads & pipeline", icon: "solar:users-group-rounded-bold-duotone", href: "#features" },
-    { title: "Smart Quotes", desc: "Interactive pricing quotes & contracts", icon: "solar:document-text-bold-duotone", href: "#modules" },
-    { title: "Event Planning", desc: "Coordinated task lists & schedules", icon: "solar:calendar-bold-duotone", href: "#workflow" },
-    { title: "Instant Payments", desc: "Milestone invoicing & global gateway", icon: "solar:wallet-money-bold-duotone", href: "#modules" },
-    { title: "Gallery Delivery", desc: "Deliver photos to clients in style", icon: "solar:gallery-bold-duotone", href: "#portal-preview" },
-    { title: "Client Portal", desc: "Self-service quote acceptance & pay", icon: "solar:window-frame-bold-duotone", href: "#portal-preview" },
+    { title: "Planner CRM", desc: "Manage client details, leads & pipeline", icon: "solar:users-group-rounded-bold-duotone", href: "/features" },
+    { title: "Smart Quotes", desc: "Interactive pricing quotes & contracts", icon: "solar:document-text-bold-duotone", href: "/features" },
+    { title: "Event Planning", desc: "Coordinated task lists & schedules", icon: "solar:calendar-bold-duotone", href: "/features" },
+    { title: "Instant Payments", desc: "Milestone invoicing & global gateway", icon: "solar:wallet-money-bold-duotone", href: "/features" },
+    { title: "Gallery Delivery", desc: "Deliver photos to clients in style", icon: "solar:gallery-bold-duotone", href: "/features" },
+    { title: "Client Portal", desc: "Self-service quote acceptance & pay", icon: "solar:window-frame-bold-duotone", href: "/features" },
   ];
 
   const resources = [
-    { title: "Help Center", desc: "Tutorials & platform documentation", icon: "solar:dialog-bold-duotone", href: "#faq" },
-    { title: "System Status", desc: "Active uptime logs and SLA metrics", icon: "solar:server-bold-duotone", href: "#footer" },
-    { title: "FAQs", desc: "Answers to common hosting questions", icon: "solar:question-square-bold-duotone", href: "#faq" },
+    { title: "Developer Docs", desc: "API payload schema & webhooks guide", icon: "solar:dialog-bold-duotone", href: "/docs" },
+    { title: "Operational Blog", desc: "SaaS growth insights & product changelogs", icon: "solar:server-bold-duotone", href: "/blog" },
+    { title: "Download Templates", desc: "Operations checklists & invoicing sheets", icon: "solar:document-text-bold-duotone", href: "/resources" },
+    { title: "Security & Trust", desc: "SOC2 compliance & multi-tenant isolation", icon: "solar:shield-bold-duotone", href: "/security" },
+    { title: "Solutions Directory", desc: "Tailored structures for event agencies", icon: "solar:window-frame-bold-duotone", href: "/solutions" },
   ];
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     setIsOpen(false);
     setActiveDropdown(null);
+    if (href.startsWith("/")) {
+      router.push(href);
+      return;
+    }
     const targetId = href.replace("#", "");
-    const elem = document.getElementById(targetId);
-    if (elem) {
-      const offset = 80;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = elem.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
+    if (pathname === "/") {
+      const elem = document.getElementById(targetId);
+      if (elem) {
+        const lenis = (window as any).lenis;
+        if (lenis) {
+          lenis.scrollTo(elem, { offset: -80, duration: 1.2 });
+        } else {
+          const offset = 80;
+          const bodyRect = document.body.getBoundingClientRect().top;
+          const elementRect = elem.getBoundingClientRect().top;
+          const elementPosition = elementRect - bodyRect;
+          const offsetPosition = elementPosition - offset;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
+        }
+      }
+    } else {
+      router.push("/" + href);
     }
   };
 
@@ -84,10 +153,11 @@ export function Navbar({ activeSection }: NavbarProps) {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500 ease-in-out transform",
+        (visible || isOpen) ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none",
         scrolled || isOpen
           ? "bg-zinc-950/70 backdrop-blur-md border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.4)] py-2"
-          : "bg-transparent border-b border-transparent py-2.5"
+          : "bg-transparent border-b border-transparent py-4"
       )}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -136,12 +206,12 @@ export function Navbar({ activeSection }: NavbarProps) {
         >
 
           <a
-            href="#features"
-            onClick={(e) => handleNavClick(e, "#features")}
+            href="/features"
+            onClick={(e) => handleNavClick(e, "/features")}
             onMouseEnter={() => setHoveredIndex(0)}
             className={cn(
               "text-[13px] font-semibold tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-zinc-400 hover:text-zinc-100",
-              activeSection === "features" && "text-white"
+              pathname === "/features" && "text-white"
             )}
           >
             Features
@@ -210,7 +280,7 @@ export function Navbar({ activeSection }: NavbarProps) {
                         </div>
                         <div>
                           <h4 className="text-xs font-extrabold text-zinc-200 group-hover:text-white transition-colors">{item.title}</h4>
-                          <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">{item.desc}</p>
+                          <p className="text-[10px] text-zinc-555 mt-0.5 leading-snug">{item.desc}</p>
                         </div>
                       </a>
                     ))}
@@ -221,12 +291,12 @@ export function Navbar({ activeSection }: NavbarProps) {
           </div>
 
           <a
-            href="#pricing"
-            onClick={(e) => handleNavClick(e, "#pricing")}
+            href="/pricing"
+            onClick={(e) => handleNavClick(e, "/pricing")}
             onMouseEnter={() => setHoveredIndex(2)}
             className={cn(
               "text-[13px] font-semibold tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-zinc-400 hover:text-zinc-100",
-              activeSection === "pricing" && "text-white"
+              pathname === "/pricing" && "text-white"
             )}
           >
             Pricing
@@ -312,6 +382,27 @@ export function Navbar({ activeSection }: NavbarProps) {
           className="hidden md:flex items-center gap-4"
           onMouseLeave={() => setHoveredIndex(null)}
         >
+          <button
+            onClick={() => router.push("/demo")}
+            onMouseEnter={() => setHoveredIndex(5)}
+            className={cn(
+              "text-[13px] font-semibold tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-purple-400 hover:text-purple-300 focus:outline-none flex items-center gap-1"
+            )}
+          >
+            <Icon icon="solar:star-bold-duotone" className="text-xs text-purple-450 animate-pulse" />
+            Live Demo
+            {hoveredIndex === 5 && (
+              <motion.div
+                layoutId="nav-hover-capsule"
+                className="absolute inset-0 rounded-full bg-purple-500/10 border border-purple-500/25 shadow-[0_2px_8px_rgba(139,92,246,0.15)] -z-10"
+                transition={{
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 30,
+                }}
+              />
+            )}
+          </button>
           <button
             onClick={handleSignIn}
             onMouseEnter={() => setHoveredIndex(4)}
@@ -405,6 +496,17 @@ export function Navbar({ activeSection }: NavbarProps) {
               <div className="h-px bg-zinc-850 my-1" />
 
               <div className="flex flex-col gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push("/demo");
+                  }}
+                  className="w-full border-purple-500/20 text-purple-400 hover:bg-purple-950/20 py-5 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
+                >
+                  <Icon icon="solar:star-bold-duotone" className="text-xs animate-pulse" />
+                  Live Demo
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => {

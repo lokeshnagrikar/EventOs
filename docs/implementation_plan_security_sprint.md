@@ -31,7 +31,7 @@ Remediation plan to address critical security, multi-tenancy, database consisten
 ### 1. API Gateway (`api-gateway`)
 * **Objective**: Eliminate HMAC key construction overhead in `JwtAuthFilter` on every single request.
 * **Scope of Changes**:
-  * **[MODIFY] [JwtAuthFilter.java](file:///d:/EventOs/backend/api-gateway/src/main/java/com/eventos/gateway/config/JwtAuthFilter.java)**:
+  * **[MODIFY] JwtAuthFilter.java**:
     * Cache the `SecretKey` and `JwtParser` instance using thread-safe double-checked lazy initialization.
     * Re-use the cached `JwtParser` instance to parse and validate token claims.
 
@@ -40,13 +40,13 @@ Remediation plan to address critical security, multi-tenancy, database consisten
 ### 2. CRM Service (`crm-service`)
 * **Objective**: Implement server-side pagination for leads/quotes and database-level stats aggregations.
 * **Scope of Changes**:
-  * **[MODIFY] [LeadRepository.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/repository/LeadRepository.java)** & **[QuoteRepository.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/repository/QuoteRepository.java)**:
+  * **[MODIFY] LeadRepository.java** & **[QuoteRepository.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/repository/QuoteRepository.java)**:
     * Add paginated finder methods returning `Page<Lead>` and `Page<Quote>` taking a `Pageable` parameter.
     * Add custom jpql/native aggregation queries in `LeadRepository` to count leads grouped by status, count by source, and average budget totals.
-  * **[MODIFY] [LeadService.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/service/LeadService.java)** & **[QuoteService.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/service/QuoteService.java)**:
+  * **[MODIFY] LeadService.java** & **[QuoteService.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/service/QuoteService.java)**:
     * Support paginated listings in service methods.
     * Implement a stats summary retrieval method in `LeadService` executing database aggregation queries.
-  * **[MODIFY] [CrmLeadController.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/controller/CrmLeadController.java)** & **[QuoteController.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/controller/QuoteController.java)**:
+  * **[MODIFY] CrmLeadController.java** & **[QuoteController.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/controller/QuoteController.java)**:
     * Update `GET /leads` and `GET /quotes` endpoints to accept optional `page` and `size` parameters.
     * Add `GET /leads/stats` endpoint in `CrmLeadController` to return compiled analytics.
 
@@ -55,12 +55,12 @@ Remediation plan to address critical security, multi-tenancy, database consisten
 ### 3. Event Service (`event-service`)
 * **Objective**: Implement server-side pagination and aggregates for events, invoices, and payments.
 * **Scope of Changes**:
-  * **[MODIFY] [EventRepository.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/repository/EventRepository.java)**, **[InvoiceRepository.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/repository/InvoiceRepository.java)**, and **[PaymentRepository.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/repository/PaymentRepository.java)**:
+  * **[MODIFY] EventRepository.java**, **[InvoiceRepository.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/repository/InvoiceRepository.java)**, and **[PaymentRepository.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/repository/PaymentRepository.java)**:
     * Add paginated methods for events, invoices, and payments.
     * Add database aggregation queries (sums, counts, monthly sums, payment method groupings).
-  * **[MODIFY] [EventService.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/service/EventService.java)**, **[InvoiceService.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/service/InvoiceService.java)**, and **[PaymentService.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/service/PaymentService.java)**:
+  * **[MODIFY] EventService.java**, **[InvoiceService.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/service/InvoiceService.java)**, and **[PaymentService.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/service/PaymentService.java)**:
     * Integrate pagination and database-level aggregations in service layers.
-  * **[MODIFY] [EventController.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/controller/EventController.java)**, **[InvoiceController.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/controller/InvoiceController.java)**, and **[PaymentController.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/controller/PaymentController.java)**:
+  * **[MODIFY] EventController.java**, **[InvoiceController.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/controller/InvoiceController.java)**, and **[PaymentController.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/controller/PaymentController.java)**:
     * Support paginated requests for events, invoices, and payments.
     * Add `GET /events/stats`, `GET /invoices/stats`, and `GET /payments/stats` endpoints.
 
@@ -69,17 +69,17 @@ Remediation plan to address critical security, multi-tenancy, database consisten
 ### 4. Web Frontend (`web`)
 * **Objective**: Switch reports page to use stats endpoints, optimize cache times, and replace browser alert boxes with premium toast alerts.
 * **Scope of Changes**:
-  * **[MODIFY] [providers.tsx](file:///d:/EventOs/web/src/app/providers.tsx)**:
+  * **[MODIFY] providers.tsx**:
     * Adjust React Query global `staleTime` from 5 minutes to 10 seconds, ensuring near real-time dashboard updates.
-  * **[MODIFY] [reports/page.tsx](file:///d:/EventOs/web/src/app/reports/page.tsx)**:
+  * **[MODIFY] reports/page.tsx**:
     * Refactor to fetch aggregated analytics from the backend `/stats` endpoints rather than performing client-side calculations on full datasets.
-  * **[NEW] [toastStore.ts](file:///d:/EventOs/web/src/lib/toastStore.ts)**:
+  * **[NEW] toastStore.ts**:
     * A Zustand store managing active toast notifications (`addToast`, `removeToast`, toast type states).
-  * **[NEW] [ToastContainer.tsx](file:///d:/EventOs/web/src/components/ToastContainer.tsx)**:
+  * **[NEW] ToastContainer.tsx**:
     * Floating container component rendering beautiful, animated toast banners (success/error/info) in the bottom-right corner.
-  * **[MODIFY] [layout.tsx](file:///d:/EventOs/web/src/app/layout.tsx)**:
+  * **[MODIFY] layout.tsx**:
     * Embed `ToastContainer` globally in the application body.
-  * **[MODIFY] [portal/page.tsx](file:///d:/EventOs/web/src/app/portal/page.tsx)** & **[settings/page.tsx](file:///d:/EventOs/web/src/app/settings/page.tsx)**:
+  * **[MODIFY] portal/page.tsx** & **[settings/page.tsx](file:///d:/EventOs/web/src/app/settings/page.tsx)**:
     * Replace browser `alert(...)` popups with sleek trigger calls to the custom toast store (`addToast`).
 
 ---
@@ -144,4 +144,3 @@ EventOs/
 3. **Database Aggregations**: Call `/api/v1/crm/leads/stats` and `/api/v1/events/payments/stats` to verify that calculations like conversions and monthly sums are correctly aggregated on the server.
 4. **Reports Analytics Page**: Load the dashboard reports page, verify it loads stats instantly and that network payloads are tiny compared to full datasets.
 5. **Toast Notifications**: Trigger quote approvals, rejections, or settings saves and confirm that elegant animated toast banners pop up in the bottom-right corner instead of blocking browser dialog boxes.
-

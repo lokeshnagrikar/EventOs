@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import EmptyState from "@/components/ui/EmptyState";
+import { TableSkeleton } from "@/components/ui/skeletons";
 
 interface TimelineItem {
   id: string;
@@ -79,12 +81,7 @@ export default function PortalTimelinePage() {
   const progressPercent = sortedTimeline.length > 0 ? Math.round((completedCount / sortedTimeline.length) * 100) : 0;
 
   if (isLoading) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <span className="h-8 w-8 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin" />
-        <span className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Loading Schedule...</span>
-      </div>
-    );
+    return <TableSkeleton cols={3} rows={5} />;
   }
 
   return (
@@ -127,13 +124,11 @@ export default function PortalTimelinePage() {
       </div>
 
       {sortedTimeline.length === 0 ? (
-        <div className="text-center py-20 border border-dashed border-zinc-850 rounded-2xl bg-[#161618]/10 text-zinc-500 flex flex-col items-center justify-center gap-3">
-          <Clock size={36} className="text-zinc-700" />
-          <div>
-            <p className="font-semibold text-zinc-400">Timeline not active</p>
-            <p className="text-xs text-zinc-650 mt-1">Our coordinators will outline milestones shortly.</p>
-          </div>
-        </div>
+        <EmptyState
+          icon={Clock}
+          title="Timeline not active"
+          description="Our coordinators will outline milestones shortly."
+        />
       ) : (
         <div className="relative pl-8 ml-4 sm:ml-6 space-y-8 py-2">
           

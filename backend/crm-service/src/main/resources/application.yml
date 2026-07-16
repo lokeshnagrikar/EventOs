@@ -4,6 +4,11 @@ server:
     context-path: /api/v1/crm
   tomcat:
     redirect-context-root: false
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+  shutdown: graceful
 
 spring:
   application:
@@ -12,6 +17,8 @@ spring:
     # Disable trailing-slash redirect to prevent 301s bypassing the API Gateway proxy (CORS)
     pathmatch:
       use-suffix-pattern: false
+  jackson:
+    default-property-inclusion: non_null
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
@@ -26,6 +33,13 @@ spring:
     username: ${POSTGRES_USER:eventos_admin}
     password: ${POSTGRES_PASSWORD:eventos_secure_pass}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+      leak-detection-threshold: 2000
   jpa:
     hibernate:
       ddl-auto: validate
@@ -37,6 +51,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    validate-on-migrate: false
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:demo}
@@ -65,6 +80,8 @@ management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
     prometheus:
       enabled: true
   metrics:
@@ -75,7 +92,7 @@ management:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo:4318/v1/traces}
   tracing:
     sampling:
-      probability: 1.0
+      probability: ${OTEL_SAMPLING_PROBABILITY:0.0}
 
 resilience4j:
   circuitbreaker:

@@ -11,12 +11,75 @@ import { SessionTimeoutHandler } from "@/components/auth/SessionTimeoutHandler";
 import { SocketProvider } from "@/context/SocketContext";
 import Lenis from "lenis";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { useAuthStore } from "@/store/authStore";
+import { useBillingStore } from "@/store/billingStore";
+import LimitExceededModal from "@/components/ui/LimitExceededModal";
+import { useOnboardingStore } from "@/store/onboardingStore";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import ProductTourSpotlight from "@/components/onboarding/ProductTourSpotlight";
+import OnboardingChecklistWidget from "@/components/onboarding/OnboardingChecklistWidget";
+import HelpSearch from "@/components/help/HelpSearch";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { ExitIntent } from "@/components/landing/ExitIntent";
+import OfflineBanner from "@/components/ui/OfflineBanner";
+import CelebrationOverlay from "@/components/onboarding/CelebrationOverlay";
+import ContextualHelp from "@/components/help/ContextualHelp";
+
+
 
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
+  const { activeTenantId, accessToken, initializeAuth } = useAuthStore();
+  const { fetchSubscription, fetchUsage, fetchSettings, fetchPlans } = useBillingStore();
+  const { openOnboarding } = useOnboardingStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    initializeAuth();
+    setMounted(true);
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      const activeTenant = sessionStorage.getItem("activeTenantId");
+      if (activeTenant && !accessToken) {
+        try {
+          const { apiClient } = require("@/lib/api-client");
+          const response = await apiClient.post("/auth/refresh", {});
+          const { accessToken: newAccessToken } = response.data.data;
+          
+          useAuthStore.setState({ accessToken: newAccessToken });
+        } catch (err) {
+          console.error("Failed to restore session token:", err);
+          useAuthStore.getState().clearAuth();
+        }
+      }
+    };
+
+    if (mounted) {
+      restoreSession();
+    }
+  }, [mounted, accessToken]);
+
+  useEffect(() => {
+    if (activeTenantId && accessToken) {
+      fetchPlans();
+      fetchSubscription();
+      fetchUsage();
+      fetchSettings();
+
+      // Detect if new workspace
+      const storedStatus = localStorage.getItem("eventos_onboarding_status");
+      if (!storedStatus) {
+        openOnboarding();
+      }
+    }
+  }, [activeTenantId, accessToken]);
+
+
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -30,14 +93,33 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    // Initialize Lenis smooth scroll ONLY on the public landing page (/)
+    // Initialize Lenis smooth scroll on all public marketing pages.
     // This prevents Lenis from hijacking trackpad/mouse scroll events in nested scroll containers in dashboard & portal pages.
-    const isLandingPage = pathname === "/";
+    const isDashboardOrPortal = pathname.startsWith("/dashboard") || 
+                                pathname.startsWith("/portal") || 
+                                pathname.startsWith("/activity") ||
+                                pathname.startsWith("/ai") ||
+                                pathname.startsWith("/bookings") ||
+                                pathname.startsWith("/chat") ||
+                                pathname.startsWith("/crm") ||
+                                pathname.startsWith("/developer") ||
+                                pathname.startsWith("/events") ||
+                                pathname.startsWith("/settings") ||
+                                pathname.startsWith("/superadmin") ||
+                                pathname.startsWith("/workspace-select") ||
+                                pathname.startsWith("/onboarding") ||
+                                pathname.startsWith("/invoices") ||
+                                pathname.startsWith("/quotes") ||
+                                pathname.startsWith("/reports") ||
+                                pathname.startsWith("/share") ||
+                                pathname.startsWith("/import") ||
+                                pathname.startsWith("/payments");
+    const isPublicMarketingPage = !isDashboardOrPortal;
     let lenis: Lenis | null = null;
     let animationFrameId: number;
     let observer: MutationObserver | null = null;
 
-    if (isLandingPage) {
+    if (isPublicMarketingPage) {
       lenis = new Lenis({
         duration: 1.2,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -47,6 +129,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         wheelMultiplier: 1.0,
         touchMultiplier: 1.5,
       });
+
+      (window as any).lenis = lenis;
 
       // Synchronize Lenis state with body overflow style (locks scroll during preloader or modals)
       if (document.body.style.overflow === "hidden") {
@@ -148,21 +232,37 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "171503360314-e51mor0dee5v5f5jqi3gincelrhuva4l.apps.googleusercontent.com"}>
       <QueryClientProvider client={queryClient}>
         <SocketProvider>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={pathname}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }} // Fast, premium Vercel/Linear cubic-bezier
-              className="min-h-screen flex flex-col"
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
-          <AiAssistant />
-          <SmartSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-          <SessionTimeoutHandler />
+          <div className="min-h-screen flex flex-col relative overflow-hidden">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full flex-1 flex flex-col"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          {mounted && (
+            <>
+              <AiAssistant />
+              <SmartSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+              <SessionTimeoutHandler />
+              <LimitExceededModal />
+              <OnboardingWizard />
+              <ProductTourSpotlight />
+              <OnboardingChecklistWidget />
+              <HelpSearch />
+              <AuthModal />
+              <ExitIntent />
+              <CelebrationOverlay />
+              <ContextualHelp />
+            </>
+          )}
+          <OfflineBanner />
         </SocketProvider>
       </QueryClientProvider>
     </GoogleOAuthProvider>

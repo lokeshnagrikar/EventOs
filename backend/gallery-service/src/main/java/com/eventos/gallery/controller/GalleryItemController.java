@@ -121,6 +121,46 @@ public class GalleryItemController {
         }
     }
 
+    /**
+     * Avatar-only upload endpoint — uploads a profile image directly to Cloudinary
+     * without needing an albumId. Returns the secure CDN URL for use in user profiles.
+     */
+    @PostMapping(value = "/upload-avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    public ResponseEntity<?> uploadAvatar(
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("BAD_REQUEST", "File cannot be empty"));
+            }
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("BAD_REQUEST", "Only image files are allowed for avatars"));
+            }
+
+            java.util.Map<String, Object> uploadResult = galleryItemService.uploadAvatarToCloudinary(file);
+            String secureUrl = (String) uploadResult.get("secure_url");
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("url", secureUrl);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", data);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(createErrorResponse("BAD_REQUEST", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("UPLOAD_FAILED", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
     public ResponseEntity<?> deleteItem(

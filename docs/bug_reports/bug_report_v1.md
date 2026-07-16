@@ -11,14 +11,14 @@ This document reports critical and minor issues identified during the system-wid
 * **Consequences:** Key business logic operations (such as converting quotes to bookings, verifying lead contacts for permissions, and invalidating dashboard caches) fail with **404 Not Found** errors.
 
 ### Root Cause
-In `event-service`'s [application.yml](file:///d:/EventOs/backend/event-service/src/main/resources/application.yml#L46), the CRM service base URL is configured as:
+In `event-service`'s application.yml, the CRM service base URL is configured as:
 ```yaml
 service:
   crm:
     base-url: ${CRM_SERVICE_URL:http://localhost:8082/api/v1/crm}
 ```
 This means `crmServiceBaseUrl` in the Java classes resolves to `http://localhost:8082/api/v1/crm`.
-However, inside [BookingService.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/service/BookingService.java) and [PaymentService.java](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/service/PaymentService.java), the REST requests append hardcoded paths containing `"/crm"`:
+However, inside BookingService.java and PaymentService.java, the REST requests append hardcoded paths containing `"/crm"`:
 * **BookingService.java L158:** `crmServiceBaseUrl + "/crm/quotes/" + booking.getQuoteId().toString()`
   * Resolves to: `http://localhost:8082/api/v1/crm/crm/quotes/{id}`
 * **BookingService.java L169:** `crmServiceBaseUrl + "/crm/leads/" + leadId.toString()`
@@ -45,7 +45,7 @@ For example, change `crmServiceBaseUrl + "/crm/quotes/"` to `crmServiceBaseUrl +
 * **Consequences:** The CRM Dashboard metrics aggregation endpoint fails to fetch event and financial statistics (like upcoming events list, revenue metrics, and outstanding payments balance), resulting in **404 Not Found** errors and causing the CRM Dashboard to display default fallback values (0 events, 0 revenue).
 
 ### Root Cause
-1. In `crm-service`'s [DashboardService.java](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/service/DashboardService.java#L30-L31), the `eventServiceBaseUrl` falls back to `http://localhost:8083/api/v1` because the property `service.event.base-url` is missing from `crm-service`'s `application.yml`.
+1. In `crm-service`'s DashboardService.java, the `eventServiceBaseUrl` falls back to `http://localhost:8083/api/v1` because the property `service.event.base-url` is missing from `crm-service`'s `application.yml`.
 2. The `event-service` is configured with context-path `server.servlet.context-path: /api/v1/events`.
 3. In `DashboardService.java` L242, the endpoint is called as:
    ```java
@@ -54,7 +54,7 @@ For example, change `crmServiceBaseUrl + "/crm/quotes/"` to `crmServiceBaseUrl +
    This resolves to `http://localhost:8083/api/v1/dashboard/metrics`, but the actual endpoint lies at `http://localhost:8083/api/v1/events/dashboard/metrics`.
 
 ### How to Fix
-1. Add the missing event service property in `crm-service`'s [application.yml](file:///d:/EventOs/backend/crm-service/src/main/resources/application.yml):
+1. Add the missing event service property in `crm-service`'s application.yml:
    ```yaml
    service:
      event:
@@ -76,9 +76,9 @@ For example, change `crmServiceBaseUrl + "/crm/quotes/"` to `crmServiceBaseUrl +
 
 ### Root Cause
 In all three microservice `JwtRequestFilter` classes:
-* [auth-service JwtRequestFilter.java L51-85](file:///d:/EventOs/backend/auth-service/src/main/java/com/eventos/auth/config/JwtRequestFilter.java#L51-L85)
-* [crm-service JwtRequestFilter.java L61-95](file:///d:/EventOs/backend/crm-service/src/main/java/com/eventos/crm/config/JwtRequestFilter.java#L61-L95)
-* [event-service JwtRequestFilter.java L61-95](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/gateway/config/JwtAuthFilter.java#L61-L95) *(Note: check correct service path)*
+* auth-service JwtRequestFilter.java L51-85
+* crm-service JwtRequestFilter.java L61-95
+* event-service JwtRequestFilter.java L61-95
 
 The code sets the tenant:
 ```java
@@ -112,7 +112,7 @@ return;
 * **Consequences:** Users with `MANAGER` or `STAFF` roles cannot access the team member list `/settings/team`. In collaborative views (like scheduling booking resource assignments or selecting event coordinators), the frontend fails to fetch user lists, resulting in **403 Forbidden** errors.
 
 ### Root Cause
-In `auth-service`'s [SettingsController.java L117](file:///d:/EventOs/backend/auth-service/src/main/java/com/eventos/auth/controller/SettingsController.java#L117):
+In `auth-service`'s SettingsController.java L117:
 ```java
 @GetMapping("/team")
 @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")

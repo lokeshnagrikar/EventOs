@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import EmptyState from "@/components/ui/EmptyState";
+import { TableSkeleton } from "@/components/ui/skeletons";
 
 interface Invoice {
   id: string;
@@ -121,12 +123,7 @@ export default function PortalInvoicesPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <span className="h-8 w-8 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin" />
-        <span className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Loading Accounts Statement...</span>
-      </div>
-    );
+    return <TableSkeleton cols={4} rows={6} />;
   }
 
   return (
@@ -145,13 +142,11 @@ export default function PortalInvoicesPage() {
         </div>
 
         {clientInvoices.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-zinc-850 rounded-2xl bg-[#161618]/10 text-zinc-500 flex flex-col items-center justify-center gap-3">
-            <FileSpreadsheet size={36} className="text-zinc-700" />
-            <div>
-              <p className="font-semibold text-zinc-455">No invoices issued</p>
-              <p className="text-xs text-zinc-650 mt-1">Invoice logs will show here once statements are generated.</p>
-            </div>
-          </div>
+          <EmptyState
+            icon={FileSpreadsheet}
+            title="No invoices issued"
+            description="Invoice logs will show here once statements are generated."
+          />
         ) : (
           <div className="space-y-4">
             {clientInvoices.map((invoice) => (
@@ -306,9 +301,12 @@ export default function PortalInvoicesPage() {
 
           <div className="space-y-2.5">
             {clientPayments.length === 0 ? (
-              <div className="text-center py-10 border border-dashed border-zinc-850 rounded-xl bg-zinc-950/20 text-zinc-550 text-[10.5px]">
-                No payment history logs cleared.
-              </div>
+              <EmptyState
+                icon={Landmark}
+                title="No payment history logs cleared"
+                description="Transaction receipts will show here once payments are processed."
+                compact
+              />
             ) : (
               clientPayments.map((payment) => (
                 <div

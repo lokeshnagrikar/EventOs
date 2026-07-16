@@ -12,7 +12,9 @@ import {
   HelpCircle,
   Clock,
   Briefcase,
-  DollarSign
+  DollarSign,
+  Square,
+  CheckSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +49,9 @@ interface AdvancedTableProps {
     totalElements: number;
   };
   onPageChange?: (page: number) => void;
+  selectedLeadIds?: string[];
+  onToggleSelectLead?: (leadId: string) => void;
+  onSelectAllLeads?: (leadIds: string[]) => void;
 }
 
 function Highlight({ text, search }: { text: string; search: string }) {
@@ -56,7 +61,7 @@ function Highlight({ text, search }: { text: string; search: string }) {
     <span>
       {parts.map((part, i) =>
         part.toLowerCase() === search.toLowerCase() ? (
-          <mark key={i} className="bg-purple-600 text-white rounded px-0.5 font-bold">
+          <mark key={i} className="bg-purple-650 text-white rounded px-0.5 font-bold">
             {part}
           </mark>
         ) : (
@@ -74,6 +79,9 @@ export default function AdvancedTable({
   searchQuery = "",
   pagination,
   onPageChange,
+  selectedLeadIds = [],
+  onToggleSelectLead,
+  onSelectAllLeads,
 }: AdvancedTableProps) {
   const [sortField, setSortField] = useState<keyof Lead>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -139,13 +147,28 @@ export default function AdvancedTable({
       case "WON":
       case "BOOKED":
       case "COMPLETED":
-        return "border-emerald-500/20 bg-emerald-500/5 text-emerald-450";
+        return "border-emerald-500/20 bg-emerald-500/5 text-emerald-455";
       case "LOST":
         return "border-red-500/20 bg-red-500/5 text-red-405";
       case "ARCHIVED":
         return "border-zinc-500/20 bg-zinc-550/5 text-zinc-400";
       default:
         return "border-zinc-800 bg-zinc-900 text-zinc-400";
+    }
+  };
+
+  const allSelected = sortedLeads.length > 0 && sortedLeads.every(l => selectedLeadIds.includes(l.id));
+
+  const handleSelectAll = () => {
+    if (!onSelectAllLeads) return;
+    if (allSelected) {
+      // Unselect all in current view
+      const leadIdsToKeep = selectedLeadIds.filter(id => !sortedLeads.some(l => l.id === id));
+      onSelectAllLeads(leadIdsToKeep);
+    } else {
+      // Select all in current view
+      const uniqueIds = Array.from(new Set([...selectedLeadIds, ...sortedLeads.map(l => l.id)]));
+      onSelectAllLeads(uniqueIds);
     }
   };
 
@@ -170,6 +193,16 @@ export default function AdvancedTable({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-zinc-900 bg-zinc-900/30 text-zinc-500 font-bold select-none">
+              {onToggleSelectLead && (
+                <th className="p-4 w-10">
+                  <div 
+                    onClick={handleSelectAll}
+                    className="p-1 hover:bg-zinc-800 rounded text-zinc-500 hover:text-white transition cursor-pointer"
+                  >
+                    {allSelected ? <CheckSquare size={13} className="text-purple-400" /> : <Square size={13} />}
+                  </div>
+                </th>
+              )}
               <th className="p-4 cursor-pointer hover:text-zinc-300 transition-colors" onClick={() => handleSort("name")}>
                 Client Name <ArrowUpDown size={11} className="inline ml-1 opacity-70" />
               </th>
@@ -194,13 +227,28 @@ export default function AdvancedTable({
             {sortedLeads.map((lead) => {
               const assignee = teamMembers.find((m) => m.id === lead.assignedUserId);
               const assigneeName = assignee ? `${assignee.firstName} ${assignee.lastName}` : "Unassigned";
+              const isSelected = selectedLeadIds.includes(lead.id);
 
               return (
                 <tr
                   key={lead.id}
                   onClick={() => onLeadClick(lead.id)}
-                  className="hover:bg-[#161618]/30 transition-all cursor-pointer"
+                  className={cn(
+                    "hover:bg-[#161618]/30 transition-all cursor-pointer",
+                    isSelected ? "bg-purple-550/[0.02] border-l-2 border-l-purple-500" : ""
+                  )}
                 >
+                  {onToggleSelectLead && (
+                    <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                      <div 
+                        onClick={() => onToggleSelectLead(lead.id)}
+                        className="p-1 hover:bg-zinc-800 rounded text-zinc-500 hover:text-white transition cursor-pointer"
+                      >
+                        {isSelected ? <CheckSquare size={13} className="text-purple-400" /> : <Square size={13} />}
+                      </div>
+                    </td>
+                  )}
+                  
                   {/* Name with Highlight */}
                   <td className="p-4 font-bold text-zinc-200">
                     <Highlight text={lead.name} search={searchQuery} />
@@ -211,7 +259,7 @@ export default function AdvancedTable({
                     <div className="text-zinc-300">
                       <Highlight text={lead.phone || ""} search={searchQuery} />
                     </div>
-                    <div className="text-[10px] text-zinc-500">
+                    <div className="text-[10px] text-zinc-550">
                       <Highlight text={lead.email || ""} search={searchQuery} />
                     </div>
                   </td>
@@ -254,7 +302,7 @@ export default function AdvancedTable({
             })}
             {leads.length === 0 && (
               <tr>
-                <td colSpan={8} className="text-center py-12 text-zinc-500 italic">
+                <td colSpan={9} className="text-center py-12 text-zinc-500 italic">
                   No records match the active workspace filters.
                 </td>
               </tr>

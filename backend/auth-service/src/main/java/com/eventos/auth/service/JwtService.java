@@ -115,6 +115,13 @@ public class JwtService {
     public String generateToken(User user, java.util.UUID tenantId, String role, 
                                  java.util.List<String> permissions, String companyName, 
                                  java.util.UUID workspaceId, String deviceId, String sessionId) {
+        return generateToken(user, tenantId, role, permissions, companyName, workspaceId, deviceId, sessionId, false);
+    }
+
+    public String generateToken(User user, java.util.UUID tenantId, String role, 
+                                 java.util.List<String> permissions, String companyName, 
+                                 java.util.UUID workspaceId, String deviceId, String sessionId,
+                                 boolean impersonated) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenantId", tenantId.toString());
         claims.put("userId", user.getId().toString());
@@ -127,7 +134,7 @@ public class JwtService {
         claims.put("firstName", user.getFirstName());
         claims.put("lastName", user.getLastName());
         claims.put("email", user.getEmail());
-        claims.put("impersonated", false);
+        claims.put("impersonated", impersonated);
 
         if (useSymmetric) {
             return Jwts.builder()

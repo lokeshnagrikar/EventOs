@@ -105,12 +105,16 @@ export const AnimatedBeam: React.FC<AnimatedBeamProps> = ({
       resizeObserver.observe(containerRef.current)
     }
 
+    // Add window resize listener
+    window.addEventListener("resize", updatePath)
+
     // Call the updatePath initially to set the initial path
     updatePath()
 
     // Clean up the observer on component unmount
     return () => {
       resizeObserver.disconnect()
+      window.removeEventListener("resize", updatePath)
     }
   }, [
     containerRef,
@@ -174,14 +178,10 @@ export const AnimatedBeam: React.FC<AnimatedBeamProps> = ({
             repeatDelay,
           }}
         >
-          <stop stopColor={gradientStartColor} stopOpacity="0"></stop>
-          <stop stopColor={gradientStartColor}></stop>
-          <stop offset="32.5%" stopColor={gradientStopColor}></stop>
-          <stop
-            offset="100%"
-            stopColor={gradientStopColor}
-            stopOpacity="0"
-          ></stop>
+          <stop offset="0%" stopColor={gradientStartColor} stopOpacity="0" />
+          <stop offset="10%" stopColor={gradientStartColor} stopOpacity="1" />
+          <stop offset="90%" stopColor={gradientStopColor} stopOpacity="1" />
+          <stop offset="100%" stopColor={gradientStopColor} stopOpacity="0" />
         </motion.linearGradient>
       </defs>
     </svg>

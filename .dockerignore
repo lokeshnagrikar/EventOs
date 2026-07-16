@@ -1,0 +1,13 @@
+node_modules
+web/node_modules
+web/.next
+backend/**/target
+logs
+Project SRE Hardening & Audit Files
+.git
+.github
+.vscode
+hs_err_pid*.log
+replay_pid*.log
+*.zip
+*.tar.gz

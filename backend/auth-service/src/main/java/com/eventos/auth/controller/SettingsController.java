@@ -2,8 +2,10 @@ package com.eventos.auth.controller;
 
 import com.eventos.auth.entity.Company;
 import com.eventos.auth.entity.Membership;
+import com.eventos.auth.entity.User;
 import com.eventos.auth.repository.MembershipRepository;
 import com.eventos.auth.repository.CompanyRepository;
+import com.eventos.auth.repository.UserRepository;
 import com.eventos.auth.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +25,16 @@ public class SettingsController {
 
     private final CompanyRepository companyRepository;
     private final MembershipRepository membershipRepository;
+    private final UserRepository userRepository;
     private final AuthService authService;
 
     public SettingsController(CompanyRepository companyRepository,
             MembershipRepository membershipRepository,
+            UserRepository userRepository,
             AuthService authService) {
         this.companyRepository = companyRepository;
         this.membershipRepository = membershipRepository;
+        this.userRepository = userRepository;
         this.authService = authService;
     }
 
@@ -111,9 +116,72 @@ public class SettingsController {
         return ResponseEntity.ok(response);
     }
 
+    // --- User Profile Endpoints ---
 
+    @GetMapping("/profile")
+    public ResponseEntity<?> getUserProfile() {
+        UUID userId = getUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"));
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", user.getId().toString());
+        data.put("firstName", user.getFirstName());
+        data.put("lastName", user.getLastName());
+        data.put("email", user.getEmail());
+        data.put("phone", user.getPhone());
+        data.put("profileImage", user.getProfileImage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", data);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateUserProfile(@RequestBody Map<String, String> request) {
+        UUID userId = getUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"));
+
+        if (request.containsKey("firstName"))
+            user.setFirstName(request.get("firstName"));
+        if (request.containsKey("lastName"))
+            user.setLastName(request.get("lastName"));
+        if (request.containsKey("phone"))
+            user.setPhone(request.get("phone"));
+        if (request.containsKey("profileImage"))
+            user.setProfileImage(request.get("profileImage"));
+
+        User saved = userRepository.save(user);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", saved.getId().toString());
+        data.put("firstName", saved.getFirstName());
+        data.put("lastName", saved.getLastName());
+        data.put("email", saved.getEmail());
+        data.put("phone", saved.getPhone());
+        data.put("profileImage", saved.getProfileImage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", data);
+        return ResponseEntity.ok(response);
+    }
 
     // --- Helpers ---
+
+    private UUID getUserId() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
+            return ((com.eventos.auth.config.UserPrincipal) auth.getPrincipal()).getUserId();
+        }
+        throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "User context is missing");
+    }
 
     private UUID getTenantId(String header) {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder

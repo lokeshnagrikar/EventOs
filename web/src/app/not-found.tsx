@@ -6,7 +6,7 @@ import { Compass, HelpCircle } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen w-full bg-[#09090B] text-zinc-100 flex items-center justify-center p-4 overflow-hidden relative selection:bg-purple-600/35 selection:text-white">
+    <div className="min-h-screen w-full bg-background text-foreground flex items-center justify-center p-4 overflow-hidden relative selection:bg-purple-600/35 selection:text-white">
       {/* Decorative radial gradients */}
       <div className="absolute inset-0 bg-[radial-gradient(#1c1917_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-15 pointer-events-none z-0" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-purple-550/10 blur-[120px] rounded-full pointer-events-none z-0" />
@@ -16,7 +16,7 @@ export default function NotFound() {
           {/* Top Line Accent */}
           <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 opacity-90" />
 
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-4" role="alert" aria-live="polite">
             <div className="mx-auto h-12 w-12 rounded-2xl bg-purple-550/10 border border-purple-500/20 flex items-center justify-center text-purple-400 select-none">
               <Compass size={22} className="animate-spin-slow" />
             </div>
@@ -33,13 +33,13 @@ export default function NotFound() {
             <div className="flex flex-col gap-2 pt-3 border-t border-zinc-850">
               <Link
                 href="/dashboard"
-                className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors active:scale-[0.98] w-full"
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors active:scale-[0.98] w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
               >
                 Go to Command Dashboard
               </Link>
               <Link
                 href="/"
-                className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-350 rounded-xl text-xs font-bold cursor-pointer transition-colors active:scale-[0.98] w-full border border-zinc-700/50"
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-350 rounded-xl text-xs font-bold cursor-pointer transition-colors active:scale-[0.98] w-full border border-zinc-700/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
               >
                 <HelpCircle size={12} />
                 Visit Portal Homepage

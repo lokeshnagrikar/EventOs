@@ -79,6 +79,8 @@ public class PaymentTrackingIntegrationTest {
         UserPrincipal principal = new UserPrincipal(UUID.randomUUID(), tenantId, "owner@eventos.com", "OWNER");
         auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                 principal, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_OWNER")));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+        com.eventos.event.config.TenantContext.setTenantId(tenantId);
 
         // Setup sequences
         tenantSequenceRepository.save(TenantSequence.builder()

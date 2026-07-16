@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -130,6 +131,8 @@ export default function ForgotPasswordPage() {
               id="email"
               type="email"
               placeholder="you@company.com"
+              autoFocus
+              autoComplete="email"
               className={`w-full pl-10 pr-4 py-2.5 bg-zinc-950/50 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                 errors.email ? "border-rose-500/50" : "border-zinc-800 focus:border-[#8B5CF6]"
               }`}
@@ -156,13 +159,13 @@ export default function ForgotPasswordPage() {
       </form>
 
       <div className="text-center pt-4 border-t border-zinc-850">
-        <a
+        <Link
           href="/login"
-          className="text-xs text-zinc-400 hover:text-white flex items-center justify-center gap-2 transition-all"
+          className="text-xs text-zinc-400 hover:text-white flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded"
         >
           <ArrowLeft size={14} />
           Back to Sign In
-        </a>
+        </Link>
       </div>
     </div>
   );

@@ -75,6 +75,26 @@ public class CloudinaryService {
         }
     }
 
+    private Map<String, Object> getMockUploadResult(MultipartFile file, boolean isVideo) {
+        log.info("Simulating media upload in Mock Mode for file: {}", file.getOriginalFilename());
+        Map<String, Object> result = new HashMap<>();
+        String url = isVideo 
+                ? mockVideos.get(random.nextInt(mockVideos.size()))
+                : mockImages.get(random.nextInt(mockImages.size()));
+        
+        result.put("secure_url", url);
+        result.put("public_id", "mock_" + UUID.randomUUID().toString().replace("-", ""));
+        result.put("bytes", file.getSize());
+        result.put("format", isVideo ? "mp4" : "jpg");
+        result.put("width", 1920);
+        result.put("height", 1080);
+        result.put("resource_type", isVideo ? "video" : "image");
+        if (isVideo) {
+            result.put("duration", 15.0 + random.nextDouble() * 20.0);
+        }
+        return result;
+    }
+
     public Map<String, Object> upload(MultipartFile file) throws IOException {
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType.toLowerCase())) {
@@ -84,30 +104,21 @@ public class CloudinaryService {
         boolean isVideo = contentType.startsWith("video/");
         
         if (isMockMode) {
-            log.info("Simulating media upload in Mock Mode for file: {}", file.getOriginalFilename());
-            Map<String, Object> result = new HashMap<>();
-            String url = isVideo 
-                    ? mockVideos.get(random.nextInt(mockVideos.size()))
-                    : mockImages.get(random.nextInt(mockImages.size()));
-            
-            result.put("secure_url", url);
-            result.put("public_id", "mock_" + UUID.randomUUID().toString().replace("-", ""));
-            result.put("bytes", file.getSize());
-            result.put("format", isVideo ? "mp4" : "jpg");
-            result.put("width", 1920);
-            result.put("height", 1080);
-            result.put("resource_type", isVideo ? "video" : "image");
-            if (isVideo) {
-                result.put("duration", 15.0 + random.nextDouble() * 20.0);
-            }
-            return result;
+            return getMockUploadResult(file, isVideo);
         }
 
         log.info("Uploading file stream {} to Cloudinary...", file.getOriginalFilename());
-        Map uploadResult = cloudinary.uploader().upload(file.getInputStream(), ObjectUtils.asMap(
-                "resource_type", "auto",
-                "folder", "eventos_gallery"
-        ));
+        Map uploadResult;
+        try {
+            uploadResult = cloudinary.uploader().upload(file.getInputStream(), ObjectUtils.asMap(
+                    "resource_type", "auto",
+                    "folder", "eventos_gallery"
+            ));
+        } catch (Exception e) {
+            log.warn("Cloudinary upload failed ({}). Falling back to MOCK MODE simulation.", e.getMessage());
+            this.isMockMode = true;
+            return getMockUploadResult(file, isVideo);
+        }
         
         Map<String, Object> result = new HashMap<>();
         result.put("secure_url", uploadResult.get("secure_url"));

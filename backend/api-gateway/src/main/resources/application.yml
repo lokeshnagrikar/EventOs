@@ -25,6 +25,10 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
       routes:
+        - id: auth-websocket
+          uri: ${AUTH_SERVICE_WS_URL:ws://localhost:8081}
+          predicates:
+            - Path=/api/v1/auth/ws/**
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
@@ -75,6 +79,16 @@ app:
     public-key: ${JWT_PUBLIC_KEY:}
   gateway:
     secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
+  rate-limiting:
+    enabled: true
+    default-limit: 100
+    default-window-seconds: 60
+    auth-login-limit: 5
+    auth-login-window-seconds: 10
+    auth-register-limit: 5
+    auth-register-window-seconds: 10
+    password-reset-limit: 3
+    password-reset-window-seconds: 60
 
 management:
   endpoints:
@@ -94,4 +108,4 @@ management:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo:4318/v1/traces}
   tracing:
     sampling:
-      probability: 1.0
+      probability: ${OTEL_SAMPLING_PROBABILITY:0.0}

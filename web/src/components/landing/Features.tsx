@@ -48,8 +48,7 @@ const features = [
     iconColor: "#10B981",
     spotlightColor: "rgba(16,185,129,0.15)",
     borderColor: "rgba(16,185,129,0.35)",
-    colSpan: "md:col-span-2",
-    wide: true,
+    colSpan: "md:col-span-1",
   },
   {
     icon: "solar:shield-user-bold-duotone",
@@ -71,7 +70,18 @@ const features = [
     iconColor: "#F59E0B",
     spotlightColor: "rgba(245,158,11,0.15)",
     borderColor: "rgba(245,158,11,0.35)",
-    colSpan: "md:col-span-2",
+    colSpan: "md:col-span-1",
+  },
+  {
+    icon: "solar:cpu-bold-duotone",
+    title: "EventOS AI Engine",
+    description:
+      "Intelligently matches vendor contracts, analyzes client budget deviations, and schedules automated email/SMS reminders. Reduce manual operational tasks to zero.",
+    badge: "AI Automation",
+    iconColor: "#F43F5E",
+    spotlightColor: "rgba(244,63,94,0.15)",
+    borderColor: "rgba(244,63,94,0.35)",
+    colSpan: "md:col-span-3",
     wide: true,
   },
 ];

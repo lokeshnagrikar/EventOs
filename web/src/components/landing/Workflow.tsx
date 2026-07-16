@@ -24,7 +24,7 @@ const steps = [
   },
   {
     title: "Quote",
-    desc: "Proposal accepted by client",
+    desc: "Proposal drafted & accepted",
     icon: "solar:document-text-bold-duotone",
     iconColor: "#EC4899",
     gradientFrom: "#EC4899",
@@ -38,29 +38,9 @@ const steps = [
     icon: "solar:check-square-bold-duotone",
     iconColor: "#06B6D4",
     gradientFrom: "#06B6D4",
-    gradientTo: "#6366F1",
+    gradientTo: "#10B981",
     pathColor: "rgba(6, 182, 212, 0.15)",
     borderColor: "border-cyan-500/30",
-  },
-  {
-    title: "Event",
-    desc: "Timelines & tasks coordinated",
-    icon: "solar:calendar-bold-duotone",
-    iconColor: "#6366F1",
-    gradientFrom: "#6366F1",
-    gradientTo: "#F59E0B",
-    pathColor: "rgba(99, 102, 241, 0.15)",
-    borderColor: "border-indigo-500/30",
-  },
-  {
-    title: "Gallery",
-    desc: "High-res media delivered",
-    icon: "solar:gallery-bold-duotone",
-    iconColor: "#F59E0B",
-    gradientFrom: "#F59E0B",
-    gradientTo: "#10B981",
-    pathColor: "rgba(245, 158, 11, 0.15)",
-    borderColor: "border-amber-500/30",
   },
   {
     title: "Payment",
@@ -68,9 +48,19 @@ const steps = [
     icon: "solar:wallet-money-bold-duotone",
     iconColor: "#10B981",
     gradientFrom: "#10B981",
-    gradientTo: "#10B981",
+    gradientTo: "#F59E0B",
     pathColor: "rgba(16, 185, 129, 0.15)",
     borderColor: "border-emerald-500/30",
+  },
+  {
+    title: "Gallery",
+    desc: "High-res media delivered",
+    icon: "solar:gallery-bold-duotone",
+    iconColor: "#F59E0B",
+    gradientFrom: "#F59E0B",
+    gradientTo: "#F59E0B",
+    pathColor: "rgba(245, 158, 11, 0.15)",
+    borderColor: "border-amber-500/30",
   },
 ];
 
@@ -79,7 +69,6 @@ export function Workflow() {
   const containerRef = useRef<HTMLDivElement>(null);
   
   const refs = [
-    useRef<HTMLDivElement>(null),
     useRef<HTMLDivElement>(null),
     useRef<HTMLDivElement>(null),
     useRef<HTMLDivElement>(null),
@@ -114,6 +103,9 @@ export function Workflow() {
         stagger: 0.12,
         duration: 0.55,
         ease: "power2.out",
+        onComplete: () => {
+          window.dispatchEvent(new Event("resize"));
+        }
       }
     ).fromTo(
       ".gsap-workflow-stat",
@@ -128,21 +120,26 @@ export function Workflow() {
       "-=0.25"
     );
 
+    const timer1 = setTimeout(() => window.dispatchEvent(new Event("resize")), 400);
+    const timer2 = setTimeout(() => window.dispatchEvent(new Event("resize")), 1200);
+
     return () => {
       ScrollTrigger.getAll().forEach(t => t.kill());
+      clearTimeout(timer1);
+      clearTimeout(timer2);
     };
   }, [shouldReduceMotion]);
 
   return (
     <section
-      className="py-24 border-b border-zinc-900 bg-zinc-950/40 relative overflow-hidden"
       id="workflow"
+      className="py-24 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden text-left"
     >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-purple-500/5 to-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
-        {/* Section Header */}
+        {/* Header */}
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-20">
           <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-[#06B6D4] uppercase">
             <Icon icon="solar:routing-bold-duotone" className="text-sm" />
@@ -171,16 +168,18 @@ export function Workflow() {
                 fromRef={refs[idx]}
                 toRef={refs[idx + 1]}
                 curvature={0}
-                duration={4}
-                delay={idx * 0.5}
+                duration={3.5}
+                delay={idx * 0.4}
                 gradientStartColor={step.gradientFrom}
                 gradientStopColor={step.gradientTo}
-                pathColor={step.pathColor}
+                pathColor={step.gradientFrom}
+                pathOpacity={0.12}
+                pathWidth={2.5}
               />
             ))}
 
           {/* Step Nodes */}
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-8 md:gap-4 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-4 relative z-10">
             {steps.map((step, idx) => (
               <div
                 key={step.title}

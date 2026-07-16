@@ -22,6 +22,7 @@ import {
   Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import PageShell from "@/components/ui/PageShell";
 
 interface WorkflowNode {
   id: string;
@@ -93,42 +94,25 @@ export default function AutomationPage() {
     setNodes(nodes.filter(n => n.id !== id));
   };
 
+  const headerActions = (
+    <button
+      onClick={runSimulation}
+      disabled={isPlaying}
+      className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-purple-600/15 cursor-pointer"
+    >
+      <Play size={13} className={isPlaying ? "animate-spin" : ""} />
+      {isPlaying ? "Simulating Run..." : "Test Workflow Pipeline"}
+    </button>
+  );
+
   return (
-    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
-      {/* Background glow effects */}
-      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
-
-      {/* Navbar */}
-      <nav className="h-16 border-b border-zinc-800 bg-[#111113]/85 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50 cursor-pointer"
-            aria-label="Back to dashboard"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-base">Automation Center</span>
-            <span className="text-xs px-2 py-0.5 bg-purple-950/30 border border-purple-900/30 rounded text-purple-400 font-bold uppercase tracking-wider font-mono">Workflows</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={runSimulation}
-            disabled={isPlaying}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-purple-600/15 cursor-pointer"
-          >
-            <Play size={13} className={isPlaying ? "animate-spin" : ""} />
-            {isPlaying ? "Simulating Run..." : "Test Workflow Pipeline"}
-          </button>
-        </div>
-      </nav>
-
+    <PageShell
+      title="Automation Center"
+      subtitle="Define, verify, and simulate cross-service business automation flows."
+      actions={headerActions}
+    >
       {/* Main Workspace split */}
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full z-10 grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         
         {/* Left Control Panel */}
         <div className="lg:col-span-1 p-6 border border-zinc-850 bg-[#111113]/40 rounded-2xl backdrop-blur-md flex flex-col justify-between space-y-6 h-fit">
@@ -274,7 +258,7 @@ export default function AutomationPage() {
           </div>
         </div>
 
-      </main>
-    </div>
+      </div>
+    </PageShell>
   );
 }

@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { DashboardSkeleton } from "@/components/ui/skeletons";
 
 interface Quote {
   id: string;
@@ -207,12 +208,7 @@ export default function ClientDashboard() {
   const isLoading = loadingQuotes || loadingInvoices || loadingEvents || loadingTimeline;
 
   if (isLoading) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <span className="h-8 w-8 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin" />
-        <span className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Compiling Event Overview...</span>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (

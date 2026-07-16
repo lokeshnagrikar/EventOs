@@ -5,106 +5,143 @@
 
 @layer base {
   :root {
-    /* High-Contrast Light Mode (Outdoor default) */
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    /* Memora Design System — Light Mode UI Tokens */
+    --background: #F1F5F9; /* Soft off-white Slate 100 */
+    --foreground: #0F172A; /* Slate 900 */
 
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card: #FFFFFF; /* Pure White Card Surface */
+    --card-foreground: #0F172A;
 
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
+    --popover: #FFFFFF;
+    --popover-foreground: #0F172A;
 
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
 
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
+    --primary: #8B5CF6; /* Primary 500 */
+    --primary-foreground: #FFFFFF;
 
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
+    --secondary: #E2E8F0; /* Slate 200 */
+    --secondary-foreground: #0F172A;
 
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --muted: #F1F5F9; /* Slate 100 */
+    --muted-foreground: #64748B; /* Slate 500 */
 
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: 355.7 100% 97.3%;
+    --accent: #E2E8F0;
+    --accent-foreground: #0F172A;
 
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --destructive: #EF4444; /* Semantic Error */
+    --destructive-foreground: #FFFFFF;
+
+    --border: #E2E8F0; /* Slate 200 */
+    --input: #E2E8F0;
+    --ring: #8B5CF6;
 
     --radius: 0.625rem;
 
-    --chart-1: oklch(0.87 0 0);
+    --chart-1: #6366F1;
+    --chart-2: #14B8A6;
+    --chart-3: #FACC15;
+    --chart-4: #F97316;
+    --chart-5: #EC4899;
 
-    --chart-2: oklch(0.556 0 0);
-
-    --chart-3: oklch(0.439 0 0);
-
-    --chart-4: oklch(0.371 0 0);
-
-    --chart-5: oklch(0.269 0 0);
-
-    --sidebar: oklch(0.985 0 0);
-
-    --sidebar-foreground: oklch(0.145 0 0);
-
-    --sidebar-primary: oklch(0.205 0 0);
-
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-
-    --sidebar-accent: oklch(0.97 0 0);
-
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-
-    --sidebar-border: oklch(0.922 0 0);
-
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #0F172A;
+    --sidebar-primary: #8B5CF6;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F8FAFC;
+    --sidebar-accent-foreground: #0F172A;
+    --sidebar-border: #E2E8F0;
+    --sidebar-ring: #8B5CF6;
   }
 
   .dark {
-    /* Command Center Dark Mode (Default) */
-    --background: oklch(0.13 0.005 286.07); /* #09090B */
-    --foreground: oklch(0.985 0 0); /* #FAFAFA */
+    /* Memora Design System — Dark Mode UI Tokens */
+    --background: #0B0F19; /* Slate 950 Deep Slate */
+    --foreground: #F8FAFC; /* Primary Text */
 
-    --card: oklch(0.16 0.006 286.37); /* #111113 / #161618 */
-    --card-foreground: oklch(0.985 0 0);
+    --card: #111827; /* Slate 900 Surface */
+    --card-foreground: #F8FAFC;
 
-    --popover: oklch(0.16 0.006 286.37);
-    --popover-foreground: oklch(0.985 0 0);
+    --popover: #111827;
+    --popover-foreground: #F8FAFC;
 
-    --primary: oklch(0.58 0.23 293.42); /* #8B5CF6 (Purple-500) */
-    --primary-foreground: oklch(1 0 0);
+    --primary: #A78BFA; /* Primary 500 (Dark) */
+    --primary-foreground: #0B0F19;
 
-    --secondary: oklch(0.19 0.006 286.37); /* #18181B */
-    --secondary-foreground: oklch(0.985 0 0);
+    --secondary: #1E293B; /* Slate 800 Surface Elevated */
+    --secondary-foreground: #F8FAFC;
 
-    --muted: oklch(0.19 0.006 286.37);
-    --muted-foreground: oklch(0.708 0 0);
+    --muted: #1E293B;
+    --muted-foreground: #94A3B8; /* Slate 400 */
 
-    --accent: oklch(0.19 0.006 286.37);
-    --accent-foreground: oklch(0.985 0 0);
+    --accent: #1E293B;
+    --accent-foreground: #F8FAFC;
 
-    --destructive: oklch(0.704 0.191 22.216);
-    --destructive-foreground: 355.7 100% 97.3%;
+    --destructive: #F87171; /* Semantic Error (Dark) */
+    --destructive-foreground: #0B0F19;
 
-    --border: oklch(0.27 0.006 286.37); /* #27272A (zinc-800) */
-    --input: oklch(0.27 0.006 286.37);
-    --ring: oklch(0.58 0.23 293.42);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.14 0.006 286.37); /* #0e0e11 */
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.58 0.23 293.42);
-    --sidebar-primary-foreground: oklch(1 0 0);
-    --sidebar-accent: oklch(0.19 0.006 286.37);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.20 0.006 286.37);
-    --sidebar-ring: oklch(0.58 0.23 293.42);
+    --border: #334155; /* Slate 700 */
+    --input: #334155;
+    --ring: #A78BFA;
+
+    --chart-1: #818CF8;
+    --chart-2: #2DD4BF;
+    --chart-3: #FCD34D;
+    --chart-4: #FB923C;
+    --chart-5: #F472B6;
+
+    --sidebar: #0B0F19;
+    --sidebar-foreground: #F8FAFC;
+    --sidebar-primary: #A78BFA;
+    --sidebar-primary-foreground: #0B0F19;
+    --sidebar-accent: #111827;
+    --sidebar-accent-foreground: #F8FAFC;
+    --sidebar-border: #334155;
+    --sidebar-ring: #A78BFA;
+  }
+
+  /* Color Theme Option Overrides (Memora Accent Schemes) */
+  [data-theme="blue"] {
+    --primary: #6366F1 !important;
+    --ring: #6366F1 !important;
+    --sidebar-primary: #6366F1 !important;
+  }
+  .dark [data-theme="blue"] {
+    --primary: #818CF8 !important;
+    --ring: #818CF8 !important;
+    --sidebar-primary: #818CF8 !important;
+  }
+
+  [data-theme="emerald"] {
+    --primary: #14B8A6 !important;
+    --ring: #14B8A6 !important;
+    --sidebar-primary: #14B8A6 !important;
+  }
+  .dark [data-theme="emerald"] {
+    --primary: #2DD4BF !important;
+    --ring: #2DD4BF !important;
+    --sidebar-primary: #2DD4BF !important;
+  }
+
+  [data-theme="rose"] {
+    --primary: #EC4899 !important;
+    --ring: #EC4899 !important;
+    --sidebar-primary: #EC4899 !important;
+  }
+  .dark [data-theme="rose"] {
+    --primary: #F472B6 !important;
+    --ring: #F472B6 !important;
+    --sidebar-primary: #F472B6 !important;
+  }
+
+  [data-theme="amber"] {
+    --primary: #FACC15 !important;
+    --ring: #FACC15 !important;
+    --sidebar-primary: #FACC15 !important;
+  }
+  .dark [data-theme="amber"] {
+    --primary: #FCD34D !important;
+    --ring: #FCD34D !important;
+    --sidebar-primary: #FCD34D !important;
   }
 
   * {
@@ -118,13 +155,17 @@
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes slide-in {
@@ -138,18 +179,233 @@
   }
 }
 
-.animate-slide-in {
-  animation: slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-6px); }
   40%, 80% { transform: translateX(6px); }
 }
 
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .animate-shake {
   animation: shake 0.4s ease-in-out;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Scrollbar Utilities ────────────────────────────────────────────────────── */
+
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(113, 113, 122, 0.3) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(113, 113, 122, 0.3);
+    border-radius: 3px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(113, 113, 122, 0.5);
+  }
+}
+
+/* ─── Light Mode Override Layer for Hardcoded Dark Classes (Scoped to Console & Portal Layouts) ─── */
+html:not(.dark) .theme-dynamic {
+  /* Headings & general white text in components */
+  h1.text-white, h2.text-white, h3.text-white, h4.text-white, h5.text-white, h6.text-white,
+  .text-white:not(button):not(.bg-primary *):not(.bg-purple-600 *):not(.bg-gradient-to-tr *) {
+    color: #0F172A !important; /* Slate 900 */
+  }
+
+  /* Zinc text shades */
+  .text-zinc-50, .text-zinc-100, .text-zinc-150, .text-zinc-200, .text-zinc-250, .text-zinc-300, .text-zinc-350 {
+    color: #0F172A !important; /* Slate 900 */
+  }
+  .text-zinc-400, .text-zinc-450, .text-zinc-550, .text-zinc-500 {
+    color: #475569 !important; /* Slate 600 */
+  }
+  .text-zinc-600, .text-zinc-650 {
+    color: #64748B !important; /* Slate 500 */
+  }
+
+  /* Alert Banners & Containers styling */
+  .bg-red-950\/20 {
+    background-color: rgba(254, 226, 226, 0.95) !important; /* bg-red-100/95 */
+  }
+  .border-red-500\/20 {
+    border-color: rgba(239, 68, 68, 0.3) !important;
+  }
+  .text-red-200 {
+    color: #991B1B !important; /* text-red-800 */
+  }
+
+  .bg-amber-950\/20 {
+    background-color: rgba(254, 243, 199, 0.95) !important; /* bg-amber-100/95 */
+  }
+  .border-amber-500\/20 {
+    border-color: rgba(245, 158, 11, 0.3) !important;
+  }
+  .text-amber-200 {
+    color: #92400E !important; /* text-amber-800 */
+  }
+
+  .bg-blue-950\/20 {
+    background-color: rgba(219, 234, 254, 0.95) !important; /* bg-blue-100/95 */
+  }
+  .border-blue-500\/20 {
+    border-color: rgba(59, 130, 246, 0.3) !important;
+  }
+  .text-blue-200 {
+    color: #1E40AF !important; /* text-blue-800 */
+  }
+
+  /* Alert Badge label background (strong tag with bg-black/40) */
+  .bg-black\/40 {
+    background-color: #E2E8F0 !important; /* Slate 200 */
+    color: #0F172A !important;
+    border-color: #CBD5E1 !important;
+  }
+
+  /* Alert Action buttons (bg-white/10 etc.) */
+  .bg-white\/10 {
+    background-color: rgba(15, 23, 42, 0.05) !important;
+    border-color: rgba(15, 23, 42, 0.1) !important;
+    color: #0F172A !important;
+  }
+  .hover\:bg-white\/15:hover {
+    background-color: rgba(15, 23, 42, 0.1) !important;
+  }
+  .text-white\/40 {
+    color: rgba(15, 23, 42, 0.4) !important;
+  }
+  .hover\:text-white:hover {
+    color: #0F172A !important;
+  }
+
+  /* General dashboard cards & container components backgrounds */
+  .bg-zinc-950, 
+  .bg-zinc-900, 
+  .bg-zinc-950\/80, 
+  .bg-zinc-950\/50, 
+  .bg-zinc-950\/40, 
+  .bg-zinc-955\/40, 
+  .bg-\[\#141416\]\/40, 
+  .bg-zinc-900\/60, 
+  .bg-zinc-900\/40 {
+    background-color: #FFFFFF !important; /* Keep it as white card surface */
+    border-color: #E2E8F0 !important;
+  }
+  
+  .bg-zinc-950\/20, 
+  .bg-zinc-950\/10, 
+  .bg-zinc-900\/20, 
+  .bg-zinc-900\/10 {
+    background-color: #F8FAFC !important; /* Slate 50 container background */
+    border-color: #E2E8F0 !important;
+  }
+  
+  .border-zinc-900, 
+  .border-zinc-855, 
+  .border-zinc-850, 
+  .border-zinc-800, 
+  .border-zinc-855\/60,
+  .border-zinc-800\/60, 
+  .border-zinc-850\/60, 
+  .border-zinc-850\/50, 
+  .border-zinc-855\/50 {
+    border-color: #E2E8F0 !important;
+  }
+
+  .divide-zinc-900, 
+  .divide-zinc-850, 
+  .divide-zinc-850\/50 {
+    border-color: #E2E8F0 !important;
+  }
+
+
+  /* Force light theme values on all inputs, select boxes, and textareas */
+  input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]), 
+  select, 
+  textarea {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    border-color: #E2E8F0 !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #94A3B8 !important;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: #8B5CF6 !important;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15) !important;
+  }
+
+  /* SVG Chart text styles for readability in Light Mode */
+  svg text {
+    fill: #475569 !important;
+  }
+}
+
+/* ─── Dark Mode Specific Form Elements (Scoped to Console & Portal Layouts) ─── */
+.dark.theme-dynamic, .dark .theme-dynamic {
+  input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]), 
+  select, 
+  textarea {
+    background-color: #111827 !important; /* Surface Slate 900 */
+    color: #F8FAFC !important;
+    border-color: #334155 !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #64748B !important;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: #A78BFA !important;
+    box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.15) !important;
+  }
 }
 
 

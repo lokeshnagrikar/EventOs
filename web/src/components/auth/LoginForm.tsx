@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,6 +13,7 @@ import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles } fr
 import { Button } from "@/components/ui/button";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useAuthModalStore } from "@/store/authModalStore";
+import { analytics } from "@/lib/analytics";
 import { useGoogleLogin } from "@react-oauth/google";
 import { AuthLoader } from "./AuthLoader";
 import { cn } from "@/lib/utils";
@@ -176,7 +178,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         captchaValue: realRecaptchaEnabled ? captchaToken : captchaInput,
       });
 
-      const { accessToken, firstName, role, userId, tenantId, memberships, permissions } = response.data.data;
+      const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
       
       // Store lightweight session flag cookie for edge middleware redirection checks
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
@@ -188,11 +190,12 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       // Save state in Zustand store
       setAuth(
         accessToken,
-        { id: userId, email: data.email, firstName, role, permissions: permissions || [] },
+        { id: userId, email: data.email, firstName, lastName, role, permissions: permissions || [] },
         tenantId,
         memberships
       );
 
+      analytics.trackAuth("login", data.email);
       addToast("Successfully authenticated!", "success");
 
       if (isModal) {
@@ -211,6 +214,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     } catch (err: any) {
       const errCode = err.response?.data?.error?.code;
       const errMsg = err.response?.data?.error?.message || "Invalid email or password. Please try again.";
+      analytics.trackError("frontend", errMsg, { email: data.email, action: "login" });
       if (errCode === "CAPTCHA_REQUIRED") {
         setShowCaptcha(true);
         setCaptchaToken(null);
@@ -240,7 +244,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         accessToken,
       });
 
-      const { accessToken: jwtToken, firstName, role, userId, tenantId, memberships, permissions } = response.data.data;
+      const { accessToken: jwtToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
       
       // Store session cookies
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
@@ -252,7 +256,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       // Save state in Zustand store
       setAuth(
         jwtToken,
-        { id: userId, email: response.data.data.email || "", firstName, role, permissions: permissions || [] },
+        { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
         memberships
       );
@@ -358,12 +362,14 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               id="email"
               type="email"
               placeholder="you@company.com"
-              className={`w-full pl-9 pr-3 py-2 bg-white/[0.03] border rounded-xl text-xs placeholder-zinc-550 text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+              autoFocus
+              autoComplete="email"
+              className={`w-full pl-9 pr-3 py-2 bg-zinc-500/5 border rounded-xl text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                 errors.email 
                   ? "border-rose-500/50" 
                   : focusedField === "email"
-                  ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                  : "border-white/[0.08] hover:border-white/[0.15]"
+                  ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                  : "border-border hover:border-zinc-700/30"
               }`}
               {...register("email")}
               onFocus={() => setFocusedField("email")}
@@ -382,9 +388,9 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="password">
               Password
             </label>
-            <a href="/forgot-password" className="text-[10px] text-purple-400 hover:text-purple-305 hover:underline font-semibold">
+            <Link href="/forgot-password" className="text-[10px] text-purple-400 hover:text-purple-305 hover:underline font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500 rounded">
               Forgot password?
-            </a>
+            </Link>
           </div>
           <div className="relative">
             <KeyRound className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
@@ -394,12 +400,13 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
-              className={`w-full pl-9 pr-9 py-2 bg-white/[0.03] border rounded-xl text-xs placeholder-zinc-550 text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+              autoComplete="current-password"
+              className={`w-full pl-9 pr-9 py-2 bg-zinc-500/5 border rounded-xl text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                 errors.password 
                   ? "border-rose-500/50" 
                   : focusedField === "password"
-                  ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                  : "border-white/[0.08] hover:border-white/[0.15]"
+                  ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                  : "border-border hover:border-zinc-700/30"
               }`}
               {...register("password")}
               onFocus={() => setFocusedField("password")}
@@ -482,10 +489,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                     onChange={(e) => setCaptchaInput(e.target.value)}
                     onFocus={() => setFocusedField("captcha")}
                     onBlur={() => setFocusedField(null)}
-                    className={`flex-grow px-2.5 py-1.5 bg-white/[0.03] border rounded-xl text-xs placeholder-zinc-550 text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`flex-grow px-2.5 py-1.5 bg-zinc-500/5 border rounded-xl text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       focusedField === "captcha"
-                        ? "border-[#8B5CF6] bg-[#09090b]/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                        : "border-white/[0.08] hover:border-white/[0.15]"
+                        ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                        : "border-border hover:border-zinc-700/30"
                     }`}
                   />
                 </div>

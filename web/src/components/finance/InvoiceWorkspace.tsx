@@ -25,6 +25,7 @@ import {
   Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToastStore } from "@/lib/toastStore";
 
 interface Invoice {
   id: string;
@@ -72,15 +73,11 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   
-  // Notification alert toasts
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "info">("success");
+  const addToast = useToastStore((state) => state.addToast);
 
   // Show Toast helper
   const triggerToast = (msg: string, type: "success" | "info" = "success") => {
-    setToastMessage(msg);
-    setToastType(type);
-    setTimeout(() => setToastMessage(""), 3000);
+    addToast(msg, type === "success" ? "success" : "info");
   };
 
   // 1. Fetch Invoice Details
@@ -213,24 +210,6 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto z-10 relative">
-      
-      {/* Toast Alert */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={cn(
-              "fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-xl text-xs font-bold border shadow-xl z-50 flex items-center gap-1.5 backdrop-blur-md",
-              toastType === "success" ? "bg-emerald-950/80 border-emerald-500/20 text-emerald-400" : "bg-purple-950/80 border-purple-500/20 text-purple-400"
-            )}
-          >
-            {toastType === "success" ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
-            {toastMessage}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ─── WORKSPACE ACTIONS HEADER ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-4 print:hidden select-none">

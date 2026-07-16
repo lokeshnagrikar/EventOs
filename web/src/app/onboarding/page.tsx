@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { useToastStore } from "@/lib/toastStore";
+import { LoadingScreen } from "@/components/ui/skeletons";
 
 const onboardingSchema = z.object({
   name: z.string().min(3, "Company name must be at least 3 characters"),
@@ -135,12 +136,7 @@ export default function OnboardingPage() {
   };
 
   if (initialLoading) {
-    return (
-      <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col items-center justify-center gap-3">
-        <Loader2 className="animate-spin text-purple-500" size={32} />
-        <span className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Accessing Onboarding Wizard...</span>
-      </div>
-    );
+    return <LoadingScreen message="Accessing Onboarding Wizard..." />;
   }
 
   return (

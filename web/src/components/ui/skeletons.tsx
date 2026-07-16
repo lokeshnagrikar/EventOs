@@ -258,3 +258,186 @@ export function PageSkeleton() {
     </div>
   );
 }
+
+export function KpiCardSkeleton() {
+  return (
+    <div className={cn("rounded-2xl border border-zinc-800/60 bg-zinc-900/20 p-5 space-y-3 relative overflow-hidden", shimmer)}>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1.5">
+          <div className="h-3 bg-zinc-800 rounded w-20 animate-pulse" />
+          <div className="h-7 bg-zinc-800 rounded w-28 animate-pulse" />
+        </div>
+        <div className="h-10 w-10 bg-zinc-800/60 rounded-xl animate-pulse" />
+      </div>
+      <div className="flex items-center justify-between pt-1">
+        <div className="h-2.5 bg-zinc-850 rounded w-32 animate-pulse" />
+        <div className="h-4 bg-zinc-800 rounded w-12 animate-pulse" />
+      </div>
+      {/* Mini sparkline placeholder */}
+      <div className="h-8 flex items-end gap-1 pt-1">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex-1 bg-zinc-850/60 rounded-t animate-pulse"
+            style={{ height: `${((i * 11) % 50) + 30}%`, animationDelay: `${i * 80}ms` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function KanbanSkeleton() {
+  return (
+    <div className={cn("grid grid-cols-1 md:grid-cols-4 gap-4 relative overflow-hidden", shimmer)}>
+      {Array.from({ length: 4 }).map((_, col) => (
+        <div key={col} className="space-y-3">
+          {/* Column header */}
+          <div className="flex items-center justify-between px-1 mb-2">
+            <div className="h-4 bg-zinc-800 rounded w-24 animate-pulse" />
+            <div className="h-5 w-5 bg-zinc-850 rounded animate-pulse" />
+          </div>
+          {/* Cards */}
+          {Array.from({ length: 3 - (col % 2) }).map((_, card) => (
+            <div
+              key={card}
+              className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 p-4 space-y-2.5 animate-pulse"
+              style={{ animationDelay: `${(col * 3 + card) * 100}ms` }}
+            >
+              <div className="h-3.5 bg-zinc-800 rounded w-3/4" />
+              <div className="h-2.5 bg-zinc-850 rounded w-1/2" />
+              <div className="flex items-center gap-2 pt-1">
+                <div className="h-5 w-5 bg-zinc-800 rounded-full" />
+                <div className="h-2.5 bg-zinc-850 rounded w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function StatsSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className={cn("grid gap-4 relative overflow-hidden", shimmer)} style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-zinc-800/50 bg-zinc-900/20 p-4 space-y-2 animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
+          <div className="h-3 bg-zinc-850 rounded w-1/2" />
+          <div className="h-6 bg-zinc-800 rounded w-2/3" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function DashboardSkeleton() {
+  return (
+    <div className="flex min-h-screen bg-background text-foreground">
+      <div className="hidden md:block">
+        <SidebarSkeleton />
+      </div>
+      <div className="flex-1 flex flex-col">
+        <NavbarSkeleton />
+        <div className="p-6 md:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
+          {/* Header */}
+          <div className="flex justify-between items-center border-b border-zinc-850 pb-5">
+            <div className="space-y-2">
+              <div className="h-6 bg-zinc-800 rounded w-40 animate-pulse" />
+              <div className="h-3 bg-zinc-850 rounded w-64 animate-pulse" />
+            </div>
+            <div className="h-9 w-28 bg-zinc-800 rounded-xl animate-pulse" />
+          </div>
+
+          {/* KPI Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <KpiCardSkeleton key={i} />
+            ))}
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ChartSkeleton />
+            <ChartSkeleton />
+          </div>
+
+          {/* Table */}
+          <TableSkeleton rows={4} cols={5} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ProfileSkeleton() {
+  return (
+    <div className={cn("space-y-6 max-w-4xl relative overflow-hidden", shimmer)}>
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 pb-6 border-b border-zinc-800/60">
+        <div className="h-20 w-20 rounded-full bg-zinc-800 animate-pulse shrink-0" />
+        <div className="space-y-2 flex-1 w-full">
+          <div className="h-5 bg-zinc-800 rounded w-1/3 animate-pulse" />
+          <div className="h-3 bg-zinc-850 rounded w-1/2 animate-pulse" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <div className="h-3.5 bg-zinc-800 rounded w-1/4 animate-pulse" />
+            <div className="h-9 bg-zinc-900 border border-zinc-850 rounded-xl animate-pulse" />
+          </div>
+        ))}
+      </div>
+      <div className="pt-4">
+        <div className="h-10 bg-zinc-800 rounded-xl w-32 animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+export function InvoiceSkeleton() {
+  return (
+    <div className={cn("space-y-4 relative overflow-hidden", shimmer)}>
+      <div className="flex justify-between items-center pb-4 border-b border-zinc-800/60">
+        <div className="space-y-2">
+          <div className="h-4.5 bg-zinc-800 rounded w-28 animate-pulse" />
+          <div className="h-3 bg-zinc-850 rounded w-40 animate-pulse" />
+        </div>
+        <div className="h-8 w-24 bg-zinc-800 rounded-lg animate-pulse" />
+      </div>
+      <div className="space-y-2.5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex justify-between items-center p-3 bg-zinc-900/35 border border-zinc-850/60 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 bg-zinc-800 rounded-lg animate-pulse" />
+              <div className="space-y-1.5">
+                <div className="h-3.5 bg-zinc-800 rounded w-24 animate-pulse" />
+                <div className="h-2.5 bg-zinc-850 rounded w-16 animate-pulse" />
+              </div>
+            </div>
+            <div className="text-right space-y-1.5">
+              <div className="h-3.5 bg-zinc-800 rounded w-16 animate-pulse" />
+              <div className="h-2.5 bg-zinc-850 rounded w-12 animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ListSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className={cn("space-y-2.5 relative overflow-hidden", shimmer)}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between p-3.5 bg-zinc-900/10 border border-zinc-850/45 rounded-xl animate-pulse">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="h-4 w-4 bg-zinc-850 rounded" />
+            <div className="h-3.5 bg-zinc-800 rounded w-1/3" />
+          </div>
+          <div className="h-3.5 bg-zinc-850 rounded w-20" />
+        </div>
+      ))}
+    </div>
+  );
+}

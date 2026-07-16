@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { LoadingScreen } from "@/components/ui/skeletons";
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -212,18 +213,15 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   ];
 
   if (!authChecked) {
-    return (
-      <div className="min-h-screen bg-[#09090B] text-zinc-100 flex items-center justify-center">
-        <Loader2 className="animate-spin text-purple-500" size={32} />
-      </div>
-    );
+    return <LoadingScreen message="Entering Portal Lounge..." />;
   }
 
   return (
-    <div className={cn("min-h-screen flex flex-col md:flex-row bg-[#09090B] text-zinc-100 font-sans transition-colors duration-200", darkMode ? "dark" : "")}>
+    <div className={cn("min-h-screen flex flex-col md:flex-row bg-background text-foreground font-sans transition-colors duration-200 theme-dynamic", darkMode ? "dark" : "")}>
       
       {/* Mobile Header Top Navigation */}
-      <div className="md:hidden h-16 border-b border-zinc-800 bg-[#111113]/90 backdrop-blur px-4 flex items-center justify-between z-30 sticky top-0">
+      <div className="md:hidden h-16 border-b border-border bg-card/90 backdrop-blur px-4 flex items-center justify-between z-30 sticky top-0">
+
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-extrabold text-sm shadow-md">
             E

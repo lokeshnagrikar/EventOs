@@ -170,7 +170,7 @@ Service-to-Service (direct, no gateway):
 
 ### BUG-07 — Onboarding Page Route Mismatch (404 Not Found)
 **Severity:** CRITICAL  
-**Component:** Frontend / Onboarding ([page.tsx](file:///d:/EventOs/web/src/app/onboarding/page.tsx))  
+**Component:** Frontend / Onboarding (`page.tsx`)  
 
 **Root Cause:**  
 The onboarding component invokes `apiClient.get("/settings/company")` and `apiClient.put("/settings/company")`. With `apiClient`'s baseURL `/api/v1`, this resolves to `/api/v1/settings/company`.
@@ -187,7 +187,7 @@ Update page requests to use `/auth/settings/company` (e.g. `apiClient.get("/auth
 
 ### BUG-08 — Missing Budget Calculator REST Controller (404 Not Found)
 **Severity:** CRITICAL  
-**Service/Component:** `event-service` / Frontend Calculator ([page.tsx](file:///d:/EventOs/web/src/app/calculator/page.tsx))  
+**Service/Component:** `event-service` / Frontend Calculator (`page.tsx`)  
 
 **Root Cause:**  
 The frontend Budget Calculator relies on multiple REST endpoints:
@@ -210,7 +210,7 @@ Implement a `BudgetCalculatorController` in `event-service` (under package `com.
 
 ### BUG-09 — Client Portal Logout Session Leak
 **Severity:** MAJOR  
-**Component:** Frontend Client Portal ([layout.tsx](file:///d:/EventOs/web/src/app/portal/layout.tsx))  
+**Component:** Frontend Client Portal (`layout.tsx`)  
 
 **Root Cause:**  
 The Client Portal logout handler (`handleLogout`) clears the client-side cookies (`accessToken`, `user_role`, `user_name`) and localStorage items, but **fails to send a POST request to `/auth/logout`** to invalidate the backend session.
@@ -226,7 +226,7 @@ Integrate a server-side logout request `await api.post("/auth/logout")` (or `api
 
 ### BUG-10 — Empty Email Logout Session Leak (Dashboard)
 **Severity:** MAJOR  
-**Component:** Frontend Dashboard ([page.tsx](file:///d:/EventOs/web/src/app/dashboard/page.tsx))  
+**Component:** Frontend Dashboard (`page.tsx`)  
 
 **Root Cause:**  
 The dashboard logout calls `await api.post("/auth/logout", { email: "" })`. 
@@ -247,7 +247,7 @@ await api.post("/auth/logout", { email: user?.email || "" });
 
 ### BUG-11 — Middleware Cookie Bypass on Portal Logout
 **Severity:** MEDIUM  
-**Component:** Frontend Portal Layout & Routing ([layout.tsx](file:///d:/EventOs/web/src/app/portal/layout.tsx), [middleware.ts](file:///d:/EventOs/web/src/middleware.ts))  
+**Component:** Frontend Portal Layout & Routing (`layout.tsx`, `middleware.ts`)  
 
 **Root Cause:**  
 Next.js Edge Middleware (`middleware.ts`) secures dashboard and portal routes by checking for the `hasSession` cookie. While the main application's Zustand store `clearAuth` correctly removes `hasSession`, the Client Portal layout `handleLogout` does not clear the `hasSession` cookie.
@@ -265,7 +265,7 @@ document.cookie = "hasSession=; Path=/; Max-Age=0; SameSite=Lax";
 
 ### BUG-12 — Inconsistent Booking API Endpoints
 **Severity:** LOW  
-**Component:** Frontend ([bookings/page.tsx](file:///d:/EventOs/web/src/app/bookings/page.tsx) vs [invoices/page.tsx](file:///d:/EventOs/web/src/app/invoices/page.tsx))  
+**Component:** Frontend (`bookings/page.tsx` vs `invoices/page.tsx`)  
 
 **Root Cause:**  
 `bookings/page.tsx` calls `api.get("/bookings")` while `invoices/page.tsx` and `payments/page.tsx` call `api.get("/events/bookings")`. 
@@ -273,4 +273,3 @@ Although both paths work because the gateway rewrites `/api/v1/bookings/**` to `
 
 **Fix Recommendation:**  
 Standardize all booking queries to use `/events/bookings` directly.
-

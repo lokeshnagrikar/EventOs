@@ -77,6 +77,8 @@ public class BudgetManagementIntegrationTest {
         UserPrincipal principal = new UserPrincipal(UUID.randomUUID(), tenantId, "owner@eventos.com", "OWNER");
         auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                 principal, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_OWNER")));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+        com.eventos.event.config.TenantContext.setTenantId(tenantId);
 
         // Other Tenant Auth
         UserPrincipal otherPrincipal = new UserPrincipal(UUID.randomUUID(), otherTenantId, "otherowner@eventos.com", "OWNER");

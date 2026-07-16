@@ -4,6 +4,7 @@ export interface UserProfile {
   id: string;
   email: string;
   firstName: string;
+  lastName?: string;
   role: string;
   permissions: string[];
 }
@@ -23,48 +24,38 @@ interface AuthState {
   memberships: WorkspaceMembership[];
   isAuthenticated: boolean;
   
+  initializeAuth: () => void;
   setAuth: (accessToken: string, user: UserProfile, activeTenantId: string, memberships: WorkspaceMembership[]) => void;
   updateActiveTenant: (tenantId: string, accessToken: string, role: string, permissions: string[]) => void;
   clearAuth: () => void;
 }
 
-// Hydrate initial state from sessionStorage safely on client-side
-const getInitialState = () => {
-  if (typeof window === 'undefined') {
-    return {
-      user: null,
-      activeTenantId: null,
-      memberships: [],
-    };
-  }
-  
-  try {
-    const user = sessionStorage.getItem('user');
-    const activeTenantId = sessionStorage.getItem('activeTenantId');
-    const memberships = sessionStorage.getItem('memberships');
-    
-    return {
-      user: user ? JSON.parse(user) : null,
-      activeTenantId: activeTenantId || null,
-      memberships: memberships ? JSON.parse(memberships) : [],
-    };
-  } catch (e) {
-    return {
-      user: null,
-      activeTenantId: null,
-      memberships: [],
-    };
-  }
-};
-
-const initialState = getInitialState();
-
 export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
-  user: initialState.user,
-  activeTenantId: initialState.activeTenantId,
-  memberships: initialState.memberships,
-  isAuthenticated: !!initialState.activeTenantId,
+  user: null,
+  activeTenantId: null,
+  memberships: [],
+  isAuthenticated: false,
+
+  initializeAuth: () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const user = sessionStorage.getItem('user');
+      const activeTenantId = sessionStorage.getItem('activeTenantId');
+      const memberships = sessionStorage.getItem('memberships');
+      
+      if (activeTenantId) {
+        set({
+          user: user ? JSON.parse(user) : null,
+          activeTenantId: activeTenantId,
+          memberships: memberships ? JSON.parse(memberships) : [],
+          isAuthenticated: true,
+        });
+      }
+    } catch (e) {
+      console.error("Failed to initialize auth from session storage", e);
+    }
+  },
 
   setAuth: (accessToken, user, activeTenantId, memberships) => {
     set({

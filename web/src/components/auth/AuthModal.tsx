@@ -109,7 +109,7 @@ export function AuthModal() {
             )}
           >
             <SpotlightCard className={cn(
-              "w-full bg-[#09090b]/95 border border-white/[0.08] shadow-[0_0_60px_rgba(0,0,0,0.4)] shadow-purple-500/[0.03] backdrop-blur-xl relative text-zinc-100 selection:bg-purple-650 selection:text-white",
+              "w-full bg-card/95 border border-border shadow-[0_0_60px_rgba(0,0,0,0.4)] backdrop-blur-xl relative text-foreground selection:bg-purple-650 selection:text-white",
               isMobile ? "rounded-t-[32px] rounded-b-none border-b-0 pb-6" : "rounded-2xl overflow-hidden"
             )}>
               {/* Top Accent Gradient Line (Desktop only) */}

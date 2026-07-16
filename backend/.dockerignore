@@ -1,0 +1,9 @@
+**/target
+**/.idea
+**/.settings
+**/.classpath
+**/.project
+**/logs
+**/test_run.log
+**/hs_err_pid*.log
+**/replay_pid*.log

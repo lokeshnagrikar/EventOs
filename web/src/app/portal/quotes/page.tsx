@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import EmptyState from "@/components/ui/EmptyState";
+import { CardSkeleton } from "@/components/ui/skeletons";
 
 interface QuoteItem {
   id: string;
@@ -136,9 +138,9 @@ export default function PortalQuotesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <span className="h-8 w-8 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin" />
-        <span className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Retrieving proposals...</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CardSkeleton />
+        <CardSkeleton />
       </div>
     );
   }
@@ -182,13 +184,11 @@ export default function PortalQuotesPage() {
       {/* RENDER LOGIC BY CATEGORY */}
       {activeCategory === "PROPOSALS" && (
         clientQuotes.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-zinc-850 rounded-2xl bg-[#161618]/10 text-zinc-500 flex flex-col items-center justify-center gap-3">
-            <FileText size={36} className="text-zinc-700" />
-            <div>
-              <p className="font-semibold text-zinc-450">No active proposals found</p>
-              <p className="text-xs text-zinc-650 mt-1">Quotations will show here once shared by our planner.</p>
-            </div>
-          </div>
+          <EmptyState
+            icon={FileText}
+            title="No active proposals found"
+            description="Quotations will show here once shared by our planner."
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {clientQuotes.map((quote) => (

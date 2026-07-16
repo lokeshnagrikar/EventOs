@@ -16,73 +16,101 @@ export function Pricing() {
 
   const plans = [
     {
+      name: "Free",
+      desc: "For newly launched event coordinators getting off the ground.",
+      monthlyPrice: 0,
+      annualPrice: 0,
+      cta: "Start Free",
+      popular: false,
+      features: [
+        "2 Active Events",
+        "1 Team seat",
+        "5 GB Media storage quota",
+        "Standard client portal access",
+        "Standard email invoices",
+      ],
+      border: "border-zinc-850 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
+    },
+    {
       name: "Starter",
-      desc: "Perfect for independent wedding coordinators and solo planners.",
-      monthlyPrice: 2499,
-      annualPrice: 1999,
+      desc: "Perfect for independent planners managing multiple schedules.",
+      monthlyPrice: 39,
+      annualPrice: 29,
       cta: "Start Free Trial",
       popular: false,
       features: [
-        "Up to 15 Active Events",
-        "CRM Lead Pipeline Kanban",
-        "Smart Proposals & Signature Acceptance",
-        "Milestone Invoice Drafting",
-        "Secure Client Portal Link",
-        "2 Team Members Included",
-        "10GB Media Gallery Storage",
+        "5 Active Events",
+        "2 Team seats",
+        "20 GB Media storage quota",
+        "Milestone payments clearing",
+        "Automated contract signing",
+        "Standard email support",
       ],
-      border: "border-zinc-800/80 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
+      border: "border-zinc-850 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
     },
     {
-      name: "Growth",
-      desc: "For mid-size event agencies and busy production teams.",
-      monthlyPrice: 5999,
-      annualPrice: 4799,
+      name: "Professional",
+      desc: "Our most popular package for active event organizations.",
+      monthlyPrice: 99,
+      annualPrice: 79,
       cta: "Start Free Trial",
       popular: true,
       features: [
-        "Unlimited Active Events",
-        "Advanced CRM Fields & Automations",
-        "White-Labeled Custom Client Portal",
-        "Auto-billing & Online Deposits",
-        "Vendor Task Assignments & Timelines",
-        "Up to 10 Team Members",
-        "100GB Premium Gallery Storage",
-        "Custom Branding & Gallery Overlays",
+        "20 Active Events",
+        "5 Team seats",
+        "100 GB Media storage quota",
+        "AI Assistant operations advisor",
+        "Interactive custom quotes editor",
+        "Priority support queue SLA",
       ],
       border: "border-purple-500/20 bg-zinc-950/80 backdrop-blur-lg shadow-[0_0_50px_rgba(139,92,246,0.08)]",
     },
     {
+      name: "Business",
+      desc: "For established production houses requiring custom domains.",
+      monthlyPrice: 189,
+      annualPrice: 149,
+      cta: "Start Free Trial",
+      popular: false,
+      features: [
+        "50 Active Events",
+        "15 Team seats",
+        "500 GB Media storage quota",
+        "Custom white-labeled domains",
+        "Developer API & webhooks access",
+        "24/7 dedicated support channels",
+      ],
+      border: "border-zinc-850 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
+    },
+    {
       name: "Enterprise",
-      desc: "For large-scale venue managers and national production houses.",
+      desc: "Custom structures for global scale agency workloads.",
       monthlyPrice: null,
       annualPrice: null,
       cta: "Contact Sales",
       popular: false,
       features: [
-        "Dedicated Multi-Tenant Isolation SLA",
-        "Custom Domain Mapping (e.g. portal.yourbrand.com)",
-        "White-Labeled SMTP Email Deliveries",
-        "Unlimited Team Members & Roles",
-        "Premium API Access & Webhooks",
-        "1TB Secure Media Gallery Storage",
-        "Priority 24/7 Phone Support & SLA",
-        "Custom Feature Development Options",
+        "Unlimited Active Events",
+        "Unlimited Team seats",
+        "Dedicated AWS storage assets",
+        "Custom AI training parameters",
+        "Multi-tenant tenant isolation",
+        "Dedicated SLA accounts manager",
       ],
-      border: "border-zinc-800/80 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
+      border: "border-zinc-850 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
     },
   ];
 
   const formatPrice = (price: number | null) => {
     if (price === null) return "Custom";
-    return `₹${price.toLocaleString("en-IN")}`;
+    return `$${price}`;
   };
 
   const openModal = useAuthModalStore((state) => state.openModal);
 
   const handleCtaClick = (planName: string, monthlyPrice: number | null) => {
     analytics.trackCta(`pricing_${planName.toLowerCase()}`, planName, "pricing");
-    if (monthlyPrice) {
+    if (planName !== "Enterprise") {
       openModal("register");
     } else {
       router.push("mailto:sales@eventos.io");
@@ -138,7 +166,7 @@ export function Pricing() {
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 items-stretch max-w-[90rem] mx-auto">
           {plans.map((plan, idx) => (
             <motion.div
               key={plan.name}
@@ -174,13 +202,13 @@ export function Pricing() {
                       : formatPrice(plan.annualPrice)}
                   </span>
                   {plan.monthlyPrice !== null && (
-                    <span className="text-zinc-500 text-xs">/month</span>
+                    <span className="text-zinc-500 text-xs">/mo</span>
                   )}
                 </div>
 
-                {billingCycle === "annually" && plan.monthlyPrice !== null && (
+                {billingCycle === "annually" && plan.monthlyPrice !== null && plan.monthlyPrice !== 0 && (
                   <span className="text-[10px] bg-purple-500/10 border border-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-semibold block w-fit">
-                    Billed annually (₹{(plan.annualPrice! * 12).toLocaleString("en-IN")}/yr)
+                    Billed annually (${plan.annualPrice! * 12}/yr)
                   </span>
                 )}
 

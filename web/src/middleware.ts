@@ -23,6 +23,14 @@ export function middleware(request: NextRequest) {
                             pathname.startsWith("/invoices") ||
                             pathname.startsWith("/calculator") ||
                             pathname.startsWith("/gallery") ||
+                            pathname.startsWith("/activity") ||
+                            pathname.startsWith("/ai") ||
+                            pathname.startsWith("/chat") ||
+                            pathname.startsWith("/developer") ||
+                            pathname.startsWith("/import") ||
+                            pathname.startsWith("/automation") ||
+                            pathname.startsWith("/superadmin") ||
+                            pathname.startsWith("/finance") ||
                             pathname.startsWith("/reports");
 
   if (isProtectedRoute && !hasSession) {
@@ -57,6 +65,14 @@ export const config = {
     "/invoices/:path*",
     "/calculator/:path*",
     "/gallery/:path*",
+    "/activity/:path*",
+    "/ai/:path*",
+    "/chat/:path*",
+    "/developer/:path*",
+    "/import/:path*",
+    "/automation/:path*",
+    "/superadmin/:path*",
+    "/finance/:path*",
     "/reports/:path*",
   ],
 };

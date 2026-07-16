@@ -21,8 +21,8 @@ public class SecurityController {
     private final AuthService authService;
 
     public SecurityController(User2FaRepository user2FaRepository,
-                              AuditLogRepository auditLogRepository,
-                              AuthService authService) {
+            AuditLogRepository auditLogRepository,
+            AuthService authService) {
         this.user2FaRepository = user2FaRepository;
         this.auditLogRepository = auditLogRepository;
         this.authService = authService;
@@ -34,7 +34,7 @@ public class SecurityController {
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
         UUID tenantId = getTenantId(tenantIdHeader);
         UUID userId = getCurrentUserId();
-        
+
         List<Map<String, Object>> sessions = authService.getActiveSessions(userId, tenantId, null);
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -59,7 +59,7 @@ public class SecurityController {
     public ResponseEntity<?> get2FAStatus() {
         UUID userId = getCurrentUserId();
         Optional<User2Fa> opt = user2FaRepository.findById(userId);
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("enabled", opt.isPresent() && opt.get().isEnabled());
@@ -71,7 +71,7 @@ public class SecurityController {
     public ResponseEntity<?> setup2FA() {
         UUID userId = getCurrentUserId();
         String secret = Base64.getEncoder().encodeToString(UUID.randomUUID().toString().substring(0, 10).getBytes());
-        
+
         User2Fa user2Fa = user2FaRepository.findById(userId).orElse(new User2Fa());
         user2Fa.setUserId(userId);
         user2Fa.setSecret(secret);
@@ -90,10 +90,10 @@ public class SecurityController {
     public ResponseEntity<?> enable2FA(@RequestBody Map<String, String> request) {
         UUID userId = getCurrentUserId();
         String code = request.get("code");
-        
+
         User2Fa user2Fa = user2FaRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("2FA not set up yet"));
-        
+
         // Simple mock validation (accept any 6-digit code for this module's scope)
         if (code == null || code.length() != 6) {
             return ResponseEntity.badRequest().body(createErrorResponse("INVALID_CODE", "Invalid verification code"));
@@ -133,7 +133,8 @@ public class SecurityController {
         String newPassword = request.get("newPassword");
 
         if (currentPassword == null || newPassword == null) {
-            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Current and new password are required"));
+            return ResponseEntity.badRequest()
+                    .body(createErrorResponse("BAD_REQUEST", "Current and new password are required"));
         }
 
         try {
@@ -165,10 +166,11 @@ public class SecurityController {
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
         UUID tenantId = getTenantId(tenantIdHeader);
         List<AuditLog> logs = auditLogRepository.findAllByTenantId(tenantId);
-        
+
         // Filter logs related to security actions
         List<AuditLog> securityLogs = logs.stream()
-                .filter(l -> l.getAction().contains("LOGIN") || l.getAction().contains("PASSWORD") || l.getAction().contains("2FA"))
+                .filter(l -> l.getAction().contains("LOGIN") || l.getAction().contains("PASSWORD")
+                        || l.getAction().contains("2FA"))
                 .sorted(Comparator.comparing(AuditLog::getCreatedAt).reversed())
                 .collect(Collectors.toList());
 

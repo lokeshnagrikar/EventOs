@@ -44,12 +44,12 @@ public class AuthController {
 
     private ResponseCookie createRefreshTokenCookie(String token, long maxAge) {
         boolean isRender = System.getenv("RENDER") != null;
-        
+
         boolean secure = isRender;
         if (secureCookieOverrideStr != null && !secureCookieOverrideStr.trim().isEmpty()) {
             secure = Boolean.parseBoolean(secureCookieOverrideStr.trim().replace("\r", "").replace("\n", ""));
         }
-        
+
         String sameSite = isRender ? "None" : "Lax";
         if (sameSitePolicyOverride != null && !sameSitePolicyOverride.trim().isEmpty()) {
             sameSite = sameSitePolicyOverride.trim().replace("\r", "").replace("\n", "");
@@ -156,7 +156,8 @@ public class AuthController {
             }
             if ("EMAIL_UNVERIFIED".equals(e.getMessage())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(createErrorResponse("EMAIL_UNVERIFIED", "Please verify your email address before logging in."));
+                        .body(createErrorResponse("EMAIL_UNVERIFIED",
+                                "Please verify your email address before logging in."));
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(createErrorResponse("INVALID_CREDENTIALS", e.getMessage()));
@@ -291,7 +292,6 @@ public class AuthController {
                     .body(createErrorResponse("VERIFICATION_FAILED", e.getMessage()));
         }
     }
-
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(

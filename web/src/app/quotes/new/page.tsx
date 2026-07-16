@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { useOnboardingStore } from "@/store/onboardingStore";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import {
   ArrowLeft,
@@ -181,7 +182,9 @@ export default function QuoteBuilderPage() {
       return response.data;
     },
     onSuccess: () => {
+      const { completeStep } = useOnboardingStore.getState();
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      completeStep("create_quote");
       router.push("/quotes");
     },
     onError: (err: any) => {
