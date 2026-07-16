@@ -8,6 +8,7 @@ import { Icon } from "@iconify/react";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/lib/toastStore";
+import { ArrowRight } from "lucide-react";
 
 const TIMEZONES = [
   "Asia/Kolkata (IST)",
