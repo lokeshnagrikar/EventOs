@@ -564,6 +564,7 @@ public class AuthService {
 
         List<Company> companies = companyRepository.findByTenantId(tenantId);
         UUID companyId = companies.isEmpty() ? tenantId : companies.get(0).getId();
+        String workspaceName = companies.isEmpty() ? "Your Workspace" : companies.get(0).getName();
 
         // Resolve sender's display name for the invitation email
         String senderDisplayName = "Your team admin";
@@ -601,7 +602,7 @@ public class AuthService {
             // Send invitation email to existing user
             String inviteeName = ((existingUser.getFirstName() != null ? existingUser.getFirstName() : "") + " " +
                     (existingUser.getLastName() != null ? existingUser.getLastName() : "")).trim();
-            emailService.sendInvitationEmail(email, rawToken, inviteeName, senderDisplayName, roleName, null);
+            emailService.sendInvitationEmail(email, rawToken, inviteeName, senderDisplayName, roleName, workspaceName, null);
 
             auditLogService.logEvent(tenantId, senderId, "INVITATION_SENT", null, null,
                     "Invitation sent to existing user email: " + email + " for role: " + roleName);
@@ -635,7 +636,7 @@ public class AuthService {
 
             // Send invitation email to new pending user
             String inviteeName = ((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "")).trim();
-            emailService.sendInvitationEmail(email, rawToken, inviteeName, senderDisplayName, roleName, null);
+            emailService.sendInvitationEmail(email, rawToken, inviteeName, senderDisplayName, roleName, workspaceName, null);
 
             auditLogService.logEvent(tenantId, senderId, "INVITATION_SENT", null, null,
                     "Invitation sent to new pending user: " + email + " for role: " + roleName);
@@ -683,6 +684,14 @@ public class AuthService {
 
         auditLogService.logEvent(invitation.getTenantId(), user.getId(), "INVITATION_ACCEPTED", null, null,
                 "Invitation accepted. User activated: " + invitation.getEmail());
+
+        // Send Welcome Email
+        String wsName = "Your Workspace";
+        List<Company> companies = companyRepository.findByTenantId(invitation.getTenantId());
+        if (!companies.isEmpty()) {
+            wsName = companies.get(0).getName();
+        }
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), wsName);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -1007,6 +1016,17 @@ public class AuthService {
         auditLogService.logEvent(null, user.getId(), "EMAIL_VERIFIED", null, null,
                 "Email verification completed successfully for: " + user.getEmail());
 
+        // Send Welcome Email
+        String wsName = "Your Workspace";
+        List<Membership> memberships = membershipRepository.findAllByUserId(user.getId());
+        if (!memberships.isEmpty()) {
+            List<Company> companies = companyRepository.findByTenantId(memberships.get(0).getTenantId());
+            if (!companies.isEmpty()) {
+                wsName = companies.get(0).getName();
+            }
+        }
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), wsName);
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("message", "Email verification successful");
@@ -1041,6 +1061,17 @@ public class AuthService {
 
         auditLogService.logEvent(null, user.getId(), "EMAIL_VERIFIED", null, null,
                 "Email verification completed successfully for: " + user.getEmail());
+
+        // Send Welcome Email
+        String wsName = "Your Workspace";
+        List<Membership> memberships = membershipRepository.findAllByUserId(user.getId());
+        if (!memberships.isEmpty()) {
+            List<Company> companies = companyRepository.findByTenantId(memberships.get(0).getTenantId());
+            if (!companies.isEmpty()) {
+                wsName = companies.get(0).getName();
+            }
+        }
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), wsName);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

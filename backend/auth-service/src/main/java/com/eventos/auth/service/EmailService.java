@@ -60,7 +60,7 @@ public class EmailService {
     }
 
     @Async
-    public void sendInvitationEmail(String toEmail, String inviteToken, String inviteeName, String senderName, String roleName, String frontendBaseUrl) {
+    public void sendInvitationEmail(String toEmail, String inviteToken, String inviteeName, String senderName, String roleName, String workspaceName, String frontendBaseUrl) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -74,60 +74,143 @@ public class EmailService {
             String displayName = (inviteeName != null && !inviteeName.trim().isEmpty()) ? inviteeName : toEmail.split("@")[0];
             String roleDisplay = roleName != null ? roleName.substring(0, 1).toUpperCase() + roleName.substring(1).toLowerCase() : "Team Member";
             String inviterDisplay = (senderName != null && !senderName.trim().isEmpty()) ? senderName : "Your admin";
+            String workspaceDisplay = (workspaceName != null && !workspaceName.trim().isEmpty()) ? workspaceName : "Your Workspace";
+
+            String initials = "OS";
+            if (senderName != null && !senderName.trim().isEmpty()) {
+                String[] parts = senderName.trim().split("\\s+");
+                if (parts.length > 1) {
+                    initials = (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+                } else if (parts.length == 1 && !parts[0].isEmpty()) {
+                    initials = parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+                }
+            }
 
             String htmlContent =
-                "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; background-color: #0a0a0b; border-radius: 20px; overflow: hidden; border: 1px solid #27272a;\">" +
-
-                // Header banner
-                "  <div style=\"background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); padding: 36px 32px; text-align: center;\">" +
-                "    <div style=\"font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;\">Event<span style=\"opacity:0.75;\">OS</span></div>" +
-                "    <div style=\"margin-top: 16px; width: 52px; height: 52px; background: rgba(255,255,255,0.15); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;\">" +
-                "      <span style=\"font-size: 24px;\">📨</span>" +
-                "    </div>" +
-                "    <h1 style=\"color: #ffffff; font-size: 22px; font-weight: 800; margin: 12px 0 4px; letter-spacing: -0.5px;\">You're Invited!</h1>" +
-                "    <p style=\"color: rgba(255,255,255,0.75); font-size: 13px; margin: 0;\">Join " + inviterDisplay + "'s workspace on EventOS</p>" +
+                "<!DOCTYPE html>" +
+                "<html lang=\"en\">" +
+                "<head>" +
+                "<meta charset=\"UTF-8\">" +
+                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "<title>EventOS Invitation</title>" +
+                "</head>" +
+                "<body style=\"margin:0; padding:30px 15px; background:#050507; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;\">" +
+                "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">" +
+                "<tr>" +
+                "<td align=\"center\">" +
+                "<!-- MAIN CONTAINER -->" +
+                "<table width=\"560\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#0C0C0F; border:1px solid #27272A; border-radius:28px; overflow:hidden;\">" +
+                "<!-- HERO -->" +
+                "<tr>" +
+                "<td align=\"center\" style=\"padding:55px 35px; background: linear-gradient(135deg,#7C3AED 0%,#DB2777 50%,#2563EB 100%);\">" +
+                "  <table width=\"100%\">" +
+                "    <tr>" +
+                "      <td align=\"center\">" +
+                "        <div style=\"display:inline-block; padding:7px 18px; border-radius:50px; background:rgba(255,255,255,.15); color:white; font-size:11px; font-weight:700; letter-spacing:1px;\">✨ TEAM INVITATION</div>" +
+                "        <div style=\"margin-top:25px; font-size:30px; font-weight:900; color:white; letter-spacing:-1px;\">EVENT<span style=\"color:#FBCFE8;\">OS</span></div>" +
+                "        <div style=\"margin:25px auto; width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); font-size:38px; line-height:80px;\">🚀</div>" +
+                "        <h1 style=\"margin:0; font-size:30px; color:white; font-weight:800;\">You're Invited</h1>" +
+                "        <p style=\"margin-top:12px; font-size:15px; color:rgba(255,255,255,.85);\">Join <strong>" + inviterDisplay + "</strong>'s EventOS workspace</p>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "</td>" +
+                "</tr>" +
+                "<!-- BODY -->" +
+                "<tr>" +
+                "<td style=\"padding:40px;\">" +
+                "  <p style=\"font-size:15px; color:#E4E4E7; font-weight:600;\">Hi " + displayName + " 👋</p>" +
+                "  <p style=\"font-size:14px; line-height:1.8; color:#A1A1AA;\">" +
+                "    <strong style=\"color:white;\">" + inviterDisplay + "</strong> has invited you to join <strong style=\"color:#C4B5FD;\">" + workspaceDisplay + "</strong> on EventOS. Your account is ready. Accept the invitation and start managing events." +
+                "  </p>" +
+                "  <!-- INVITER CARD -->" +
+                "  <table width=\"100%\" cellpadding=\"18\" style=\"margin-top:30px; background:#131316; border:1px solid #27272A; border-radius:18px;\">" +
+                "    <tr>" +
+                "      <td width=\"60\">" +
+                "        <div style=\"width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:white; text-align:center; line-height:48px; font-weight:800; font-size:16px;\">" + initials + "</div>" +
+                "      </td>" +
+                "      <td>" +
+                "        <div style=\"color:#71717A; font-size:11px; text-transform:uppercase; letter-spacing:1px;\">Invited By</div>" +
+                "        <div style=\"color:white; font-size:16px; font-weight:700; margin-top:5px;\">" + inviterDisplay + "</div>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "  <!-- WORKSPACE CARD -->" +
+                "  <table width=\"100%\" cellpadding=\"20\" style=\"margin-top:20px; background: linear-gradient(145deg, #15151A, #101014); border:1px solid #27272A; border-radius:18px;\">" +
+                "    <tr>" +
+                "      <td>" +
+                "        <div style=\"color:#71717A; font-size:11px; letter-spacing:1px;\">WORKSPACE ACCESS</div>" +
+                "        <h2 style=\"margin:8px 0; color:white; font-size:20px;\">🏢 " + workspaceDisplay + "</h2>" +
+                "        <table width=\"100%\" cellpadding=\"8\">" +
+                "          <tr>" +
+                "            <td style=\"color:#A1A1AA; font-size:13px; padding: 4px 0;\">🎯 Role</td>" +
+                "            <td align=\"right\" style=\"color:#C4B5FD; font-weight:700; font-size:13px; padding: 4px 0;\">" + roleDisplay + "</td>" +
+                "          </tr>" +
+                "          <tr>" +
+                "            <td style=\"color:#A1A1AA; font-size:13px; padding: 4px 0;\">📅 Invitation</td>" +
+                "            <td align=\"right\" style=\"color:white; font-size:13px; padding: 4px 0;\">48 Hours</td>" +
+                "          </tr>" +
+                "        </table>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "  <!-- CTA -->" +
+                "  <table width=\"100%\" style=\"margin:35px 0;\">" +
+                "    <tr>" +
+                "      <td align=\"center\">" +
+                "        <a href=\"" + acceptUrl + "\" style=\"display:inline-block; padding:18px 45px; border-radius:50px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:white; font-size:15px; font-weight:800; text-decoration:none; box-shadow: 0 10px 20px rgba(139,92,246,0.25);\">🚀 Join Workspace</a>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "  <!-- JOURNEY -->" +
+                "  <table width=\"100%\" cellpadding=\"18\" style=\"background:#111113; border:1px solid #27272A; border-radius:18px;\">" +
+                "    <tr>" +
+                "      <td>" +
+                "        <h3 style=\"margin:0 0 15px; color:white; font-size:16px;\">Your EventOS Journey</h3>" +
+                "        <div style=\"color:#A1A1AA; font-size:13px; line-height: 2;\">" +
+                "          ① Create Password<br>" +
+                "          ② Complete Profile<br>" +
+                "          ③ Enter Workspace<br>" +
+                "          ④ Manage Events 🚀" +
+                "        </div>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "  <!-- SECURITY -->" +
+                "  <table width=\"100%\" cellpadding=\"18\" style=\"margin-top:25px; background:#15100F; border:1px solid rgba(245,158,11,.2); border-radius:16px;\">" +
+                "    <tr>" +
+                "      <td>" +
+                "        <div style=\"color:#FBBF24; font-weight:700; font-size:14px;\">🔐 Secure Invitation</div>" +
+                "        <p style=\"color:#A1A1AA; font-size:12px; line-height:1.7; margin-bottom:0;\">" +
+                "          This invitation is unique to your email. For security reasons it expires after 48 hours." +
+                "        </p>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "  <p style=\"margin-top:30px; font-size:12px; color:#71717A; line-height:1.8;\">" +
+                "    Button not working?<br>" +
+                "    Copy this link:<br>" +
+                "    <a href=\"" + acceptUrl + "\" style=\"color:#A78BFA; word-break:break-all;\">" + acceptUrl + "</a>" +
+                "  </p>" +
+                "</td>" +
+                "</tr>" +
+                "<!-- FOOTER -->" +
+                "<tr>" +
+                "<td align=\"center\" style=\"padding:30px; background:#08080A; border-top:1px solid #27272A;\">" +
+                "  <div style=\"font-size:12px; color:#52525B; line-height:1.8;\">" +
+                "    <strong style=\"color:#E4E4E7;\">EventOS</strong><br>" +
+                "    The Operating System for Event Businesses<br><br>" +
+                "    Built for creators. Designed for unforgettable events.<br><br>" +
+                "    © 2026 EventOS" +
                 "  </div>" +
-
-                // Body
-                "  <div style=\"padding: 32px;\">" +
-                "    <p style=\"color: #a1a1aa; font-size: 13px; line-height: 1.7; margin: 0 0 20px;\">Hi <strong style=\"color:#e4e4e7;\">" + displayName + "</strong>,</p>" +
-                "    <p style=\"color: #a1a1aa; font-size: 13px; line-height: 1.7; margin: 0 0 24px;\">" +
-                "      <strong style=\"color:#e4e4e7;\">" + inviterDisplay + "</strong> has invited you to join their team on <strong style=\"color:#e4e4e7;\">EventOS</strong> as a <strong style=\"color:#a78bfa;\">" + roleDisplay + "</strong>. " +
-                "      Click the button below to set your password and activate your account." +
-                "    </p>" +
-
-                // Role Badge
-                "    <div style=\"background: #18181b; border: 1px solid #3f3f46; border-radius: 12px; padding: 16px 20px; margin-bottom: 28px; display: flex; align-items: center; gap: 12px;\">" +
-                "      <div style=\"width: 36px; height: 36px; background: linear-gradient(135deg, #7c3aed, #db2777); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;\">" +
-                "        <span style=\"font-size: 16px;\">🎯</span>" +
-                "      </div>" +
-                "      <div>" +
-                "        <div style=\"color: #71717a; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;\">Your Role</div>" +
-                "        <div style=\"color: #e4e4e7; font-size: 14px; font-weight: 700;\">" + roleDisplay + "</div>" +
-                "      </div>" +
-                "    </div>" +
-
-                // CTA Button
-                "    <div style=\"text-align: center; margin-bottom: 28px;\">" +
-                "      <a href=\"" + acceptUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #7c3aed, #db2777); color: #ffffff; font-size: 14px; font-weight: 800; padding: 14px 36px; border-radius: 12px; text-decoration: none; letter-spacing: -0.2px;\">Accept Invitation →</a>" +
-                "    </div>" +
-
-                // Expiry notice
-                "    <div style=\"background: #18181b; border: 1px solid #27272a; border-radius: 10px; padding: 12px 16px; text-align: center; margin-bottom: 24px;\">" +
-                "      <p style=\"color: #71717a; font-size: 11px; margin: 0;\">⏳ This invitation expires in <strong style=\"color:#a78bfa;\">48 hours</strong></p>" +
-                "    </div>" +
-
-                // Fallback URL
-                "    <p style=\"color: #52525b; font-size: 11px; line-height: 1.6; margin: 0;\">Or copy this link into your browser:<br/>" +
-                "      <span style=\"color: #7c3aed; word-break: break-all;\">" + acceptUrl + "</span>" +
-                "    </p>" +
-                "  </div>" +
-
-                // Footer
-                "  <div style=\"border-top: 1px solid #18181b; padding: 20px 32px; text-align: center;\">" +
-                "    <p style=\"color: #3f3f46; font-size: 10px; margin: 0;\">EventOS · The Operating System for Event Businesses · If you didn't expect this email, please ignore it.</p>" +
-                "  </div>" +
-                "</div>";
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</body>" +
+                "</html>";
 
             helper.setText(htmlContent, true);
             mailSender.send(message);
@@ -164,6 +247,127 @@ public class EmailService {
             log.info("[EMAIL_SENT] Password reset email sent successfully to: {}", toEmail);
         } catch (Exception e) {
             log.error("[EMAIL_ERROR] Failed to send password reset email to: {}", toEmail, e);
+        }
+    }
+
+    @Async
+    public void sendWelcomeEmail(String toEmail, String inviteeName, String workspaceName) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            String sender = (fromAddress != null && !fromAddress.trim().isEmpty()) ? fromAddress : "no-reply@eventos.co";
+            helper.setFrom(sender);
+            helper.setTo(toEmail);
+            helper.setSubject("Welcome to EventOS — Account Successfully Activated! 🚀");
+
+            String displayName = (inviteeName != null && !inviteeName.trim().isEmpty()) ? inviteeName : toEmail.split("@")[0];
+            String workspaceDisplay = (workspaceName != null && !workspaceName.trim().isEmpty()) ? workspaceName : "Your Workspace";
+            String consoleUrl = frontendUrl + "/dashboard";
+
+            String htmlContent =
+                "<!DOCTYPE html>" +
+                "<html lang=\"en\">" +
+                "<head>" +
+                "<meta charset=\"UTF-8\">" +
+                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "<title>Welcome to EventOS</title>" +
+                "</head>" +
+                "<body style=\"margin:0; padding:30px 15px; background:#050507; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;\">" +
+                "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">" +
+                "<tr>" +
+                "<td align=\"center\">" +
+                "<!-- MAIN CONTAINER -->" +
+                "<table width=\"560\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#0C0C0F; border:1px solid #27272A; border-radius:28px; overflow:hidden;\">" +
+                "<!-- HERO -->" +
+                "<tr>" +
+                "<td align=\"center\" style=\"padding:55px 35px; background: linear-gradient(135deg,#7C3AED 0%,#DB2777 50%,#2563EB 100%);\">" +
+                "  <table width=\"100%\">" +
+                "    <tr>" +
+                "      <td align=\"center\">" +
+                "        <div style=\"display:inline-block; padding:7px 18px; border-radius:50px; background:rgba(255,255,255,.15); color:white; font-size:11px; font-weight:700; letter-spacing:1px;\">✨ ACCOUNT ACTIVATED</div>" +
+                "        <div style=\"margin-top:25px; font-size:30px; font-weight:900; color:white; letter-spacing:-1px;\">EVENT<span style=\"color:#FBCFE8;\">OS</span></div>" +
+                "        <div style=\"margin:25px auto; width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); font-size:38px; line-height:80px;\">🎉</div>" +
+                "        <h1 style=\"margin:0; font-size:30px; color:white; font-weight:800;\">Welcome Aboard!</h1>" +
+                "        <p style=\"margin-top:12px; font-size:15px; color:rgba(255,255,255,.85);\">Your account has been opened successfully</p>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "</td>" +
+                "</tr>" +
+                "<!-- BODY -->" +
+                "<tr>" +
+                "<td style=\"padding:40px;\">" +
+                "  <p style=\"font-size:15px; color:#E4E4E7; font-weight:600;\">Hi " + displayName + " 👋</p>" +
+                "  <p style=\"font-size:14px; line-height:1.8; color:#A1A1AA;\">" +
+                "    We are thrilled to welcome you to <strong style=\"color:#C4B5FD;\">" + workspaceDisplay + "</strong> on EventOS. Your profile is now fully active, and you are ready to begin creating, planning, and managing outstanding events." +
+                "  </p>" +
+                "  <!-- SUCCESS CARD -->" +
+                "  <table width=\"100%\" cellpadding=\"20\" style=\"margin-top:20px; background: linear-gradient(145deg, #15151A, #101014); border:1px solid #27272A; border-radius:18px;\">" +
+                "    <tr>" +
+                "      <td>" +
+                "        <div style=\"color:#71717A; font-size:11px; letter-spacing:1px;\">WORKSPACE CONFIRMATION</div>" +
+                "        <h2 style=\"margin:8px 0; color:white; font-size:20px;\">🏢 " + workspaceDisplay + "</h2>" +
+                "        <table width=\"100%\" cellpadding=\"8\">" +
+                "          <tr>" +
+                "            <td style=\"color:#A1A1AA; font-size:13px; padding: 4px 0;\">✔️ Email Verified</td>" +
+                "            <td align=\"right\" style=\"color:#C4B5FD; font-weight:700; font-size:13px; padding: 4px 0;\">Yes</td>" +
+                "          </tr>" +
+                "          <tr>" +
+                "            <td style=\"color:#A1A1AA; font-size:13px; padding: 4px 0;\">✔️ Account Status</td>" +
+                "            <td align=\"right\" style=\"color:white; font-size:13px; padding: 4px 0;\">Active</td>" +
+                "          </tr>" +
+                "        </table>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "  <!-- CTA -->" +
+                "  <table width=\"100%\" style=\"margin:35px 0;\">" +
+                "    <tr>" +
+                "      <td align=\"center\">" +
+                "        <a href=\"" + consoleUrl + "\" style=\"display:inline-block; padding:18px 45px; border-radius:50px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:white; font-size:15px; font-weight:800; text-decoration:none; box-shadow: 0 10px 20px rgba(139,92,246,0.25);\">🚀 Go to Console</a>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "  <!-- JOURNEY -->" +
+                "  <table width=\"100%\" cellpadding=\"18\" style=\"background:#111113; border:1px solid #27272A; border-radius:18px;\">" +
+                "    <tr>" +
+                "      <td>" +
+                "        <h3 style=\"margin:0 0 15px; color:white; font-size:16px;\">Next Steps to Launch</h3>" +
+                "        <div style=\"color:#A1A1AA; font-size:13px; line-height: 2;\">" +
+                "          ① Explore CRM & Leads Pipeline<br>" +
+                "          ② Configure Brand Customizations<br>" +
+                "          ③ Connect Cloudinary Storage<br>" +
+                "          ④ Invite team and create your first booking! 🎉" +
+                "        </div>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "</td>" +
+                "</tr>" +
+                "<!-- FOOTER -->" +
+                "<tr>" +
+                "<td align=\"center\" style=\"padding:30px; background:#08080A; border-top:1px solid #27272A;\">" +
+                "  <div style=\"font-size:12px; color:#52525B; line-height:1.8;\">" +
+                "    <strong style=\"color:#E4E4E7;\">EventOS</strong><br>" +
+                "    The Operating System for Event Businesses<br><br>" +
+                "    Built for creators. Designed for unforgettable events.<br><br>" +
+                "    © 2026 EventOS" +
+                "  </div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</body>" +
+                "</html>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            log.info("[EMAIL_SENT] Welcome email sent successfully to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("[EMAIL_ERROR] Failed to send welcome email to: {} — {}", toEmail, e.getMessage());
         }
     }
 }

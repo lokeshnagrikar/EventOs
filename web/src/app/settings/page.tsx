@@ -2288,7 +2288,7 @@ export default function SettingsPage() {
                               <tr key={inv.id} className="border-b border-zinc-900 last:border-0 hover:bg-zinc-950/30">
                                 <td className="py-2.5 font-bold text-zinc-300">{inv.invoiceNumber}</td>
                                 <td className="py-2.5">{new Date(inv.dueDate).toLocaleDateString()}</td>
-                                <td className="py-2.5 font-bold text-zinc-200">${inv.amount.toFixed(2)}</td>
+                                <td className="py-2.5 font-bold text-zinc-200">{inv.currency === "INR" ? "₹" : "$"}{inv.amount.toFixed(2)}</td>
                                 <td className="py-2.5">
                                   <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] text-emerald-400 font-sans font-black uppercase">
                                     {inv.status}
@@ -2327,9 +2327,9 @@ export default function SettingsPage() {
                                                 <p>${billingTaxType || "Tax ID"}: ${billingTaxId || "N/A"}</p>
                                               </div>
                                               <div style="margin-top: 30px;">
-                                                <div class="item"><span>SaaS Subscription Renewal</span> <span>$${inv.amount.toFixed(2)}</span></div>
-                                                <div class="item"><span>Tax index (18%)</span> <span>$${inv.tax.toFixed(2)}</span></div>
-                                                <div class="item total"><span>Total Paid</span> <span>$${(inv.amount + inv.tax).toFixed(2)} ${inv.currency}</span></div>
+                                                <div class="item"><span>SaaS Subscription Renewal</span> <span>${inv.currency === "INR" ? "₹" : "$"}${inv.amount.toFixed(2)}</span></div>
+                                                <div class="item"><span>Tax index (18%)</span> <span>${inv.currency === "INR" ? "₹" : "$"}${inv.tax.toFixed(2)}</span></div>
+                                                <div class="item total"><span>Total Paid</span> <span>${inv.currency === "INR" ? "₹" : "$"}${(inv.amount + inv.tax).toFixed(2)} ${inv.currency}</span></div>
                                               </div>
                                               <div style="margin-top: 50px; text-align: center; font-size: 10px; color: #555;">
                                                 Thank you for subscribing to EventOS!
@@ -2540,7 +2540,7 @@ export default function SettingsPage() {
                                   <div className="space-y-1">
                                     <span className="text-[10px] font-black uppercase text-zinc-300 block">{p.name}</span>
                                     <div className="flex items-baseline gap-1 mt-2">
-                                      <span className="text-xl font-bold text-white">${priceVal.toFixed(0)}</span>
+                                      <span className="text-xl font-bold text-white">{p.currency === "INR" ? "₹" : "$"}{priceVal.toFixed(0)}</span>
                                       <span className="text-[8px] text-zinc-500 font-mono uppercase">{labelVal}</span>
                                     </div>
                                     <p className="text-[8px] text-zinc-500 mt-1 font-semibold leading-normal">

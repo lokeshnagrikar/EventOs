@@ -135,9 +135,9 @@ CREATE INDEX idx_tenant_usages_tenant ON tenant_usages(tenant_id);
 -- Seed predefined SaaS Plan tiers
 INSERT INTO plans (id, name, code, price, currency, billing_interval, max_users, max_storage, max_gallery_uploads, max_events, max_leads, max_ai_credits, max_automation_runs, max_api_calls, custom_domain_supported, white_label_supported)
 VALUES
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Free Trial', 'free_trial', 0.00, 'USD', 'MONTHLY', 3, 5368709120, 20, 5, 10, 50, 100, 1000, FALSE, FALSE),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'Starter', 'starter', 29.00, 'USD', 'MONTHLY', 5, 10737418240, 50, 15, 50, 200, 500, 5000, FALSE, FALSE),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'Professional', 'professional', 79.00, 'USD', 'MONTHLY', 15, 53687091200, 200, 50, 200, 1000, 2500, 25000, TRUE, FALSE),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', 'Business', 'business', 149.00, 'USD', 'MONTHLY', 50, 214748364800, 1000, 200, 1000, 5000, 10000, 100000, TRUE, TRUE),
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', 'Enterprise', 'enterprise', 299.00, 'USD', 'MONTHLY', 999, 1099511627776, 99999, 99999, 99999, 50000, 100000, 1000000, TRUE, TRUE)
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Free Trial', 'free_trial', 0.00, 'INR', 'MONTHLY', 3, 5368709120, 20, 5, 10, 50, 100, 1000, FALSE, FALSE),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'Starter', 'starter', 1999.00, 'INR', 'MONTHLY', 5, 10737418240, 50, 15, 50, 200, 500, 5000, FALSE, FALSE),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'Professional', 'professional', 5999.00, 'INR', 'MONTHLY', 15, 53687091200, 200, 50, 200, 1000, 2500, 25000, TRUE, FALSE),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', 'Business', 'business', 11999.00, 'INR', 'MONTHLY', 50, 214748364800, 1000, 200, 1000, 5000, 10000, 100000, TRUE, TRUE),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', 'Enterprise', 'enterprise', 24999.00, 'INR', 'MONTHLY', 999, 1099511627776, 99999, 99999, 99999, 50000, 100000, 1000000, TRUE, TRUE)
 ON CONFLICT (code) DO NOTHING;
