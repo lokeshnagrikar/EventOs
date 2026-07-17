@@ -252,6 +252,7 @@ public class GalleryItemService {
                         .publicId(item.getPublicId())
                         .isVideo(GalleryItemType.VIDEO.equals(item.getType()))
                         .build();
+                        
 
                 MediaDeletedEvent event = MediaDeletedEvent.builder()
                         .tenantId(tenantId)

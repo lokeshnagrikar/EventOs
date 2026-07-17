@@ -15,6 +15,9 @@ import java.util.UUID;
 @Table(name = "gallery_items")
 @Data
 @NoArgsConstructor
+
+
+
 @AllArgsConstructor
 @Builder
 public class GalleryItem {

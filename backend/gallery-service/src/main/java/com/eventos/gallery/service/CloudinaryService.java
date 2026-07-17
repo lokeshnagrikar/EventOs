@@ -48,7 +48,7 @@ public class CloudinaryService {
     private final Random random = new Random();
 
     private static final List<String> ALLOWED_MIME_TYPES = List.of(
-            "image/jpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif",
+            "image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif",
             "video/mp4", "video/quicktime", "video/x-matroska", "video/webm"
     );
 
@@ -97,11 +97,53 @@ public class CloudinaryService {
 
     public Map<String, Object> upload(MultipartFile file) throws IOException {
         String contentType = file.getContentType();
+        if (contentType == null || "application/octet-stream".equalsIgnoreCase(contentType)) {
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename != null && originalFilename.contains(".")) {
+                String ext = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+                switch (ext) {
+                    case "jpg":
+                    case "jpeg":
+                        contentType = "image/jpeg";
+                        break;
+                    case "png":
+                        contentType = "image/png";
+                        break;
+                    case "gif":
+                        contentType = "image/gif";
+                        break;
+                    case "webp":
+                        contentType = "image/webp";
+                        break;
+                    case "heic":
+                        contentType = "image/heic";
+                        break;
+                    case "heif":
+                        contentType = "image/heif";
+                        break;
+                    case "mp4":
+                        contentType = "video/mp4";
+                        break;
+                    case "mov":
+                        contentType = "video/quicktime";
+                        break;
+                    case "mkv":
+                        contentType = "video/x-matroska";
+                        break;
+                    case "webm":
+                        contentType = "video/webm";
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
         if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType.toLowerCase())) {
             throw new IllegalArgumentException("Unsupported media type: " + contentType + ". Only standard images and videos are allowed.");
         }
         
-        boolean isVideo = contentType.startsWith("video/");
+        boolean isVideo = contentType.toLowerCase().startsWith("video/");
         
         if (isMockMode) {
             return getMockUploadResult(file, isVideo);
@@ -110,13 +152,12 @@ public class CloudinaryService {
         log.info("Uploading file stream {} to Cloudinary...", file.getOriginalFilename());
         Map uploadResult;
         try {
-            uploadResult = cloudinary.uploader().upload(file.getInputStream(), ObjectUtils.asMap(
+            uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
                     "resource_type", "auto",
                     "folder", "eventos_gallery"
             ));
         } catch (Exception e) {
             log.warn("Cloudinary upload failed ({}). Falling back to MOCK MODE simulation.", e.getMessage());
-            this.isMockMode = true;
             return getMockUploadResult(file, isVideo);
         }
         
