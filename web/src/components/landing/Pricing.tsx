@@ -34,8 +34,8 @@ export function Pricing() {
     {
       name: "Starter",
       desc: "Perfect for independent planners managing multiple schedules.",
-      monthlyPrice: 39,
-      annualPrice: 29,
+      monthlyPrice: 1999,
+      annualPrice: 1599,
       cta: "Start Free Trial",
       popular: false,
       features: [
@@ -51,8 +51,8 @@ export function Pricing() {
     {
       name: "Professional",
       desc: "Our most popular package for active event organizations.",
-      monthlyPrice: 99,
-      annualPrice: 79,
+      monthlyPrice: 5999,
+      annualPrice: 4799,
       cta: "Start Free Trial",
       popular: true,
       features: [
@@ -68,8 +68,8 @@ export function Pricing() {
     {
       name: "Business",
       desc: "For established production houses requiring custom domains.",
-      monthlyPrice: 189,
-      annualPrice: 149,
+      monthlyPrice: 11999,
+      annualPrice: 9599,
       cta: "Start Free Trial",
       popular: false,
       features: [
@@ -103,7 +103,7 @@ export function Pricing() {
 
   const formatPrice = (price: number | null) => {
     if (price === null) return "Custom";
-    return `$${price}`;
+    return `₹${price.toLocaleString()}`;
   };
 
   const openModal = useAuthModalStore((state) => state.openModal);
@@ -176,6 +176,11 @@ export function Pricing() {
               transition={{ duration: 0.4, delay: shouldReduceMotion ? 0 : idx * 0.1 }}
               className={`rounded-2xl border p-6 flex flex-col justify-between relative transition-all duration-300 ${plan.border}`}
             >
+              {/* Dynamic pulsing glow behind popular card */}
+              {plan.popular && (
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur-md opacity-10 animate-pulse pointer-events-none z-0" />
+              )}
+
               {/* BorderBeam decoration on Growth Card */}
               {plan.popular && !shouldReduceMotion && (
                 <BorderBeam size={200} duration={12} borderWidth={1.5} colorFrom="#8B5CF6" colorTo="#EC4899" />
@@ -183,7 +188,7 @@ export function Pricing() {
 
               {/* Hot badge */}
               {plan.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold uppercase py-1 px-3.5 rounded-full tracking-wider shadow-md">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold uppercase py-1 px-3.5 rounded-full tracking-wider shadow-md z-10">
                   Most Popular
                 </span>
               )}
@@ -208,7 +213,7 @@ export function Pricing() {
 
                 {billingCycle === "annually" && plan.monthlyPrice !== null && plan.monthlyPrice !== 0 && (
                   <span className="text-[10px] bg-purple-500/10 border border-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-semibold block w-fit">
-                    Billed annually (${plan.annualPrice! * 12}/yr)
+                    Billed annually (₹{(plan.annualPrice! * 12).toLocaleString()}/yr)
                   </span>
                 )}
 

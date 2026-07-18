@@ -153,42 +153,60 @@ export function Navbar({ activeSection }: NavbarProps) {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500 ease-in-out transform",
-        (visible || isOpen) ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none",
-        scrolled || isOpen
-          ? "bg-zinc-950/70 backdrop-blur-md border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.4)] py-2"
-          : "bg-transparent border-b border-transparent py-4"
+        "fixed top-0 left-0 right-0 z-50 w-full pt-3 px-4 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] transform pointer-events-none",
+        (visible || isOpen) ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
       )}
     >
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+      {/* Always-on Apple-style Floating Glass Capsule */}
+      <div
+        className={cn(
+          "pointer-events-auto mx-auto flex items-center justify-between rounded-full border backdrop-blur-2xl backdrop-saturate-[1.8] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          scrolled || isOpen
+            ? "max-w-5xl bg-white/[0.04] border-white/[0.1] px-5 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.06)]"
+            : "max-w-6xl bg-white/[0.03] border-white/[0.07] px-6 py-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.04)]"
+        )}
+      >
 
         {/* Logo */}
         <div
-          className="group flex items-center gap-3 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-lg p-1"
+          className="group flex items-center gap-2.5 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-lg p-1"
           onClick={() => router.push("/")}
           tabIndex={0}
           onKeyDown={(e) => e.key === "Enter" && router.push("/")}
           aria-label="EventOS Home"
         >
-          {/* Logo Emblem (From public/logo/logo.png) */}
+          {/* Logo Emblem */}
           <img
             src="/logo/logo.png"
             alt="EO"
-            className="h-11 w-11 object-contain transition-all duration-300 ease-out group-hover:scale-105 group-hover:rotate-[3deg] group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]"
+            className={cn(
+              "object-contain transition-all duration-500 ease-out group-hover:scale-105 group-hover:rotate-[3deg] group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]",
+              scrolled ? "h-8 w-8" : "h-11 w-11"
+            )}
           />
 
           {/* Vertical Separator */}
-          <div className="h-9 w-[1px] bg-zinc-800 transition-colors duration-300 group-hover:bg-purple-500/40" />
+          <div className={cn(
+            "w-[1px] bg-zinc-800 transition-all duration-500 group-hover:bg-purple-500/40",
+            scrolled ? "h-6" : "h-9"
+          )} />
 
-          {/* Brand Text styled in code */}
+          {/* Brand Text */}
           <div className="flex flex-col justify-center text-left transition-all duration-300 group-hover:translate-x-0.5">
-            <h1 className="font-extrabold text-lg leading-none tracking-tight text-white font-heading flex items-center transition-all duration-300 group-hover:text-purple-100">
+            <h1 className={cn(
+              "font-extrabold leading-none tracking-tight text-white font-heading flex items-center transition-all duration-500 group-hover:text-purple-100",
+              scrolled ? "text-sm" : "text-lg"
+            )}>
               Event
               <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent ml-0.5 transition-all duration-300 group-hover:brightness-110">
                 OS
               </span>
             </h1>
-            <span className="text-[8px] text-[#8E8A9F] font-bold tracking-[0.16em] uppercase block mt-1 leading-none transition-colors duration-300 group-hover:text-zinc-300">
+            {/* Hide tagline when scrolled for compact capsule */}
+            <span className={cn(
+              "text-[8px] text-[#8E8A9F] font-bold tracking-[0.16em] uppercase block leading-none transition-all duration-500 group-hover:text-zinc-300",
+              scrolled ? "mt-0 h-0 opacity-0 overflow-hidden" : "mt-1 opacity-100"
+            )}>
               MANAGE. ENGAGE. ELEVATE.
             </span>
           </div>
@@ -378,7 +396,7 @@ export function Navbar({ activeSection }: NavbarProps) {
         </nav>
 
         {/* Desktop CTAs */}
-        <div 
+        <div
           className="hidden md:flex items-center gap-4"
           onMouseLeave={() => setHoveredIndex(null)}
         >
@@ -425,7 +443,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             )}
           </button>
           <LiquidButton
-            variant="brandNavbar"
+            variant="appleGlass"
             onClick={handleStartTrial}
             className="rounded-full text-xs font-bold uppercase tracking-wider active:scale-[0.98]"
             size="default"
@@ -437,7 +455,7 @@ export function Navbar({ activeSection }: NavbarProps) {
         {/* Mobile menu toggle */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden h-10 w-10 border border-zinc-800/80 bg-zinc-950/40 hover:bg-zinc-900/60 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-150 focus:outline-none focus:ring-2 focus:ring-purple-500/55 transition-colors shrink-0"
+          className="md:hidden h-9 w-9 border border-white/[0.08] bg-zinc-950/50 backdrop-blur-xl hover:bg-zinc-900/60 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-500/55 transition-all duration-300 shrink-0"
           aria-expanded={isOpen}
           aria-label="Toggle navigation menu"
         >

@@ -31,7 +31,7 @@ export function Competitors() {
         </div>
 
         {/* Comparison Table */}
-        <div className="border border-zinc-850 rounded-2xl overflow-x-auto bg-[#121214]/10 backdrop-blur">
+        <div className="border border-white/[0.08] rounded-2xl overflow-x-auto bg-white/[0.01] backdrop-blur-xl">
           <table className="w-full text-left border-collapse text-[11px] sm:text-xs">
             <thead>
               <tr className="border-b border-zinc-850 bg-zinc-950/60 font-black text-zinc-300">

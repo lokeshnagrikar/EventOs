@@ -224,12 +224,12 @@ export function Modules() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.4, delay: shouldReduceMotion ? 0 : idx * 0.07 }}
-              className={`${mod.colSpan === 2 ? "md:col-span-2" : "md:col-span-1"}`}
+              className={mod.colSpan === 2 ? "md:col-span-2" : "md:col-span-1"}
             >
               <SpotlightCard
                 spotlightColor={mod.spotlightColor}
                 borderColor={mod.borderHover}
-                className="h-full rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-md p-6 group hover:border-white/[0.1] hover:bg-white/[0.04] transition-all duration-300"
+                className="h-full rounded-2xl border border-white/[0.06] bg-zinc-950/20 backdrop-blur-md p-6 group hover:border-white/[0.12] hover:bg-zinc-900/10 transition-all duration-500 shadow-[0_0_30px_rgba(0,0,0,0.3)] hover:shadow-[0_0_50px_rgba(139,92,246,0.03)]"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between">
@@ -265,8 +265,10 @@ export function Modules() {
                 {/* Description */}
                 <p className="mt-3 text-zinc-500 text-xs leading-relaxed">{mod.description}</p>
 
-                {/* Mini Preview */}
-                {mod.mini}
+                {/* Mini Preview with smooth group-hover scale transition */}
+                <div className="transition-transform duration-500 group-hover:scale-[1.02] origin-bottom">
+                  {mod.mini}
+                </div>
 
                 {/* Bottom hover bar */}
                 <div

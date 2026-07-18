@@ -138,7 +138,7 @@ export function ProductShowcase() {
             }`}
           >
             {/* Main Window Mockup */}
-            <div className="rounded-2xl border border-zinc-800 bg-[#0c0c0e]/95 shadow-2xl relative overflow-hidden">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e]/45 shadow-2xl backdrop-blur-2xl relative overflow-hidden">
               {/* Top window dots */}
               <div className="flex items-center gap-1.5 px-4 py-3 border-b border-zinc-900/80 bg-zinc-950/40">
                 <span className="h-2.5 w-2.5 rounded-full bg-zinc-800" />

@@ -94,9 +94,13 @@ export function Features() {
       className="py-24 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden"
       id="features"
     >
+      {/* Dynamic Background Grid Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.005)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.005)_1px,transparent_1px)] [background-size:120px_120px] pointer-events-none z-0" />
+
       {/* Background radial gradients */}
-      <div className="absolute bottom-0 right-[15%] w-[400px] h-[400px] bg-purple-950/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute top-12 left-[10%] w-[350px] h-[350px] bg-cyan-950/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-[15%] w-[400px] h-[400px] bg-purple-950/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-12 left-[10%] w-[350px] h-[350px] bg-cyan-950/10 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Section Header */}
@@ -136,7 +140,7 @@ export function Features() {
               <SpotlightCard
                 spotlightColor={feat.spotlightColor}
                 borderColor={feat.borderColor}
-                className="h-full group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-md p-6 flex flex-col gap-4 hover:border-white/[0.1] hover:bg-white/[0.04] transition-all duration-300 hover:shadow-2xl"
+                className="h-full group relative rounded-2xl border border-white/[0.06] bg-zinc-950/20 backdrop-blur-md p-6 flex flex-col gap-4 hover:border-white/[0.12] hover:bg-zinc-900/10 transition-all duration-500 hover:shadow-[0_0_50px_rgba(0,0,0,0.4)]"
               >
                 {/* Icon + Badge Row */}
                 <div className="flex items-center justify-between">

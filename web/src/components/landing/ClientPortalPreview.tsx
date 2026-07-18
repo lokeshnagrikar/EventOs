@@ -304,7 +304,6 @@ export function ClientPortalPreview() {
             </div>
           </motion.div>
 
-          {/* Right — Portal Mockup */}
           <motion.div
             initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -316,7 +315,7 @@ export function ClientPortalPreview() {
             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 via-purple-500/5 to-transparent blur-2xl rounded-3xl pointer-events-none" />
 
             {/* Mockup Window */}
-            <div className="relative rounded-2xl border border-zinc-800 bg-[#0c0c0e]/95 shadow-[0_0_60px_rgba(99,102,241,0.08)] overflow-hidden">
+            <div className="relative rounded-2xl border border-white/[0.08] bg-[#0c0c0e]/45 shadow-[0_0_60px_rgba(99,102,241,0.08)] backdrop-blur-2xl overflow-hidden">
               {/* Window dots */}
               <div className="flex items-center gap-1.5 px-4 py-3 border-b border-zinc-900 bg-zinc-950/60">
                 <div className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
@@ -365,7 +364,7 @@ export function ClientPortalPreview() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.5 }}
-              className="absolute -bottom-4 -right-4 flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 shadow-xl"
+              className="absolute -bottom-4 -right-4 flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-950/60 border border-white/[0.08] backdrop-blur-md shadow-xl"
             >
               <Icon icon="solar:shield-check-bold-duotone" className="text-emerald-400 text-xl" />
               <div>

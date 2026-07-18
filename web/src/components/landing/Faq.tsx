@@ -82,7 +82,7 @@ export function Faq() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-[#0c0c0e]/60 border border-zinc-900 rounded-2xl p-4 sm:p-6 backdrop-blur-md"
+          className="bg-[#0c0c0e]/40 border border-white/[0.08] rounded-2xl p-4 sm:p-6 backdrop-blur-2xl"
         >
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, idx) => (

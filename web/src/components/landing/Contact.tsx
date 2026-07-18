@@ -88,7 +88,7 @@ export function Contact() {
             <div className="space-y-6">
               {/* Direct channels */}
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl text-purple-400">
+                <div className="p-3 bg-white/[0.02] border border-white/[0.06] backdrop-blur-xs rounded-xl text-purple-400">
                   <Icon icon="solar:letter-bold-duotone" className="text-xl" />
                 </div>
                 <div>
@@ -101,7 +101,7 @@ export function Contact() {
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl text-cyan-400">
+                <div className="p-3 bg-white/[0.02] border border-white/[0.06] backdrop-blur-xs rounded-xl text-cyan-400">
                   <Icon icon="solar:clock-circle-bold-duotone" className="text-xl" />
                 </div>
                 <div>
@@ -114,7 +114,7 @@ export function Contact() {
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl text-pink-400">
+                <div className="p-3 bg-white/[0.02] border border-white/[0.06] backdrop-blur-xs rounded-xl text-pink-400">
                   <Icon icon="solar:map-point-bold-duotone" className="text-xl" />
                 </div>
                 <div>
@@ -130,7 +130,7 @@ export function Contact() {
 
           {/* Column 2: Inquiries Form */}
           <div className="lg:col-span-7">
-            <div className="relative rounded-2xl border border-zinc-850/80 bg-zinc-950/40 backdrop-blur-md p-6 sm:p-10 shadow-[0_0_50px_rgba(0,0,0,0.3)]">
+            <div className="relative rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-2xl p-6 sm:p-10 shadow-[0_30px_100px_rgba(0,0,0,0.4)]">
               {/* Subtle top light bar */}
               <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-purple-500/20 to-transparent pointer-events-none" />
               

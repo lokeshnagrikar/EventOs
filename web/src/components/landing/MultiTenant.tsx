@@ -65,47 +65,47 @@ export function MultiTenant() {
         {/* Visual Diagram + Columns Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          {/* Left Feature Column */}
-          <div className="lg:col-span-5 space-y-6 order-2 lg:order-1">
-            {securityFeatures.map((feat, idx) => (
-              <motion.div
-                key={feat.title}
-                initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-              >
-                <SpotlightCard className="p-5 bg-zinc-900/40 border border-zinc-800/80 rounded-xl relative overflow-hidden group">
-                  <div className="flex gap-4">
-                    <div
-                      className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 border"
-                      style={{
-                        borderColor: `${feat.color}25`,
-                        background: `${feat.color}10`,
-                      }}
-                    >
-                      <Icon icon={feat.icon} style={{ color: feat.color }} className="text-xl" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-extrabold text-zinc-200">{feat.title}</h3>
-                      <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">{feat.desc}</p>
-                    </div>
-                  </div>
-                </SpotlightCard>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Right Diagram Column */}
-          <div className="lg:col-span-7 order-1 lg:order-2 flex justify-center">
+        {/* Left Feature Column */}
+        <div className="lg:col-span-5 space-y-6 order-2 lg:order-1">
+          {securityFeatures.map((feat, idx) => (
             <motion.div
-              initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative w-full max-w-lg aspect-[1.15] bg-[#0d0d0f]/90 border border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between overflow-hidden shadow-[0_0_50px_rgba(139,92,246,0.04)]"
+              key={feat.title}
+              initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
             >
-              <BorderBeam size={220} duration={12} borderWidth={1.5} />
+              <SpotlightCard className="p-5 bg-white/[0.02] border border-white/[0.06] backdrop-blur-md rounded-xl relative overflow-hidden group">
+                <div className="flex gap-4">
+                  <div
+                    className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 border"
+                    style={{
+                      borderColor: `${feat.color}25`,
+                      background: `${feat.color}10`,
+                    }}
+                  >
+                    <Icon icon={feat.icon} style={{ color: feat.color }} className="text-xl" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-extrabold text-zinc-200">{feat.title}</h3>
+                    <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">{feat.desc}</p>
+                  </div>
+                </div>
+              </SpotlightCard>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Right Diagram Column */}
+        <div className="lg:col-span-7 order-1 lg:order-2 flex justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative w-full max-w-lg aspect-[1.15] bg-[#0d0d0f]/40 border border-white/[0.08] backdrop-blur-2xl rounded-2xl p-6 flex flex-col justify-between overflow-hidden shadow-[0_0_50px_rgba(139,92,246,0.06)]"
+          >
+            <BorderBeam size={220} duration={12} borderWidth={1.5} />
               
               {/* Header inside mockup */}
               <div className="flex items-center justify-between border-b border-zinc-900 pb-3">

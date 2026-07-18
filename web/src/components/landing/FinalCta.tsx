@@ -46,7 +46,7 @@ export function FinalCta() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.55 }}
-          className="relative rounded-3xl border border-purple-500/20 bg-gradient-to-br from-[#8B5CF6]/12 via-[#EC4899]/8 to-[#06B6D4]/8 p-8 sm:p-16 overflow-hidden shadow-[0_0_100px_rgba(139,92,246,0.07)]"
+          className="relative rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#8B5CF6]/12 via-[#EC4899]/8 to-[#06B6D4]/8 p-8 sm:p-16 overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.4),0_0_100px_rgba(139,92,246,0.07)] backdrop-blur-2xl"
         >
           {/* BorderBeam decoration */}
           {!shouldReduceMotion && (
