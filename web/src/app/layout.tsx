@@ -5,6 +5,7 @@ import "./globals.css";
 import Providers from "./providers";
 import ToastContainer from "@/components/ToastContainer";
 import { cn } from "@/lib/utils";
+import { FloatingDock } from "@/components/landing/FloatingDock";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -102,6 +103,7 @@ export default async function RootLayout({
         </a>
         <Providers>
           {children}
+          <FloatingDock />
           <ToastContainer />
         </Providers>
       </body>

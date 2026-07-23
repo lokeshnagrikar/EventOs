@@ -215,9 +215,9 @@ export default function ClientDashboard() {
     <div className="space-y-8 animate-slide-in text-zinc-300 select-none">
       
       {/* ─── DYNAMIC WELCOME HEADER ─── */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-800 relative">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/[0.04] relative">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 font-bold shrink-0">
+          <div className="h-12 w-12 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-zinc-400 font-bold shrink-0 shadow-sm">
             <UserCheck size={20} className="text-purple-400" />
           </div>
           <div>
@@ -232,13 +232,13 @@ export default function ClientDashboard() {
         
         {/* Days remaining countdown circular progress widget */}
         {activeEvent && (
-          <div className="flex items-center gap-4 bg-[#111113]/90 border border-zinc-800 p-4.5 rounded-2xl relative shadow-md overflow-hidden shrink-0">
+          <div className="flex items-center gap-4 bg-white/[0.02] backdrop-blur-md border border-white/[0.04] p-4.5 rounded-2xl relative shadow-md overflow-hidden shrink-0">
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-500/5 to-transparent blur-[15px] pointer-events-none" />
             <div className="text-center">
               <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Days Countdown</span>
               <span className="text-xl font-black text-purple-400 font-mono mt-0.5 block">{daysRemaining}</span>
             </div>
-            <div className="h-8 w-px bg-zinc-800" />
+            <div className="h-8 w-px bg-white/[0.05]" />
             <div>
               <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Schedule Date</span>
               <span className="text-[11px] font-bold text-zinc-300 mt-0.5 block">
@@ -251,7 +251,7 @@ export default function ClientDashboard() {
 
       {/* ─── JOURNEY PROGRESS TRACKER ─── */}
       {activeEvent && (
-        <div className="p-5 border border-zinc-800 bg-[#141416]/40 rounded-2xl space-y-4 relative overflow-hidden">
+        <div className="p-6 border border-white/[0.04] bg-white/[0.02] backdrop-blur-md rounded-2xl space-y-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-purple-500/[0.02] via-transparent to-transparent pointer-events-none" />
           <div className="flex justify-between items-center text-xs">
             <div>
@@ -260,15 +260,15 @@ export default function ClientDashboard() {
                 <Award size={13} className="text-purple-400" /> Stage: {currentStage.label}
               </h4>
             </div>
-            <span className="px-2.5 py-0.5 bg-purple-550/5 border border-purple-500/20 text-purple-400 font-black rounded-full uppercase text-[8.5px]">
+            <span className="px-2.5 py-0.5 bg-purple-500/10 border border-purple-500/20 text-purple-400 font-black rounded-full uppercase text-[8.5px]">
               {currentStage.pct}% Completed
             </span>
           </div>
 
           {/* Progress bar */}
-          <div className="h-2 w-full bg-zinc-950 border border-zinc-850 rounded-full overflow-hidden">
+          <div className="h-2 w-full bg-zinc-950/60 border border-white/[0.04] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-650 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 rounded-full transition-all duration-500 shadow-[0_0_12px_rgba(139,92,246,0.2)]"
               style={{ width: `${currentStage.pct}%` }}
             />
           </div>
@@ -284,7 +284,7 @@ export default function ClientDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Outstanding Balance */}
-        <div onClick={() => router.push("/portal/invoices")} className="p-5 rounded-2xl border border-zinc-800 bg-[#111113]/30 hover:border-purple-500/25 shadow flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
+        <div onClick={() => router.push("/portal/invoices")} className="p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] backdrop-blur-md hover:border-purple-500/20 shadow-md flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
           <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Outstanding balance</span>
           <div>
             <p className="text-xl font-black text-red-400 font-mono">₹{totalBalanceDue.toLocaleString()}</p>
@@ -293,7 +293,7 @@ export default function ClientDashboard() {
         </div>
 
         {/* Paid Balance */}
-        <div onClick={() => router.push("/portal/invoices")} className="p-5 rounded-2xl border border-zinc-800 bg-[#111113]/30 hover:border-purple-500/25 shadow flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
+        <div onClick={() => router.push("/portal/invoices")} className="p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] backdrop-blur-md hover:border-purple-500/20 shadow-md flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
           <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Contract Value Cleared</span>
           <div>
             <p className="text-xl font-black text-emerald-400 font-mono">₹{totalPaid.toLocaleString()}</p>
@@ -302,7 +302,7 @@ export default function ClientDashboard() {
         </div>
 
         {/* Photo Gallery Assets */}
-        <div onClick={() => router.push("/portal/gallery")} className="p-5 rounded-2xl border border-zinc-800 bg-[#111113]/30 hover:border-purple-500/25 shadow flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
+        <div onClick={() => router.push("/portal/gallery")} className="p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] backdrop-blur-md hover:border-purple-500/20 shadow-md flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
           <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Mood board captures</span>
           <div>
             <p className="text-xl font-black text-purple-400 font-mono">248 items</p>
@@ -311,7 +311,7 @@ export default function ClientDashboard() {
         </div>
 
         {/* Documents count */}
-        <div onClick={() => router.push("/portal/quotes")} className="p-5 rounded-2xl border border-zinc-800 bg-[#111113]/30 hover:border-purple-500/25 shadow flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
+        <div onClick={() => router.push("/portal/quotes")} className="p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] backdrop-blur-md hover:border-purple-500/20 shadow-md flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
           <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Proposals & Agreements</span>
           <div>
             <p className="text-xl font-black text-zinc-200 font-mono">4 files</p>
@@ -328,13 +328,13 @@ export default function ClientDashboard() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Guest Checklist Card */}
-          <div className="p-5 border border-zinc-850 bg-[#111113]/40 rounded-2xl space-y-4">
+          <div className="p-6 border border-white/[0.04] bg-white/[0.01] backdrop-blur-md rounded-2xl space-y-4 shadow-sm">
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-400">Interactive Checklist</h3>
                 <p className="text-[10px] text-zinc-550 font-bold mt-0.5">Toggle tasks to update coordinator.</p>
               </div>
-              <span className="text-[9.5px] font-mono font-black text-purple-450 bg-purple-550/5 border border-purple-500/10 px-2 py-0.5 rounded-md">
+              <span className="text-[9.5px] font-mono font-black text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 rounded-md">
                 {checklistProgress}% Completed
               </span>
             </div>
@@ -345,13 +345,13 @@ export default function ClientDashboard() {
                   key={item.id}
                   onClick={() => toggleChecklistItem(item.id)}
                   className={cn(
-                    "p-3 border rounded-xl bg-zinc-950/20 cursor-pointer flex flex-col justify-between gap-2.5 transition-all duration-200",
-                    item.completed ? "border-zinc-850/80 text-zinc-500" : "border-zinc-800 text-zinc-200 hover:border-zinc-700"
+                    "p-3.5 border rounded-xl bg-white/[0.01] cursor-pointer flex flex-col justify-between gap-2.5 transition-all duration-200 select-none",
+                    item.completed ? "border-white/[0.03] text-zinc-500 bg-white/[0.005]" : "border-white/[0.06] text-zinc-200 hover:border-white/[0.12]"
                   )}
                 >
                   <div className="flex items-center justify-between">
                     <span className={cn("font-bold text-[10.5px]", item.completed && "line-through")}>{item.label}</span>
-                    {item.completed ? <CheckCircle2 size={13} className="text-emerald-500" /> : <div className="h-3.5 w-3.5 rounded-full border border-zinc-700" />}
+                    {item.completed ? <CheckCircle2 size={13} className="text-emerald-500" /> : <div className="h-3.5 w-3.5 rounded-full border border-white/[0.1]" />}
                   </div>
 
                   <div className="flex justify-between items-center text-[8.5px] text-zinc-550 font-mono">
@@ -364,7 +364,7 @@ export default function ClientDashboard() {
           </div>
 
           {/* Event specs Recharts Chart */}
-          <div className="p-5 border border-zinc-850 bg-[#111113]/40 rounded-2xl space-y-4">
+          <div className="p-6 border border-white/[0.04] bg-white/[0.01] backdrop-blur-md rounded-2xl space-y-4 shadow-sm">
             <div>
               <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-400">Campaign analytics progress</h3>
               <p className="text-[10px] text-zinc-550 mt-0.5">Overall task completions logged.</p>
@@ -373,11 +373,17 @@ export default function ClientDashboard() {
             <div className="h-44 w-full text-xs">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analyticsData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#a855f7" stopOpacity={0.85}/>
+                      <stop offset="100%" stopColor="#6366f1" stopOpacity={0.2}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                   <XAxis dataKey="name" stroke="#71717a" />
                   <YAxis stroke="#71717a" />
                   <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a" }} />
-                  <Bar dataKey="progress" fill="#a855f7" radius={[4, 4, 0, 0]} barSize={36} />
+                  <Bar dataKey="progress" fill="url(#barGradient)" radius={[4, 4, 0, 0]} barSize={36} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -389,21 +395,21 @@ export default function ClientDashboard() {
         <div className="lg:col-span-1 space-y-6">
           
           {/* Quick Actions Panel */}
-          <div className="p-5 border border-zinc-850 bg-[#111113]/40 rounded-2xl space-y-3.5">
+          <div className="p-6 border border-white/[0.04] bg-white/[0.01] backdrop-blur-md rounded-2xl space-y-3.5 shadow-sm">
             <span className="text-[9.5px] text-zinc-550 uppercase font-black tracking-widest block">Quick Navigation Desk</span>
             
-            <div className="space-y-2 text-xs font-bold text-zinc-350">
-              <button onClick={() => router.push("/portal/timeline")} className="w-full p-3 border border-zinc-855 bg-zinc-950/20 rounded-xl text-left hover:border-purple-500/25 transition-all flex justify-between items-center group">
+            <div className="space-y-2 text-xs font-semibold text-zinc-350">
+              <button onClick={() => router.push("/portal/timeline")} className="w-full p-3 border border-white/[0.05] bg-white/[0.01] rounded-xl text-left hover:border-purple-500/20 transition-all flex justify-between items-center group">
                 <span>View Timeline details</span>
                 <ArrowRight size={12} className="text-zinc-650 group-hover:translate-x-0.5 transition-transform" />
               </button>
               
-              <button onClick={() => router.push("/portal/invoices")} className="w-full p-3 border border-zinc-855 bg-zinc-950/20 rounded-xl text-left hover:border-purple-500/25 transition-all flex justify-between items-center group">
+              <button onClick={() => router.push("/portal/invoices")} className="w-full p-3 border border-white/[0.05] bg-white/[0.01] rounded-xl text-left hover:border-purple-500/20 transition-all flex justify-between items-center group">
                 <span>View Invoices & receipts</span>
                 <ArrowRight size={12} className="text-zinc-650 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
-              <button onClick={() => router.push("/portal/support")} className="w-full p-3 border border-zinc-855 bg-zinc-950/20 rounded-xl text-left hover:border-purple-500/25 transition-all flex justify-between items-center group">
+              <button onClick={() => router.push("/portal/support")} className="w-full p-3 border border-white/[0.05] bg-white/[0.01] rounded-xl text-left hover:border-purple-500/20 transition-all flex justify-between items-center group">
                 <span>Contact support desk</span>
                 <ArrowRight size={12} className="text-zinc-650 group-hover:translate-x-0.5 transition-transform" />
               </button>
@@ -412,9 +418,9 @@ export default function ClientDashboard() {
 
           {/* Next milestone preview */}
           {nextMilestone && (
-            <div className="p-5 border border-zinc-850 bg-[#111113]/40 rounded-2xl space-y-3.5">
+            <div className="p-6 border border-white/[0.04] bg-white/[0.01] backdrop-blur-md rounded-2xl space-y-3.5 shadow-sm">
               <span className="text-[9.5px] text-zinc-550 uppercase font-black tracking-widest block">Next Milestone Task</span>
-              <div className="p-4 border border-purple-500/10 bg-purple-550/[0.01] rounded-xl space-y-1.5">
+              <div className="p-4 border border-purple-500/10 bg-purple-500/[0.01] rounded-xl space-y-1.5">
                 <span className="text-[8px] font-mono text-purple-400 font-black uppercase tracking-wider">{new Date(nextMilestone.scheduledTime).toLocaleDateString()}</span>
                 <h4 className="font-extrabold text-zinc-250 text-xs">{nextMilestone.title}</h4>
                 <p className="text-[10px] text-zinc-500 leading-normal font-medium">{nextMilestone.description}</p>

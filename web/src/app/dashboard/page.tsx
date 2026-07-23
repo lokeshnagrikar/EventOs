@@ -80,6 +80,7 @@ import ErrorState from "@/components/ui/ErrorState";
 import { DashboardSkeleton } from "@/components/ui/skeletons";
 import { useToastStore } from "@/lib/toastStore";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { AuroraText } from "@/components/ui/aurora-text";
 
 // ─── TYPES & INTERFACES ──────────────────────────────────────────────────────────
 interface DashboardData {
@@ -130,6 +131,7 @@ interface WidgetConfig {
 
 // ─── DEFAULT WIDGET CONFIGS ──────────────────────────────────────────────────────
 const DEFAULT_WIDGET_CONFIGS: WidgetConfig[] = [
+  { id: "control", title: "Control Center", category: "operations", colSpan: "col-span-1", isPinned: true, visible: true },
   { id: "health", title: "Workspace Health Score", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "priority", title: "Today's Focus", category: "operations", colSpan: "col-span-2", isPinned: false, visible: true },
   { id: "advisor", title: "AI Business Advisor", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
@@ -222,6 +224,86 @@ export default function DashboardPage() {
   const router = useRouter();
   const addToast = useToastStore((state) => state.addToast);
 
+  // Control Center States
+  const [audioFx, setAudioFx] = useState(true);
+  const [liveUpdates, setLiveUpdates] = useState(true);
+  const [darkMode, setDarkMode] = useState(true);
+
+  const toggleTheme = useCallback(() => {
+    setDarkMode((prev) => !prev);
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark");
+    }
+  }, []);
+
+  // Tactile click audio fx using Web Audio API
+  const playTickSound = useCallback(() => {
+    if (!audioFx || typeof window === "undefined") return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.05);
+
+      gain.gain.setValueAtTime(0.012, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.05);
+    } catch (e) {
+      // AudioContext fails gracefully if browser blocks auto-play
+    }
+  }, [audioFx]);
+
+  // Success chime audio fx using Web Audio API
+  const playSuccessSound = useCallback(() => {
+    if (!audioFx || typeof window === "undefined") return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+
+      const playTone = (freq: number, delay: number, dur: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+
+        gain.gain.setValueAtTime(0.015, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + dur);
+      };
+
+      playTone(523.25, 0, 0.12);
+      playTone(659.25, 0.08, 0.18);
+    } catch (e) {
+      // Ignore audio errors
+    }
+  }, [audioFx]);
+
+  // 1. Fetch CRM & Event metrics dynamically from backend
+  const { data: dashboardResponse } = useQuery<{ data: DashboardData }>({
+    queryKey: ["ownerDashboardMetrics"],
+    queryFn: async () => {
+      const res = await api.get("/crm/dashboard/metrics");
+      return res.data;
+    }
+  });
+
+  const dashboardData = dashboardResponse?.data;
+
   // States
   const [userName, setUserName] = useState("Lokesh Nagrikar");
   const [greeting, setGreeting] = useState("Good Morning");
@@ -246,6 +328,17 @@ export default function DashboardPage() {
   const [latency, setLatency] = useState(14);
   const [wsPulse, setWsPulse] = useState(true);
   const [liveCounterTrigger, setLiveCounterTrigger] = useState(0);
+
+  const [liveTime, setLiveTime] = useState("");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const updateTime = () => {
+      setLiveTime(new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", second: "2-digit" }));
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Dynamic Workspace Health Factors
   const [healthScores, setHealthScores] = useState({
@@ -362,7 +455,11 @@ export default function DashboardPage() {
     const savedOrder = localStorage.getItem("eventos_executive_widgets_order");
     if (savedOrder) {
       try {
-        setWidgetOrder(JSON.parse(savedOrder));
+        const parsed = JSON.parse(savedOrder);
+        if (Array.isArray(parsed) && !parsed.some((w: any) => w.id === "control")) {
+          parsed.unshift({ id: "control", title: "Control Center", category: "operations", colSpan: "col-span-1", isPinned: true, visible: true });
+        }
+        setWidgetOrder(parsed);
       } catch {
         setWidgetOrder(DEFAULT_WIDGET_CONFIGS);
       }
@@ -376,6 +473,51 @@ export default function DashboardPage() {
       setUserName(user.firstName + (user.lastName ? " " + user.lastName : ""));
     }
   }, [user]);
+
+  useEffect(() => {
+    if (dashboardData) {
+      // 1. Map KPI metrics
+      const rawRevenue = parseFloat(dashboardData.revenueMetrics?.totalRevenue || "0");
+      const rawOutstanding = parseFloat(dashboardData.revenueMetrics?.outstandingBalance || "0");
+      const rawLeadsCount = dashboardData.leadMetrics?.totalLeads || 0;
+      const rawConversion = dashboardData.leadMetrics?.conversionRate || 0.0;
+      const rawEventsCount = dashboardData.upcomingEvents?.length || 0;
+
+      setKpiMetrics((prev) => ({
+        ...prev,
+        revenue: rawRevenue || prev.revenue,
+        outstanding: rawOutstanding || prev.outstanding,
+        leads: rawLeadsCount || prev.leads,
+        conversionRate: rawConversion || prev.conversionRate,
+        eventsThisMonth: rawEventsCount || prev.eventsThisMonth,
+        profit: (rawRevenue - rawOutstanding) || prev.profit,
+      }));
+
+      // 2. Map priority tasks from teamTasks
+      if (dashboardData.teamTasks && dashboardData.teamTasks.length > 0) {
+        const mappedTasks = dashboardData.teamTasks.slice(0, 5).map((task, idx) => ({
+          id: task.id,
+          text: `${task.title} - ${task.description || "In progress"}`,
+          type: "TASK",
+          weight: task.completed ? 100 : 80,
+          color: task.completed ? "text-emerald-400" : "text-purple-400",
+          actionText: task.completed ? "Mark Incomplete" : "Complete Task"
+        }));
+        setPriorityTasks(mappedTasks);
+      }
+
+      // 3. Map recent activity
+      if (dashboardData.recentActivity && dashboardData.recentActivity.length > 0) {
+        const mappedActivity = dashboardData.recentActivity.slice(0, 5).map((act) => ({
+          id: act.id,
+          message: act.message,
+          time: act.time || "Recently",
+          tag: "SYSTEM"
+        }));
+        setTimelineActivity(mappedActivity);
+      }
+    }
+  }, [dashboardData]);
 
   // Sync Layout Order
   const saveLayoutOrder = (updated: WidgetConfig[]) => {
@@ -435,9 +577,11 @@ export default function DashboardPage() {
   };
 
   // Drag and Drop implementation
-  const handleDragStart = (e: React.DragEvent, id: string) => {
+  const handleDragStart = (e: React.DragEvent | any, id: string) => {
     setDraggedWidgetId(id);
-    e.dataTransfer.effectAllowed = "move";
+    if (e?.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -545,6 +689,7 @@ export default function DashboardPage() {
   // Confetti particles generator
   const triggerConfettiAnimation = () => {
     setShowConfetti(true);
+    playSuccessSound();
     const colors = ["#8b5cf6", "#ec4899", "#38bdf8", "#10b981", "#fbbf24"];
     const particles = Array.from({ length: 120 }).map((_, i) => ({
       id: i,
@@ -741,7 +886,7 @@ export default function DashboardPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              {greeting}, {user?.firstName || " 😊 "}
+              {greeting}, <AuroraText>{user?.firstName || "Lokesh"}</AuroraText>
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
@@ -753,6 +898,14 @@ export default function DashboardPage() {
           </div>
           <p className="text-xs text-zinc-450 font-bold flex flex-wrap items-center gap-x-2 gap-y-1 select-none">
             <span>Today is {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</span>
+            {liveTime && (
+              <>
+                <span className="text-zinc-650">•</span>
+                <span className="flex items-center gap-1 text-zinc-300 bg-white/[0.03] border border-white/[0.05] px-2 py-0.5 rounded-md font-mono text-[10px]">
+                  ⏰ {liveTime}
+                </span>
+              </>
+            )}
             <span className="text-zinc-650">•</span>
             <span className="text-purple-400/90 font-extrabold">Dream Weddings Studio</span>
             <span className="text-zinc-650">•</span>
@@ -901,13 +1054,15 @@ export default function DashboardPage() {
             const sizeClass = widget.colSpan;
 
             return (
-              <div
+              <motion.div
                 key={widget.id}
                 draggable={isCustomizeMode}
-                onDragStart={(e) => handleDragStart(e, widget.id)}
+                onDragStart={(e: any) => handleDragStart(e, widget.id)}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, widget.id)}
                 onDragEnd={handleDragEnd}
+                whileHover={!isCustomizeMode ? { y: -4, scale: 1.012 } : undefined}
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
                 className={cn(
                   "transition-all duration-300 relative",
                   sizeClass,
@@ -946,9 +1101,146 @@ export default function DashboardPage() {
 
                 {/* ─── WIDGET CONTENT RENDERING ─── */}
 
+                {/* 0. CONTROL CENTER WIDGET */}
+                {widget.id === "control" && (
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[340px] flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest block">EventOS Console</span>
+                          <h3 className="text-xs font-extrabold text-zinc-300 mt-0.5">{widget.title}</h3>
+                        </div>
+                        <span className="text-[9px] font-black text-cyan-400 bg-cyan-950/20 border border-cyan-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Status
+                        </span>
+                      </div>
+
+                      {/* Toggles Grid */}
+                      <div className="grid grid-cols-2 gap-2.5 mt-5">
+                        {/* Toggle 1: Dark Mode */}
+                        <button
+                          onClick={() => { toggleTheme(); playTickSound(); }}
+                          className={cn(
+                            "p-3 rounded-xl border flex flex-col items-start gap-1.5 text-left transition-all duration-200 cursor-pointer select-none",
+                            darkMode
+                              ? "bg-purple-950/20 border-purple-500/20 text-purple-400"
+                              : "bg-zinc-950/40 border-zinc-900 text-zinc-400 hover:text-zinc-300"
+                          )}
+                        >
+                          <div className="flex justify-between items-center w-full">
+                            <span className="text-sm">🌓</span>
+                            <div className={cn("h-3 w-6 rounded-full p-0.5 transition-colors duration-200", darkMode ? "bg-purple-500" : "bg-zinc-800")}>
+                              <div className={cn("h-2 w-2 rounded-full bg-white transition-transform duration-200", darkMode ? "translate-x-3" : "translate-x-0")} />
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-extrabold block">Theme View</span>
+                            <span className="text-[8px] text-zinc-500 font-medium">{darkMode ? "Dark Mode" : "Light Mode"}</span>
+                          </div>
+                        </button>
+
+                        {/* Toggle 2: Audio FX */}
+                        <button
+                          onClick={() => { setAudioFx(!audioFx); playTickSound(); }}
+                          className={cn(
+                            "p-3 rounded-xl border flex flex-col items-start gap-1.5 text-left transition-all duration-200 cursor-pointer select-none",
+                            audioFx
+                              ? "bg-purple-950/20 border-purple-500/20 text-purple-400"
+                              : "bg-zinc-950/40 border-zinc-900 text-zinc-400 hover:text-zinc-300"
+                          )}
+                        >
+                          <div className="flex justify-between items-center w-full">
+                            <span className="text-sm">🔊</span>
+                            <div className={cn("h-3 w-6 rounded-full p-0.5 transition-colors duration-200", audioFx ? "bg-purple-500" : "bg-zinc-800")}>
+                              <div className={cn("h-2 w-2 rounded-full bg-white transition-transform duration-200", audioFx ? "translate-x-3" : "translate-x-0")} />
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-extrabold block">Tactile Audio</span>
+                            <span className="text-[8px] text-zinc-500 font-medium">{audioFx ? "Feedback On" : "Muted"}</span>
+                          </div>
+                        </button>
+
+                        {/* Toggle 3: Live updates */}
+                        <button
+                          onClick={() => { setLiveUpdates(!liveUpdates); playTickSound(); }}
+                          className={cn(
+                            "p-3 rounded-xl border flex flex-col items-start gap-1.5 text-left transition-all duration-200 cursor-pointer select-none",
+                            liveUpdates
+                              ? "bg-purple-950/20 border-purple-500/20 text-purple-400"
+                              : "bg-zinc-950/40 border-zinc-900 text-zinc-400 hover:text-zinc-300"
+                          )}
+                        >
+                          <div className="flex justify-between items-center w-full">
+                            <span className="text-sm">📡</span>
+                            <div className={cn("h-3 w-6 rounded-full p-0.5 transition-colors duration-200", liveUpdates ? "bg-purple-500" : "bg-zinc-800")}>
+                              <div className={cn("h-2 w-2 rounded-full bg-white transition-transform duration-200", liveUpdates ? "translate-x-3" : "translate-x-0")} />
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-extrabold block">Live Sync</span>
+                            <span className="text-[8px] text-zinc-550 font-medium">{liveUpdates ? "WebSockets on" : "Paused"}</span>
+                          </div>
+                        </button>
+
+                        {/* Toggle 4: Customize Grid */}
+                        <button
+                          onClick={() => { setIsCustomizeMode(!isCustomizeMode); playTickSound(); }}
+                          className={cn(
+                            "p-3 rounded-xl border flex flex-col items-start gap-1.5 text-left transition-all duration-200 cursor-pointer select-none",
+                            isCustomizeMode
+                              ? "bg-purple-950/20 border-purple-500/20 text-purple-400"
+                              : "bg-zinc-950/40 border-zinc-900 text-zinc-400 hover:text-zinc-300"
+                          )}
+                        >
+                          <div className="flex justify-between items-center w-full">
+                            <span className="text-sm">🛠️</span>
+                            <div className={cn("h-3 w-6 rounded-full p-0.5 transition-colors duration-200", isCustomizeMode ? "bg-purple-500" : "bg-zinc-800")}>
+                              <div className={cn("h-2 w-2 rounded-full bg-white transition-transform duration-200", isCustomizeMode ? "translate-x-3" : "translate-x-0")} />
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-extrabold block">Grid Design</span>
+                            <span className="text-[8px] text-zinc-550 font-medium">{isCustomizeMode ? "Customizing" : "Locked"}</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Circular Storage indicator at the bottom */}
+                    <div className="pt-4 border-t border-zinc-900 flex items-center justify-between">
+                      <div className="space-y-1">
+                        <span className="text-[9px] text-zinc-550 uppercase font-black tracking-widest block">System Space</span>
+                        <div className="text-xs font-black text-zinc-350">
+                          94.2 GB <span className="text-zinc-555 font-bold">/ 100 GB</span>
+                        </div>
+                      </div>
+
+                      {/* Mini circular progress indicator */}
+                      <div className="relative h-11 w-11 flex items-center justify-center shrink-0">
+                        <svg className="w-11 h-11 transform -rotate-90">
+                          <circle cx="22" cy="22" r="18" stroke="#1c1c1f" strokeWidth="2.5" fill="transparent" />
+                          <circle
+                            cx="22"
+                            cy="22"
+                            r="18"
+                            stroke="#ec4899"
+                            strokeWidth="2.5"
+                            fill="transparent"
+                            strokeDasharray={113}
+                            strokeDashoffset={113 * (1 - 0.942)}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span className="absolute font-mono text-[8px] font-black text-white">94%</span>
+                      </div>
+                    </div>
+                  </SpotlightCard>
+                )}
+
                 {/* 1. HEALTH SCORE WIDGET */}
                 {widget.id === "health" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[340px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[340px] flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
                         <div>
@@ -1014,7 +1306,7 @@ export default function DashboardPage() {
 
                 {/* 2. TODAY'S FOCUS PRIORITY CHECKS */}
                 {widget.id === "priority" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[340px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[340px] flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1077,7 +1369,7 @@ export default function DashboardPage() {
 
                 {/* 3. AI BUSINESS ADVISOR */}
                 {widget.id === "advisor" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[340px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[340px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1177,7 +1469,7 @@ export default function DashboardPage() {
 
                 {/* 5. SALES ANALYTICS FUNNEL */}
                 {widget.id === "sales" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[380px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">CRM Leads Funnel</span>
@@ -1228,7 +1520,7 @@ export default function DashboardPage() {
 
                 {/* 6. FINANCE DASHBOARD FLOW */}
                 {widget.id === "finance" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[380px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
@@ -1268,18 +1560,23 @@ export default function DashboardPage() {
                                 <stop offset="5%" stopColor="#ec4899" stopOpacity={0.2} />
                                 <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
                               </linearGradient>
+                              <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.2} />
+                                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                              </linearGradient>
                             </defs>
-                            <CartesianGrid stroke="#1c1c1f" strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="month" stroke="#52525b" fontSize={9} tickLine={false} axisLine={false} />
+                            <CartesianGrid stroke="#ffffff05" strokeDasharray="0" vertical={false} />
+                            <XAxis dataKey="month" stroke="#52525b" fontSize={9} tickLine={false} axisLine={false} tickMargin={8} />
                             <YAxis
                               stroke="#52525b"
                               fontSize={9}
                               tickLine={false}
                               axisLine={false}
                               tickFormatter={(v) => `₹${v / 1000}k`}
+                              tickMargin={8}
                             />
                             <Tooltip
-                              contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: "12px" }}
+                              contentStyle={{ backgroundColor: "rgba(9, 9, 11, 0.6)", borderColor: "rgba(255, 255, 255, 0.08)", borderRadius: "12px", backdropFilter: "blur(12px)" }}
                               labelStyle={{ color: "#71717a", fontSize: "9px", fontWeight: "bold" }}
                               itemStyle={{ color: "#e4e4e7", fontSize: "11px", fontWeight: "bold" }}
                               formatter={(v: number) => [`₹${v.toLocaleString()}`, activeChartTab.toUpperCase()]}
@@ -1288,9 +1585,9 @@ export default function DashboardPage() {
                               type="monotone"
                               dataKey={activeChartTab === "revenue" ? "revenue" : activeChartTab === "bookings" ? "expenses" : "forecast"}
                               stroke={activeChartTab === "revenue" ? "#8b5cf6" : activeChartTab === "bookings" ? "#ec4899" : "#06b6d4"}
-                              strokeWidth={2}
+                              strokeWidth={2.5}
                               fillOpacity={1}
-                              fill={`url(${activeChartTab === "revenue" ? "#purpleGrad" : "#pinkGrad"})`}
+                              fill={`url(${activeChartTab === "revenue" ? "#purpleGrad" : activeChartTab === "bookings" ? "#pinkGrad" : "#cyanGrad"})`}
                             />
                           </AreaChart>
                         </ResponsiveContainer>
@@ -1306,7 +1603,7 @@ export default function DashboardPage() {
 
                 {/* 7. EVENT & PACKAGE TRACKER */}
                 {widget.id === "events" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[380px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Operational Metrics</span>
@@ -1354,7 +1651,7 @@ export default function DashboardPage() {
 
                 {/* 8. TEAM PERFORMANCE & BURNOUT */}
                 {widget.id === "team" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[380px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-3">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Resource roster metrics</span>
@@ -1410,7 +1707,7 @@ export default function DashboardPage() {
 
                 {/* 9. CLIENT INSIGHTS & NPS */}
                 {widget.id === "clients" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-855 bg-[#121214]/30 backdrop-blur min-h-[380px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Client Satisfaction Index</span>
@@ -1461,7 +1758,7 @@ export default function DashboardPage() {
 
                 {/* 10. MEDIA STORAGE ANALYTICS */}
                 {widget.id === "media" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[380px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Photo Album Resources</span>
@@ -1517,7 +1814,7 @@ export default function DashboardPage() {
 
                 {/* 11. WORKSPACE TIMELINE LOGS */}
                 {widget.id === "activity" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[380px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Audit Security Logs</span>
@@ -1542,7 +1839,7 @@ export default function DashboardPage() {
 
                 {/* 12. CORPORATE GOALS PROGRESS */}
                 {widget.id === "goals" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[380px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1588,7 +1885,7 @@ export default function DashboardPage() {
 
                 {/* 13. PREDICTIVE BUSINESS GROWTH */}
                 {widget.id === "forecasting" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-zinc-850 bg-[#121214]/30 backdrop-blur min-h-[380px] flex flex-col justify-between">
+                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">AI Business Forecasting</span>
@@ -1599,17 +1896,18 @@ export default function DashboardPage() {
                       <div className="h-56 w-full select-none">
                         <ResponsiveContainer width="100%" height="100%">
                           <LineChart data={mockRechartsRevenue} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
-                            <CartesianGrid stroke="#1c1c1f" strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="month" stroke="#52525b" fontSize={9} tickLine={false} axisLine={false} />
+                            <CartesianGrid stroke="#ffffff05" strokeDasharray="0" vertical={false} />
+                            <XAxis dataKey="month" stroke="#52525b" fontSize={9} tickLine={false} axisLine={false} tickMargin={8} />
                             <YAxis
                               stroke="#52525b"
                               fontSize={9}
                               tickLine={false}
                               axisLine={false}
                               tickFormatter={(v) => `₹${v / 1000}k`}
+                              tickMargin={8}
                             />
                             <Tooltip
-                              contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: "12px" }}
+                              contentStyle={{ backgroundColor: "rgba(9, 9, 11, 0.6)", borderColor: "rgba(255, 255, 255, 0.08)", borderRadius: "12px", backdropFilter: "blur(12px)" }}
                               labelStyle={{ color: "#71717a", fontSize: "9px", fontWeight: "bold" }}
                               itemStyle={{ color: "#e4e4e7", fontSize: "11px", fontWeight: "bold" }}
                               formatter={(v: number) => [`₹${v.toLocaleString()}`, "Predicted Inflow"]}
@@ -1642,7 +1940,7 @@ export default function DashboardPage() {
                     </div>
                   </SpotlightCard>
                 )}
-              </div>
+              </motion.div>
             );
           })}
       </div>

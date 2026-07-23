@@ -445,13 +445,13 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
   }
 
   return (
-    <div className={cn("space-y-4", shouldShake ? "animate-shake" : "")}>
+    <div className={cn("space-y-3 sm:space-y-4", shouldShake ? "animate-shake" : "")}>
       {/* Progress header */}
-      <div className="text-center space-y-1.5 select-none">
-        <div className="mx-auto h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-xl shadow-purple-500/10 select-none transform hover:rotate-12 hover:scale-105 transition-all duration-300">
-          <Sparkles size={16} className="text-white animate-pulse" />
+      <div className="text-center space-y-1 select-none">
+        <div className="mx-auto h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-xl shadow-purple-500/10 select-none transform hover:rotate-12 hover:scale-105 transition-all duration-300">
+          <Sparkles size={14} className="text-white animate-pulse" />
         </div>
-        <h2 className="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
+        <h2 className="text-lg sm:text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
           Event<span className="text-purple-400">OS</span>
         </h2>
         <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">The Operating System for Event Businesses</p>
@@ -497,7 +497,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
               animate="visible"
               exit="exit"
               variants={slideVariants}
-              className="space-y-3"
+              className="space-y-2.5 sm:space-y-3"
             >
               <div className="flex items-center gap-2 pb-1 border-b border-zinc-850">
                 <User size={13} className="text-purple-400" />
@@ -510,7 +510,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   type="button"
                   disabled={loading || googleAuthenticating}
                   onClick={() => loginWithGoogle()}
-                  className="relative flex items-center justify-center w-full py-2.5 px-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.15] rounded-xl text-[11px] font-semibold text-zinc-300 hover:text-white transition-all active:scale-[0.98] cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative flex items-center justify-center w-full py-3 sm:py-2.5 px-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.15] rounded-xl text-sm sm:text-[11px] font-semibold text-zinc-300 hover:text-white transition-all active:scale-[0.98] cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="h-3.5 w-3.5 mr-2" viewBox="0 0 24 24">
                     <path
@@ -552,7 +552,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     placeholder="Shubham"
                     autoFocus
                     autoComplete="given-name"
-                    className={`w-full px-2.5 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`w-full px-2.5 py-2 sm:py-1.5 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.firstName 
                         ? "border-rose-500/50" 
                         : focusedField === "firstName"
@@ -577,7 +577,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     type="text"
                     placeholder="Decor"
                     autoComplete="family-name"
-                    className={`w-full px-2.5 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`w-full px-2.5 py-2 sm:py-1.5 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       focusedField === "lastName"
                         ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
                         : "border-border hover:border-zinc-700/30"
@@ -605,7 +605,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     type="email"
                     placeholder="name@agency.com"
                     autoComplete="email"
-                    className={`w-full pl-9 pr-3 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`w-full pl-9 pr-3 py-2 sm:py-1.5 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.email 
                         ? "border-rose-500/50" 
                         : focusedField === "email"
@@ -636,7 +636,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     type="text"
                     placeholder="+91 98765 43210"
                     autoComplete="tel"
-                    className={`w-full pl-9 pr-3 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`w-full pl-9 pr-3 py-2 sm:py-1.5 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.phone 
                         ? "border-rose-500/50" 
                         : focusedField === "phone"
@@ -667,7 +667,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
               <Button
                 type="button"
                 onClick={nextStep}
-                className="w-full py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                className="w-full py-2.5 sm:py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-sm sm:text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-[0.98]"
               >
                 <span>Continue</span>
                 <ArrowRight size={13} />
@@ -681,7 +681,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
               animate="visible"
               exit="exit"
               variants={slideVariants}
-              className="space-y-3"
+              className="space-y-2.5 sm:space-y-3"
             >
               <div className="flex items-center gap-2 pb-1 border-b border-zinc-850">
                 <Building2 size={13} className="text-purple-400" />
@@ -701,7 +701,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     type="text"
                     placeholder="Shubham Weddings & Events"
                     autoComplete="organization"
-                    className={`w-full pl-9 pr-3 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`w-full pl-9 pr-3 py-2 sm:py-1.5 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.companyName 
                         ? "border-rose-500/50" 
                         : focusedField === "companyName"
@@ -732,7 +732,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="new-password"
-                    className={`w-full pl-9 pr-10 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`w-full pl-9 pr-10 py-2 sm:py-1.5 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.password 
                         ? "border-rose-500/50" 
                         : focusedField === "password"
@@ -791,7 +791,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="new-password"
-                    className={`w-full pl-9 pr-10 py-1.5 bg-zinc-500/5 border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    className={`w-full pl-9 pr-10 py-2 sm:py-1.5 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                       errors.confirmPassword 
                         ? "border-rose-500/50" 
                         : focusedField === "confirmPassword"

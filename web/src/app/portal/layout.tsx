@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import {
   Calendar,
   FileText,
@@ -126,8 +127,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   const handleLogout = async (expired: boolean | React.MouseEvent = false) => {
     const isExpired = typeof expired === "boolean" ? expired : false;
+    const userEmail = useAuthStore.getState().user?.email || "";
     try {
-      await api.post("/auth/logout", { email: decodeURIComponent(getCookieValue("user_name")) });
+      await api.post("/auth/logout", { email: userEmail });
     } catch (err) {
       console.error("Portal logout failed:", err);
     }
@@ -142,13 +144,22 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (!authChecked) return;
     let timeoutId: any;
+    let lastActivityTime = Date.now();
+
     const resetTimer = () => {
+      const now = Date.now();
+      // Throttle timeout resets to at most once every 5 seconds
+      if (now - lastActivityTime < 5000 && timeoutId) {
+        return;
+      }
+      lastActivityTime = now;
+
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => handleLogout(true), 30 * 60 * 1000);
     };
     const events = ["mousemove", "keydown", "click", "scroll"];
     resetTimer();
-    events.forEach(event => window.addEventListener(event, resetTimer));
+    events.forEach(event => window.addEventListener(event, resetTimer, { passive: true }));
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
       events.forEach(event => window.removeEventListener(event, resetTimer));
@@ -217,7 +228,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className={cn("min-h-screen flex flex-col md:flex-row bg-background text-foreground font-sans transition-colors duration-200 theme-dynamic", darkMode ? "dark" : "")}>
+    <div className={cn("h-screen overflow-hidden flex flex-col md:flex-row bg-background text-foreground font-sans transition-colors duration-200 theme-dynamic", darkMode ? "dark" : "")}>
       
       {/* Mobile Header Top Navigation */}
       <div className="md:hidden h-16 border-b border-border bg-card/90 backdrop-blur px-4 flex items-center justify-between z-30 sticky top-0">
@@ -239,28 +250,28 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       </div>
 
       {/* Desktop Sidebar Navigation */}
-      <aside className="hidden md:flex w-64 border-r border-zinc-800 bg-[#0d0d0e]/95 p-6 flex-col justify-between shrink-0 z-10 sticky top-0 h-screen select-none">
+      <aside className="hidden md:flex w-64 border-r border-white/[0.04] bg-[#09090b]/40 backdrop-blur-xl p-6 flex-col justify-between shrink-0 z-10 h-full select-none">
         <div className="space-y-6">
           {/* Logo Section */}
           <div className="flex items-center gap-2.5 pb-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-650 flex items-center justify-center text-white font-extrabold text-base shadow-lg shadow-purple-500/10">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-indigo-500 flex items-center justify-center text-white font-extrabold text-base shadow-lg shadow-purple-500/10">
               E
             </div>
             <div>
-              <h1 className="font-extrabold text-xs leading-none tracking-wide text-zinc-200">EventOS</h1>
-              <span className="text-[9px] text-zinc-550 font-black uppercase tracking-wider mt-1 block">Client Experience</span>
+              <h1 className="font-extrabold text-xs leading-none tracking-wide text-zinc-150">EventOS</h1>
+              <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider mt-1 block">Client Experience</span>
             </div>
           </div>
 
           {/* Quick Actions Search Bar */}
           <button
             onClick={() => setShowSearchModal(true)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700/80 rounded-xl text-zinc-500 hover:text-zinc-400 transition-all text-xs font-semibold"
+            className="w-full flex items-center justify-between px-3 py-2 bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.08] rounded-xl text-zinc-500 hover:text-zinc-400 transition-all text-xs font-semibold"
           >
             <span className="flex items-center gap-2">
               <Search size={13} /> Search portal...
             </span>
-            <span className="font-mono text-[9px] bg-zinc-950 px-1.5 py-0.5 rounded border border-zinc-800">Ctrl+K</span>
+            <span className="font-mono text-[9px] bg-zinc-950 px-1.5 py-0.5 rounded border border-white/[0.04]">Ctrl+K</span>
           </button>
 
           {/* Nav Links */}
@@ -273,10 +284,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                   key={item.path}
                   onClick={() => router.push(item.path)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border",
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all border",
                     isActive
-                      ? "bg-purple-950/20 text-purple-400 border-purple-900/40 shadow-sm"
-                      : "text-zinc-450 hover:text-zinc-200 hover:bg-zinc-900/30 border-transparent"
+                      ? "bg-white/[0.06] text-white border-white/[0.05] shadow-[0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-md"
+                      : "text-zinc-450 hover:text-zinc-200 hover:bg-white/[0.03] border-transparent"
                   )}
                 >
                   <Icon size={14} className={isActive ? "text-purple-400" : "text-zinc-500"} />
@@ -288,12 +299,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </div>
 
         {/* User Footer Panel */}
-        <div className="pt-6 border-t border-zinc-850 flex flex-col gap-3">
+        <div className="pt-6 border-t border-white/[0.05] flex flex-col gap-3">
           
           <div className="flex gap-2">
             <button
               onClick={() => setShowNotificationDrawer(true)}
-              className="flex-1 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white relative transition-all"
+              className="flex-1 h-9 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-white relative transition-all"
             >
               <Bell size={14} />
               {unreadCount > 0 && (
@@ -302,7 +313,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             </button>
             <button
               onClick={() => setShowChatDrawer(true)}
-              className="flex-1 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+              className="flex-1 h-9 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-white transition-all"
             >
               <MessageSquare size={14} />
             </button>
@@ -310,7 +321,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 border border-zinc-750">
+              <div className="h-8 w-8 rounded-full bg-white/[0.03] flex items-center justify-center text-zinc-400 border border-white/[0.05]">
                 <User size={15} />
               </div>
               <div className="truncate max-w-[110px]">
@@ -321,13 +332,13 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             <div className="flex items-center gap-1">
               <button
                 onClick={toggleTheme}
-                className="h-7 w-7 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 flex items-center justify-center text-zinc-400 transition-all"
+                className="h-7 w-7 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] flex items-center justify-center text-zinc-400 transition-all"
               >
                 {darkMode ? <Sun size={13} /> : <Moon size={13} />}
               </button>
               <button
                 onClick={handleLogout}
-                className="h-7 w-7 rounded-lg bg-zinc-900 hover:bg-red-500/10 hover:text-red-400 border border-zinc-800 flex items-center justify-center text-zinc-500 transition-all"
+                className="h-7 w-7 rounded-lg bg-white/[0.02] hover:bg-red-500/10 hover:text-red-400 border border-white/[0.06] flex items-center justify-center text-zinc-500 transition-all"
               >
                 <LogOut size={13} />
               </button>
@@ -338,6 +349,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
       {/* Main Content Workspace */}
       <main data-lenis-prevent className="flex-1 p-6 md:p-10 overflow-y-auto max-w-7xl mx-auto w-full z-0 flex flex-col relative">
+        {/* Background Glow Orbs */}
+        <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+        <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
         {children}
       </main>
 

@@ -195,6 +195,7 @@ export default function PricingPage() {
                 key={plan.name}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -8, scale: 1.015 }}
                 transition={{ delay: idx * 0.08 }}
                 className="flex"
               >
@@ -215,10 +216,18 @@ export default function PricingPage() {
                       <p className="text-[10px] text-zinc-555 leading-relaxed font-semibold min-h-[40px]">{plan.desc}</p>
                     </div>
 
-                    <div className="py-2">
+                    <div className="py-2 overflow-hidden">
                       {price !== null ? (
                         <div className="flex items-baseline">
-                          <span className="text-3xl font-black tracking-tight text-white font-mono">${price}</span>
+                          <motion.span
+                            key={billingCycle}
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                            className="text-3xl font-black tracking-tight text-white font-mono block"
+                          >
+                            ${price}
+                          </motion.span>
                           <span className="text-zinc-555 text-[10px] font-bold ml-1 uppercase">/ mo</span>
                         </div>
                       ) : (

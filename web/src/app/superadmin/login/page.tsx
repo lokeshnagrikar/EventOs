@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, Lock, User, Key, Eye, EyeOff, Sparkles, Check, Info } from "lucide-react";
+import { Shield, Lock, User, Key, Eye, EyeOff, Sparkles, Check, Info, RefreshCw } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
 import { cn } from "@/lib/utils";
@@ -14,40 +15,105 @@ export default function SuperAdminLoginPage() {
   const { setAuth } = useAuthStore();
   const { addToast } = useToastStore();
   
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@eventos.com");
+  const [password, setPassword] = useState("admin123");
   const [selectedRole, setSelectedRole] = useState("super_admin");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // CAPTCHA State
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [realRecaptchaEnabled, setRealRecaptchaEnabled] = useState(false);
+  const [captchaId, setCaptchaId] = useState<string | null>(null);
+  const [captchaImageUrl, setCaptchaImageUrl] = useState<string | null>(null);
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  const fetchCaptchaDetails = async () => {
+    try {
+      const { apiClient } = require("@/lib/api-client");
+      const response = await apiClient.get("/auth/captcha");
+      const { realRecaptchaEnabled: isReal, captchaId: id, imageUrl } = response.data.data;
+      setRealRecaptchaEnabled(isReal);
+      setCaptchaId(id);
+      setCaptchaImageUrl(imageUrl);
+    } catch (err) {
+      console.error("Failed to load CAPTCHA details", err);
+    }
+  };
+
+  useEffect(() => {
+    if (showCaptcha) {
+      fetchCaptchaDetails();
+    }
+  }, [showCaptcha]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      const activeRole = ADMIN_ROLES.find(r => r.id === selectedRole);
-      if (!activeRole) return;
+    try {
+      const { apiClient } = require("@/lib/api-client");
 
-      const userProfile = {
-        id: `admin-${selectedRole}-${Date.now().toString(36)}`,
-        email: email || `${selectedRole}@eventos.co`,
-        firstName: activeRole.name,
-        lastName: "Operator",
-        role: "SUPER_ADMIN", // Flag to pass App Shell superadmin restriction
-        permissions: [selectedRole] // Custom sub-role permission flag
-      };
+      // 1. Submit login credentials to the real auth microservice
+      const response = await apiClient.post("/auth/login", {
+        email,
+        password,
+        captchaId: showCaptcha ? captchaId : undefined,
+        captchaValue: showCaptcha ? (realRecaptchaEnabled ? captchaToken : captchaInput) : undefined,
+      });
 
-      setAuth(
-        "admin-mock-jwt-token-xyz-123",
-        userProfile,
-        "superadmin-governed-tenant-system",
-        [{ tenantId: "superadmin-governed-tenant-system", companyId: "eventos-corp", companyName: "EventOS Corporate", role: "GLOBAL_ADMIN", status: "ACTIVE" }]
-      );
+      if (response.data?.success) {
+        const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
 
-      addToast(`🔑 Logged in as ${activeRole.name} successfully!`, "success");
-      router.push("/superadmin");
+        // 2. Access control: Only SUPER_ADMIN users should access the platform dashboard
+        if (role !== "SUPER_ADMIN") {
+          addToast("Access Denied: Only platform Super Administrators can access this console.", "error");
+          setLoading(false);
+          return;
+        }
+
+        // 3. Save standard session flags & cookies for Edge Middleware checks
+        document.cookie = "hasSession=true; path=/; SameSite=Lax";
+        document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
+        document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+        localStorage.setItem("user_name", firstName);
+        localStorage.setItem("user_role", role);
+
+        // 4. Save authentication credentials in Zustand store
+        // Map "all" permissions or select sub-role based on user selection
+        const adminPermissions = permissions && permissions.length > 0 && permissions[0] !== "all" 
+          ? permissions 
+          : [selectedRole];
+
+        setAuth(
+          accessToken,
+          { id: userId, email, firstName, lastName, role, permissions: adminPermissions },
+          tenantId,
+          memberships
+        );
+
+        addToast(`🔑 Authenticated as ${firstName} successfully!`, "success");
+        router.push("/superadmin");
+      }
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error?.message || "Invalid credentials. Authentication failed.";
+      const errCode = err.response?.data?.error?.code;
+
+      if (errCode === "CAPTCHA_REQUIRED") {
+        setShowCaptcha(true);
+        setCaptchaToken(null);
+        setCaptchaInput("");
+        if (showCaptcha) {
+          fetchCaptchaDetails();
+        }
+        addToast("Security verification is required. Please solve the CAPTCHA.", "warning");
+      } else {
+        addToast(errMsg, "error");
+      }
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -90,7 +156,13 @@ export default function SuperAdminLoginPage() {
                   type="button"
                   onClick={() => {
                     setSelectedRole(role.id);
-                    setEmail(`${role.id}@eventos.co`);
+                    if (role.id === "super_admin") {
+                      setEmail("admin@eventos.com");
+                      setPassword("admin123");
+                    } else {
+                      setEmail(`${role.id}@eventos.co`);
+                      setPassword("");
+                    }
                   }}
                   className={cn(
                     "p-2.5 rounded-xl border text-left transition-all cursor-pointer",
@@ -160,6 +232,54 @@ export default function SuperAdminLoginPage() {
                 </p>
               </div>
             </div>
+
+            {/* CAPTCHA challenges */}
+            {showCaptcha && (
+              <div className="space-y-2 p-3 bg-zinc-900/30 border border-zinc-800 rounded-xl">
+                <div className="flex justify-between items-center">
+                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                    Security Verification
+                  </label>
+                  {!realRecaptchaEnabled && (
+                    <button
+                      type="button"
+                      onClick={fetchCaptchaDetails}
+                      className="text-[9px] text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw size={10} /> Refresh
+                    </button>
+                  )}
+                </div>
+                {realRecaptchaEnabled ? (
+                  <div className="flex justify-center py-1">
+                    <ReCAPTCHA
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "your_site_key"}
+                      onChange={(token) => setCaptchaToken(token)}
+                      theme="dark"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {captchaImageUrl && (
+                      <img
+                        src={captchaImageUrl}
+                        alt="Captcha Challenge"
+                        className="h-8 rounded border border-zinc-800 bg-white shrink-0"
+                        onError={() => fetchCaptchaDetails()}
+                      />
+                    )}
+                    <input
+                      type="text"
+                      placeholder="Enter CAPTCHA value"
+                      value={captchaInput}
+                      onChange={(e) => setCaptchaInput(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs placeholder-zinc-650 text-zinc-200 focus:outline-none focus:border-purple-500/30 font-semibold"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             <button
               type="submit"

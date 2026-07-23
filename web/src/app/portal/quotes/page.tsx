@@ -149,7 +149,7 @@ export default function PortalQuotesPage() {
     <div className="space-y-6 animate-slide-in text-zinc-300 select-none">
       
       {/* Header Info */}
-      <div className="flex justify-between items-center border-b border-zinc-850 pb-5">
+      <div className="flex justify-between items-center border-b border-white/[0.04] pb-5">
         <div>
           <h3 className="text-base font-extrabold text-zinc-150 uppercase tracking-wider flex items-center gap-2">
             <FileText size={18} className="text-purple-500" />
@@ -162,7 +162,7 @@ export default function PortalQuotesPage() {
       </div>
 
       {/* Tabs navigation for Document Vault */}
-      <div className="flex bg-[#111113]/60 border border-zinc-850 p-1.5 rounded-2xl gap-2 max-w-sm text-xs font-bold">
+      <div className="flex bg-white/[0.02] border border-white/[0.04] p-1.5 rounded-2xl gap-2 max-w-sm text-xs font-bold">
         {[
           { id: "PROPOSALS", label: "Event Proposals" },
           { id: "CONTRACTS", label: "Signed Contracts" },
@@ -173,7 +173,7 @@ export default function PortalQuotesPage() {
             onClick={() => setActiveCategory(tab.id as any)}
             className={cn(
               "flex-1 py-2 text-center rounded-xl transition-all",
-              activeCategory === tab.id ? "bg-zinc-800 text-purple-400" : "text-zinc-550 hover:text-zinc-300"
+              activeCategory === tab.id ? "bg-white/[0.06] text-purple-400 shadow-[0_1px_3px_rgba(0,0,0,0.3)]" : "text-zinc-550 hover:text-zinc-300"
             )}
           >
             {tab.label}
@@ -195,7 +195,7 @@ export default function PortalQuotesPage() {
               <div
                 key={quote.id}
                 onClick={() => setSelectedQuote(quote)}
-                className="p-5 border border-zinc-800 hover:border-purple-600/40 bg-[#111113]/40 rounded-2xl transition-all cursor-pointer flex flex-col justify-between gap-4 group hover:shadow shadow-purple-500/5"
+                className="p-5 border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-purple-500/30 hover:bg-white/[0.02] rounded-2xl transition-all cursor-pointer flex flex-col justify-between gap-4 group hover:shadow shadow-purple-500/5 duration-300"
               >
                 <div className="space-y-3">
                   <div className="flex justify-between items-start">
@@ -213,12 +213,12 @@ export default function PortalQuotesPage() {
                       {quote.status}
                     </span>
                   </div>
-                  <div className="flex justify-between border-t border-zinc-850/40 pt-3 text-xs font-bold">
+                  <div className="flex justify-between border-t border-white/[0.04] pt-3 text-xs font-bold">
                     <span className="text-zinc-500 font-bold">Grand Total Amount:</span>
                     <span className="font-mono text-zinc-200">INR {quote.total.toLocaleString()}</span>
                   </div>
                 </div>
-                <div className="flex justify-between items-center pt-2.5 border-t border-zinc-850/30 text-[9px] text-zinc-500 font-bold">
+                <div className="flex justify-between items-center pt-2.5 border-t border-white/[0.04] text-[9px] text-zinc-500 font-bold">
                   <span>Created: {new Date(quote.createdAt).toLocaleDateString()}</span>
                   <span className="flex items-center gap-0.5 text-[10px] font-bold text-purple-400">
                     Review proposal details
@@ -232,14 +232,14 @@ export default function PortalQuotesPage() {
       )}
 
       {activeCategory === "CONTRACTS" && (
-        <div className="p-4 border border-zinc-800 bg-[#111113]/30 rounded-2xl space-y-4">
+        <div className="p-6 border border-white/[0.04] bg-white/[0.01] backdrop-blur-md rounded-2xl space-y-4 shadow-sm">
           <div className="flex justify-between items-center">
             <h4 className="text-xs font-black uppercase text-zinc-400 tracking-wider">Signed Sign-Off Documents</h4>
             <span className="text-[9px] text-zinc-550 font-bold font-mono">2 files secured</span>
           </div>
 
           <div className="space-y-3">
-            <div className="p-4 bg-zinc-950/20 border border-zinc-850 rounded-xl flex items-center justify-between gap-4">
+            <div className="p-4 bg-white/[0.005] border border-white/[0.04] rounded-xl flex items-center justify-between gap-4 transition-all hover:border-white/[0.08]">
               <div className="flex items-center gap-3">
                 <FileText size={16} className="text-purple-400" />
                 <div>
@@ -247,12 +247,12 @@ export default function PortalQuotesPage() {
                   <p className="text-[9px] text-zinc-550 mt-0.5 font-mono">1.8 MB &bull; Signed June 28, 2026</p>
                 </div>
               </div>
-              <button className="h-8 w-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white" title="Download signed PDF">
+              <button className="h-8 w-8 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-white transition-all" title="Download signed PDF">
                 <Download size={13} />
               </button>
             </div>
 
-            <div className="p-4 bg-zinc-950/20 border border-zinc-850 rounded-xl flex items-center justify-between gap-4">
+            <div className="p-4 bg-white/[0.005] border border-white/[0.04] rounded-xl flex items-center justify-between gap-4 transition-all hover:border-white/[0.08]">
               <div className="flex items-center gap-3">
                 <FileText size={16} className="text-purple-400" />
                 <div>
@@ -300,7 +300,7 @@ export default function PortalQuotesPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full max-w-2xl bg-[#111113] border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] relative animate-fade-in"
             >
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
 
               {/* Header */}
               <div className="flex justify-between items-center p-5 border-b border-zinc-800 shrink-0 z-10 relative">

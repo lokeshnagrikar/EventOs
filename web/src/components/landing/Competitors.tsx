@@ -3,6 +3,7 @@
 import React from "react";
 import { Check, X, ShieldAlert } from "lucide-react";
 import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
 
 const COMPARISON_ROWS = [
   { feature: "Consolidated Workspace (CRM + Ledger + Gallery)", eventos: "✔ Yes", honeybook: "✕ No", hubspot: "✕ No", clickup: "✕ No", pixieset: "✕ No", quickbooks: "✕ No" },
@@ -18,7 +19,13 @@ export function Competitors() {
     <section className="py-20 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden select-none">
       <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-12">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-3xl mx-auto space-y-3"
+        >
           <span className="text-xs font-bold tracking-widest text-purple-400 uppercase block font-mono">
             Subscription Consolidator
           </span>
@@ -28,10 +35,16 @@ export function Competitors() {
           <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
             Why event Planners and photography studio collectives waste ₹28,000+/mo across disconnected tools, and how EventOS replaces them under a single architecture.
           </p>
-        </div>
+        </motion.div>
 
         {/* Comparison Table */}
-        <div className="border border-white/[0.08] rounded-2xl overflow-x-auto bg-white/[0.01] backdrop-blur-xl">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="border border-white/[0.08] rounded-2xl overflow-x-auto bg-white/[0.01] backdrop-blur-xl"
+        >
           <table className="w-full text-left border-collapse text-[11px] sm:text-xs">
             <thead>
               <tr className="border-b border-zinc-850 bg-zinc-950/60 font-black text-zinc-300">
@@ -58,7 +71,7 @@ export function Competitors() {
               ))}
             </tbody>
           </table>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -48,12 +48,14 @@ import {
   Wrench,
   Fuel,
   Compass,
-  FileCheck
+  FileCheck,
+  Zap
 } from "lucide-react";
 import KpiCard from "../dashboard/KpiCard";
 import EventCard from "./EventCard";
 import { cn } from "@/lib/utils";
 import GlobalEmptyState from "../ui/EmptyState";
+import OfflineCheckInWidget from "./OfflineCheckInWidget";
 import { CardSkeleton, TableSkeleton, KanbanSkeleton, CalendarSkeleton } from "../ui/skeletons";
 import { useToastStore } from "@/lib/toastStore";
 import { useOnboardingStore } from "@/store/onboardingStore";
@@ -720,6 +722,7 @@ export default function EventsDashboard() {
         <div className="flex items-center gap-1.5 overflow-x-auto">
           {([
             { key: "pipelines", label: "Pipelines & Events", icon: FolderKanban },
+            { key: "checkin", label: "Venue Check-in (PWA)", icon: Zap },
             { key: "resources", label: "Resource Center", icon: Users },
             { key: "vendors", label: "Partner Vendors", icon: UserCheck },
             { key: "inventory", label: "Prop Inventory", icon: Box },
@@ -848,6 +851,18 @@ export default function EventsDashboard() {
         {/* CATEGORY VIEWS */}
         <div className="min-h-[500px]">
           <AnimatePresence mode="wait">
+
+            {/* B. VENUE CHECK-IN (OFFLINE PWA) */}
+            {mainCategory === "checkin" && (
+              <motion.div
+                key="checkin"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <OfflineCheckInWidget />
+              </motion.div>
+            )}
 
             {/* A. EVENTS PIPELINES */}
             {mainCategory === "pipelines" && (

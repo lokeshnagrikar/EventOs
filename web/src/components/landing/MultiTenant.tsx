@@ -46,7 +46,13 @@ export function MultiTenant() {
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-4 mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-2xl mx-auto space-y-4 mb-20"
+        >
           <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-[#8B5CF6] uppercase">
             <Icon icon="solar:lock-keyhole-minimalistic-bold-duotone" className="text-sm" />
             Security & Infrastructure
@@ -60,7 +66,7 @@ export function MultiTenant() {
           <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
             Engineered to secure tenant environments, protect planner databases, and provide isolated guest spaces for client portal approvals.
           </p>
-        </div>
+        </motion.div>
 
         {/* Visual Diagram + Columns Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">

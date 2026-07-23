@@ -40,7 +40,7 @@ public class TeamController {
 
         List<Map<String, Object>> members = new ArrayList<>();
         for (Membership m : memberships) {
-            if (m.getUser().isDeleted())
+            if (m.getUser().isDeleted() || "INACTIVE".equals(m.getStatus()))
                 continue;
             Map<String, Object> uInfo = new HashMap<>();
             uInfo.put("id", m.getUser().getId().toString());

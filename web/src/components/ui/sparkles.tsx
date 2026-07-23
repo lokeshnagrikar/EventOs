@@ -18,6 +18,12 @@ type ParticlesProps = {
   particleColor?: string;
   particleDensity?: number;
 };
+
+// Stable init callback defined outside component to remain stable across app lifecycle
+const initParticlesEngine = async (engine: Engine) => {
+  await loadSlim(engine);
+};
+
 export const SparklesCore = (props: ParticlesProps) => {
   const {
     id,
@@ -30,9 +36,10 @@ export const SparklesCore = (props: ParticlesProps) => {
     particleDensity,
   } = props;
   const controls = useAnimation();
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const particlesLoaded = async (container?: Container) => {
-    if (container) {
+  useEffect(() => {
+    if (isLoaded) {
       controls.start({
         opacity: 1,
         transition: {
@@ -40,17 +47,19 @@ export const SparklesCore = (props: ParticlesProps) => {
         },
       });
     }
+  }, [isLoaded, controls]);
+
+  const particlesLoaded = async (container?: Container) => {
+    if (container) {
+      setIsLoaded(true);
+    }
   };
 
   const generatedId = useId();
 
-  const initFn = async (engine: Engine) => {
-    await loadSlim(engine);
-  };
-
   return (
     <motion.div animate={controls} className={cn("opacity-0", className)}>
-      <ParticlesProvider init={initFn}>
+      <ParticlesProvider init={initParticlesEngine}>
         <Particles
           id={id || generatedId}
           className={cn("h-full w-full")}

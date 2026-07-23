@@ -17,6 +17,7 @@ import java.util.UUID;
 public class BillingController {
 
     private final BillingService billingService;
+    private final com.eventos.auth.repository.AuditLogRepository auditLogRepository;
 
     @org.springframework.beans.factory.annotation.Value("${app.stripe.api-key:}")
     private String stripeApiKey;
@@ -27,8 +28,10 @@ public class BillingController {
     @org.springframework.beans.factory.annotation.Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
-    public BillingController(BillingService billingService) {
+    public BillingController(BillingService billingService,
+                             com.eventos.auth.repository.AuditLogRepository auditLogRepository) {
         this.billingService = billingService;
+        this.auditLogRepository = auditLogRepository;
     }
 
     @GetMapping("/plans")
@@ -299,6 +302,72 @@ public class BillingController {
         return ResponseEntity.ok(response);
     }
 
+    // Super Admin Cohort Analytics API
+    @GetMapping("/superadmin/analytics/cohorts")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getCohortAnalytics() {
+        Map<String, Object> data = billingService.getCohortAnalytics();
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", data);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Announcements API - GET
+    @GetMapping("/superadmin/announcements")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getAnnouncements() {
+        List<Map<String, Object>> list = billingService.getAnnouncements();
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", list);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Announcements API - POST
+    @PostMapping("/superadmin/announcements")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> createAnnouncement(@RequestBody Map<String, String> body) {
+        Map<String, Object> created = billingService.createAnnouncement(body);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", created);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Security Blacklist API - GET
+    @GetMapping("/superadmin/security/blacklist")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getBlacklist() {
+        List<Map<String, Object>> list = billingService.getBlacklistedIps();
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", list);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Security Blacklist API - POST
+    @PostMapping("/superadmin/security/blacklist")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> addBlacklistIp(@RequestBody Map<String, String> body) {
+        Map<String, Object> created = billingService.addBlacklistIp(body);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", created);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Security Blacklist API - DELETE
+    @DeleteMapping("/superadmin/security/blacklist/{ip}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> removeBlacklistIp(@PathVariable String ip) {
+        billingService.removeBlacklistIp(ip);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "IP " + ip + " removed from blacklist");
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/subscription/checkout")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> createCheckoutSession(
@@ -381,6 +450,19 @@ public class BillingController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Webhook Error: " + e.getMessage());
         }
+    }
+
+    // Super Admin platform logs API
+    @GetMapping("/superadmin/logs")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getSuperAdminLogs() {
+        List<AuditLog> logs = auditLogRepository.findAll();
+        logs.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", logs);
+        return ResponseEntity.ok(response);
     }
 
     private UUID getTenantId(String header) {

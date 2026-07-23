@@ -515,7 +515,7 @@ export default function GalleryPage() {
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-[#111113] border border-zinc-800 rounded-xl shadow-2xl p-6 overflow-hidden relative">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
             <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4 z-10 relative">
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <Folder className="text-purple-500" size={16} /> Create Media Album

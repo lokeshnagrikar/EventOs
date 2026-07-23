@@ -24,6 +24,7 @@ import { ExitIntent } from "@/components/landing/ExitIntent";
 import OfflineBanner from "@/components/ui/OfflineBanner";
 import CelebrationOverlay from "@/components/onboarding/CelebrationOverlay";
 import ContextualHelp from "@/components/help/ContextualHelp";
+import PWAProvider from "@/components/PWAProvider";
 
 
 
@@ -144,9 +145,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             if (overflow === "hidden") {
               lenis?.stop();
             } else {
-              // Reset window and Lenis scroll position to top on preloader exit
-              window.scrollTo(0, 0);
-              lenis?.scrollTo(0, { immediate: true });
               lenis?.start();
             }
           }
@@ -162,18 +160,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       animationFrameId = requestAnimationFrame(raf);
     }
 
-    // Unregister active Service Workers to prevent caching and redirect issues in production
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistrations().then((registrations) => {
-        for (const registration of registrations) {
-          registration.unregister().then((success) => {
-            if (success) console.log("Unregistered stale service worker successfully.");
-          });
-        }
-      }).catch((err) => {
-        console.warn("Failed to unregister service worker: ", err);
-      });
-    }
+
 
     // Global keyboard triggers
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -230,41 +217,43 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "171503360314-e51mor0dee5v5f5jqi3gincelrhuva4l.apps.googleusercontent.com"}>
-      <QueryClientProvider client={queryClient}>
-        <SocketProvider>
-          <div className="min-h-screen flex flex-col relative overflow-hidden">
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.div
-                key={pathname}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full flex-1 flex flex-col"
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-          {mounted && (
-            <>
-              <AiAssistant />
-              <SmartSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-              <SessionTimeoutHandler />
-              <LimitExceededModal />
-              <OnboardingWizard />
-              <ProductTourSpotlight />
-              <OnboardingChecklistWidget />
-              <HelpSearch />
-              <AuthModal />
-              <ExitIntent />
-              <CelebrationOverlay />
-              <ContextualHelp />
-            </>
-          )}
-          <OfflineBanner />
-        </SocketProvider>
-      </QueryClientProvider>
+      <PWAProvider>
+        <QueryClientProvider client={queryClient}>
+          <SocketProvider>
+            <div className="min-h-screen flex flex-col relative overflow-hidden">
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.div
+                  key={pathname}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  className="w-full flex-1 flex flex-col"
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+            {mounted && (
+              <>
+                <AiAssistant />
+                <SmartSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+                <SessionTimeoutHandler />
+                <LimitExceededModal />
+                <OnboardingWizard />
+                <ProductTourSpotlight />
+                <OnboardingChecklistWidget />
+                <HelpSearch />
+                <AuthModal />
+                <ExitIntent />
+                <CelebrationOverlay />
+                <ContextualHelp />
+              </>
+            )}
+            <OfflineBanner />
+          </SocketProvider>
+        </QueryClientProvider>
+      </PWAProvider>
     </GoogleOAuthProvider>
   );
 }

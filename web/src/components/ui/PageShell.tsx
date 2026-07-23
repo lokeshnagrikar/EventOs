@@ -82,9 +82,9 @@ export default function PageShell({
 
   return (
     <div className="min-h-screen flex bg-background text-foreground font-sans relative overflow-hidden transition-all duration-200 theme-dynamic">
-      {/* Background glow orbs */}
-      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+      {/* Ambient background glow */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/[0.04] to-pink-500/[0.03] blur-[130px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-64 w-[500px] h-[500px] bg-cyan-500/[0.025] blur-[110px] rounded-full pointer-events-none z-0" />
 
       {/* Command Palette */}
       <CommandPalette isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />
@@ -133,7 +133,13 @@ export default function PageShell({
             className
           )}
         >
-          {/* Header Section */}
+          {/* Page enter animation wrapper */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          >
+          {/* Page header */}
           {(title || breadcrumbs || actions) && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
@@ -188,6 +194,7 @@ export default function PageShell({
           )}
 
           {children}
+          </motion.div>
         </main>
       </div>
     </div>

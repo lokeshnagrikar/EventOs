@@ -4,6 +4,8 @@ import React from "react";
 import { Marquee } from "@/components/ui/marquee";
 import { Icon } from "@iconify/react";
 
+import { motion } from "framer-motion";
+
 const brands = [
   { name: "Vogue Weddings", icon: "solar:heart-bold-duotone", color: "#EC4899" },
   { name: "Apex Productions", icon: "solar:star-shine-bold-duotone", color: "#8B5CF6" },
@@ -39,11 +41,17 @@ export function TrustedBy() {
 
   return (
     <section className="py-12 border-t border-b border-zinc-900 bg-zinc-950/30 w-full relative z-10 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 mb-7">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+        className="max-w-7xl mx-auto px-6 mb-7"
+      >
         <p className="text-center text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
           Trusted by high-end planners, luxury wedding agencies, and production teams globally
         </p>
-      </div>
+      </motion.div>
 
       <div className="relative flex w-full flex-col items-center justify-center overflow-hidden gap-3">
         <Marquee className="[--duration:30s] py-1" pauseOnHover>

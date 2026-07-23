@@ -29,12 +29,13 @@ export function middleware(request: NextRequest) {
                             pathname.startsWith("/developer") ||
                             pathname.startsWith("/import") ||
                             pathname.startsWith("/automation") ||
-                            pathname.startsWith("/superadmin") ||
+                            (pathname.startsWith("/superadmin") && pathname !== "/superadmin/login") ||
                             pathname.startsWith("/finance") ||
                             pathname.startsWith("/reports");
 
   if (isProtectedRoute && !hasSession) {
-    const loginUrl = new URL("/login", request.url);
+    const redirectPath = pathname.startsWith("/superadmin") ? "/superadmin/login" : "/login";
+    const loginUrl = new URL(redirectPath, request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }

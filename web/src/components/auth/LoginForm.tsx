@@ -9,7 +9,7 @@ import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
-import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles } from "lucide-react";
+import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useAuthModalStore } from "@/store/authModalStore";
@@ -88,6 +88,24 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   const [resending, setResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
 
+  // OTP Verification States
+  const [showOtpScreen, setShowOtpScreen] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(""));
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpSuccess, setOtpSuccess] = useState(false);
+  const [resendTimer, setResendTimer] = useState(120);
+
+  useEffect(() => {
+    if (showOtpScreen && resendTimer > 0) {
+      const timer = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [showOtpScreen, resendTimer]);
+
   const fetchCaptchaDetails = async () => {
     try {
       const response = await apiClient.get("/auth/captcha");
@@ -149,6 +167,99 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       addToast(serverMsg, "error");
     } finally {
       setResending(false);
+    }
+  };
+
+  const handleOtpChange = (index: number, val: string) => {
+    if (val !== "" && !/^[0-9]$/.test(val)) return;
+
+    const newValues = [...otpValues];
+    newValues[index] = val;
+    setOtpValues(newValues);
+    setOtpError(null);
+
+    if (val !== "" && index < 5) {
+      const nextInput = document.getElementById(`otp-input-${index + 1}`) as HTMLInputElement;
+      if (nextInput) nextInput.focus();
+    }
+
+    const fullCode = newValues.join("");
+    if (fullCode.length === 6) {
+      verifyOtpCode(fullCode);
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace") {
+      const newValues = [...otpValues];
+      if (otpValues[index] !== "") {
+        newValues[index] = "";
+        setOtpValues(newValues);
+      } else if (index > 0) {
+        newValues[index - 1] = "";
+        setOtpValues(newValues);
+        const prevInput = document.getElementById(`otp-input-${index - 1}`) as HTMLInputElement;
+        if (prevInput) prevInput.focus();
+      }
+      setOtpError(null);
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData("text").trim();
+    if (!/^\d{6}$/.test(pastedText)) return;
+
+    const newValues = pastedText.split("");
+    setOtpValues(newValues);
+    setOtpError(null);
+
+    const lastInput = document.getElementById(`otp-input-5`) as HTMLInputElement;
+    if (lastInput) lastInput.focus();
+
+    verifyOtpCode(pastedText);
+  };
+
+  const verifyOtpCode = async (code: string) => {
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      await apiClient.post("/auth/verify-otp", {
+        email: otpEmail,
+        otp: code
+      });
+      setOtpSuccess(true);
+      addToast("Account verified successfully!", "success");
+      setTimeout(() => {
+        setShowOtpScreen(false);
+        setEmailUnverified(false);
+        setOtpSuccess(false);
+        setError(null);
+      }, 2000);
+    } catch (err: any) {
+      const serverMsg = err.response?.data?.error?.message || "Invalid or expired OTP code.";
+      setOtpError(serverMsg);
+      addToast(serverMsg, "error");
+      triggerShake();
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setResendTimer(120);
+    setOtpError(null);
+    setOtpValues(Array(6).fill(""));
+    try {
+      await apiClient.post("/auth/resend-verification", {
+        email: otpEmail
+      });
+      addToast("Verification code resent successfully!", "success");
+    } catch (err: any) {
+      const serverMsg = err.response?.data?.error?.message || "Failed to resend verification code.";
+      setOtpError(serverMsg);
+      addToast(serverMsg, "error");
+      triggerShake();
     }
   };
 
@@ -225,6 +336,15 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       }
       if (errCode === "EMAIL_UNVERIFIED") {
         setEmailUnverified(true);
+        setOtpEmail(data.email);
+        setShowOtpScreen(true);
+        setResendTimer(120);
+        try {
+          await apiClient.post("/auth/resend-verification", { email: data.email });
+          addToast("Verification code sent to your email!", "success");
+        } catch (e) {
+          console.error("Auto-resend verification failed:", e);
+        }
       }
       setError(errMsg);
       addToast(errMsg, "error");
@@ -296,19 +416,102 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     }
   });
 
+  if (showOtpScreen) {
+    return (
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className={cn("space-y-6 animate-slide-in text-center select-none", shouldShake ? "animate-shake" : "")}
+      >
+        <div className="mx-auto h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 shadow-md">
+          {otpSuccess ? <CheckCircle2 size={24} className="text-emerald-400 animate-scale-in" /> : <Mail size={24} className="animate-pulse" />}
+        </div>
+        
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
+            {otpSuccess ? "Verification Successful!" : "Verify Your Account"}
+          </h2>
+          <p className="text-xs text-zinc-450 leading-relaxed max-w-[280px] mx-auto">
+            {otpSuccess 
+              ? "Your account is now activated. You can now sign in." 
+              : `We've sent a 6-digit verification code to ${otpEmail}`}
+          </p>
+        </div>
+
+        {otpError && (
+          <div className="flex items-start gap-2.5 p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-300 animate-slide-in text-left">
+            <AlertCircle size={14} className="shrink-0 mt-0.5" />
+            <span>{otpError}</span>
+          </div>
+        )}
+
+        {otpSuccess ? (
+          <div className="py-4 flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* 6 Digit Input Group */}
+            <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+              {otpValues.map((val, idx) => (
+                <input
+                  key={idx}
+                  id={`otp-input-${idx}`}
+                  type="text"
+                  maxLength={1}
+                  value={val}
+                  disabled={otpLoading}
+                  onChange={(e) => handleOtpChange(idx, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                  className="w-10 h-12 text-center text-lg font-bold bg-white/[0.03] border border-white/[0.08] focus:border-[#8B5CF6] focus:bg-[#09090b]/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all"
+                />
+              ))}
+            </div>
+
+            <div className="text-[10px] text-zinc-555 italic">
+              Note: check the verification code sent to your email.
+            </div>
+
+            <div className="pt-2 border-t border-zinc-900 flex justify-between items-center text-xs text-zinc-450">
+              <button
+                type="button"
+                onClick={() => setShowOtpScreen(false)}
+                className="text-zinc-500 hover:text-zinc-300 transition-all underline"
+              >
+                Back to Sign In
+              </button>
+              {resendTimer > 0 ? (
+                <span className="text-[11px] text-zinc-550">Resend in {Math.floor(resendTimer / 60)}:{(resendTimer % 60).toString().padStart(2, "0")}</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  className="text-purple-400 hover:text-purple-300 font-bold transition-all underline"
+                >
+                  Resend Code
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className={cn("space-y-4", shouldShake ? "animate-shake" : "")}
+      className={cn("space-y-3 sm:space-y-4", shouldShake ? "animate-shake" : "")}
     >
       {/* Header logo */}
-      <motion.div variants={itemVariants} className="text-center space-y-1.5 select-none">
-        <div className="mx-auto h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-xl shadow-purple-500/10 select-none transform hover:rotate-12 hover:scale-105 transition-all duration-300">
-          <Sparkles size={16} className="text-white animate-pulse" />
+      <motion.div variants={itemVariants} className="text-center space-y-1 select-none">
+        <div className="mx-auto h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-xl shadow-purple-500/10 select-none transform hover:rotate-12 hover:scale-105 transition-all duration-300">
+          <Sparkles size={14} className="text-white animate-pulse" />
         </div>
-        <h2 className="text-lg font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
+        <h2 className="text-base sm:text-lg font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
           Event<span className="text-purple-400">OS</span>
         </h2>
         <p className="text-[8px] text-zinc-400 uppercase tracking-widest font-extrabold">The Operating System for Event Businesses</p>
@@ -348,7 +551,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
 
 
       {/* Form elements */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
         {/* Email input */}
         <motion.div variants={itemVariants} className="space-y-1">
           <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="email">
@@ -364,7 +567,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               placeholder="you@company.com"
               autoFocus
               autoComplete="email"
-              className={`w-full pl-9 pr-3 py-2 bg-zinc-500/5 border rounded-xl text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+              className={`w-full pl-9 pr-3 py-2.5 sm:py-2 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                 errors.email 
                   ? "border-rose-500/50" 
                   : focusedField === "email"
@@ -401,7 +604,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               autoComplete="current-password"
-              className={`w-full pl-9 pr-9 py-2 bg-zinc-500/5 border rounded-xl text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+              className={`w-full pl-9 pr-9 py-2.5 sm:py-2 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
                 errors.password 
                   ? "border-rose-500/50" 
                   : focusedField === "password"
@@ -506,7 +709,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-1.5"
+            className="w-full py-2.5 sm:py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-sm sm:text-xs rounded-xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-1.5"
           >
             {loading ? (
               <>
@@ -533,7 +736,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           type="button"
           disabled={loading || googleAuthenticating}
           onClick={() => loginWithGoogle()}
-          className="relative flex items-center justify-center w-full py-2.5 px-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.15] rounded-xl text-[11px] font-semibold text-zinc-300 hover:text-white transition-all active:scale-[0.98] cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative flex items-center justify-center w-full py-3 sm:py-2.5 px-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.15] rounded-xl text-sm sm:text-[11px] font-semibold text-zinc-300 hover:text-white transition-all active:scale-[0.98] cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg className="h-3.5 w-3.5 mr-2" viewBox="0 0 24 24">
             <path

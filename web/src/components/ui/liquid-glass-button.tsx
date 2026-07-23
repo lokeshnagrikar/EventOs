@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring active:scale-[0.96] active:duration-75 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-300 ease-spring focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring active:scale-[0.96] active:duration-75 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -59,7 +59,7 @@ Button.displayName = "Button"
 export { Button, buttonVariants, liquidbuttonVariants, LiquidButton }
 
 const liquidbuttonVariants = cva(
-  "inline-flex items-center justify-center cursor-pointer gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.96] active:duration-75 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center cursor-pointer gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-300 ease-spring active:scale-[0.96] active:duration-75 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
@@ -67,7 +67,7 @@ const liquidbuttonVariants = cva(
         brand: "bg-gradient-to-r from-purple-500/75 to-pink-500/70 border border-purple-400/40 hover:from-purple-500/85 hover:to-pink-500/80 text-white hover:scale-105 duration-300 transition shadow-[0_0_20px_rgba(139,92,246,0.35)] hover:shadow-[0_0_25px_rgba(139,92,246,0.45)] hover:border-purple-400/60",
         brandNavbar: "bg-gradient-to-r from-purple-500/75 to-cyan-500/65 border border-purple-400/45 hover:from-purple-500/85 hover:to-cyan-500/75 text-white hover:scale-105 duration-300 transition shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] hover:border-cyan-400/60",
         appleGlass: "bg-gradient-to-r from-purple-500/[0.12] to-pink-500/[0.08] backdrop-blur-2xl backdrop-saturate-[1.8] border border-purple-400/25 text-white hover:from-purple-500/[0.22] hover:to-pink-500/[0.15] hover:border-purple-400/40 hover:scale-105 duration-300 transition shadow-[0_4px_16px_rgba(139,92,246,0.15),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(139,92,246,0.35),inset_0_1px_0_rgba(255,255,255,0.15)]",
-        appleGlassLight: "bg-gradient-to-r from-cyan-500/[0.08] to-blue-500/[0.04] backdrop-blur-xl backdrop-saturate-150 border border-cyan-400/20 text-zinc-200 hover:from-cyan-500/[0.18] hover:to-blue-500/[0.1] hover:border-cyan-400/35 hover:text-white hover:scale-105 duration-300 transition shadow-[0_2px_12px_rgba(6,182,212,0.1),inset_0_1px_0_rgba(255,255,255,0.06)] hover:shadow-[0_0_20px_rgba(6,182,212,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]",
+        appleGlassLight: "bg-gradient-to-r from-purple-500/[0.16] via-indigo-500/[0.12] to-cyan-500/[0.15] backdrop-blur-2xl backdrop-saturate-[1.8] border border-white/[0.12] text-white hover:from-purple-500/[0.26] hover:to-cyan-500/[0.22] hover:border-white/[0.2] hover:scale-105 duration-300 transition shadow-[0_4px_16px_rgba(139,92,246,0.2),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(139,92,246,0.35),0_0_15px_rgba(6,182,212,0.2),inset_0_1px_0_rgba(255,255,255,0.15)]",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:

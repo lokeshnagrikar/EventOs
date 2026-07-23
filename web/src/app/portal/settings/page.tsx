@@ -18,6 +18,7 @@ import {
   Languages
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 export default function PortalSettingsPage() {
   const [activeSubTab, setActiveSubTab] = useState<"profile" | "notifications" | "security">("profile");
@@ -56,16 +57,39 @@ export default function PortalSettingsPage() {
   // Delete request
   const [deleteRequested, setDeleteRequested] = useState(false);
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
+  const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileSuccess(true);
-    setTimeout(() => setProfileSuccess(false), 2500);
+    try {
+      await api.put("/client/profile", {
+        name,
+        email,
+        phone,
+        address,
+        emergencyContact
+      });
+      setProfileSuccess(true);
+      setTimeout(() => setProfileSuccess(false), 2500);
+    } catch (err) {
+      console.error("Failed to update client profile:", err);
+    }
   };
 
-  const handleNotificationsSubmit = (e: React.FormEvent) => {
+  const handleNotificationsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setNotifSuccess(true);
-    setTimeout(() => setNotifSuccess(false), 2500);
+    try {
+      await api.patch("/client/preferences", {
+        whatsappReminders,
+        emailReminders,
+        smsAlerts,
+        language,
+        themeMode,
+        downloadPath
+      });
+      setNotifSuccess(true);
+      setTimeout(() => setNotifSuccess(false), 2500);
+    } catch (err) {
+      console.error("Failed to update client preferences:", err);
+    }
   };
 
   const handleSecuritySubmit = (e: React.FormEvent) => {

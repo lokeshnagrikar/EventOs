@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.stripe</groupId>
+  <artifactId>stripe-java</artifactId>
+  <version>25.10.0</version>
+  <name>stripe-java</name>
+  <description>Stripe Java Bindings</description>
+  <url>https://github.com/stripe/stripe-java</url>
+  <organization>
+    <name>Stripe</name>
+    <url>https://stripe.com</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>The MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>stripe</id>
+      <name>Stripe</name>
+      <email>support+java@stripe.com</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git@github.com:stripe/stripe-java.git</connection>
+    <developerConnection>scm:git:git@github.com:stripe/stripe-java.git</developerConnection>
+    <url>git@github.com:stripe/stripe-java.git</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.10.1</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+</project>

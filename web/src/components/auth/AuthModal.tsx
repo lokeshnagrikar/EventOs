@@ -85,7 +85,7 @@ export function AuthModal() {
           transition={{ duration: 0.35, ease: "easeOut" }}
           onClick={handleBackdropClick}
           className={cn(
-            "fixed inset-0 z-50 flex bg-black/75 backdrop-blur-md",
+            "fixed inset-0 z-50 flex bg-black/80 backdrop-blur-lg",
             isMobile ? "items-end justify-center" : "items-center justify-center p-4 sm:p-6"
           )}
         >
@@ -104,23 +104,32 @@ export function AuthModal() {
             }}
             ref={modalRef}
             className={cn(
-              "w-full max-w-[430px] z-10",
-              isMobile ? "max-h-[92vh] overflow-y-auto scrollbar-none" : ""
+              "w-full z-10",
+              isMobile ? "max-w-full max-h-[95vh] overflow-y-auto scrollbar-none" : "max-w-[430px]"
             )}
           >
             <SpotlightCard className={cn(
               "w-full bg-card/95 border border-border shadow-[0_0_60px_rgba(0,0,0,0.4)] backdrop-blur-xl relative text-foreground selection:bg-purple-650 selection:text-white",
-              isMobile ? "rounded-t-[32px] rounded-b-none border-b-0 pb-6" : "rounded-2xl overflow-hidden"
+              isMobile ? "rounded-t-[24px] rounded-b-none border-b-0 pb-[env(safe-area-inset-bottom,16px)]" : "rounded-2xl overflow-hidden"
             )}>
-              {/* Top Accent Gradient Line (Desktop only) */}
-              {!isMobile && (
-                <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#06B6D4] opacity-90 z-20" />
-              )}
+              {/* Top Accent Gradient Line */}
+              <div className={cn(
+                "absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#06B6D4] opacity-90 z-20",
+                isMobile && "rounded-t-[24px]"
+              )} />
 
-              {/* iOS bottom sheet drag handle */}
+              {/* iOS bottom sheet drag handle + close */}
               {isMobile && (
-                <div className="w-full pt-4 pb-2 flex justify-center cursor-grab active:cursor-grabbing">
-                  <div className="w-12 h-1 bg-zinc-700/50 rounded-full" />
+                <div className="w-full pt-3 pb-1 flex items-center justify-between px-5">
+                  <div />
+                  <div className="w-10 h-1 bg-zinc-700/60 rounded-full cursor-grab active:cursor-grabbing" />
+                  <button
+                    onClick={closeModal}
+                    className="h-7 w-7 rounded-full bg-zinc-800/60 border border-zinc-700/40 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                    aria-label="Close modal"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
               )}
 
@@ -140,8 +149,8 @@ export function AuthModal() {
 
               {/* Padded Content Area */}
               <div className={cn(
-                "p-6 sm:p-8 sm:pt-10",
-                isMobile ? "pt-2" : "pt-8"
+                "p-5 sm:p-8 sm:pt-10",
+                isMobile ? "pt-1 px-5 pb-4" : "pt-8"
               )}>
                 {/* Modal Forms inside Suspense to support useSearchParams in LoginForm */}
                 <Suspense fallback={<div className="text-xs text-zinc-400 text-center py-12">Loading form...</div>}>

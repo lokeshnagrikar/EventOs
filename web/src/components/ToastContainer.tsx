@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useToastStore, ToastType } from "@/lib/toastStore";
 import { CheckCircle, AlertCircle, Info, AlertTriangle, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,15 +28,23 @@ const PROGRESS_COLORS: Record<ToastType, string> = {
 
 export default function ToastContainer() {
   const { toasts, removeToast } = useToastStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent hydration mismatch — render nothing on server
+  if (!mounted) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">
+    <div className="fixed top-16 right-6 z-[999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <motion.div
             key={toast.id}
             layout
-            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            initial={{ opacity: 0, y: -16, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, x: 80, scale: 0.95 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -79,11 +87,11 @@ export default function ToastContainer() {
             {/* Progress bar */}
             {toast.duration && toast.duration > 0 && (
               <div className="h-[2px] w-full bg-white/5">
-                <div
-                  className={`h-full ${PROGRESS_COLORS[toast.type]} origin-left`}
-                  style={{
-                    animation: `toast-progress ${toast.duration}ms linear forwards`,
-                  }}
+                <motion.div
+                  initial={{ width: "100%" }}
+                  animate={{ width: "0%" }}
+                  transition={{ duration: toast.duration / 1000, ease: "linear" }}
+                  className={`h-full ${PROGRESS_COLORS[toast.type]}`}
                 />
               </div>
             )}

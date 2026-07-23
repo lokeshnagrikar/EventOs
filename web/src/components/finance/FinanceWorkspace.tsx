@@ -1288,7 +1288,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           <div className="absolute inset-0" onClick={() => setIsInvoiceModalOpen(false)} />
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             className="w-full max-w-lg bg-[#111113] border border-zinc-850 rounded-2xl shadow-2xl p-6 overflow-hidden relative z-10">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
             <div className="flex justify-between items-center pb-4 border-b border-zinc-850 mb-4 z-10 relative">
               <div>
                 <h2 className="text-sm font-extrabold text-white">Generate Client Invoice</h2>
@@ -1360,7 +1360,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           <div className="absolute inset-0" onClick={() => setIsPaymentModalOpen(false)} />
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             className="w-full max-w-lg bg-[#111113] border border-zinc-850 rounded-2xl shadow-2xl p-6 overflow-hidden relative z-10">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
             <div className="flex justify-between items-center pb-4 border-b border-zinc-850 mb-4 z-10 relative">
               <div>
                 <h2 className="text-sm font-extrabold text-white">Record Transaction</h2>
@@ -1432,7 +1432,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           <div className="absolute inset-0" onClick={() => setIsExpenseModalOpen(false)} />
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             className="w-full max-w-lg bg-[#111113] border border-zinc-850 rounded-2xl shadow-2xl p-6 overflow-hidden relative z-10">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
             <div className="flex justify-between items-center pb-4 border-b border-zinc-850 mb-4 z-10 relative">
               <div>
                 <h2 className="text-sm font-extrabold text-white">Log Direct Expense</h2>

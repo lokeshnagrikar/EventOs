@@ -228,12 +228,12 @@ export default function PortalGalleryPage() {
     <div className="space-y-6 animate-slide-in text-zinc-300 select-none">
       
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.04] pb-4">
         <div className="flex items-center gap-3">
           {selectedAlbum && (
             <button
               onClick={handleBackToAlbums}
-              className="h-8 w-8 rounded-xl border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-all"
+              className="h-8 w-8 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] text-zinc-400 hover:text-white flex items-center justify-center transition-all"
             >
               <ChevronLeft size={16} />
             </button>
@@ -330,10 +330,10 @@ export default function PortalGalleryPage() {
               <div
                 key={album.id}
                 onClick={() => setSelectedAlbum(album)}
-                className="group rounded-2xl border border-zinc-800 bg-[#111113]/40 hover:border-purple-650/40 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-[280px]"
+                className="group rounded-2xl border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-purple-500/30 hover:bg-white/[0.02] hover:shadow transition-all duration-350 cursor-pointer overflow-hidden flex flex-col h-[280px]"
               >
                 {/* Thumbnail cover */}
-                <div className="h-36 relative w-full bg-zinc-900 flex items-center justify-center shrink-0 border-b border-zinc-850">
+                <div className="h-36 relative w-full bg-zinc-900/60 flex items-center justify-center shrink-0 border-b border-white/[0.04]">
                   {album.thumbnailUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -347,7 +347,7 @@ export default function PortalGalleryPage() {
                       <span className="text-[9px] uppercase tracking-wider font-bold">Studio Album</span>
                     </div>
                   )}
-                  <span className="absolute bottom-3 right-3 bg-black/60 backdrop-blur border border-zinc-800/80 px-2 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 font-mono">
+                  <span className="absolute bottom-3 right-3 bg-black/60 backdrop-blur border border-white/[0.04] px-2 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 font-mono">
                     <Layers size={10} className="text-purple-400" />
                     {album.itemCount} items
                   </span>
@@ -362,7 +362,7 @@ export default function PortalGalleryPage() {
                       {album.description || "No descriptions set."}
                     </p>
                   </div>
-                  <div className="border-t border-zinc-850/40 pt-2 flex justify-between text-[10px] text-zinc-550 font-mono">
+                  <div className="border-t border-white/[0.04] pt-2 flex justify-between text-[10px] text-zinc-550 font-mono">
                     <span>Event Gallery</span>
                     <span>{new Date(album.createdAt).toLocaleDateString()}</span>
                   </div>
@@ -375,7 +375,7 @@ export default function PortalGalleryPage() {
         /* PASSCODE UNLOCK SCREEN */
         !isUnlocked ? (
           <div className="max-w-md mx-auto p-6 border border-zinc-800 bg-[#111113]/40 rounded-2xl space-y-4 relative overflow-hidden text-center">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
             <div className="h-10 w-10 mx-auto rounded-full bg-purple-550/10 flex items-center justify-center text-purple-400 border border-purple-900/20">
               <Lock size={18} />
             </div>

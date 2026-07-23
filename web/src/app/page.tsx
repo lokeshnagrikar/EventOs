@@ -22,9 +22,11 @@ const Features = dynamic(() => import("@/components/landing/Features").then(m =>
 const Modules = dynamic(() => import("@/components/landing/Modules").then(m => ({ default: m.Modules })), { ssr: true });
 const MultiTenant = dynamic(() => import("@/components/landing/MultiTenant").then(m => ({ default: m.MultiTenant })), { ssr: true });
 const Workflow = dynamic(() => import("@/components/landing/Workflow").then(m => ({ default: m.Workflow })), { ssr: false });
+const RunOfShowSimulator = dynamic(() => import("@/components/landing/RunOfShowSimulator").then(m => ({ default: m.RunOfShowSimulator })), { ssr: false });
 const ClientPortalPreview = dynamic(() => import("@/components/landing/ClientPortalPreview").then(m => ({ default: m.ClientPortalPreview })), { ssr: true });
 const ProductShowcase = dynamic(() => import("@/components/landing/ProductShowcase").then(m => ({ default: m.ProductShowcase })), { ssr: true });
 const Testimonials = dynamic(() => import("@/components/landing/Testimonials").then(m => ({ default: m.Testimonials })), { ssr: true });
+const RoiCalculator = dynamic(() => import("@/components/landing/RoiCalculator").then(m => ({ default: m.RoiCalculator })), { ssr: true });
 const Pricing = dynamic(() => import("@/components/landing/Pricing").then(m => ({ default: m.Pricing })), { ssr: true });
 const Competitors = dynamic(() => import("@/components/landing/Competitors").then(m => ({ default: m.Competitors })), { ssr: true });
 const Faq = dynamic(() => import("@/components/landing/Faq").then(m => ({ default: m.Faq })), { ssr: false });
@@ -192,17 +194,15 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
             </Suspense>
           </div>
 
+          {/* 6b. Interactive Live Run-of-Show Simulator */}
+          <Suspense fallback={<SectionSkeleton />}>
+            <RunOfShowSimulator />
+          </Suspense>
+
           {/* 7. Client Portal Preview — interactive portal mockup */}
           <div id="portal-preview">
             <Suspense fallback={<SectionSkeleton />}>
               <ClientPortalPreview />
-            </Suspense>
-          </div>
-
-          {/* 8. Interactive Product Showcase — tabbed interface */}
-          <div id="showcase">
-            <Suspense fallback={<SectionSkeleton />}>
-              <ProductShowcase />
             </Suspense>
           </div>
 
@@ -212,6 +212,11 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
               <Testimonials />
             </Suspense>
           </div>
+
+          {/* 9b. Interactive ROI & Revenue Calculator */}
+          <Suspense fallback={<SectionSkeleton />}>
+            <RoiCalculator />
+          </Suspense>
 
           {/* 10. Pricing Plans */}
           <div id="pricing">

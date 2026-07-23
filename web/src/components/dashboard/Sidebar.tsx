@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
@@ -15,7 +15,6 @@ import {
   FileSpreadsheet,
   Calculator,
   Settings,
-  User,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -28,7 +27,9 @@ import {
   Coins,
   Image,
   MessageSquare,
-  Database
+  Database,
+  Shield,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,25 +41,51 @@ interface SidebarProps {
   className?: string;
 }
 
-const MENU_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/ai", label: "AI Center", icon: Sparkles },
-  { href: "/chat", label: "Workspace Chat", icon: MessageSquare },
-  { href: "/crm", label: "CRM / Leads", icon: Users, permission: "VIEW_CRM", roles: ["OWNER", "ADMIN"] },
-  { href: "/events", label: "Events / Calendar", icon: Calendar, permission: "VIEW_EVENTS", roles: ["OWNER", "ADMIN", "COORDINATOR"] },
-  { href: "/bookings", label: "Bookings", icon: Layers, permission: "VIEW_BOOKINGS", roles: ["OWNER", "ADMIN", "COORDINATOR"] },
-  { href: "/quotes", label: "Quotes", icon: FileText, permission: "VIEW_QUOTES", roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
-  { href: "/gallery", label: "Media Gallery", icon: Image, permission: "VIEW_GALLERY", roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
-  { href: "/finance", label: "Finance Hub", icon: Coins, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN"] },
-  { href: "/payments", label: "Payments", icon: DollarSign, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN"] },
-  { href: "/invoices", label: "Invoices", icon: FileSpreadsheet, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN"] },
-  { href: "/calculator", label: "Budget Calculator", icon: Calculator, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "COORDINATOR"] },
-  { href: "/reports", label: "Reports & Analytics", icon: TrendingUp, permission: "VIEW_REPORTS", roles: ["OWNER", "ADMIN"] },
-  { href: "/automation", label: "Smart Automation", icon: GitBranch, permission: "MANAGE_AUTOMATION", roles: ["OWNER", "ADMIN"] },
-  { href: "/activity", label: "Activity Logs", icon: Activity, permission: "VIEW_LOGS", roles: ["OWNER", "ADMIN"] },
-  { href: "/import", label: "Import Data", icon: Database, permission: "VIEW_LOGS", roles: ["OWNER", "ADMIN"] },
-  { href: "/developer", label: "Developer Center", icon: Command },
-  { href: "/help", label: "Help Center", icon: HelpCircle },
+const MENU_SECTIONS = [
+  {
+    label: "Workspace",
+    items: [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/ai", label: "AI Center", icon: Sparkles },
+      { href: "/chat", label: "Workspace Chat", icon: MessageSquare },
+      { href: "/activity", label: "Activity Logs", icon: Activity, permission: "VIEW_LOGS", roles: ["OWNER", "ADMIN"] },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/crm", label: "CRM / Leads", icon: Users, permission: "VIEW_CRM", roles: ["OWNER", "ADMIN"] },
+      { href: "/events", label: "Events / Calendar", icon: Calendar, permission: "VIEW_EVENTS", roles: ["OWNER", "ADMIN", "COORDINATOR"] },
+      { href: "/bookings", label: "Bookings", icon: Layers, permission: "VIEW_BOOKINGS", roles: ["OWNER", "ADMIN", "COORDINATOR"] },
+      { href: "/gallery", label: "Media Gallery", icon: Image, permission: "VIEW_GALLERY", roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
+    ],
+  },
+  {
+    label: "Finance",
+    items: [
+      { href: "/quotes", label: "Quotes", icon: FileText, permission: "VIEW_QUOTES", roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
+      { href: "/finance", label: "Finance Hub", icon: Coins, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN"] },
+      { href: "/payments", label: "Payments", icon: DollarSign, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN"] },
+      { href: "/invoices", label: "Invoices", icon: FileSpreadsheet, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN"] },
+      { href: "/calculator", label: "Budget Calculator", icon: Calculator, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "COORDINATOR"] },
+    ],
+  },
+  {
+    label: "Intelligence",
+    items: [
+      { href: "/reports", label: "Reports & Analytics", icon: TrendingUp, permission: "VIEW_REPORTS", roles: ["OWNER", "ADMIN"] },
+      { href: "/automation", label: "Smart Automation", icon: GitBranch, permission: "MANAGE_AUTOMATION", roles: ["OWNER", "ADMIN"] },
+      { href: "/import", label: "Import Data", icon: Database, permission: "VIEW_LOGS", roles: ["OWNER", "ADMIN"] },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { href: "/superadmin", label: "Super Admin", icon: Shield, roles: ["SUPER_ADMIN"] },
+      { href: "/developer", label: "Developer Center", icon: Command },
+      { href: "/help", label: "Help Center", icon: HelpCircle },
+    ],
+  },
 ];
 
 export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userName, className }: SidebarProps) {
@@ -72,161 +99,240 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
 
   const userRole = user?.role || "CLIENT";
   const userPermissions = user?.permissions || [];
-
   const activeRole = mounted ? userRole : "CLIENT";
   const activePermissions = mounted ? userPermissions : [];
 
-  const filteredMenuItems = MENU_ITEMS.filter((item) => {
-    // If no permission and roles specified, it is a public sidebar node
-    const anyItem = item as any;
-    if (!anyItem.permission && !anyItem.roles) return true;
-
-    // Check role access
-    if (anyItem.roles && anyItem.roles.includes(activeRole)) return true;
-
-    // Check granular permission access
-    if (anyItem.permission && activePermissions.includes(anyItem.permission)) return true;
-
+  const isItemVisible = (item: any) => {
+    if (!item.permission && !item.roles) return true;
+    if (item.roles && item.roles.includes(activeRole)) return true;
+    if (item.permission && activePermissions.includes(item.permission)) return true;
     return false;
-  });
+  };
 
   return (
     <motion.aside
-      animate={{ width: isCollapsed ? 76 : 256 }}
-      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      animate={{ width: isCollapsed ? 72 : 252 }}
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "flex flex-col justify-between shrink-0 border-r border-border bg-card/75 backdrop-blur-md sticky top-0 h-screen z-40 select-none overflow-hidden shadow-[4px_0_30px_rgba(0,0,0,0.1)]",
+        "flex flex-col justify-between shrink-0 border-r border-white/[0.05] sticky top-0 h-screen z-40 select-none overflow-hidden",
+        "bg-[#09090b]/60 backdrop-blur-2xl shadow-[1px_0_0_rgba(255,255,255,0.03),inset_-1px_0_0_rgba(255,255,255,0.02)]",
         className
       )}
     >
-      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      {/* Inner gradient for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-500/[0.02] via-transparent to-transparent pointer-events-none" />
+
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
         {/* Brand Header */}
-        <div className="h-16 border-b border-border px-4 flex items-center justify-between shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-purple-500/20 active:scale-95 transition-all">
-              <Sparkles size={16} className="text-white" />
+        <div className="h-[60px] border-b border-white/[0.04] px-4 flex items-center justify-between shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
+            {/* Logo mark */}
+            <div className="h-8 w-8 rounded-[10px] bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/25 shrink-0 transition-transform active:scale-95">
+              <Sparkles size={14} strokeWidth={2.5} className="text-white" />
             </div>
-            {!isCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col"
-              >
-                <h1 className="font-extrabold text-sm text-foreground tracking-tight leading-none">EventOS</h1>
-                <span className="text-[10px] text-muted-foreground font-bold tracking-wider uppercase mt-1">Enterprise</span>
-              </motion.div>
-            )}
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.div
+                  key="brand-text"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="flex flex-col min-w-0"
+                >
+                  <span className="font-black text-[13px] text-white tracking-tight leading-none">EventOS</span>
+                  <span className="text-[9px] text-zinc-500 font-bold tracking-[0.12em] uppercase mt-[3px]">Enterprise</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Link>
- 
-          {!isCollapsed && (
-            <button
-              onClick={() => setIsCollapsed(true)}
-              className="h-7 w-7 rounded-lg bg-background/60 hover:bg-muted border border-border text-muted-foreground hover:text-foreground flex items-center justify-center transition-all cursor-pointer"
-              aria-label="Collapse sidebar"
-            >
-              <ChevronLeft size={14} />
-            </button>
-          )}
+
+          <AnimatePresence>
+            {!isCollapsed && (
+              <motion.button
+                key="collapse-btn"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.15 }}
+                onClick={() => setIsCollapsed(true)}
+                className="h-6 w-6 rounded-lg bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.05] text-zinc-500 hover:text-zinc-300 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                aria-label="Collapse sidebar"
+              >
+                <ChevronLeft size={12} />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Navigation Items */}
-        <nav data-lenis-prevent role="navigation" aria-label="Main navigation" className="flex-1 overflow-y-auto p-3 space-y-1.5 mt-4 scrollbar-none hover:scrollbar-thin">
-          {filteredMenuItems.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
+        {/* Navigation Items with sections */}
+        <nav
+          data-lenis-prevent
+          role="navigation"
+          aria-label="Main navigation"
+          className="flex-1 overflow-y-auto py-3 scrollbar-none"
+        >
+          {MENU_SECTIONS.map((section, sectionIdx) => {
+            const visibleItems = section.items.filter(isItemVisible);
+            if (visibleItems.length === 0) return null;
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500",
-                  isActive
-                    ? "bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/45 border border-transparent"
+              <div key={section.label} className={cn("px-3", sectionIdx > 0 && "mt-4")}>
+                {/* Section label */}
+                <AnimatePresence>
+                  {!isCollapsed && (
+                    <motion.span
+                      key={`label-${section.label}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="block text-[9px] font-black uppercase tracking-[0.14em] text-zinc-600 px-3 mb-1.5"
+                    >
+                      {section.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                {isCollapsed && sectionIdx > 0 && (
+                  <div className="h-[1px] bg-white/[0.04] mx-1 mb-2" />
                 )}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <Icon size={18} className={cn("shrink-0", isActive ? "text-purple-400" : "text-muted-foreground group-hover:text-foreground")} />
-                {!isCollapsed && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="truncate"
-                  >
-                    {item.label}
-                  </motion.span>
-                )}
-                {isCollapsed && (
-                  <div className="absolute left-[72px] bg-card border border-border text-foreground text-[10px] font-bold px-2 py-1 rounded-md opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 delay-100 whitespace-nowrap shadow-xl z-50">
-                    {item.label}
-                  </div>
-                )}
-              </Link>
+
+                {/* Items */}
+                <div className="space-y-0.5">
+                  {visibleItems.map((item, itemIdx) => {
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "relative flex items-center gap-2.5 px-3 py-[7px] rounded-[10px] text-[11px] font-semibold transition-all duration-150 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500",
+                          isCollapsed && "justify-center px-0 h-9 w-full",
+                          isActive
+                            ? "bg-white/[0.06] text-white border border-white/[0.06] shadow-[0_1px_8px_rgba(0,0,0,0.2)]"
+                            : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent"
+                        )}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        {/* Active glow pill */}
+                        {isActive && (
+                          <motion.div
+                            layoutId="active-pill"
+                            className="absolute inset-0 rounded-[10px] bg-purple-500/[0.08] border border-purple-500/[0.15]"
+                            transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                          />
+                        )}
+
+                        {/* Icon */}
+                        <Icon
+                          size={15}
+                          strokeWidth={isActive ? 2.2 : 1.8}
+                          className={cn(
+                            "shrink-0 relative z-10 transition-colors",
+                            isActive ? "text-purple-400" : "text-zinc-500 group-hover:text-zinc-300"
+                          )}
+                        />
+
+                        {/* Label */}
+                        <AnimatePresence>
+                          {!isCollapsed && (
+                            <motion.span
+                              key={`label-item-${item.href}`}
+                              initial={{ opacity: 0, x: -4 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -4 }}
+                              transition={{ duration: 0.15, delay: itemIdx * 0.015 }}
+                              className="truncate relative z-10 tracking-wide"
+                            >
+                              {item.label}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Collapsed tooltip */}
+                        {isCollapsed && (
+                          <div className="absolute left-[60px] bg-[#0a0a0f]/98 border border-white/[0.1] text-zinc-100 text-[10px] font-bold px-2.5 py-1.5 rounded-[10px] opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200 whitespace-nowrap shadow-xl z-50 backdrop-blur-xl">
+                            {item.label}
+                          </div>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
       </div>
 
       {/* Footer Controls */}
-      <div className="p-3 border-t border-border space-y-2">
-        {/* Toggle Button when Collapsed */}
+      <div className="p-3 border-t border-white/[0.04] space-y-2 relative">
+        {/* Expand button when collapsed */}
         {isCollapsed && (
           <button
             onClick={() => setIsCollapsed(false)}
-            className="w-full h-9 rounded-xl bg-background/60 hover:bg-muted border border-border text-muted-foreground hover:text-foreground flex items-center justify-center transition-all cursor-pointer mb-2"
+            className="w-full h-8 rounded-[10px] bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-zinc-500 hover:text-zinc-300 flex items-center justify-center transition-all cursor-pointer mb-2"
             aria-label="Expand sidebar"
           >
-            <ChevronRight size={14} />
+            <ChevronRight size={13} />
           </button>
         )}
 
-        {/* User Session Info Card */}
-        <div className={cn("flex items-center gap-3", isCollapsed ? "justify-center px-1" : "px-3 py-2 rounded-xl bg-muted/20 border border-border/40")}>
-          <div className="relative shrink-0 select-none">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 border border-white/[0.08] flex items-center justify-center text-[11px] font-extrabold text-white shadow-md shadow-purple-900/10">
-              {userName ? userName.charAt(0).toUpperCase() : "U"}
-            </div>
-            <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-[1.5px] ring-background animate-pulse" />
-          </div>
-          {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 min-w-0 text-left"
-            >
-              <p className="text-[11px] font-bold text-foreground truncate">{userName}</p>
-              <p className="text-[9px] text-muted-foreground font-medium truncate">Admin Console</p>
-            </motion.div>
+        {/* User Card */}
+        <div
+          className={cn(
+            "flex items-center gap-2.5 rounded-[10px] transition-colors",
+            isCollapsed ? "justify-center" : "px-2.5 py-2 bg-white/[0.02] border border-white/[0.04]"
           )}
+        >
+          <div className="relative shrink-0">
+            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-violet-700 flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-purple-900/20">
+              {userName ? userName.charAt(0).toUpperCase() : <User size={12} />}
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-[1.5px] ring-[#09090b] shadow-sm shadow-emerald-500/50" />
+          </div>
+          <AnimatePresence>
+            {!isCollapsed && (
+              <motion.div
+                key="user-info"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex-1 min-w-0"
+              >
+                <p className="text-[11px] font-bold text-zinc-200 truncate leading-none">{userName}</p>
+                <p className="text-[9px] text-zinc-600 font-medium mt-[3px]">Admin Console</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Settings and Logout Buttons */}
-        <div className={cn("flex gap-1.5", isCollapsed ? "flex-col items-center" : "justify-between")}>
+        {/* Settings & Logout */}
+        <div className={cn("flex gap-1.5", isCollapsed ? "flex-col items-center" : "")}>
           <Link
             href="/settings"
             className={cn(
-              "flex items-center justify-center h-8 rounded-lg bg-background/60 hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition-all cursor-pointer",
-              isCollapsed ? "w-8" : "flex-1 text-xs gap-1.5 font-bold"
+              "flex items-center justify-center h-8 rounded-[10px] bg-white/[0.01] hover:bg-white/[0.04] border border-white/[0.04] text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer",
+              isCollapsed ? "w-8" : "flex-1 text-[11px] gap-1.5 font-bold"
             )}
             title="Settings"
           >
-            <Settings size={14} />
+            <Settings size={13} />
             {!isCollapsed && <span>Settings</span>}
           </Link>
 
           <button
             onClick={onLogout}
             className={cn(
-              "flex items-center justify-center h-8 rounded-lg bg-background/60 hover:bg-red-500/10 hover:border-red-500/20 text-muted-foreground hover:text-red-500 border border-border transition-all cursor-pointer",
-              isCollapsed ? "w-8" : "flex-1 text-xs gap-1.5 font-bold"
+              "flex items-center justify-center h-8 rounded-[10px] bg-white/[0.01] hover:bg-red-500/[0.08] hover:border-red-500/20 text-zinc-500 hover:text-red-400 border border-white/[0.04] transition-all cursor-pointer",
+              isCollapsed ? "w-8" : "flex-1 text-[11px] gap-1.5 font-bold"
             )}
             title="Logout"
           >
-            <LogOut size={14} />
+            <LogOut size={13} />
             {!isCollapsed && <span>Log Out</span>}
           </button>
         </div>

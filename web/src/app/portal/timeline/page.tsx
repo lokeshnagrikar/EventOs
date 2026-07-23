@@ -85,10 +85,10 @@ export default function PortalTimelinePage() {
   }
 
   return (
-    <div className="p-6 border border-zinc-850 bg-[#111113]/40 rounded-2xl space-y-8 animate-slide-in text-zinc-300 select-none">
+    <div className="p-6 border border-white/[0.04] bg-white/[0.01] backdrop-blur-md rounded-2xl space-y-8 animate-slide-in text-zinc-300 select-none">
       
       {/* Header Info */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-850 pb-5">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/[0.04] pb-5">
         <div>
           <h3 className="text-base font-extrabold text-zinc-150 uppercase tracking-wider flex items-center gap-2">
             <Calendar size={18} className="text-purple-500" />
@@ -162,7 +162,7 @@ export default function PortalTimelinePage() {
                   <IconComponent size={14} />
                 </div>
                 
-                <div className="space-y-3.5 max-w-3xl p-5 border border-zinc-850/60 bg-zinc-950/20 rounded-2xl transition-all hover:border-zinc-800">
+                <div className="space-y-3.5 max-w-3xl p-5 border border-white/[0.04] bg-white/[0.01] rounded-2xl transition-all hover:border-white/[0.08]">
                   <div className="flex justify-between items-center text-[10px] text-zinc-550 font-bold font-mono">
                     <span>Logged Milestone</span>
                     <span>{new Date(item.scheduledTime).toLocaleString()}</span>

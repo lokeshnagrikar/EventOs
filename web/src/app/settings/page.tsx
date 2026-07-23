@@ -61,12 +61,15 @@ import {
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar } from "recharts";
 import { cn } from "@/lib/utils";
 
+import WhiteLabelSettings from "@/components/settings/WhiteLabelSettings";
+
 // Sidebar categories mapping
 const SECTIONS = [
   { id: "workspace", label: "Workspace Home", icon: Settings, roles: ["OWNER", "ADMIN", "COORDINATOR"] },
   { id: "profile", label: "My Profile", icon: UserCheck, roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
   { id: "company", label: "Company Profile", icon: Building2, roles: ["OWNER", "ADMIN"] },
   { id: "branding", label: "Company Branding", icon: Palette, roles: ["OWNER", "ADMIN", "COORDINATOR"] },
+  { id: "whitelabel", label: "White-Label & Domain", icon: Globe, roles: ["OWNER", "ADMIN"] },
   { id: "team", label: "Users & Teams", icon: Users, roles: ["OWNER", "ADMIN"] },
   { id: "rbac", label: "Roles & Permissions", icon: UserCheck, roles: ["OWNER", "ADMIN"] },
   { id: "orgchart", label: "Org Chart Hierarchy", icon: Network, roles: ["OWNER", "ADMIN"] },
@@ -1483,6 +1486,11 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* WHITE-LABEL & CUSTOM DOMAIN */}
+              {activeTab === "whitelabel" && (
+                <WhiteLabelSettings />
               )}
 
               {/* 4. TEAM DIRECTORY */}

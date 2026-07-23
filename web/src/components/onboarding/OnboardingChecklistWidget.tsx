@@ -119,13 +119,21 @@ export default function OnboardingChecklistWidget() {
   if (isOpen) return null;
   if (isMinimized) {
     return (
-      <button
+      <motion.button
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.94 }}
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-6 right-24 z-40 h-10 w-10 rounded-full bg-purple-600 border border-purple-500/30 text-white flex items-center justify-center shadow-lg hover:bg-purple-550 transition cursor-pointer"
+        className="fixed bottom-20 sm:bottom-6 right-18 sm:right-[80px] z-40 h-12 w-12 rounded-full bg-black/70 border border-purple-500/30 text-white flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-2xl hover:border-purple-500/60 transition cursor-pointer group"
         aria-label="Open setup checklist"
       >
-        <CheckCircle2 size={18} />
-      </button>
+        <div className="absolute -inset-1 bg-purple-500/20 rounded-full blur-md -z-10" />
+        <div className="h-6 w-6 rounded-full bg-purple-500/20 border border-purple-500/40 flex items-center justify-center shadow-md shrink-0">
+          <CheckCircle2 size={13} className="text-purple-400" />
+        </div>
+        {progress === 100 && (
+          <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+        )}
+      </motion.button>
     );
   }
 
@@ -166,7 +174,7 @@ export default function OnboardingChecklistWidget() {
         </div>
       )}
 
-      <div className="fixed bottom-6 right-24 z-40 select-none font-sans text-xs">
+      <div className="hidden md:block fixed bottom-6 right-[80px] z-40 select-none font-sans text-xs">
         <div className="relative">
           <AnimatePresence>
             {!isExpanded ? (
@@ -176,8 +184,10 @@ export default function OnboardingChecklistWidget() {
                 initial={{ opacity: 0, scale: 0.9, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setIsExpanded(true)}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-purple-500/20 bg-zinc-950/80 backdrop-blur-md text-white font-bold shadow-lg hover:border-purple-500/35 transition cursor-pointer group"
+                className="flex items-center gap-2.5 h-12 px-4 rounded-full border border-purple-500/30 bg-black/70 backdrop-blur-2xl text-white font-bold shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:border-purple-500/50 transition cursor-pointer group"
               >
                 <div className="relative">
                   <CheckCircle2 size={15} className={cn("text-purple-400", progress < 100 && "animate-pulse")} />

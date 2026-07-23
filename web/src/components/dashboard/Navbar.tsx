@@ -175,14 +175,14 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
   const crumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-30 h-16 w-full border-b border-border bg-background/80 backdrop-blur-md px-6 flex items-center justify-between transition-colors shadow-sm">
+    <header className="sticky top-0 z-30 h-[60px] w-full border-b border-white/[0.05] bg-[#09090b]/60 backdrop-blur-2xl px-5 flex items-center justify-between shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-colors">
       
       {/* Breadcrumbs / Back button */}
       <div className="flex items-center gap-3">
         {/* Mobile menu trigger */}
         <button
           onClick={onMenuToggle}
-          className="p-2 border border-border rounded-xl hover:bg-muted md:hidden text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+          className="p-2 border border-white/[0.04] rounded-xl bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.08] md:hidden text-zinc-400 hover:text-zinc-150 transition-all cursor-pointer"
           aria-label="Toggle navigation menu"
         >
           <Menu size={16} />
@@ -216,13 +216,13 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
             if (onSearchClick) onSearchClick();
             window.dispatchEvent(new CustomEvent("open-global-search"));
           }}
-          className="hidden md:flex items-center justify-between gap-3 px-3 py-1.5 border border-border rounded-xl bg-background/40 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all w-52 select-none cursor-pointer"
+          className="hidden md:flex items-center justify-between gap-3 px-3.5 py-1.5 border border-white/[0.06] rounded-full bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.1] text-xs text-zinc-500 hover:text-zinc-300 transition-all w-52 select-none cursor-pointer group"
         >
           <span className="flex items-center gap-2">
-            <Search size={13} />
-            Search Command...
+            <Search size={12} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+            <span className="text-[11px] font-medium">Search everything...</span>
           </span>
-          <kbd className="text-[10px] bg-muted px-1.5 py-0.5 rounded border border-border font-mono text-muted-foreground">⌘K</kbd>
+          <kbd className="text-[9px] bg-white/[0.05] px-1.5 py-0.5 rounded-md border border-white/[0.06] font-mono text-zinc-600">⌘K</kbd>
         </button>
 
         <button
@@ -230,7 +230,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
             if (onSearchClick) onSearchClick();
             window.dispatchEvent(new CustomEvent("open-global-search"));
           }}
-          className="p-2 border border-border hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground md:hidden transition-all cursor-pointer"
+          className="p-2 border border-white/[0.04] hover:bg-white/[0.03] hover:border-white/[0.08] rounded-xl text-zinc-400 hover:text-zinc-150 md:hidden transition-all cursor-pointer"
           title="Search"
         >
           <Search size={14} />
@@ -239,11 +239,11 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
         {/* Dark/Light mode toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 border border-border rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+          className="p-1.5 border border-white/[0.05] rounded-lg bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.1] text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer"
           aria-label="Toggle theme mode"
           title={`Switch to ${currentTheme === "dark" ? "light" : "dark"} mode`}
         >
-          {currentTheme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+          {currentTheme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
         </button>
 
         {/* Color Theme Picker */}
@@ -251,8 +251,8 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
           <button
             onClick={() => setColorsOpen(!colorsOpen)}
             className={cn(
-              "p-2 border border-border rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer flex items-center justify-center",
-              colorsOpen && "bg-muted border-border"
+              "p-1.5 border border-white/[0.05] rounded-lg bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.1] text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer flex items-center justify-center",
+              colorsOpen && "bg-white/[0.05] border-white/[0.1]"
             )}
             title="Change color theme"
           >
@@ -272,26 +272,26 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="absolute right-0 mt-2 w-36 bg-card border border-border rounded-xl p-2.5 shadow-2xl z-50 flex flex-col gap-1.5 text-xs text-foreground"
+                className="absolute right-0 mt-2 w-36 bg-[#09090b]/95 border border-white/[0.08] backdrop-blur-xl rounded-xl p-2.5 shadow-2xl z-50 flex flex-col gap-1.5 text-xs text-zinc-300"
               >
-                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block px-1 select-none mb-0.5">Colors</span>
-                <button onClick={() => handleColorChange("violet")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors w-full text-left">
+                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500 block px-1 select-none mb-0.5">Colors</span>
+                <button onClick={() => handleColorChange("violet")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
                   <span className="w-2.5 h-2.5 rounded-full bg-purple-500 block shrink-0" />
                   Violet (Default)
                 </button>
-                <button onClick={() => handleColorChange("blue")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors w-full text-left">
+                <button onClick={() => handleColorChange("blue")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
                   <span className="w-2.5 h-2.5 rounded-full bg-blue-500 block shrink-0" />
                   Blue
                 </button>
-                <button onClick={() => handleColorChange("emerald")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors w-full text-left">
+                <button onClick={() => handleColorChange("emerald")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block shrink-0" />
                   Emerald
                 </button>
-                <button onClick={() => handleColorChange("rose")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors w-full text-left">
+                <button onClick={() => handleColorChange("rose")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-500 block shrink-0" />
                   Rose
                 </button>
-                <button onClick={() => handleColorChange("amber")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors w-full text-left">
+                <button onClick={() => handleColorChange("amber")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500 block shrink-0" />
                   Amber
                 </button>
@@ -313,16 +313,20 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className={cn(
-              "relative p-2 border border-border rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer",
-              notificationsOpen && "bg-muted border-border"
+              "relative p-1.5 border border-white/[0.05] rounded-lg bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.1] text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer",
+              notificationsOpen && "bg-white/[0.05] border-white/[0.1]"
             )}
             aria-label="View notifications"
             aria-expanded={notificationsOpen}
             aria-haspopup="true"
           >
-            <Bell size={14} />
+            <Bell size={13} />
             {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-purple-500 ring-2 ring-background animate-pulse" />
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-0.5 -right-0.5 h-[7px] w-[7px] rounded-full bg-purple-500 ring-[1.5px] ring-[#09090b]"
+              />
             )}
           </button>
 
@@ -335,7 +339,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute right-0 mt-2.5 w-80 max-w-[calc(100vw-2rem)] border border-border bg-card/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-50 overflow-hidden text-xs"
+                  className="absolute right-0 mt-2.5 w-80 max-w-[calc(100vw-2rem)] border border-white/[0.08] bg-[#09090b]/95 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-50 overflow-hidden text-xs text-zinc-300"
                   role="dialog"
                   aria-label="Notifications panel"
                 >
@@ -383,14 +387,14 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
           </AnimatePresence>
         </div>        {/* Real-time Presence Bar & Connection Status */}
         <div className="flex items-center gap-2">
-          {/* Active Users presence avatars count */}
-          <div className="hidden lg:flex items-center gap-1 bg-background/20 border border-border px-2.5 py-1 rounded-xl text-[10px] font-bold text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
+          {/* Active Users */}
+          <div className="hidden lg:flex items-center gap-1.5 bg-white/[0.02] border border-white/[0.05] px-2.5 py-1 rounded-full text-[10px] font-bold text-zinc-500">
+            <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
             <span>{activeUsers.length} Online</span>
           </div>
- 
+
           <div className={cn(
-            "hidden md:flex items-center gap-1.5 px-3 py-1.5 border rounded-xl bg-background/40 text-[10px] font-bold select-none",
+            "hidden md:flex items-center gap-1.5 px-2.5 py-1 border rounded-full text-[10px] font-bold select-none",
             status === "CONNECTED" && "border-emerald-500/20 text-emerald-500 bg-emerald-500/5",
             status === "RECONNECTING" && "border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse",
             status === "DISCONNECTED" && "border-red-500/20 text-red-500 bg-red-500/5"
@@ -401,7 +405,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
               status === "RECONNECTING" && "bg-amber-500",
               status === "DISCONNECTED" && "bg-red-500"
             )} />
-            <span>{status === "CONNECTED" ? "Live Connected" : status === "RECONNECTING" ? "Reconnecting" : "Offline"}</span>
+            <span>{status === "CONNECTED" ? "Live" : status === "RECONNECTING" ? "Reconnecting" : "Offline"}</span>
           </div>
         </div>
       </div>

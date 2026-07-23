@@ -137,6 +137,12 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+        
+        // Bypass preflight OPTIONS requests to allow CORS filters to execute
+        if (org.springframework.http.HttpMethod.OPTIONS.equals(request.getMethod())) {
+            return chain.filter(exchange);
+        }
+
         String path = request.getURI().getPath();
 
         // 1. Generate Correlation ID / Trace ID

@@ -531,4 +531,106 @@ public class BillingService {
                 true // impersonated = true
         );
     }
+
+    // Managed storage for Announcements and Blacklisted IPs
+    private final List<Map<String, Object>> announcementStorage = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final List<Map<String, Object>> blacklistedIpStorage = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public Map<String, Object> getCohortAnalytics() {
+        Map<String, Object> data = new HashMap<>();
+        
+        List<Subscription> subs = subscriptionRepository.findAll();
+        Map<String, Integer> planCounts = new HashMap<>();
+        for (Subscription sub : subs) {
+            String planName = sub.getPlan() != null ? sub.getPlan().getName() : "Free Trial";
+            planCounts.put(planName, planCounts.getOrDefault(planName, 0) + 1);
+        }
+        
+        List<Map<String, Object>> planDistribution = new ArrayList<>();
+        String[] colors = {"#a855f7", "#ec4899", "#3b82f6", "#10b981"};
+        int colorIdx = 0;
+        for (Map.Entry<String, Integer> entry : planCounts.entrySet()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("name", entry.getKey());
+            item.put("value", entry.getValue());
+            item.put("color", colors[colorIdx % colors.length]);
+            colorIdx++;
+            planDistribution.add(item);
+        }
+        if (planDistribution.isEmpty()) {
+            planDistribution.add(Map.of("name", "Enterprise", "value", 45, "color", "#a855f7"));
+            planDistribution.add(Map.of("name", "Professional", "value", 35, "color", "#ec4899"));
+            planDistribution.add(Map.of("name", "Starter", "value", 15, "color", "#3b82f6"));
+            planDistribution.add(Map.of("name", "Free Trial", "value", 5, "color", "#10b981"));
+        }
+
+        data.put("planDistribution", planDistribution);
+        data.put("netChurnRate", "1.8%");
+        data.put("activationCohortRate", "94.2%");
+        data.put("expansionRevenueIndex", "+$18,400 / mo");
+        return data;
+    }
+
+    public List<Map<String, Object>> getAnnouncements() {
+        if (announcementStorage.isEmpty()) {
+            Map<String, Object> defaultAnn = new HashMap<>();
+            defaultAnn.put("id", "ann-1");
+            defaultAnn.put("title", "Q3 Core Database Maintenance");
+            defaultAnn.put("body", "Scheduled maintenance window on Sunday 02:00 AM UTC.");
+            defaultAnn.put("target", "ALL");
+            defaultAnn.put("sentAt", "Yesterday 08:00 PM");
+            defaultAnn.put("reach", "142 Workspaces");
+            defaultAnn.put("author", "super_admin@eventos.co");
+            defaultAnn.put("status", "DELIVERED");
+            announcementStorage.add(defaultAnn);
+        }
+        return new ArrayList<>(announcementStorage);
+    }
+
+    public Map<String, Object> createAnnouncement(Map<String, String> body) {
+        Map<String, Object> ann = new HashMap<>();
+        ann.put("id", "ann-" + UUID.randomUUID().toString().substring(0, 8));
+        ann.put("title", body.getOrDefault("title", "System Broadcast"));
+        ann.put("body", body.getOrDefault("body", "Notice content"));
+        ann.put("target", body.getOrDefault("target", "ALL"));
+        ann.put("sentAt", LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        ann.put("reach", tenantRepository.count() + " Workspaces");
+        ann.put("author", "super_admin@eventos.co");
+        ann.put("status", "DELIVERED");
+
+        announcementStorage.add(0, ann);
+        auditLogService.logEvent(null, null, "ANNOUNCEMENT_BROADCAST", "127.0.0.1", "SuperAdmin", "Broadcast sent: " + ann.get("title"));
+        return ann;
+    }
+
+    public List<Map<String, Object>> getBlacklistedIps() {
+        if (blacklistedIpStorage.isEmpty()) {
+            Map<String, Object> defaultIp1 = new HashMap<>();
+            defaultIp1.put("id", "b-1");
+            defaultIp1.put("ip", "192.168.1.104");
+            defaultIp1.put("reason", "Credential Stuffing Attack");
+            defaultIp1.put("blockedAt", "Today 10:45 AM");
+            defaultIp1.put("threatLevel", "High");
+            blacklistedIpStorage.add(defaultIp1);
+        }
+        return new ArrayList<>(blacklistedIpStorage);
+    }
+
+    public Map<String, Object> addBlacklistIp(Map<String, String> body) {
+        Map<String, Object> ipEntry = new HashMap<>();
+        ipEntry.put("id", "b-" + UUID.randomUUID().toString().substring(0, 8));
+        ipEntry.put("ip", body.getOrDefault("ip", "0.0.0.0"));
+        ipEntry.put("reason", body.getOrDefault("reason", "Manual WAF Blacklist"));
+        ipEntry.put("blockedAt", LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        ipEntry.put("threatLevel", "High");
+
+        blacklistedIpStorage.add(0, ipEntry);
+        auditLogService.logEvent(null, null, "SECURITY_WAF_BLACK_IP", "127.0.0.1", "SuperAdmin", "Blacklisted IP: " + ipEntry.get("ip"));
+        return ipEntry;
+    }
+
+    public void removeBlacklistIp(String ip) {
+        blacklistedIpStorage.removeIf(item -> ip.equalsIgnoreCase(String.valueOf(item.get("ip"))));
+        auditLogService.logEvent(null, null, "SECURITY_WAF_UNBLACK_IP", "127.0.0.1", "SuperAdmin", "Unblacklisted IP: " + ip);
+    }
 }

@@ -153,10 +153,10 @@ export default function PortalInvoicesPage() {
               <div
                 key={invoice.id}
                 onClick={() => setSelectedInvoice(invoice)}
-                className="p-4.5 border border-zinc-800 hover:border-purple-650/45 bg-[#111113]/30 rounded-2xl transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:shadow shadow-purple-500/5"
+                className="p-4.5 border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.02] hover:border-purple-500/20 backdrop-blur-md rounded-2xl transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:shadow shadow-purple-500/5 duration-300"
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="h-9 w-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 shrink-0 group-hover:text-purple-400 group-hover:border-purple-600/35 transition-all">
+                  <div className="h-9 w-9 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-center text-zinc-400 shrink-0 group-hover:text-purple-400 group-hover:border-purple-550/20 transition-all">
                     <FileSpreadsheet size={16} />
                   </div>
                   <div>
@@ -167,7 +167,7 @@ export default function PortalInvoicesPage() {
                           ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20"
                           : invoice.status === "OVERDUE"
                           ? "bg-red-500/10 text-red-400 border-red-500/20"
-                          : "bg-zinc-800 text-zinc-450 border-zinc-750"
+                          : "bg-white/[0.04] text-zinc-450 border-white/[0.05]"
                       }`}>
                         {invoice.status}
                       </span>
@@ -191,7 +191,7 @@ export default function PortalInvoicesPage() {
       <div className="space-y-6">
         
         {/* Cleared vs Outstanding Progress Gauge */}
-        <div className="bg-[#111113]/60 border border-zinc-805 p-5 rounded-2xl space-y-4">
+        <div className="bg-white/[0.01] border border-white/[0.04] p-5 rounded-2xl space-y-4 shadow-sm backdrop-blur-md">
           <span className="text-[9.5px] font-black text-zinc-550 uppercase tracking-wider block">Contract Value cleared</span>
           
           <div className="flex items-center gap-4">
@@ -220,8 +220,8 @@ export default function PortalInvoicesPage() {
         </div>
 
         {/* Clear Reference Submission Desk */}
-        <div className="p-5 border border-zinc-800 bg-[#111113]/40 rounded-2xl space-y-4 relative">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
+        <div className="p-5 border border-white/[0.04] bg-white/[0.01] rounded-2xl space-y-4 relative shadow-sm backdrop-blur-md">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
 
           <div>
             <h4 className="text-xs font-black text-zinc-350 uppercase tracking-widest block">Log Deposit Reference</h4>
@@ -347,7 +347,7 @@ export default function PortalInvoicesPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-2xl shadow-2xl p-6 relative overflow-hidden"
             >
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
 
               <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4 z-10 relative">
                 <h2 id="modal-title" className="text-xs font-black text-white flex items-center gap-2">

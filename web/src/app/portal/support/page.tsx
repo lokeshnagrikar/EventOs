@@ -229,7 +229,7 @@ export default function PortalSupportPage() {
 
         {/* Raise Ticket Form */}
         <div className="p-5 border border-zinc-800 bg-[#111113]/40 rounded-2xl space-y-4 relative">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
 
           <div>
             <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-400">Submit Assistance Ticket</h3>

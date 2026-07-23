@@ -30,7 +30,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 5. Seed default admin user (password: 'admin123', BCrypt hashed)
 INSERT INTO users (id, first_name, last_name, email, password_hash, status, is_deleted) VALUES
-('e5afcc88-5c4b-4df8-bb6d-6bb9bd380333', 'SaaS', 'Developer', 'admin@eventos.com', '$2a$10$T8Z.1i/sZkM8l5t9iLhS1.yZ9Kz5f3PzVpU9tM1F2O7mYw5mJzM/O', 'ACTIVE', FALSE)
+('e5afcc88-5c4b-4df8-bb6d-6bb9bd380333', 'SaaS', 'Developer', 'admin@eventos.com', '$2a$12$K5PbXeTkRuCkmLqtlXmZQegsXWQIghasY/iNKXY4kyEsEe3dpdr5O', 'ACTIVE', FALSE)
 ON CONFLICT (email) DO NOTHING;
 
 -- 6. Seed user membership to Platform Workspace under the SUPER_ADMIN role

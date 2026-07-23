@@ -1,51 +1,113 @@
-const CACHE_NAME = "eventos-cache-v1";
-const ASSETS = [
+const CACHE_NAME = "eventos-pwa-v2";
+const DYNAMIC_CACHE = "eventos-dynamic-v2";
+
+const STATIC_ASSETS = [
   "/",
+  "/dashboard",
+  "/events",
+  "/bookings",
   "/manifest.json"
 ];
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(
+// Install Event - Pre-cache critical App Shell
+self.addEventListener("install", (event) => {
+  event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
+      console.log("[PWA ServiceWorker] Pre-caching static App Shell");
+      return cache.addAll(STATIC_ASSETS);
+    }).then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
+// Activate Event - Clean up stale caches
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (key !== CACHE_NAME && key !== DYNAMIC_CACHE) {
+            console.log("[PWA ServiceWorker] Removing old cache:", key);
             return caches.delete(key);
           }
         })
       );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// Fetch Event - Network First with Cache Fallback for API data & Stale-While-Revalidate for Assets
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  if (request.method !== "GET") return;
+  if (url.protocol.startsWith("chrome-extension")) return;
+
+  // 1. API Calls Strategy (Network First -> Fallback to Cache)
+  if (url.pathname.includes("/api/") || url.pathname.includes("/auth/")) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          console.log("[PWA ServiceWorker] Network failed, serving API data from cache:", request.url);
+          return caches.match(request);
+        })
+    );
+    return;
+  }
+
+  // 2. Static Assets & HTML Pages Strategy (Cache First -> Network Fallback)
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        // Fetch fresh version in background (Stale-While-Revalidate)
+        fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse));
+          }
+        }).catch(() => {});
+        return cachedResponse;
+      }
+
+      return fetch(request)
+        .then((networkResponse) => {
+          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== "basic") {
+            return networkResponse;
+          }
+          const responseToCache = networkResponse.clone();
+          caches.open(DYNAMIC_CACHE).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+          return networkResponse;
+        })
+        .catch(() => {
+          // Fallback to root html for page navigations when offline
+          if (request.headers.get("accept")?.includes("text/html")) {
+            return caches.match("/dashboard") || caches.match("/");
+          }
+        });
     })
   );
 });
 
-self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET") return;
-  
-  // Skip caching API calls or web socket connections
-  if (e.request.url.includes("/api/") || e.request.url.includes("webpack") || e.request.url.startsWith("chrome-extension")) {
-    return;
+// Background Sync Event (Sync offline check-ins & mutations)
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-offline-checkins") {
+    console.log("[PWA ServiceWorker] Triggering background sync for offline check-ins...");
+    event.waitUntil(
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: "TRIGGER_OFFLINE_SYNC" });
+        });
+      })
+    );
   }
-
-  e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(e.request).catch((err) => {
-        const acceptHeader = e.request.headers.get("accept");
-        if (acceptHeader && acceptHeader.includes("text/html")) {
-          return caches.match("/");
-        }
-        throw err;
-      });
-    })
-  );
 });

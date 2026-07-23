@@ -1,114 +1,133 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
-import { Check } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Check, Sparkles, Zap, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BorderBeam } from "@/components/ui/border-beam";
+import { SparklesCore } from "@/components/ui/sparkles";
+import { cn } from "@/lib/utils";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
+
+interface Plan {
+  name: string;
+  desc: string;
+  monthlyPrice: number | null;
+  annualPrice: number | null;
+  cta: string;
+  popular?: boolean;
+  features: string[];
+}
+
+const plans: Plan[] = [
+  {
+    name: "Starter",
+    desc: "Perfect for independent planners managing multiple event schedules.",
+    monthlyPrice: 1999,
+    annualPrice: 1599,
+    cta: "Start Free Trial",
+    popular: false,
+    features: [
+      "5 Active Events",
+      "2 Team seats included",
+      "20 GB High-res media storage",
+      "Milestone payments clearing",
+      "Automated client contracts",
+      "Standard email support queue"
+    ]
+  },
+  {
+    name: "Professional",
+    desc: "Best value for active agencies & growing event organizations.",
+    monthlyPrice: 5999,
+    annualPrice: 4799,
+    cta: "Start Free Trial",
+    popular: true,
+    features: [
+      "Everything in Starter, plus:",
+      "20 Active Events",
+      "5 Team seats included",
+      "100 GB High-res media storage",
+      "EventOS AI Operations Co-pilot",
+      "Interactive custom quotes editor",
+      "Priority support queue SLA"
+    ]
+  },
+  {
+    name: "Enterprise",
+    desc: "Advanced security & unlimited scale for large production houses.",
+    monthlyPrice: 11999,
+    annualPrice: 9599,
+    cta: "Contact Sales",
+    popular: false,
+    features: [
+      "Everything in Professional, plus:",
+      "Unlimited Active Events & Seats",
+      "500 GB+ Dedicated AWS storage",
+      "Custom white-labeled domains",
+      "Developer API & webhooks access",
+      "24/7 Dedicated account manager"
+    ]
+  }
+];
+
+const PricingSwitch = ({ isYearly, onToggle }: { isYearly: boolean; onToggle: (yearly: boolean) => void }) => {
+  return (
+    <div className="flex justify-center">
+      <div className="relative z-10 mx-auto flex w-fit rounded-full bg-neutral-900/90 border border-white/10 p-1.5 backdrop-blur-xl shadow-2xl">
+        <button
+          onClick={() => onToggle(false)}
+          className={cn(
+            "relative z-10 w-fit h-9 rounded-full sm:px-6 px-4 flex items-center justify-center font-medium text-xs transition-colors cursor-pointer",
+            !isYearly ? "text-white" : "text-zinc-400 hover:text-zinc-200"
+          )}
+        >
+          {!isYearly && (
+            <motion.span
+              layoutId="pricing-switch"
+              className="absolute top-0 left-0 h-9 w-full rounded-full border border-blue-400/40 shadow-[0_0_20px_rgba(59,130,246,0.5)] bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600"
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+            />
+          )}
+          <span className="relative z-10 font-bold">Monthly</span>
+        </button>
+
+        <button
+          onClick={() => onToggle(true)}
+          className={cn(
+            "relative z-10 w-fit h-9 rounded-full sm:px-6 px-4 flex items-center justify-center font-medium text-xs transition-colors cursor-pointer",
+            isYearly ? "text-white" : "text-zinc-400 hover:text-zinc-200"
+          )}
+        >
+          {isYearly && (
+            <motion.span
+              layoutId="pricing-switch"
+              className="absolute top-0 left-0 h-9 w-full rounded-full border border-blue-400/40 shadow-[0_0_20px_rgba(59,130,246,0.5)] bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600"
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+            />
+          )}
+          <span className="relative z-10 flex items-center gap-2 font-bold">
+            Yearly
+            <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+              SAVE 20%
+            </span>
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export function Pricing() {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
-
-  const plans = [
-    {
-      name: "Free",
-      desc: "For newly launched event coordinators getting off the ground.",
-      monthlyPrice: 0,
-      annualPrice: 0,
-      cta: "Start Free",
-      popular: false,
-      features: [
-        "2 Active Events",
-        "1 Team seat",
-        "5 GB Media storage quota",
-        "Standard client portal access",
-        "Standard email invoices",
-      ],
-      border: "border-zinc-850 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
-    },
-    {
-      name: "Starter",
-      desc: "Perfect for independent planners managing multiple schedules.",
-      monthlyPrice: 1999,
-      annualPrice: 1599,
-      cta: "Start Free Trial",
-      popular: false,
-      features: [
-        "5 Active Events",
-        "2 Team seats",
-        "20 GB Media storage quota",
-        "Milestone payments clearing",
-        "Automated contract signing",
-        "Standard email support",
-      ],
-      border: "border-zinc-850 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
-    },
-    {
-      name: "Professional",
-      desc: "Our most popular package for active event organizations.",
-      monthlyPrice: 5999,
-      annualPrice: 4799,
-      cta: "Start Free Trial",
-      popular: true,
-      features: [
-        "20 Active Events",
-        "5 Team seats",
-        "100 GB Media storage quota",
-        "AI Assistant operations advisor",
-        "Interactive custom quotes editor",
-        "Priority support queue SLA",
-      ],
-      border: "border-purple-500/20 bg-zinc-950/80 backdrop-blur-lg shadow-[0_0_50px_rgba(139,92,246,0.08)]",
-    },
-    {
-      name: "Business",
-      desc: "For established production houses requiring custom domains.",
-      monthlyPrice: 11999,
-      annualPrice: 9599,
-      cta: "Start Free Trial",
-      popular: false,
-      features: [
-        "50 Active Events",
-        "15 Team seats",
-        "500 GB Media storage quota",
-        "Custom white-labeled domains",
-        "Developer API & webhooks access",
-        "24/7 dedicated support channels",
-      ],
-      border: "border-zinc-850 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
-    },
-    {
-      name: "Enterprise",
-      desc: "Custom structures for global scale agency workloads.",
-      monthlyPrice: null,
-      annualPrice: null,
-      cta: "Contact Sales",
-      popular: false,
-      features: [
-        "Unlimited Active Events",
-        "Unlimited Team seats",
-        "Dedicated AWS storage assets",
-        "Custom AI training parameters",
-        "Multi-tenant tenant isolation",
-        "Dedicated SLA accounts manager",
-      ],
-      border: "border-zinc-850 bg-zinc-950/40 backdrop-blur-md hover:border-zinc-700/80",
-    },
-  ];
-
-  const formatPrice = (price: number | null) => {
-    if (price === null) return "Custom";
-    return `₹${price.toLocaleString()}`;
-  };
+  const [isYearly, setIsYearly] = useState(false);
+  const pricingRef = useRef<HTMLDivElement>(null);
 
   const openModal = useAuthModalStore((state) => state.openModal);
 
-  const handleCtaClick = (planName: string, monthlyPrice: number | null) => {
+  const handleCtaClick = (planName: string) => {
     analytics.trackCta(`pricing_${planName.toLowerCase()}`, planName, "pricing");
     if (planName !== "Enterprise") {
       openModal("register");
@@ -117,135 +136,143 @@ export function Pricing() {
     }
   };
 
+  const formatPrice = (price: number | null) => {
+    if (price === null) return "Custom";
+    return `₹${price.toLocaleString()}`;
+  };
+
   return (
-    <section className="py-24 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden" id="pricing">
-      {/* Background gradients */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-pink-500/5 to-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
+    <section
+      className="min-h-screen py-24 mx-auto relative bg-[#09090b] overflow-hidden border-b border-white/5 font-sans"
+      id="pricing"
+      ref={pricingRef}
+    >
+      {/* Sparkles particle background behind header */}
+      <div className="absolute top-0 left-0 right-0 h-96 w-full overflow-hidden [mask-image:radial-gradient(50%_50%,white,transparent)] pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:70px_80px]" />
+        <SparklesCore
+          particleDensity={1200}
+          speed={0.8}
+          particleColor="#A855F7"
+          className="absolute inset-x-0 bottom-0 h-full w-full opacity-60"
+        />
+      </div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <span className="text-xs font-bold tracking-widest text-[#8B5CF6] uppercase block">
-            Flexible Pricing
-          </span>
-          <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-heading">
-            Transparent pricing for teams of all sizes.
-          </h3>
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-            All plans include tenant database isolation, secure SSL connections, and core dashboard functionality. Choose a tier to scale your operations.
-          </p>
+      {/* Blue Glow Radial Blur Blob */}
+      <div
+        className="absolute top-0 left-[10%] right-[10%] w-[80%] h-full pointer-events-none z-0"
+        style={{
+          backgroundImage: `radial-gradient(circle at 50% 25%, rgba(49, 49, 245, 0.25) 0%, transparent 65%)`,
+        }}
+      />
 
-          {/* Billing Cycle Switcher */}
-          <div className="pt-6 flex justify-center">
-            <div className="flex bg-zinc-950/80 border border-zinc-900 p-1 rounded-xl items-center">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  billingCycle === "monthly"
-                    ? "bg-zinc-900 text-white shadow-inner"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle("annually")}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  billingCycle === "annually"
-                    ? "bg-zinc-900 text-white shadow-inner"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                <span>Annually</span>
-                <span className="bg-purple-500/20 text-purple-400 text-[9px] px-1.5 py-0.5 rounded-full font-extrabold uppercase">
-                  -20%
-                </span>
-              </button>
-            </div>
-          </div>
+      {/* Header Container */}
+      <article className="text-center mb-12 pt-8 max-w-3xl mx-auto space-y-4 relative z-10 px-6">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-widest backdrop-blur-md">
+          <Sparkles size={13} className="text-blue-400" /> Transparent Pricing
         </div>
 
-        {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 items-stretch max-w-[90rem] mx-auto">
-          {plans.map((plan, idx) => (
+        <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight font-heading leading-tight">
+          Plans tailored for your event business
+        </h2>
+
+        <p className="text-zinc-400 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
+          Trusted by event agencies and coordinators worldwide. Choose a tier to unlock automation, client portals, and multi-tenant scaling.
+        </p>
+
+        <div className="pt-4">
+          <PricingSwitch isYearly={isYearly} onToggle={setIsYearly} />
+        </div>
+      </article>
+
+      {/* Pricing Cards Grid */}
+      <div className="grid md:grid-cols-3 max-w-6xl gap-6 px-6 py-4 mx-auto relative z-10 items-stretch">
+        {plans.map((plan, index) => {
+          const price = isYearly ? plan.annualPrice : plan.monthlyPrice;
+
+          return (
             <motion.div
               key={plan.name}
-              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.4, delay: shouldReduceMotion ? 0 : idx * 0.1 }}
-              className={`rounded-2xl border p-6 flex flex-col justify-between relative transition-all duration-300 ${plan.border}`}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className={cn(
+                "relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-500 border backdrop-blur-2xl",
+                plan.popular
+                  ? "bg-gradient-to-b from-neutral-900/90 via-neutral-900/95 to-black border-blue-500/60 shadow-[0_0_80px_rgba(49,49,245,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] z-20 scale-[1.02]"
+                  : "bg-neutral-900/40 hover:bg-neutral-900/70 border-white/10 hover:border-white/20 shadow-xl z-10"
+              )}
             >
-              {/* Dynamic pulsing glow behind popular card */}
+              {/* Popular Badge */}
               {plan.popular && (
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur-md opacity-10 animate-pulse pointer-events-none z-0" />
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-[10px] font-black uppercase py-1 px-4 rounded-full tracking-widest shadow-lg shadow-blue-600/40 border border-blue-400/40 flex items-center gap-1.5">
+                  <Zap size={11} className="fill-white" /> Most Popular
+                </div>
               )}
 
-              {/* BorderBeam decoration on Growth Card */}
-              {plan.popular && !shouldReduceMotion && (
-                <BorderBeam size={200} duration={12} borderWidth={1.5} colorFrom="#8B5CF6" colorTo="#EC4899" />
-              )}
-
-              {/* Hot badge */}
-              {plan.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold uppercase py-1 px-3.5 rounded-full tracking-wider shadow-md z-10">
-                  Most Popular
-                </span>
-              )}
-
-              {/* Price Details */}
-              <div className="space-y-6 text-left">
-                <div className="space-y-2">
-                  <h4 className="text-xl font-bold text-white font-heading">{plan.name}</h4>
-                  <p className="text-zinc-500 text-xs leading-relaxed min-h-[40px]">{plan.desc}</p>
+              <div>
+                {/* Header */}
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-white font-heading">{plan.name}</h3>
+                  <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed min-h-[36px]">{plan.desc}</p>
                 </div>
 
-                <div className="flex items-baseline gap-1 pt-2">
-                  <span className="text-3xl sm:text-4xl font-black text-white tracking-tight font-heading">
-                    {billingCycle === "monthly"
-                      ? formatPrice(plan.monthlyPrice)
-                      : formatPrice(plan.annualPrice)}
-                  </span>
-                  {plan.monthlyPrice !== null && (
-                    <span className="text-zinc-500 text-xs">/mo</span>
+                {/* Price Display */}
+                <div className="mb-6 pb-6 border-b border-white/10">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl sm:text-5xl font-black text-white font-heading tracking-tight">
+                      {formatPrice(price)}
+                    </span>
+                    {price !== null && (
+                      <span className="text-zinc-400 text-xs font-medium">
+                        /{isYearly ? "month" : "month"}
+                      </span>
+                    )}
+                  </div>
+                  {isYearly && price !== null && (
+                    <p className="text-[10px] text-emerald-400 font-semibold mt-1">
+                      Billed annually (₹{(price * 12).toLocaleString()}/yr)
+                    </p>
                   )}
                 </div>
 
-                {billingCycle === "annually" && plan.monthlyPrice !== null && plan.monthlyPrice !== 0 && (
-                  <span className="text-[10px] bg-purple-500/10 border border-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-semibold block w-fit">
-                    Billed annually (₹{(plan.annualPrice! * 12).toLocaleString()}/yr)
-                  </span>
-                )}
-
-                <div className="h-px bg-zinc-900" />
-
-                {/* Features List */}
-                <ul className="space-y-3" aria-label={`Features of ${plan.name} plan`}>
-                  {plan.features.map((feat) => (
-                    <li key={feat} className="flex items-start gap-2.5 text-xs text-zinc-300">
-                      <Check className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
+                {/* Features */}
+                <div className="space-y-3.5 mb-8">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                    {plan.features[0]}
+                  </h4>
+                  <ul className="space-y-2.5">
+                    {plan.features.slice(1).map((feature, fIdx) => (
+                      <li key={fIdx} className="flex items-start gap-2.5 text-xs text-zinc-300">
+                        <span className="h-4 w-4 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                          <Check size={10} className="text-blue-400 stroke-[3]" />
+                        </span>
+                        <span className="leading-tight">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
               {/* Action Button */}
-              <div className="pt-8">
-                <Button
-                  onClick={() => handleCtaClick(plan.name, plan.monthlyPrice)}
-                  className={`w-full py-6 rounded-xl font-bold text-sm transition-all duration-300 ${
+              <div>
+                <button
+                  onClick={() => handleCtaClick(plan.name)}
+                  className={cn(
+                    "w-full py-3.5 px-6 rounded-2xl font-bold text-sm transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group",
                     plan.popular
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md active:scale-[0.98]"
-                      : "bg-zinc-900 hover:bg-zinc-850 text-zinc-200 border border-zinc-800"
-                  }`}
+                      ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-600/30 border border-blue-400/40 hover:scale-[1.02] active:scale-[0.98]"
+                      : "bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98]"
+                  )}
                 >
-                  {plan.cta}
-                </Button>
+                  <span>{plan.cta}</span>
+                  <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
             </motion.div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </section>
   );
