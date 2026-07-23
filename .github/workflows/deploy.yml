@@ -80,10 +80,10 @@ jobs:
           mvn clean test -B
 
       # Setup Node environment for Next.js frontend
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
 
