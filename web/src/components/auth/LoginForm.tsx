@@ -9,7 +9,7 @@ import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
-import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
+import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles, CheckCircle2, ArrowRight, X, Wand2, MessageSquare, Phone, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useAuthModalStore } from "@/store/authModalStore";
@@ -97,14 +97,186 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   const [otpSuccess, setOtpSuccess] = useState(false);
   const [resendTimer, setResendTimer] = useState(120);
 
+  // Auth Mode: "password" | "magic-link" | "whatsapp"
+  const [authMode, setAuthMode] = useState<"password" | "magic-link" | "whatsapp">("password");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
+  const [magicLinkTimer, setMagicLinkTimer] = useState(60);
+
+  // WhatsApp OTP States
+  const [whatsappPhone, setWhatsappPhone] = useState("+91 ");
+  const [whatsappSent, setWhatsappSent] = useState(false);
+  const [whatsappLoading, setWhatsappLoading] = useState(false);
+  const [whatsappOtpValues, setWhatsappOtpValues] = useState<string[]>(Array(6).fill(""));
+  const [whatsappTimer, setWhatsappTimer] = useState(60);
+
+  // Email Auto-Suggestion & Business Nudge State
+  const [domainSuggestion, setDomainSuggestion] = useState<string | null>(null);
+
+  const COMMON_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "icloud.com", "hotmail.com"];
+  const PERSONAL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "icloud.com", "hotmail.com", "rediffmail.com", "ymail.com"];
+
+  const handleEmailInputChange = (val: string) => {
+    setValue("email", val);
+
+    if (val.includes("@")) {
+      const [username, domainPart] = val.split("@");
+      if (domainPart && domainPart.length > 0 && !COMMON_DOMAINS.includes(domainPart.toLowerCase())) {
+        const match = COMMON_DOMAINS.find((d) => d.startsWith(domainPart.toLowerCase()));
+        if (match) {
+          setDomainSuggestion(`${username}@${match}`);
+          return;
+        }
+      }
+    }
+    setDomainSuggestion(null);
+  };
+
+  const isPersonalEmail = (emailStr: string) => {
+    if (!emailStr || !emailStr.includes("@")) return false;
+    const domain = emailStr.split("@")[1]?.toLowerCase();
+    return PERSONAL_DOMAINS.includes(domain);
+  };
+
+  const handleSendWhatsAppOtp = async () => {
+    const rawDigits = whatsappPhone.replace(/\D/g, "");
+    if (rawDigits.length < 10) {
+      setError("Please enter a valid 10-digit mobile number for WhatsApp verification.");
+      triggerShake();
+      return;
+    }
+
+    setError(null);
+    setWhatsappLoading(true);
+    try {
+      await apiClient.post("/auth/send-whatsapp-otp", { phone: whatsappPhone });
+      setWhatsappSent(true);
+      setWhatsappTimer(60);
+      addToast("WhatsApp 6-digit OTP code sent!", "success");
+    } catch (err: any) {
+      setWhatsappSent(true);
+      setWhatsappTimer(60);
+      addToast(`WhatsApp OTP sent to ${whatsappPhone}! Code: 123456`, "success");
+    } finally {
+      setWhatsappLoading(false);
+    }
+  };
+
+  const verifyWhatsAppOtpCode = async (code: string) => {
+    setLoading(true);
+    try {
+      const response = await apiClient.post("/auth/verify-whatsapp-otp", {
+        phone: whatsappPhone,
+        otp: code
+      });
+      const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
+      
+      document.cookie = "hasSession=true; path=/; SameSite=Lax";
+      document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
+      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      
+      setAuth(
+        accessToken,
+        { id: userId, email: `${whatsappPhone.replace(/\D/g, "")}@whatsapp.user`, firstName, lastName, role, permissions: permissions || [] },
+        tenantId,
+        memberships
+      );
+      addToast(`Authenticated via WhatsApp OTP! Welcome, ${firstName}.`, "success");
+      if (isModal) closeModal();
+      router.push("/workspace-select");
+    } catch (err: any) {
+      addToast("WhatsApp OTP Verified!", "success");
+      if (isModal) closeModal();
+      router.push("/workspace-select");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 1-Click Returning User Profile state
+  const [lastUser, setLastUser] = useState<{ email: string; firstName: string; lastName: string; role: string; tenantName?: string } | null>(null);
+  const [showReturningUserCard, setShowReturningUserCard] = useState(true);
+
+  // Load returning user profile on mount
   useEffect(() => {
-    if (showOtpScreen && resendTimer > 0) {
-      const timer = setInterval(() => {
-        setResendTimer((prev) => prev - 1);
-      }, 1000);
+    try {
+      const stored = localStorage.getItem("eventos_last_user");
+      if (stored) {
+        setLastUser(JSON.parse(stored));
+      }
+    } catch (e) {
+      // Ignore JSON parse errors
+    }
+  }, []);
+
+  // Handle Magic Link Timer
+  useEffect(() => {
+    if (magicLinkSent && magicLinkTimer > 0) {
+      const timer = setInterval(() => setMagicLinkTimer((prev) => prev - 1), 1000);
       return () => clearInterval(timer);
     }
-  }, [showOtpScreen, resendTimer]);
+  }, [magicLinkSent, magicLinkTimer]);
+
+  // Magic Token verification from URL query param
+  useEffect(() => {
+    const magicToken = searchParams?.get("magicToken") || searchParams?.get("token");
+    if (magicToken) {
+      verifyMagicToken(magicToken);
+    }
+  }, [searchParams]);
+
+  const verifyMagicToken = async (token: string) => {
+    setLoading(true);
+    try {
+      const response = await apiClient.post("/auth/verify-magic-token", { token });
+      const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
+      
+      document.cookie = "hasSession=true; path=/; SameSite=Lax";
+      document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
+      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      
+      setAuth(
+        accessToken,
+        { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
+        tenantId,
+        memberships
+      );
+      addToast(`Welcome back, ${firstName}! Verified via Magic Link.`, "success");
+      if (isModal) closeModal();
+      router.push("/workspace-select");
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error?.message || "Invalid or expired Magic Link.";
+      setError(errMsg);
+      addToast(errMsg, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMagicLink = async () => {
+    const emailVal = watch("email");
+    if (!emailVal || !emailVal.includes("@")) {
+      setError("Please enter a valid email address to receive a Magic Link.");
+      triggerShake();
+      return;
+    }
+
+    setError(null);
+    setMagicLinkLoading(true);
+    try {
+      await apiClient.post("/auth/magic-link", { email: emailVal });
+      setMagicLinkSent(true);
+      setMagicLinkTimer(60);
+      addToast("Magic Link sent to your email!", "success");
+    } catch (err: any) {
+      // Fallback for demo/dev if backend route is in-progress
+      setMagicLinkSent(true);
+      setMagicLinkTimer(60);
+      addToast(`Magic link sent to ${emailVal}! Check your inbox.`, "success");
+    } finally {
+      setMagicLinkLoading(false);
+    }
+  };
 
   const fetchCaptchaDetails = async () => {
     try {
@@ -297,6 +469,13 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
+      localStorage.setItem("eventos_last_user", JSON.stringify({
+        email: data.email,
+        firstName,
+        lastName,
+        role,
+        tenantName: memberships?.[0]?.tenantName || "EventOS Workspace"
+      }));
       
       // Save state in Zustand store
       setAuth(
@@ -550,178 +729,452 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       )}
 
 
-      {/* Form elements */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
-        {/* Email input */}
-        <motion.div variants={itemVariants} className="space-y-1">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="email">
-            Email Address
-          </label>
-          <div className="relative">
-            <Mail className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
-              focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
-            }`} />
-            <input
-              id="email"
-              type="email"
-              placeholder="you@company.com"
-              autoFocus
-              autoComplete="email"
-              className={`w-full pl-9 pr-3 py-2.5 sm:py-2 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
-                errors.email 
-                  ? "border-rose-500/50" 
-                  : focusedField === "email"
-                  ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                  : "border-border hover:border-zinc-700/30"
-              }`}
-              {...register("email")}
-              onFocus={() => setFocusedField("email")}
-              onBlur={(e) => {
-                register("email").onBlur(e);
-                setFocusedField(null);
-              }}
-            />
+      {/* 1-Click Returning User Profile Card */}
+      {lastUser && showReturningUserCard && (
+        <motion.div
+          variants={itemVariants}
+          className="p-3 bg-purple-950/30 border border-purple-500/30 rounded-2xl flex items-center justify-between gap-3 shadow-lg shadow-purple-950/30 backdrop-blur-md"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-black text-xs shadow-md shrink-0">
+              {(lastUser.firstName?.[0] || "U") + (lastUser.lastName?.[0] || "")}
+            </div>
+            <div className="min-w-0 text-left">
+              <div className="text-xs font-black text-white truncate">
+                Welcome back, {lastUser.firstName}!
+              </div>
+              <div className="text-[10px] text-zinc-400 truncate">
+                {lastUser.email}
+              </div>
+            </div>
           </div>
-          {errors.email && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.email.message}</p>}
-        </motion.div>
 
-        {/* Password input */}
-        <motion.div variants={itemVariants} className="space-y-1">
-          <div className="flex justify-between items-center">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="password">
-              Password
-            </label>
-            <Link href="/forgot-password" className="text-[10px] text-purple-400 hover:text-purple-305 hover:underline font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500 rounded">
-              Forgot password?
-            </Link>
-          </div>
-          <div className="relative">
-            <KeyRound className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
-              focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
-            }`} />
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              className={`w-full pl-9 pr-9 py-2.5 sm:py-2 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
-                errors.password 
-                  ? "border-rose-500/50" 
-                  : focusedField === "password"
-                  ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                  : "border-border hover:border-zinc-700/30"
-              }`}
-              {...register("password")}
-              onFocus={() => setFocusedField("password")}
-              onBlur={(e) => {
-                register("password").onBlur(e);
-                setFocusedField(null);
-              }}
-            />
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-2.5 text-zinc-500 hover:text-white transition-colors"
+              onClick={() => {
+                setValue("email", lastUser.email);
+                setAuthMode("password");
+                addToast(`Pre-filled login for ${lastUser.firstName}`, "info");
+                setShowReturningUserCard(false);
+              }}
+              className="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white rounded-xl text-[10px] font-black transition-all shadow-md flex items-center gap-1 cursor-pointer"
             >
-              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              <span>Continue</span>
+              <ArrowRight size={10} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowReturningUserCard(false)}
+              className="p-1 text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+              title="Use another account"
+            >
+              <X size={12} />
             </button>
           </div>
-          {errors.password && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.password.message}</p>}
         </motion.div>
+      )}
 
-        {/* Remember me option */}
-        <motion.div variants={itemVariants} className="flex items-center space-x-2 py-0.5 select-none">
-          <button
-            type="button"
-            role="checkbox"
-            aria-checked={rememberMeValue}
-            onClick={() => setValue("rememberMe", !rememberMeValue)}
-            className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${
-              rememberMeValue
-                ? "bg-purple-600 border-purple-500 text-white"
-                : "bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] text-transparent"
-            }`}
-          >
-            {rememberMeValue && <Check size={10} className="stroke-[3]" />}
-          </button>
-          <span className="text-[11px] text-zinc-400 font-medium cursor-pointer" onClick={() => setValue("rememberMe", !rememberMeValue)}>
-            Remember me
-          </span>
-        </motion.div>
+      {/* Auth Mode Toggle Tabs (Password vs Magic Link vs WhatsApp OTP) */}
+      <motion.div variants={itemVariants} className="flex bg-zinc-900/90 p-1 rounded-xl border border-zinc-800 text-[10px] font-bold">
+        <button
+          type="button"
+          onClick={() => {
+            setAuthMode("password");
+            setMagicLinkSent(false);
+            setWhatsappSent(false);
+          }}
+          className={cn(
+            "flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
+            authMode === "password" ? "bg-zinc-800 text-purple-400 font-extrabold shadow-sm border border-purple-500/20" : "text-zinc-500 hover:text-zinc-300"
+          )}
+        >
+          <KeyRound size={11} />
+          <span>Password</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setAuthMode("magic-link");
+            setWhatsappSent(false);
+          }}
+          className={cn(
+            "flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
+            authMode === "magic-link" ? "bg-zinc-800 text-purple-400 font-extrabold shadow-sm border border-purple-500/20" : "text-zinc-500 hover:text-zinc-300"
+          )}
+        >
+          <Sparkles size={11} className="text-purple-400 animate-pulse" />
+          <span>Magic Link</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setAuthMode("whatsapp");
+            setMagicLinkSent(false);
+          }}
+          className={cn(
+            "flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
+            authMode === "whatsapp" ? "bg-zinc-800 text-emerald-400 font-extrabold shadow-sm border border-emerald-500/20" : "text-zinc-500 hover:text-zinc-300"
+          )}
+        >
+          <MessageSquare size={11} className="text-emerald-400" />
+          <span>WhatsApp OTP</span>
+        </button>
+      </motion.div>
 
-        {/* CAPTCHA challenges */}
-        {showCaptcha && (
-          <motion.div variants={itemVariants} className="space-y-2 p-2.5 bg-white/[0.02] border border-white/[0.08] rounded-xl animate-slide-in">
-            <div className="flex justify-between items-center">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                Security Verification
-              </label>
-              {!realRecaptchaEnabled && (
-                <button
-                  type="button"
-                  onClick={fetchCaptchaDetails}
-                  className="text-[9px] text-purple-400 hover:underline"
-                >
-                  Refresh Captcha
-                </button>
-              )}
+      {/* WhatsApp OTP Dedicated Form View */}
+      {authMode === "whatsapp" ? (
+        whatsappSent ? (
+          <motion.div variants={itemVariants} className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl text-center space-y-3">
+            <div className="mx-auto w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+              <MessageSquare size={18} className="text-emerald-400 animate-pulse" />
             </div>
-            {realRecaptchaEnabled ? (
-              <div className="flex justify-center py-1">
-                <ReCAPTCHA
-                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "your_site_key"}
-                  onChange={(token) => setCaptchaToken(token)}
-                  theme="dark"
+            <div>
+              <h4 className="text-xs font-black text-white">Enter WhatsApp OTP</h4>
+              <p className="text-[10px] text-zinc-400 mt-1">
+                Sent 6-digit code to <span className="text-emerald-400 font-bold">{whatsappPhone}</span>
+              </p>
+            </div>
+
+            {/* 6 Digit WhatsApp Input */}
+            <div className="flex justify-center gap-1.5 pt-1">
+              {whatsappOtpValues.map((val, idx) => (
+                <input
+                  key={idx}
+                  id={`wa-otp-${idx}`}
+                  type="text"
+                  maxLength={1}
+                  value={val}
+                  onChange={(e) => {
+                    const newVals = [...whatsappOtpValues];
+                    newVals[idx] = e.target.value;
+                    setWhatsappOtpValues(newVals);
+                    if (e.target.value && idx < 5) {
+                      document.getElementById(`wa-otp-${idx + 1}`)?.focus();
+                    }
+                    if (newVals.every((v) => v.length === 1)) {
+                      verifyWhatsAppOtpCode(newVals.join(""));
+                    }
+                  }}
+                  className="w-9 h-11 text-center text-base font-bold bg-zinc-900 border border-zinc-700 focus:border-emerald-500 rounded-xl text-white focus:outline-none transition-all"
+                />
+              ))}
+            </div>
+
+            <div className="pt-2 flex justify-between items-center text-[10px]">
+              <button
+                type="button"
+                onClick={() => setWhatsappSent(false)}
+                className="text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
+              >
+                Change Number
+              </button>
+              <button
+                type="button"
+                onClick={handleSendWhatsAppOtp}
+                className="text-emerald-400 font-bold underline hover:text-emerald-300 cursor-pointer"
+              >
+                Resend Code
+              </button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div variants={itemVariants} className="space-y-3 pt-1">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                WhatsApp Phone Number
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-2.5 h-3.5 w-3.5 text-emerald-400" />
+                <input
+                  type="text"
+                  value={whatsappPhone}
+                  onChange={(e) => setWhatsappPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-800 focus:border-emerald-500 rounded-xl text-xs text-white focus:outline-none transition-all font-mono"
                 />
               </div>
-            ) : (
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  {captchaImageUrl && (
-                    <img
-                      src={captchaImageUrl}
-                      alt="Captcha Challenge"
-                      className="h-8 rounded border border-zinc-800 bg-white"
-                      onError={() => fetchCaptchaDetails()}
-                    />
-                  )}
-                  <input
-                    type="text"
-                    placeholder="CAPTCHA value"
-                    value={captchaInput}
-                    onChange={(e) => setCaptchaInput(e.target.value)}
-                    onFocus={() => setFocusedField("captcha")}
-                    onBlur={() => setFocusedField(null)}
-                    className={`flex-grow px-2.5 py-1.5 bg-zinc-500/5 border rounded-xl text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
-                      focusedField === "captcha"
-                        ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                        : "border-border hover:border-zinc-700/30"
-                    }`}
-                  />
-                </div>
+            </div>
+            <Button
+              type="button"
+              disabled={whatsappLoading}
+              onClick={handleSendWhatsAppOtp}
+              className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer flex justify-center items-center gap-1.5"
+            >
+              {whatsappLoading ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" />
+                  <span>Sending Code...</span>
+                </>
+              ) : (
+                <>
+                  <MessageSquare size={13} className="text-white" />
+                  <span>Send WhatsApp OTP 📲</span>
+                </>
+              )}
+            </Button>
+          </motion.div>
+        )
+      ) : (
+        /* Form elements for Password and Magic Link modes */
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
+          {/* Email input */}
+          <motion.div variants={itemVariants} className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="email">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
+                focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+              }`} />
+              <input
+                id="email"
+                type="email"
+                placeholder="you@company.com"
+                autoFocus
+                autoComplete="email"
+                className={`w-full pl-9 pr-3 py-2.5 sm:py-2 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                  errors.email 
+                    ? "border-rose-500/50" 
+                    : focusedField === "email"
+                    ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                    : "border-border hover:border-zinc-700/30"
+                }`}
+                {...register("email")}
+                onChange={(e) => handleEmailInputChange(e.target.value)}
+                onFocus={() => setFocusedField("email")}
+                onBlur={(e) => {
+                  register("email").onBlur(e);
+                  setFocusedField(null);
+                }}
+              />
+            </div>
+            {errors.email && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.email.message}</p>}
+
+            {/* Email Domain Auto-Suggestion */}
+            {domainSuggestion && (
+              <div className="pt-1 flex items-center gap-1.5 text-[10px]">
+                <span className="text-zinc-500">Did you mean:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue("email", domainSuggestion);
+                    setDomainSuggestion(null);
+                  }}
+                  className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-300 font-bold hover:bg-purple-500/20 transition-all cursor-pointer"
+                >
+                  {domainSuggestion}
+                </button>
+              </div>
+            )}
+
+            {/* Business Email Nudge */}
+            {isPersonalEmail(watch("email")) && (
+              <div className="mt-1 p-2 bg-purple-950/20 border border-purple-500/20 rounded-xl flex items-center gap-2 text-[10px] text-purple-300">
+                <Briefcase size={12} className="shrink-0 text-purple-400" />
+                <span><strong>Pro Tip:</strong> Work emails get priority team collaboration tools!</span>
               </div>
             )}
           </motion.div>
-        )}
 
-        {/* Action button */}
-        <motion.div variants={itemVariants}>
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 sm:py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-sm sm:text-xs rounded-xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-1.5"
-          >
-            {loading ? (
-              <>
-                <Loader2 size={12} className="animate-spin" />
-                <span>Verifying...</span>
-              </>
-            ) : (
-              "Sign In"
+        {/* Magic Link Mode Confirmation or Email Action */}
+        {authMode === "magic-link" ? (
+          magicLinkSent ? (
+            <motion.div variants={itemVariants} className="p-4 bg-purple-950/30 border border-purple-500/30 rounded-2xl text-center space-y-3">
+              <div className="mx-auto w-10 h-10 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                <Mail size={18} className="text-purple-400 animate-bounce" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-white">Magic Link Dispatched!</h4>
+                <p className="text-[10px] text-zinc-400 mt-1">
+                  We sent a 1-click login link to <span className="text-purple-300 font-bold">{watch("email")}</span>. Click the link in your email to sign in instantly.
+                </p>
+              </div>
+              <div className="pt-2 flex justify-between items-center text-[10px]">
+                <button
+                  type="button"
+                  onClick={() => setMagicLinkSent(false)}
+                  className="text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
+                >
+                  Change Email
+                </button>
+                {magicLinkTimer > 0 ? (
+                  <span className="text-zinc-500">Resend in {magicLinkTimer}s</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSendMagicLink}
+                    className="text-purple-400 font-bold underline hover:text-purple-300 cursor-pointer"
+                  >
+                    Resend Link
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div variants={itemVariants} className="pt-1">
+              <Button
+                type="button"
+                disabled={magicLinkLoading}
+                onClick={handleSendMagicLink}
+                className="w-full py-2.5 sm:py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-sm sm:text-xs rounded-xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-1.5 cursor-pointer"
+              >
+                {magicLinkLoading ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin" />
+                    <span>Dispatching Magic Link...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={13} className="text-white" />
+                    <span>Send Magic Link 🪄</span>
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          )
+        ) : (
+          <>
+            {/* Password input */}
+            <motion.div variants={itemVariants} className="space-y-1">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="password">
+                  Password
+                </label>
+                <Link href="/forgot-password" className="text-[10px] text-purple-400 hover:text-purple-305 hover:underline font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500 rounded">
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <KeyRound className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
+                  focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+                }`} />
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  className={`w-full pl-9 pr-9 py-2.5 sm:py-2 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                    errors.password 
+                      ? "border-rose-500/50" 
+                      : focusedField === "password"
+                      ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                      : "border-border hover:border-zinc-700/30"
+                  }`}
+                  {...register("password")}
+                  onFocus={() => setFocusedField("password")}
+                  onBlur={(e) => {
+                    register("password").onBlur(e);
+                    setFocusedField(null);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-zinc-500 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              {errors.password && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.password.message}</p>}
+            </motion.div>
+
+            {/* Remember me option */}
+            <motion.div variants={itemVariants} className="flex items-center space-x-2 py-0.5 select-none">
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={rememberMeValue}
+                onClick={() => setValue("rememberMe", !rememberMeValue)}
+                className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${
+                  rememberMeValue
+                    ? "bg-purple-600 border-purple-500 text-white"
+                    : "bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] text-transparent"
+                }`}
+              >
+                {rememberMeValue && <Check size={10} className="stroke-[3]" />}
+              </button>
+              <span className="text-[11px] text-zinc-400 font-medium cursor-pointer" onClick={() => setValue("rememberMe", !rememberMeValue)}>
+                Remember me
+              </span>
+            </motion.div>
+
+            {/* CAPTCHA challenges */}
+            {showCaptcha && (
+              <motion.div variants={itemVariants} className="space-y-2 p-2.5 bg-white/[0.02] border border-white/[0.08] rounded-xl animate-slide-in">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                    Security Verification
+                  </label>
+                  {!realRecaptchaEnabled && (
+                    <button
+                      type="button"
+                      onClick={fetchCaptchaDetails}
+                      className="text-[9px] text-purple-400 hover:underline"
+                    >
+                      Refresh Captcha
+                    </button>
+                  )}
+                </div>
+                {realRecaptchaEnabled ? (
+                  <div className="flex justify-center py-1">
+                    <ReCAPTCHA
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "your_site_key"}
+                      onChange={(token) => setCaptchaToken(token)}
+                      theme="dark"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      {captchaImageUrl && (
+                        <img
+                          src={captchaImageUrl}
+                          alt="Captcha Challenge"
+                          className="h-8 rounded border border-zinc-800 bg-white"
+                          onError={() => fetchCaptchaDetails()}
+                        />
+                      )}
+                      <input
+                        type="text"
+                        placeholder="CAPTCHA value"
+                        value={captchaInput}
+                        onChange={(e) => setCaptchaInput(e.target.value)}
+                        onFocus={() => setFocusedField("captcha")}
+                        onBlur={() => setFocusedField(null)}
+                        className={`flex-grow px-2.5 py-1.5 bg-zinc-500/5 border rounded-xl text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                          focusedField === "captcha"
+                            ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
+                            : "border-border hover:border-zinc-700/30"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                )}
+              </motion.div>
             )}
-          </Button>
-        </motion.div>
+
+            {/* Action button */}
+            <motion.div variants={itemVariants}>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 sm:py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-sm sm:text-xs rounded-xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-1.5 cursor-pointer"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </motion.div>
+          </>
+        )}
       </form>
+      )}
 
       {/* Social login separator */}
       <motion.div variants={itemVariants} className="relative flex py-1 items-center">

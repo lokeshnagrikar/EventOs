@@ -27,6 +27,8 @@ const ClientPortalPreview = dynamic(() => import("@/components/landing/ClientPor
 const ProductShowcase = dynamic(() => import("@/components/landing/ProductShowcase").then(m => ({ default: m.ProductShowcase })), { ssr: true });
 const Testimonials = dynamic(() => import("@/components/landing/Testimonials").then(m => ({ default: m.Testimonials })), { ssr: true });
 const RoiCalculator = dynamic(() => import("@/components/landing/RoiCalculator").then(m => ({ default: m.RoiCalculator })), { ssr: true });
+const EventQuoteCalculator = dynamic(() => import("@/components/quote/EventQuoteCalculator").then(m => ({ default: m.EventQuoteCalculator })), { ssr: false });
+const WhatsAppNotificationSimulator = dynamic(() => import("@/components/notifications/WhatsAppNotificationSimulator").then(m => ({ default: m.WhatsAppNotificationSimulator })), { ssr: false });
 const Pricing = dynamic(() => import("@/components/landing/Pricing").then(m => ({ default: m.Pricing })), { ssr: true });
 const Competitors = dynamic(() => import("@/components/landing/Competitors").then(m => ({ default: m.Competitors })), { ssr: true });
 const Faq = dynamic(() => import("@/components/landing/Faq").then(m => ({ default: m.Faq })), { ssr: false });
@@ -218,6 +220,13 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
             <RoiCalculator />
           </Suspense>
 
+          {/* 9c. Interactive Event Production Quote & PDF Generator */}
+          <div id="quote-calculator" className="py-12 max-w-7xl mx-auto px-4 sm:px-6">
+            <Suspense fallback={<SectionSkeleton />}>
+              <EventQuoteCalculator />
+            </Suspense>
+          </div>
+
           {/* 10. Pricing Plans */}
           <div id="pricing">
             <Suspense fallback={<SectionSkeleton />}>
@@ -253,6 +262,11 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
         {/* 13. Footer */}
         <Suspense fallback={null}>
           <Footer />
+        </Suspense>
+
+        {/* Live WhatsApp & SMS Booking Notification Simulator Widget */}
+        <Suspense fallback={null}>
+          <WhatsAppNotificationSimulator />
         </Suspense>
       </div>
     </>

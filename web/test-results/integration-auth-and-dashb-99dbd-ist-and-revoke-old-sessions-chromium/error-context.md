@@ -7,21 +7,76 @@
 # Test info
 
 - Name: integration\auth-and-dashboard.spec.ts >> EventOS Frontend Integration & Authentication Flow >> should display active sessions list and revoke old sessions
-- Location: tests\integration\auth-and-dashboard.spec.ts:164:7
+- Location: web\tests\integration\auth-and-dashboard.spec.ts:164:7
 
 # Error details
 
 ```
-Error: page.reload: Target page, context or browser has been closed
-Call log:
-  - waiting for navigation until "load"
-    - navigated to "http://localhost:3000/settings/security"
+Test timeout of 30000ms exceeded.
+```
 
+```
+Error: page.goto: Test timeout of 30000ms exceeded.
+Call log:
+  - navigating to "http://localhost:3000/settings/security", waiting until "load"
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e5]: Redirecting to Security Settings...
 ```
 
 # Test source
 
 ```ts
+  71  |                 status: 'ACTIVE'
+  72  |               }
+  73  |             ]
+  74  |           }
+  75  |         })
+  76  |       });
+  77  |     });
+  78  | 
+  79  |     // Fill in credentials
+  80  |     await page.fill('input[id="email"]', 'demo@eventos.com');
+  81  |     await page.fill('input[id="password"]', 'securePassword123');
+  82  | 
+  83  |     // Submit login form
+  84  |     await page.click('button[type="submit"]');
+  85  | 
+  86  |     // Should redirect to Workspace Switcher page
+  87  |     await expect(page).toHaveURL(/\/workspace-select/);
+  88  | 
+  89  |     // Verify session details saved in Session Storage via page evaluation
+  90  |     const storedActiveTenant = await page.evaluate(() => sessionStorage.getItem('activeTenantId'));
+  91  |     const storedUser = await page.evaluate(() => sessionStorage.getItem('user'));
+  92  | 
+  93  |     expect(storedActiveTenant).toBe('99999999-9999-9999-9999-999999999999');
+  94  |     expect(storedUser).not.toBeNull();
+  95  |     expect(storedUser!).toContain('demo@eventos.com');
+  96  |     expect(storedUser!).toContain('Demo');
+  97  |   });
+  98  | 
+  99  |   test('should switch workspace contexts and set appropriate HTTP headers', async ({ page }) => {
+  100 |     // Set cookie first to prevent middleware redirecting to login page
+  101 |     await page.context().addCookies([
+  102 |       { name: 'hasSession', value: 'true', domain: 'localhost', path: '/' }
+  103 |     ]);
+  104 | 
+  105 |     // Pre-populate authenticated state using cookie and sessionStorage simulation
+  106 |     await page.goto('/workspace-select');
+  107 |     await page.evaluate(() => {
+  108 |       sessionStorage.setItem('activeTenantId', '99999999-9999-9999-9999-999999999999');
+  109 |       sessionStorage.setItem('user', JSON.stringify({
+  110 |         id: '88888888-8888-8888-8888-888888888888',
+  111 |         email: 'demo@eventos.com',
+  112 |         firstName: 'Demo',
+  113 |         role: 'OWNER'
   114 |       }));
   115 |       sessionStorage.setItem('memberships', JSON.stringify([
   116 |         {
@@ -79,7 +134,8 @@ Call log:
   168 |     ]);
   169 | 
   170 |     // Setup authenticated state
-  171 |     await page.goto('/settings/security');
+> 171 |     await page.goto('/settings/security');
+      |                ^ Error: page.goto: Test timeout of 30000ms exceeded.
   172 |     await page.evaluate(() => {
   173 |       sessionStorage.setItem('activeTenantId', '99999999-9999-9999-9999-999999999999');
   174 |       sessionStorage.setItem('user', JSON.stringify({
@@ -122,8 +178,7 @@ Call log:
   211 |       });
   212 |     });
   213 | 
-> 214 |     await page.reload();
-      |                ^ Error: page.reload: Target page, context or browser has been closed
+  214 |     await page.reload();
   215 | 
   216 |     // Verify session details are visible
   217 |     await expect(page.locator('text=MacBook Pro')).toBeVisible();

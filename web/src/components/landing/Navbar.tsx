@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WorkspaceSelectorPill } from "./WorkspaceSelectorPill";
 import { Button } from "@/components/ui/button";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
@@ -139,6 +140,15 @@ export function Navbar({ activeSection }: NavbarProps) {
   ];
 
   const resources = [
+    { 
+      title: "Quote Calculator 🧮", 
+      desc: "Live cost estimation & instant PDF export", 
+      icon: "solar:calculator-bold-duotone", 
+      href: "/quote-calculator",
+      iconColor: "text-purple-400",
+      hoverBg: "hover:bg-[#181324]",
+      hoverBorder: "hover:border-purple-500/30"
+    },
     { 
       title: "Developer Docs", 
       desc: "API payload schema & webhooks guide", 
@@ -552,6 +562,9 @@ export function Navbar({ activeSection }: NavbarProps) {
           className="hidden md:flex items-center gap-3 relative z-10"
           onMouseLeave={() => setHoveredIndex(null)}
         >
+          {/* Multi-Tenant Workspace Selector Pill */}
+          <WorkspaceSelectorPill />
+
           <button
             onClick={() => router.push("/demo")}
             onMouseEnter={() => setHoveredIndex(5)}

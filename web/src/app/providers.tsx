@@ -29,6 +29,8 @@ import PWAProvider from "@/components/PWAProvider";
 
 
 
+import { LogoutConfirmationModal } from "@/components/auth/LogoutConfirmationModal";
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -245,6 +247,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 <OnboardingChecklistWidget />
                 <HelpSearch />
                 <AuthModal />
+                <LogoutConfirmationModal />
                 <ExitIntent />
                 <CelebrationOverlay />
                 <ContextualHelp />

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { useAuthModalStore } from "@/store/authModalStore";
 import { api } from "@/lib/api";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Navbar from "@/components/dashboard/Navbar";
@@ -61,15 +62,8 @@ export default function PageShell({
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await api.post("/auth/logout", { email: user?.email || "" });
-    } catch (e) {
-      console.error("Logout failed:", e);
-    }
-    clearAuth();
-    localStorage.removeItem("user_name");
-    router.push("/login");
+  const handleLogout = () => {
+    useAuthModalStore.getState().openLogoutModal();
   };
 
   if (bare) {

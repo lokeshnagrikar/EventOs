@@ -29,7 +29,8 @@ import {
   Check,
   Sparkles,
   Eye,
-  EyeOff
+  EyeOff,
+  Briefcase
 } from "lucide-react";
 
 const registerSchema = z
@@ -92,6 +93,34 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
   const triggerShake = () => {
     setShouldShake(true);
     setTimeout(() => setShouldShake(false), 400);
+  };
+
+  // Email Auto-Suggestion & Business Nudge State
+  const [domainSuggestion, setDomainSuggestion] = useState<string | null>(null);
+
+  const COMMON_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "icloud.com", "hotmail.com"];
+  const PERSONAL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "icloud.com", "hotmail.com", "rediffmail.com", "ymail.com"];
+
+  const handleEmailInputChange = (val: string) => {
+    setValue("email", val);
+
+    if (val.includes("@")) {
+      const [username, domainPart] = val.split("@");
+      if (domainPart && domainPart.length > 0 && !COMMON_DOMAINS.includes(domainPart.toLowerCase())) {
+        const match = COMMON_DOMAINS.find((d) => d.startsWith(domainPart.toLowerCase()));
+        if (match) {
+          setDomainSuggestion(`${username}@${match}`);
+          return;
+        }
+      }
+    }
+    setDomainSuggestion(null);
+  };
+
+  const isPersonalEmail = (emailStr: string) => {
+    if (!emailStr || !emailStr.includes("@")) return false;
+    const domain = emailStr.split("@")[1]?.toLowerCase();
+    return PERSONAL_DOMAINS.includes(domain);
   };
 
   // 6-digit OTP States
@@ -613,6 +642,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                         : "border-border hover:border-zinc-700/30"
                     }`}
                     {...register("email")}
+                    onChange={(e) => handleEmailInputChange(e.target.value)}
                     onFocus={() => setFocusedField("email")}
                     onBlur={(e) => {
                       register("email").onBlur(e);
@@ -621,6 +651,31 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   />
                 </div>
                 {errors.email && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.email.message}</p>}
+
+                {/* Email Domain Auto-Suggestion */}
+                {domainSuggestion && (
+                  <div className="pt-1 flex items-center gap-1.5 text-[10px]">
+                    <span className="text-zinc-500">Did you mean:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue("email", domainSuggestion);
+                        setDomainSuggestion(null);
+                      }}
+                      className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-300 font-bold hover:bg-purple-500/20 transition-all cursor-pointer"
+                    >
+                      {domainSuggestion}
+                    </button>
+                  </div>
+                )}
+
+                {/* Business Email Nudge */}
+                {isPersonalEmail(watch("email")) && (
+                  <div className="mt-1 p-2 bg-purple-950/20 border border-purple-500/20 rounded-xl flex items-center gap-2 text-[10px] text-purple-300">
+                    <Briefcase size={12} className="shrink-0 text-purple-400" />
+                    <span><strong>Pro Tip:</strong> Work emails get priority team collaboration tools!</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1">

@@ -7,31 +7,51 @@
 # Test info
 
 - Name: integration\auth-and-dashboard.spec.ts >> EventOS Frontend Integration & Authentication Flow >> should switch workspace contexts and set appropriate HTTP headers
-- Location: tests\integration\auth-and-dashboard.spec.ts:99:7
+- Location: web\tests\integration\auth-and-dashboard.spec.ts:99:7
 
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
-
-Locator: locator('text=Apex Wedding Planners')
-Expected: visible
-Timeout: 5000ms
-Error: element(s) not found
-
-Call log:
-  - Expect "toBeVisible" with timeout 5000ms
-  - waiting for locator('text=Apex Wedding Planners')
-
+Test timeout of 30000ms exceeded.
 ```
 
-```yaml
-- 'heading "Application error: a client-side exception has occurred while loading localhost (see the browser console for more information)." [level=2]'
+```
+Error: page.goto: Test timeout of 30000ms exceeded.
+Call log:
+  - navigating to "http://localhost:3000/workspace-select", waiting until "load"
+
 ```
 
 # Test source
 
 ```ts
+  6   |     // Clear cookies/session storage and set bypass preloader flag before each integration test
+  7   |     await page.goto('/');
+  8   |     await page.evaluate(() => {
+  9   |       sessionStorage.clear();
+  10  |       localStorage.clear();
+  11  |       localStorage.setItem('nopreload', 'true');
+  12  |     });
+  13  |   });
+  14  | 
+  15  |   test('should display Landing Page with CTAs linking to Login and Register', async ({ page }) => {
+  16  |     await page.goto('/?nopreload=true');
+  17  | 
+  18  |     // Check Landing Page elements
+  19  |     await expect(page.locator('text=The Operating System for Event Businesses')).toBeVisible();
+  20  |     await expect(page.locator('text=Run your entire event business')).toBeVisible();
+  21  | 
+  22  |     // Check action buttons exist
+  23  |     const createWorkspaceBtn = page.locator('text=Start Free Trial');
+  24  |     const enterDashboardBtn = page.locator('text=Book a Demo');
+  25  | 
+  26  |     await expect(createWorkspaceBtn).toBeVisible();
+  27  |     await expect(enterDashboardBtn).toBeVisible();
+  28  | 
+  29  |     // Click login button in the header
+  30  |     await page.click('header >> text=Sign In');
+  31  |     await expect(page).toHaveURL(/\/login/);
+  32  |   });
   33  | 
   34  |   test('should enforce protected route redirects for unauthenticated users', async ({ page }) => {
   35  |     // Attempting to access dashboard, switcher, or settings directly
@@ -105,7 +125,8 @@ Call log:
   103 |     ]);
   104 | 
   105 |     // Pre-populate authenticated state using cookie and sessionStorage simulation
-  106 |     await page.goto('/workspace-select');
+> 106 |     await page.goto('/workspace-select');
+      |                ^ Error: page.goto: Test timeout of 30000ms exceeded.
   107 |     await page.evaluate(() => {
   108 |       sessionStorage.setItem('activeTenantId', '99999999-9999-9999-9999-999999999999');
   109 |       sessionStorage.setItem('user', JSON.stringify({
@@ -132,8 +153,7 @@ Call log:
   130 |     await page.reload();
   131 | 
   132 |     // Verify both workspace options are rendered
-> 133 |     await expect(page.locator('text=Apex Wedding Planners')).toBeVisible();
-      |                                                              ^ Error: expect(locator).toBeVisible() failed
+  133 |     await expect(page.locator('text=Apex Wedding Planners')).toBeVisible();
   134 |     await expect(page.locator('text=Elite Corporate Events')).toBeVisible();
   135 | 
   136 |     // Mock switcher API response
@@ -207,31 +227,4 @@ Call log:
   204 |               osName: 'iOS',
   205 |               ipAddress: '10.0.0.4',
   206 |               lastActiveAt: '2026-06-17T15:30:00Z',
-  207 |               isCurrent: false
-  208 |             }
-  209 |           ]
-  210 |         })
-  211 |       });
-  212 |     });
-  213 | 
-  214 |     await page.reload();
-  215 | 
-  216 |     // Verify session details are visible
-  217 |     await expect(page.locator('text=MacBook Pro')).toBeVisible();
-  218 |     await expect(page.locator('text=iPhone 15')).toBeVisible();
-  219 |     await expect(page.locator('text=Current Device')).toBeVisible();
-  220 | 
-  221 |     // Mock revocation API
-  222 |     let isRevoked = false;
-  223 |     await page.route('**/api/v1/auth/sessions/session-2', async (route) => {
-  224 |       if (route.request().method() === 'DELETE') {
-  225 |         isRevoked = true;
-  226 |         await route.fulfill({
-  227 |           status: 200,
-  228 |           contentType: 'application/json',
-  229 |           body: JSON.stringify({ success: true, data: null })
-  230 |         });
-  231 |       }
-  232 |     });
-  233 | 
 ```
