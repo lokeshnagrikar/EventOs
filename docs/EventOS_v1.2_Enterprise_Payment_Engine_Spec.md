@@ -265,7 +265,7 @@ CREATE TABLE webhook_logs (
     "amount": 59000.00,
     "platformFee": 1180.00,
     "netAmount": 57820.00,
-    "clientSecret": "rzp_live_928174_secret",
+    "clientSecret": "rzp_test_placeholder_secret",
     "status": "INITIATED"
   }
 }

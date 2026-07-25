@@ -43,7 +43,7 @@ const DEFAULT_CONFIG: WhatsAppConfig = {
   provider: "meta",
   phoneNumberId: "109284719283741",
   wbaid: "928174019283",
-  accessToken: "EAAG9z819283741928374192837419283741",
+  accessToken: "META_SYSTEM_USER_TOKEN_PLACEHOLDER",
   templateNamespace: "eventos_agency_templates",
   webhookVerifyToken: "eventos_meta_verify_token_9281",
   businessPhone: "+91 98223 10291",
