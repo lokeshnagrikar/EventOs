@@ -18,6 +18,10 @@ import {
   ShieldCheck
 } from "lucide-react";
 import { useToastStore } from "@/lib/toastStore";
+import { useAuthStore } from "@/store/authStore";
+import { usePathname } from "next/navigation";
+
+const APP_PATHS = ["/dashboard", "/crm", "/events", "/gallery", "/invoices", "/quotes", "/settings", "/ai", "/reports", "/bookings", "/activity", "/chat", "/onboarding"];
 
 export interface NotificationItem {
   id: string;
@@ -69,52 +73,19 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
 ];
 
 export function WhatsAppNotificationSimulator() {
+  const pathname = usePathname();
+  const { isAuthenticated } = useAuthStore();
   const addToast = useToastStore((state) => state.addToast);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [isOpen, setIsOpen] = useState(false);
-  const [isSimulating, setIsSimulating] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "whatsapp" | "sms" | "payment">("all");
 
+  const isAppPage = APP_PATHS.some((p) => pathname.startsWith(p));
+  if (!isAppPage || !isAuthenticated) {
+    return null;
+  }
+
   const unreadCount = notifications.filter((n) => n.unread).length;
-
-  // Auto-stream realistic notifications every 15 seconds when active
-  useEffect(() => {
-    if (!isSimulating) return;
-
-    const interval = setInterval(() => {
-      const sampleAlerts = [
-        {
-          type: "whatsapp" as const,
-          sender: "Priya Sharma (Bride)",
-          message: "Updated guest list to 450 guests. Added VIP seating chart request."
-        },
-        {
-          type: "payment" as const,
-          sender: "HDFC Payment Gateway",
-          message: "Received ₹75,000 milestone payment for Concert AV Rigging."
-        },
-        {
-          type: "sms" as const,
-          sender: "Venue Manager (Vikram)",
-          message: "Stage setup clearance approved for Hall B. Freight doors open."
-        }
-      ];
-
-      const randomAlert = sampleAlerts[Math.floor(Math.random() * sampleAlerts.length)];
-      const newNotif: NotificationItem = {
-        id: "notif-" + Date.now(),
-        ...randomAlert,
-        time: "Just now",
-        unread: true,
-        status: "delivered"
-      };
-
-      setNotifications((prev) => [newNotif, ...prev.slice(0, 15)]);
-      addToast(`📲 WhatsApp Alert: ${randomAlert.sender} - ${randomAlert.message.slice(0, 45)}...`, "info");
-    }, 18000);
-
-    return () => clearInterval(interval);
-  }, [isSimulating, addToast]);
 
   const handleTestSendAlert = () => {
     const customAlert: NotificationItem = {
@@ -142,7 +113,7 @@ export function WhatsAppNotificationSimulator() {
   });
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-24 z-50">
       {/* Floating Trigger Button */}
       <motion.button
         whileHover={{ scale: 1.05 }}

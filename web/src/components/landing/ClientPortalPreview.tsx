@@ -188,6 +188,55 @@ const portalViews = [
       </div>
     ),
   },
+  {
+    id: "whatsapp",
+    label: "WhatsApp Triggers",
+    icon: "solar:chat-round-dots-bold-duotone",
+    preview: (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div>
+            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">WhatsApp Auto-Bot</p>
+            <h4 className="text-sm font-bold text-white">Client Conversation Thread</h4>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-bold flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live Sync
+          </span>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 space-y-3 font-sans text-xs">
+          <div className="flex flex-col items-start space-y-1">
+            <span className="text-[9px] font-bold text-zinc-500">Priya Sharma (Bride) • 02:14 PM</span>
+            <div className="p-2.5 rounded-2xl rounded-tl-none bg-zinc-900 border border-zinc-800 text-zinc-200 max-w-[85%] leading-relaxed text-[11px]">
+              "Hey! Have you updated the Mandap floral staging timeline?"
+            </div>
+          </div>
+
+          <div className="flex flex-col items-end space-y-1">
+            <span className="text-[9px] font-bold text-emerald-400">EventOS Bot ✓✓ • 02:15 PM</span>
+            <div className="p-2.5 rounded-2xl rounded-tr-none bg-emerald-950/60 border border-emerald-500/30 text-emerald-200 max-w-[85%] leading-relaxed text-[11px]">
+              "Hi Priya! 🌸 Stage Mandap setup is 100% complete. Here is your live event link: <span className="underline font-mono">eventos.app/share/p-9281</span>"
+            </div>
+          </div>
+
+          <div className="flex flex-col items-start space-y-1">
+            <span className="text-[9px] font-bold text-zinc-500">Priya Sharma • 02:16 PM</span>
+            <div className="p-2.5 rounded-2xl rounded-tl-none bg-zinc-900 border border-zinc-800 text-zinc-200 max-w-[85%] leading-relaxed text-[11px]">
+              "Awesome! Clearing deposit payment right now."
+            </div>
+          </div>
+
+          <div className="flex flex-col items-end space-y-1">
+            <span className="text-[9px] font-bold text-emerald-400">EventOS Bot ✓✓ • 02:17 PM</span>
+            <div className="p-2.5 rounded-2xl rounded-tr-none bg-emerald-950/60 border border-emerald-500/30 text-emerald-200 max-w-[85%] leading-relaxed text-[11px]">
+              "Deposit payment of ₹1,50,000 received via GPay UPI ✓✓. Receipt #EOS-INV-928 generated!"
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  },
 ];
 
 const features = [

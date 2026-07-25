@@ -200,7 +200,8 @@ export default function QuoteDetailPage() {
 
   const copyShareableLink = () => {
     if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
+      const publicShareUrl = `${window.location.origin}/quotes/share/${quoteId}`;
+      navigator.clipboard.writeText(publicShareUrl);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     }

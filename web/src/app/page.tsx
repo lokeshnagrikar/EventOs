@@ -34,6 +34,7 @@ const Competitors = dynamic(() => import("@/components/landing/Competitors").the
 const Faq = dynamic(() => import("@/components/landing/Faq").then(m => ({ default: m.Faq })), { ssr: false });
 const FinalCta = dynamic(() => import("@/components/landing/FinalCta").then(m => ({ default: m.FinalCta })), { ssr: true });
 const Contact = dynamic(() => import("@/components/landing/Contact").then(m => ({ default: m.Contact })), { ssr: true });
+const AmbientCursorGlow = dynamic(() => import("@/components/ui/AmbientCursorGlow").then(m => ({ default: m.AmbientCursorGlow })), { ssr: false });
 const Footer = dynamic(() => import("@/components/landing/Footer").then(m => ({ default: m.Footer })), { ssr: true });
 
 // Simple fallback for dynamic sections
@@ -156,6 +157,9 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
       )}>
         {/* Sticky Navigation */}
         <Navbar activeSection={activeSection} />
+
+        {/* Ambient Cursor Glow Physics */}
+        <AmbientCursorGlow />
 
         {/* Main Content */}
         <main id="main-content" role="main">

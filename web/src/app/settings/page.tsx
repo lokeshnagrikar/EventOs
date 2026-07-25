@@ -56,12 +56,15 @@ import {
   ExternalLink,
   ShieldCheck,
   CheckCheck,
-  Upload
+  Upload,
+  MessageSquare
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar } from "recharts";
 import { cn } from "@/lib/utils";
 
 import WhiteLabelSettings from "@/components/settings/WhiteLabelSettings";
+import WhatsAppApiSettings from "@/components/settings/WhatsAppApiSettings";
+import PaymentEngineSettings from "@/components/settings/PaymentEngineSettings";
 
 // Sidebar categories mapping
 const SECTIONS = [
@@ -70,6 +73,8 @@ const SECTIONS = [
   { id: "company", label: "Company Profile", icon: Building2, roles: ["OWNER", "ADMIN"] },
   { id: "branding", label: "Company Branding", icon: Palette, roles: ["OWNER", "ADMIN", "COORDINATOR"] },
   { id: "whitelabel", label: "White-Label & Domain", icon: Globe, roles: ["OWNER", "ADMIN"] },
+  { id: "whatsapp", label: "WhatsApp Meta Cloud API", icon: MessageSquare, roles: ["OWNER", "ADMIN"] },
+  { id: "payment_engine", label: "Enterprise Payment Engine", icon: CreditCard, roles: ["OWNER", "ADMIN"] },
   { id: "team", label: "Users & Teams", icon: Users, roles: ["OWNER", "ADMIN"] },
   { id: "rbac", label: "Roles & Permissions", icon: UserCheck, roles: ["OWNER", "ADMIN"] },
   { id: "orgchart", label: "Org Chart Hierarchy", icon: Network, roles: ["OWNER", "ADMIN"] },
@@ -197,10 +202,17 @@ export default function SettingsPage() {
   ]);
 
   const [billingStreet, setBillingStreet] = useState("142 Vercel Square");
-  const [billingCity, setBillingCity] = useState("New York");
-  const [billingCountry, setBillingCountry] = useState("United States");
-  const [billingTaxType, setBillingTaxType] = useState("VAT");
-  const [billingTaxId, setBillingTaxId] = useState("US-928374-B");
+  const [billingCity, setBillingCity] = useState("Nagpur");
+  const [billingCountry, setBillingCountry] = useState("India");
+  const [billingTaxType, setBillingTaxType] = useState("GST");
+  const [billingTaxId, setBillingTaxId] = useState("27AABCU9281R1Z5");
+
+  // Real Owner Payment Destination Settings
+  const [ownerUpiId, setOwnerUpiId] = useState("apexevents@okicici");
+  const [ownerAccountName, setOwnerAccountName] = useState("Apex Event Management Pvt Ltd");
+  const [ownerAccountNumber, setOwnerAccountNumber] = useState("9180200492810");
+  const [ownerIfsc, setOwnerIfsc] = useState("HDFC0001092");
+  const [ownerBankName, setOwnerBankName] = useState("HDFC Bank, Ramdaspeth");
 
   const [showCancelConfirmationModal, setShowCancelConfirmationModal] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
@@ -1493,6 +1505,16 @@ export default function SettingsPage() {
                 <WhiteLabelSettings />
               )}
 
+              {/* WHATSAPP META CLOUD API GATEWAY */}
+              {activeTab === "whatsapp" && (
+                <WhatsAppApiSettings />
+              )}
+
+              {/* ENTERPRISE PAYMENT ENGINE ARCHITECTURE */}
+              {activeTab === "payment_engine" && (
+                <PaymentEngineSettings />
+              )}
+
               {/* 4. TEAM DIRECTORY */}
               {activeTab === "team" && (
                 <div className="space-y-6">
@@ -2079,6 +2101,75 @@ export default function SettingsPage() {
                           {couponValidationMsg}
                         </p>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Owner Direct Payment Destination Profile */}
+                  <div className="p-5 border border-purple-500/30 bg-[#111113]/60 rounded-2xl space-y-4 shadow-lg shadow-purple-950/20">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="text-[9.5px] font-black uppercase text-purple-400 tracking-widest block">Agency Owner Direct Payment Destination</span>
+                        <p className="text-[10px] text-zinc-400">Enter your real UPI ID and Bank Account details. Clients scanning your proposal QR codes will transfer funds directly into this account (0% fee).</p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-400 font-bold text-[9px] font-mono">
+                        Direct Settlement
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-semibold text-[10px] text-zinc-300">
+                      <div className="space-y-1">
+                        <label className="text-[8.5px] text-zinc-400 uppercase font-black">Business UPI VPA ID</label>
+                        <input
+                          type="text"
+                          value={ownerUpiId}
+                          onChange={(e) => setOwnerUpiId(e.target.value)}
+                          placeholder="e.g. youragency@okicici"
+                          className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 text-white rounded-xl outline-none font-mono focus:border-purple-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8.5px] text-zinc-400 uppercase font-black">Account Holder Name</label>
+                        <input
+                          type="text"
+                          value={ownerAccountName}
+                          onChange={(e) => setOwnerAccountName(e.target.value)}
+                          placeholder="e.g. Apex Event Management Pvt Ltd"
+                          className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 text-white rounded-xl outline-none font-sans focus:border-purple-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8.5px] text-zinc-400 uppercase font-black">Bank Account Number</label>
+                        <input
+                          type="text"
+                          value={ownerAccountNumber}
+                          onChange={(e) => setOwnerAccountNumber(e.target.value)}
+                          placeholder="e.g. 9180200492810"
+                          className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 text-white rounded-xl outline-none font-mono focus:border-purple-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-semibold text-[10px] text-zinc-300">
+                      <div className="space-y-1">
+                        <label className="text-[8.5px] text-zinc-400 uppercase font-black">Bank Name & Branch</label>
+                        <input
+                          type="text"
+                          value={ownerBankName}
+                          onChange={(e) => setOwnerBankName(e.target.value)}
+                          placeholder="e.g. HDFC Bank, Ramdaspeth"
+                          className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 text-white rounded-xl outline-none font-sans focus:border-purple-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8.5px] text-zinc-400 uppercase font-black">IFSC Code</label>
+                        <input
+                          type="text"
+                          value={ownerIfsc}
+                          onChange={(e) => setOwnerIfsc(e.target.value.toUpperCase())}
+                          placeholder="e.g. HDFC0001092"
+                          className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 text-white rounded-xl outline-none font-mono uppercase focus:border-purple-500"
+                        />
+                      </div>
                     </div>
                   </div>
 

@@ -977,7 +977,7 @@ export default function EventsDashboard() {
                         {filteredEvents.map((e, idx) => (
                           <EventCard key={e.id} event={e} index={idx} />
                         ))}
-                        {filteredEvents.length === 0 && <GlobalEmptyState icon={CalendarIcon} title="No Events found" description="Initialize a new event workspace!" />}
+                        {filteredEvents.length === 0 && <GlobalEmptyState variant="events" icon={CalendarIcon} title="No Events found" description="Initialize a new event workspace!" />}
                       </div>
                     )}
 

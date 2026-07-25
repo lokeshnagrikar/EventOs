@@ -2,18 +2,22 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Kanban, Calendar as CalendarIcon, Shield, Image as ImageIcon, Laptop, Smartphone, Check, Clock, User } from "lucide-react";
+import { Kanban, Calendar as CalendarIcon, Shield, Image as ImageIcon, Laptop, Smartphone, Check, Clock, User, Lock, Download, Share2, Sparkles, KeyRound } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export function ProductShowcase() {
   const shouldReduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState("kanban");
   const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">("desktop");
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [copiedPasscode, setCopiedPasscode] = useState(false);
 
   const tabs = [
     { id: "kanban", label: "Pipeline Kanban", icon: <Kanban className="h-4 w-4" /> },
     { id: "calendar", label: "Event Calendar", icon: <CalendarIcon className="h-4 w-4" /> },
     { id: "portal", label: "Client Portal", icon: <Shield className="h-4 w-4" /> },
-    { id: "gallery", label: "Media Gallery", icon: <ImageIcon className="h-4 w-4" /> },
+    { id: "gallery", label: "Media Delivery Reel", icon: <ImageIcon className="h-4 w-4" /> },
   ];
 
   // Dummy Kanban Columns
@@ -23,7 +27,7 @@ export function ProductShowcase() {
       count: 3,
       border: "border-purple-500/20",
       items: [
-        { client: "Riya & Karan", event: "Wedding Setup", budget: "₹15,00,000", source: "Instagram" },
+        { client: "Riya & Karan", event: "Royal Lawn Wedding", budget: "₹15,00,000", source: "Instagram" },
         { client: "Microsoft India", event: "Annual Tech Summit", budget: "₹30,00,000", source: "Website" },
       ],
     },
@@ -32,7 +36,7 @@ export function ProductShowcase() {
       count: 2,
       border: "border-pink-500/20",
       items: [
-        { client: "Aanya Verma", event: "Birthday Bash", budget: "₹5,00,000", source: "Referral" },
+        { client: "Aanya Verma", event: "Birthday Gala", budget: "₹5,00,000", source: "Referral" },
       ],
     },
     {
@@ -48,13 +52,41 @@ export function ProductShowcase() {
   // Dummy Calendar Timeline
   const calendarTimeline = [
     { time: "09:00 AM", event: "Photographer Team Check-in", status: "Done", type: "ops" },
-    { time: "11:30 AM", event: "Floral Backdrop Decoration", status: "In Progress", type: "decor" },
+    { time: "11:30 AM", event: "Floral Backdrop Scenography", status: "In Progress", type: "decor" },
     { time: "02:00 PM", event: "Sound Check & LED Wall Setup", status: "Pending", type: "tech" },
     { time: "05:00 PM", event: "Guest Entry & Welcome Mocktail", status: "Pending", type: "event" },
   ];
 
+  const galleryItems = [
+    { name: "Baraat_Ingress_4K.JPG", size: "18.4 MB", type: "IMAGE", tag: "Lawn Entrance" },
+    { name: "Stage_Mandap_Decor_01.RAW", size: "45.2 MB", type: "IMAGE", tag: "Stage Rigging" },
+    { name: "Sangeet_Drone_4K.MP4", size: "320.0 MB", type: "VIDEO", tag: "Drone Reel" },
+    { name: "Couple_Reception_Portrait.RAW", size: "52.1 MB", type: "IMAGE", tag: "Portrait" },
+  ];
+
+  const handleStartDownload = () => {
+    setIsDownloading(true);
+    setDownloadProgress(10);
+    const interval = setInterval(() => {
+      setDownloadProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setIsDownloading(false), 1500);
+          return 100;
+        }
+        return prev + 25;
+      });
+    }, 400);
+  };
+
+  const handleCopyPasscode = () => {
+    navigator.clipboard.writeText("https://eventos.app/share/gallery-p928?pin=9281");
+    setCopiedPasscode(true);
+    setTimeout(() => setCopiedPasscode(false), 2000);
+  };
+
   return (
-    <section className="py-24 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden" id="showcase">
+    <section className="py-24 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden font-sans" id="showcase">
       {/* Background gradients */}
       <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-cyan-950/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-12 right-[10%] w-[350px] h-[350px] bg-purple-950/5 blur-[100px] rounded-full pointer-events-none" />
@@ -109,7 +141,7 @@ export function ProductShowcase() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative px-4 py-2 rounded-lg flex items-center gap-2 text-xs sm:text-sm font-bold transition-all ${
+              className={`relative px-4 py-2 rounded-lg flex items-center gap-2 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 activeTab === tab.id
                   ? "text-white"
                   : "text-zinc-500 hover:text-zinc-300"
@@ -144,6 +176,9 @@ export function ProductShowcase() {
                 <span className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
                 <span className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
                 <span className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
+                <span className="text-[10px] text-zinc-500 font-mono ml-2 select-none">
+                  {activeTab === "gallery" ? "admin.eventos.io/gallery/share-album-928" : "admin.eventos.io/dashboard"}
+                </span>
               </div>
 
               {/* Window Content */}
@@ -219,31 +254,13 @@ export function ProductShowcase() {
                         {calendarTimeline.map((item) => (
                           <div
                             key={item.time}
-                            className="p-3 bg-zinc-950/60 border border-zinc-900 rounded-xl flex items-center justify-between gap-4 hover:border-zinc-800 transition-colors"
+                            className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-900 flex items-center justify-between"
                           >
                             <div className="flex items-center gap-3">
-                              <span className="font-mono text-xs font-extrabold text-purple-400 bg-purple-950/20 border border-purple-500/10 px-2.5 py-1 rounded-lg">
-                                {item.time}
-                              </span>
-                              <div>
-                                <h5 className="text-xs font-bold text-zinc-200">{item.event}</h5>
-                                <span className="text-[9px] font-semibold text-zinc-500 tracking-wider uppercase">
-                                  Category: {item.type}
-                                </span>
-                              </div>
+                              <span className="font-mono text-xs font-bold text-purple-400">{item.time}</span>
+                              <span className="text-xs font-bold text-white">{item.event}</span>
                             </div>
-
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                                item.status === "Done"
-                                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/10"
-                                  : item.status === "In Progress"
-                                  ? "bg-amber-500/15 text-amber-400 border border-amber-500/10 animate-pulse"
-                                  : "bg-zinc-900 text-zinc-500 border border-zinc-800"
-                              }`}
-                            >
-                              {item.status === "Done" && <Check className="h-2.5 w-2.5" />}
-                              {item.status === "In Progress" && <Clock className="h-2.5 w-2.5" />}
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-900 text-zinc-400 border border-zinc-800 font-bold">
                               {item.status}
                             </span>
                           </div>
@@ -311,30 +328,67 @@ export function ProductShowcase() {
                       transition={{ duration: 0.25 }}
                       className="space-y-4"
                     >
-                      <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
+                      {/* Gallery Header */}
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3 border-b border-zinc-900">
                         <div>
-                          <h4 className="text-sm font-bold text-white">Media Gallery Delivery</h4>
-                          <p className="text-[11px] text-zinc-500">Passcode-protected digital albums delivered to guests</p>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-black text-white">Royal Palace Wedding — 4K Media Album</h4>
+                            <span className="px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-500/30 text-[9px] font-bold flex items-center gap-1 font-mono">
+                              <Lock size={10} /> PIN: 9281
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-400 mt-0.5">3,420 4K Photos & High-Bitrate Drone Reels Delivered</p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={handleCopyPasscode}
+                            className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Share2 size={12} className="text-purple-400" />
+                            <span>{copiedPasscode ? "Invite Link Copied ✓" : "Share Client Link"}</span>
+                          </button>
+                          <button
+                            onClick={handleStartDownload}
+                            disabled={isDownloading}
+                            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black transition flex items-center gap-1.5 shadow-md shadow-amber-950 cursor-pointer"
+                          >
+                            <Download size={12} />
+                            <span>{isDownloading ? `Downloading ${downloadProgress}%...` : "Download All (3.4 GB)"}</span>
+                          </button>
                         </div>
                       </div>
 
+                      {/* Download Progress Bar */}
+                      {isDownloading && (
+                        <div className="space-y-1 font-mono text-[9px] p-2 bg-amber-950/40 border border-amber-500/30 rounded-xl">
+                          <div className="flex justify-between text-amber-300 font-bold">
+                            <span>COMPRESSING HIGH-RES ZIP ARCHIVE...</span>
+                            <span>{downloadProgress}%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-400 transition-all duration-300" style={{ width: `${downloadProgress}%` }} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Media Thumbnails Grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {[1, 2, 3, 4].map((i) => (
-                          <div key={i} className="relative aspect-square bg-zinc-900 rounded-lg overflow-hidden border border-zinc-850 group/img">
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-10" />
-                            <div className="h-full w-full bg-gradient-to-tr from-purple-500/10 to-cyan-500/10 flex items-center justify-center">
-                              <ImageIcon className="h-6 w-6 text-zinc-600 group-hover/img:scale-105 transition-transform" />
+                        {galleryItems.map((item, i) => (
+                          <div key={i} className="relative aspect-square bg-zinc-900/80 rounded-2xl overflow-hidden border border-zinc-800 group/img shadow-md">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
+                            <div className="h-full w-full bg-gradient-to-tr from-purple-500/15 via-pink-500/10 to-amber-500/15 flex items-center justify-center">
+                              <ImageIcon className="h-7 w-7 text-zinc-400 group-hover/img:scale-110 transition-transform duration-300" />
                             </div>
-                            <span className="absolute bottom-2 left-2 text-[9px] font-bold text-white z-20">
-                              IMG_083{i}.JPG
+                            <span className="absolute top-2 left-2 text-[8.5px] font-black text-amber-300 bg-black/60 border border-amber-500/30 px-1.5 py-0.5 rounded-md z-20 font-mono">
+                              {item.tag}
                             </span>
+                            <div className="absolute bottom-2 left-2 right-2 text-[9px] font-bold text-white z-20 truncate">
+                              <span className="block truncate font-mono">{item.name}</span>
+                              <span className="text-[8px] text-zinc-400 block font-mono">{item.size}</span>
+                            </div>
                           </div>
                         ))}
-                      </div>
-
-                      <div className="flex justify-between items-center p-3 bg-zinc-950/60 border border-zinc-900 rounded-lg text-[10px] text-zinc-400">
-                        <span>Expiry Link: 30 days remaining</span>
-                        <span className="text-purple-400 font-bold hover:underline cursor-pointer">Download All ZIP</span>
                       </div>
                     </motion.div>
                   )}

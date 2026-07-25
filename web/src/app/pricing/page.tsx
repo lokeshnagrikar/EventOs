@@ -48,45 +48,38 @@ export default function PricingPage() {
     return { hoursSaved, moneySaved, roiMultiplier };
   }, [eventVolume, hoursSpent, hourlyRate, billingCycle]);
 
-  const plans = [
-    {
-      name: "Free",
-      desc: "For newly launched event coordinators getting off the ground.",
-      price: { monthly: 0, yearly: 0 },
-      features: [
-        "2 Active Events",
-        "1 Team seat",
-        "5 GB Media storage quota",
-        "Standard client portal access",
-        "Standard email invoices",
-      ],
-      cta: "Start Free",
-      isPopular: false,
-    },
+  const [currency, setCurrency] = useState<"INR" | "USD">("INR");
+
+  const plans = useMemo(() => [
     {
       name: "Starter",
-      desc: "Perfect for independent planners managing multiple schedules.",
-      price: { monthly: 39, yearly: 29 },
+      desc: "Perfect for independent planners managing multiple event schedules.",
+      price: { 
+        monthly: currency === "INR" ? 1999 : 29, 
+        yearly: currency === "INR" ? 1599 : 23 
+      },
       features: [
         "5 Active Events",
-        "2 Team seats",
-        "20 GB Media storage quota",
+        "2 Team seats included",
+        "20 GB High-res media storage",
         "Milestone payments clearing",
-        "Automated contract signing",
-        "Standard email support",
+        "Automated client contracts",
       ],
       cta: "Start Free Trial",
       isPopular: false,
     },
     {
       name: "Professional",
-      desc: "Our most popular package for active event organizations.",
-      price: { monthly: 99, yearly: 79 },
+      desc: "Best value for active agencies & growing event organizations.",
+      price: { 
+        monthly: currency === "INR" ? 5999 : 79, 
+        yearly: currency === "INR" ? 4799 : 63 
+      },
       features: [
         "20 Active Events",
-        "5 Team seats",
-        "100 GB Media storage quota",
-        "AI Assistant operations advisor",
+        "5 Team seats included",
+        "100 GB High-res media storage",
+        "EventOS AI Operations Co-pilot",
         "Interactive custom quotes editor",
         "Priority support queue SLA",
       ],
@@ -94,36 +87,23 @@ export default function PricingPage() {
       isPopular: true,
     },
     {
-      name: "Business",
-      desc: "For established production houses requiring custom domains.",
-      price: { monthly: 189, yearly: 149 },
+      name: "Enterprise",
+      desc: "Advanced security & unlimited scale for large production houses.",
+      price: { 
+        monthly: currency === "INR" ? 11999 : 149, 
+        yearly: currency === "INR" ? 9599 : 119 
+      },
       features: [
-        "50 Active Events",
-        "15 Team seats",
-        "500 GB Media storage quota",
+        "Unlimited Active Events & Seats",
+        "500 GB+ Dedicated AWS storage",
         "Custom white-labeled domains",
         "Developer API & webhooks access",
-        "24/7 dedicated support channels",
-      ],
-      cta: "Start Free Trial",
-      isPopular: false,
-    },
-    {
-      name: "Enterprise",
-      desc: "Custom structures for global scale agency workloads.",
-      price: { monthly: null, yearly: null },
-      features: [
-        "Unlimited Active Events",
-        "Unlimited Team seats",
-        "Dedicated AWS storage assets",
-        "Custom AI training parameters",
-        "Multi-tenant tenant isolation",
-        "Dedicated SLA accounts manager",
+        "Dedicated SLA account manager",
       ],
       cta: "Contact Sales",
       isPopular: false,
     },
-  ];
+  ], [currency]);
 
   return (
     <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-650 selection:text-white">
@@ -156,8 +136,8 @@ export default function PricingPage() {
             Start free on any plan, upgrade when you scale. No hidden margins. 20% discount on yearly invoices.
           </motion.p>
 
-          {/* Toggle */}
-          <div className="flex justify-center pt-6 select-none">
+          {/* Toggle Controls */}
+          <div className="flex flex-wrap justify-center items-center gap-4 pt-6 select-none">
             <div className="flex bg-zinc-950 border border-zinc-850 p-1 rounded-full text-xs font-bold items-center gap-1">
               <button
                 onClick={() => setBillingCycle("monthly")}
@@ -179,6 +159,27 @@ export default function PricingPage() {
                 <span className="text-[9px] bg-emerald-950/40 text-emerald-455 border border-emerald-900/30 px-2 py-0.5 rounded-full uppercase font-black tracking-wide leading-none">
                   -20%
                 </span>
+              </button>
+            </div>
+
+            <div className="flex bg-zinc-950 border border-zinc-850 p-1 rounded-full text-xs font-bold items-center gap-1">
+              <button
+                onClick={() => setCurrency("INR")}
+                className={cn(
+                  "px-3 py-1.5 rounded-full transition-all cursor-pointer flex items-center gap-1",
+                  currency === "INR" ? "bg-purple-950/60 text-purple-300 border border-purple-500/30 shadow" : "text-zinc-500 hover:text-zinc-300"
+                )}
+              >
+                🇮🇳 ₹ INR
+              </button>
+              <button
+                onClick={() => setCurrency("USD")}
+                className={cn(
+                  "px-3 py-1.5 rounded-full transition-all cursor-pointer flex items-center gap-1",
+                  currency === "USD" ? "bg-purple-950/60 text-purple-300 border border-purple-500/30 shadow" : "text-zinc-500 hover:text-zinc-300"
+                )}
+              >
+                🌐 $ USD
               </button>
             </div>
           </div>
@@ -226,7 +227,7 @@ export default function PricingPage() {
                             transition={{ duration: 0.25, ease: "easeOut" }}
                             className="text-3xl font-black tracking-tight text-white font-mono block"
                           >
-                            ${price}
+                            {currency === "INR" ? "₹" : "$"}{price}
                           </motion.span>
                           <span className="text-zinc-555 text-[10px] font-bold ml-1 uppercase">/ mo</span>
                         </div>
@@ -235,7 +236,7 @@ export default function PricingPage() {
                       )}
                       {hasDiscount && plan.price.monthly !== 0 && (
                         <span className="text-[9px] text-zinc-555 line-through block mt-0.5 font-bold font-mono">
-                          Billed at ${plan.price.monthly}/mo monthly
+                          Billed at {currency === "INR" ? "₹" : "$"}{plan.price.monthly}/mo monthly
                         </span>
                       )}
                     </div>

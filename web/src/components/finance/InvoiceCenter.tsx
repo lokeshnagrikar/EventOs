@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import KpiCard from "../dashboard/KpiCard";
 import { cn } from "@/lib/utils";
+import EmptyState from "@/components/ui/EmptyState";
+import { useCelebrationStore } from "@/store/celebrationStore";
 
 interface Invoice {
   id: string;
@@ -140,6 +142,7 @@ export default function InvoiceCenter() {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       setIsModalOpen(false);
       resetForm();
+      useCelebrationStore.getState().triggerCelebration("first_invoice");
     },
     onError: (err: any) => {
       setErrorText(err.response?.data?.error?.message || "Failed to generate invoice.");
@@ -361,7 +364,15 @@ export default function InvoiceCenter() {
                 })}
               </tbody>
             </table>
-            {filteredInvoices.length === 0 && <EmptyState />}
+            {filteredInvoices.length === 0 && (
+              <EmptyState
+                variant="invoices"
+                title="No Invoices Issued Yet"
+                description="Generate client invoices, track milestone payments, and automate payment reminders."
+                ctaText="Generate First Invoice"
+                onCtaClick={() => { resetForm(); setIsModalOpen(true); }}
+              />
+            )}
           </div>
         )}
       </div>

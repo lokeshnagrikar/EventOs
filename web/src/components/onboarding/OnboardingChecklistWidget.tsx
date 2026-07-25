@@ -4,9 +4,12 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronUp, ChevronDown, CheckCircle2, Sparkles, Play, Pause, X, Trophy, Star, Zap } from "lucide-react";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useToastStore } from "@/lib/toastStore";
+import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
+
+const APP_PATHS = ["/dashboard", "/crm", "/events", "/gallery", "/invoices", "/quotes", "/settings", "/ai", "/reports", "/bookings", "/activity", "/chat", "/onboarding"];
 
 interface ChecklistItem {
   id: string;
@@ -174,7 +177,7 @@ export default function OnboardingChecklistWidget() {
         </div>
       )}
 
-      <div className="hidden md:block fixed bottom-6 right-[80px] z-40 select-none font-sans text-xs">
+      <div className="hidden md:block fixed bottom-6 right-44 z-40 select-none font-sans text-xs">
         <div className="relative">
           <AnimatePresence>
             {!isExpanded ? (

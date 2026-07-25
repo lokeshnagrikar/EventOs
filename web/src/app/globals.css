@@ -514,6 +514,10 @@ html:not(.dark) .theme-dynamic {
 }
 
 /* ─── Lenis Smooth Scroll Configuration ─────────────────────────────────────── */
+html {
+  scroll-behavior: auto !important;
+}
+
 html.lenis,
 html.lenis body {
   height: auto;
