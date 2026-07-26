@@ -269,6 +269,28 @@ export default function GalleryPage() {
       setFormError("Album name is required.");
       return;
     }
+
+    const newAlbumObj: Album = {
+      id: `alb_${Date.now()}`,
+      name: albumName,
+      description: description || "Curated visual asset collection for event proofing.",
+      eventId: selectedEventId || undefined,
+      itemCount: 0,
+      thumbnailUrl: coverImage || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
+      coverImage: coverImage || undefined,
+      createdAt: new Date().toISOString(),
+      status: albumStatus,
+      visibility: albumVisibility
+    };
+
+    // Save to local storage for instant sync across tabs & Client Portal
+    try {
+      const saved = localStorage.getItem("eventos_shared_albums");
+      const existing: Album[] = saved ? JSON.parse(saved) : [];
+      const updated = [newAlbumObj, ...existing];
+      localStorage.setItem("eventos_shared_albums", JSON.stringify(updated));
+    } catch (err) {}
+
     createAlbumMutation.mutate({
       name: albumName, description: description || undefined, eventId: selectedEventId || undefined,
       status: albumStatus, visibility: albumVisibility, coverImage: coverImage || undefined

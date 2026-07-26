@@ -173,7 +173,7 @@ export default function ClientDashboard() {
   // Active progress stage selection mapping
   const currentStage = useMemo(() => {
     if (!activeEvent) return STAGES[0];
-    const status = activeEvent.status.toUpperCase();
+    const status = (activeEvent.status || "CONFIRMED").toUpperCase();
     if (status === "CONFIRMED") return STAGES[3];
     if (status === "IN_PROGRESS") return STAGES[6];
     if (status === "COMPLETED") return STAGES[8];
@@ -249,8 +249,14 @@ export default function ClientDashboard() {
         )}
       </header>
 
-      {/* ─── JOURNEY PROGRESS TRACKER ─── */}
-      {activeEvent && (
+      {/* ─── JOURNEY PROGRESS TRACKER / EMPTY STATE ─── */}
+      {!activeEvent ? (
+        <EmptyState
+          variant="events"
+          title="No Active Event Assigned"
+          description="Your event details, milestone progress, and run-of-show schedule will outline here once configured by your coordinator."
+        />
+      ) : (
         <div className="p-6 border border-white/[0.04] bg-white/[0.02] backdrop-blur-md rounded-2xl space-y-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-purple-500/[0.02] via-transparent to-transparent pointer-events-none" />
           <div className="flex justify-between items-center text-xs">

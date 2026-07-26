@@ -9,6 +9,8 @@ import { ProgressRing } from "./ProgressRing";
 import { useLoadingProgress } from "./useLoadingProgress";
 import { EASE_PREMIUM } from "./animations";
 
+import { EventOsLogo } from "@/components/ui/EventOsLogo";
+
 interface PreloaderProps {
   onComplete: () => void;
 }
@@ -76,13 +78,13 @@ export function Preloader({ onComplete }: PreloaderProps) {
 
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {!isExiting && (
         <motion.div
           initial={{ opacity: 1 }}
           exit={{
             opacity: 0,
-            transition: { duration: 0.8, ease: EASE_PREMIUM }
+            transition: { duration: 0.95, ease: [0.7, 0, 0.2, 1] }
           }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#09090B] select-none overflow-hidden"
         >
@@ -96,35 +98,30 @@ export function Preloader({ onComplete }: PreloaderProps) {
           <motion.div
             style={{ x: parallaxX, y: parallaxY }}
             exit={{
-              scale: 2.5,
+              scale: 4.5,
               opacity: 0,
-              filter: "blur(10px)",
-              transition: { duration: 0.75, ease: EASE_PREMIUM }
+              filter: "blur(14px)",
+              transition: { duration: 0.9, ease: [0.7, 0, 0.2, 1] }
             }}
             className="flex flex-col items-center justify-center z-10 max-w-sm w-full px-6 text-center space-y-7"
           >
             {/* 1. Large Brand Mark Silhouette with Shimmer Effect */}
             <div className="relative flex flex-col items-center gap-4">
               
-              {/* Floating Sparkles Icon Silhouette */}
+              {/* Transparent Floating EventOS Monogram Logo */}
               <motion.div
                 animate={{ 
-                  y: [0, -6, 0],
-                  filter: ["drop-shadow(0 0 10px rgba(168,85,247,0.25))", "drop-shadow(0 0 20px rgba(236,72,153,0.45))", "drop-shadow(0 0 10px rgba(168,85,247,0.25))"]
+                  y: [0, -8, 0],
+                  filter: [
+                    "drop-shadow(0 0 20px rgba(168,85,247,0.4)) drop-shadow(0 0 40px rgba(236,72,153,0.25))",
+                    "drop-shadow(0 0 35px rgba(236,72,153,0.65)) drop-shadow(0 0 60px rgba(168,85,247,0.4))",
+                    "drop-shadow(0 0 20px rgba(168,85,247,0.4)) drop-shadow(0 0 40px rgba(236,72,153,0.25))"
+                  ]
                 }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-cyan-500 flex items-center justify-center text-white shadow-xl relative overflow-hidden"
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+                className="relative flex items-center justify-center py-2"
               >
-                {/* Diagonal shine line sweeping on the icon */}
-                <motion.div 
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent w-[40%] -skew-x-12"
-                  style={{
-                    left: `${(progress * 1.5) - 40}%`
-                  }}
-                />
-                <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 3v18M3 12h18M12 3l3.5 5.5L21 12l-5.5 3.5L12 21l-3.5-5.5L3 12l5.5-3.5L12 3z" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                <EventOsLogo size={105} animated={true} />
               </motion.div>
 
               {/* Shimmering Text Logo */}

@@ -91,7 +91,7 @@ function SvgIllustration({ variant }: { variant: EmptyStateVariant }) {
           <rect x="36" y="22" width="48" height="76" rx="8" fill="url(#inv_bg)" stroke="#34D399" strokeWidth="1.5" />
           <path d="M44 34H76M44 46H68M44 56H60" stroke="#6EE7B7" strokeWidth="2" strokeLinecap="round" />
           <circle cx="60" cy="74" r="12" fill="#059669" fillOpacity="0.3" stroke="#10B981" strokeWidth="2" />
-          <text x="60" y="78" fill="#34D399" fontSize="13" fontWeight="bold" textAnchor="middle font-mono">₹</text>
+          <text x="60" y="78" fill="#34D399" fontSize="13" fontWeight="bold" textAnchor="middle" className="font-mono">₹</text>
           <defs>
             <linearGradient id="inv_bg" x1="36" y1="22" x2="84" y2="98" gradientUnits="userSpaceOnUse">
               <stop stopColor="#064E3B" />

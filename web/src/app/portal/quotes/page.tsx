@@ -185,9 +185,9 @@ export default function PortalQuotesPage() {
       {activeCategory === "PROPOSALS" && (
         clientQuotes.length === 0 ? (
           <EmptyState
-            icon={FileText}
+            variant="quotes"
             title="No active proposals found"
-            description="Quotations will show here once shared by our planner."
+            description="Quotations and digital proposals will show here once issued by your coordinator."
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

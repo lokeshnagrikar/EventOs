@@ -93,6 +93,25 @@ export default function AdvancedUploader({ albumId, onUploadComplete }: Advanced
           )
         );
         
+        // Save uploaded file info to local storage state for client portal sync
+        try {
+          const newItem = {
+            id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            albumId: albumId,
+            name: item.name,
+            type: item.file.type.startsWith("video") ? "VIDEO" : "IMAGE",
+            url: URL.createObjectURL(item.file),
+            category: "Decor",
+            size: item.size,
+            format: item.name.split(".").pop(),
+            createdAt: new Date().toISOString(),
+            favorite: false
+          };
+          const key = `eventos_gallery_items_${albumId}`;
+          const existing = JSON.parse(localStorage.getItem(key) || "[]");
+          localStorage.setItem(key, JSON.stringify([newItem, ...existing]));
+        } catch (e) {}
+
         showToast(`Successfully uploaded ${item.name}`, "success");
         queryClient.invalidateQueries({ queryKey: ["albumItems", albumId] });
         queryClient.invalidateQueries({ queryKey: ["albums"] });

@@ -125,9 +125,9 @@ export default function PortalTimelinePage() {
 
       {sortedTimeline.length === 0 ? (
         <EmptyState
-          icon={Clock}
+          variant="events"
           title="Timeline not active"
-          description="Our coordinators will outline milestones shortly."
+          description="Event milestones and run-of-show schedules will outline here once configured by your coordinator."
         />
       ) : (
         <div className="relative pl-8 ml-4 sm:ml-6 space-y-8 py-2">

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { EventOsLogo } from "@/components/ui/EventOsLogo";
 import { ORB_FLOAT } from "./animations";
 
 export const GlassOrb = React.memo(function GlassOrb() {
@@ -30,8 +30,8 @@ export const GlassOrb = React.memo(function GlassOrb() {
         aria-hidden="true"
       />
 
-      {/* Sparkles icon inside */}
-      <Sparkles size={24} className="text-purple-100 relative z-10 animate-pulse" />
+      {/* EventOS Monogram Logo inside */}
+      <EventOsLogo size={36} animated={true} className="relative z-10" />
     </motion.div>
   );
 });

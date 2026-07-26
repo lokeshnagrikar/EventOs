@@ -2,7 +2,8 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { EventOsLogo } from "@/components/ui/EventOsLogo";
 
 // Shimmer gradient style helper
 const shimmer =
@@ -14,23 +15,47 @@ export function LoadingScreen({ message = "Loading workspace..." }: { message?: 
       {/* Decorative Radial Grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#1c1917_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
       
-      {/* Gradient Glow */}
-      <div className="absolute w-[300px] h-[300px] bg-purple-550/10 blur-[100px] rounded-full pointer-events-none" />
+      {/* Animated Gradient Glow Aura */}
+      <motion.div
+        animate={{ scale: [1, 1.25, 1], opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute w-[380px] h-[380px] bg-gradient-to-tr from-purple-600/25 via-pink-500/20 to-cyan-500/10 blur-[130px] rounded-full pointer-events-none"
+      />
 
-      <div className="relative flex flex-col items-center space-y-4">
-        {/* Glowing Brand Badge */}
-        <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-2xl shadow-xl shadow-purple-500/20 select-none animate-pulse">
-          <Sparkles size={22} className="text-white animate-spin [animation-duration:8s]" />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative flex flex-col items-center space-y-5"
+      >
+        {/* Glowing Official EventOS Monogram Preloader Logo (Transparent Float) */}
+        <motion.div
+          animate={{ 
+            y: [0, -8, 0],
+            filter: [
+              "drop-shadow(0 0 25px rgba(168,85,247,0.45)) drop-shadow(0 0 45px rgba(236,72,153,0.3))",
+              "drop-shadow(0 0 40px rgba(236,72,153,0.7)) drop-shadow(0 0 70px rgba(168,85,247,0.45))",
+              "drop-shadow(0 0 25px rgba(168,85,247,0.45)) drop-shadow(0 0 45px rgba(236,72,153,0.3))"
+            ]
+          }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+          className="relative flex items-center justify-center py-2"
+        >
+          <EventOsLogo size={96} animated={true} />
+        </motion.div>
+
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-1.5 justify-center">
+            Event<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500">OS</span>
+          </h2>
+          <p className="text-[10.5px] text-zinc-400 font-bold tracking-widest uppercase">{message}</p>
         </div>
-        <div className="text-center">
-          <h2 className="text-lg font-bold text-zinc-200">EventOS</h2>
-          <p className="text-xs text-zinc-500 font-medium tracking-wider uppercase mt-1">{message}</p>
+
+        {/* Shimmering Dynamic Progress Bar */}
+        <div className="w-56 bg-white/[0.04] border border-white/[0.08] h-1.5 rounded-full relative overflow-hidden mt-1 shadow-inner">
+          <div className="absolute top-0 left-0 h-full w-2/3 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 rounded-full animate-[shimmer_1.5s_infinite]" />
         </div>
-        {/* Shimmering Progress Bar */}
-        <div className="w-48 bg-white/[0.04] border border-white/[0.08] h-1 rounded-full relative overflow-hidden mt-2">
-          <div className="absolute top-0 left-0 h-full w-2/3 bg-gradient-to-r from-purple-500 to-pink-500 animate-[shimmer_1.5s_infinite]" />
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
