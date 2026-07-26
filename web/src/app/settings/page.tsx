@@ -942,10 +942,10 @@ export default function SettingsPage() {
       s.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const team = teamRes || [];
-  const apiKeys = apiKeysRes || [];
-  const auditLogs = auditLogsRes || [];
-  const securitySessions = securitySessionsRes || [];
+  const team = useMemo(() => teamRes || [], [teamRes]);
+  const apiKeys = useMemo(() => apiKeysRes || [], [apiKeysRes]);
+  const auditLogs = useMemo(() => auditLogsRes || [], [auditLogsRes]);
+  const securitySessions = useMemo(() => securitySessionsRes || [], [securitySessionsRes]);
   const billingStats = billingRes || { profile: {}, usage: {} };
 
   // Resolve user ID to their email dynamically from the team list

@@ -154,17 +154,46 @@ Quote estimate tha. **Invoice actual legal bill/statement hota hai.**
 
 ---
 
-## 9. Payment (0% Platform Fee Direct UPI Settlement) Kya Hai?
+## 9. Payment & Enterprise Payment Engine (v1.2 Platform Commission) Kya Hai?
 
 ### 💡 Simple Definition:
-Invoice ke baad client paise pay karta hai. EventOS ki khaas baat ye hai ki **0% Platform Commission** lagta hai. Client ka sara paisa **seedhe Agency Owner ke Bank Account** mein jata hai!
+Invoice ke baad client paise pay karta hai. **EventOS v1.2** mein **Enterprise Payment Engine** hai, jo Agency Owner aur Platform Admin dono ko **Configurable Platform Fee & Commission Modes** set karne ki permission deta hai:
+
+```
+                  ┌─────────────────────────────────────────┐
+                  │   v1.2 Enterprise Payment Engine Tiers  │
+                  ├─────────────────────────────────────────┤
+                  │ 1. NO_FEE           ➔ 0% Platform Fee   │
+                  │ 2. FIXED            ➔ ₹99 / ₹500 Flat   │
+                  │ 3. PERCENTAGE       ➔ 2.0% Commission   │
+                  │ 4. CUSTOM SLAB      ➔ Enterprise Matrix │
+                  └─────────────────────────────────────────┘
+```
+
+### ⚙️ Platform Fee Calculation Tiers:
+1. **NO_FEE (0% Platform Fee):** 100% money clears to Agency Owner's bank account with zero platform deduction.
+2. **FIXED_FEE:** Fixed flat charge per transaction (e.g. ₹99 per invoice payment).
+3. **PERCENTAGE_FEE:** Configurable rate (e.g. 2.0% platform fee). On a ₹1,50,000 payment, Platform Fee = ₹3,000.
+4. **CUSTOM_SLAB:** Enterprise custom tier for high-volume agencies.
+
+### 👤 Fee Bearer Allocation Rules (`feeBearer`):
+- **OWNER_DEDUCTION (Owner Pays):** Platform fee is deducted from the Owner's settlement net payout.  
+  *(Gross Client Invoice: ₹1,50,000 | Platform Fee 2%: ₹3,000 | **Net Owner Settlement: ₹1,47,000**)*
+- **CLIENT_SURCHARGE (Client Pays):** Platform fee is added transparently on top of the invoice total.  
+  *(Client Pays: ₹1,53,000 | Platform Fee 2%: ₹3,000 | **Net Owner Settlement: ₹1,50,000**)*
 
 ### 📌 Real UPI Payment Flow:
-1. Owner Settings mein VPA daalta hai: `agencyowner@upi`
-2. Client Portal par **Pay Now** par click karta hai.
-3. Live NPCI UPI QR Code generate hota hai (`DynamicUpiQrModal.tsx`).
-4. Client Google Pay, PhonePe, ya Paytm se QR scan karke ₹1,50,000 transfer kar deta hai.
-5. Client UTR reference (`UPI/619283719283/GPay`) daalta hai aur payment instant receipt ban jata hai!
+1. Owner Workspace Settings (`/settings?tab=payment_engine`) mein payment engine configure karta hai (`ownerUpiId: agencyowner@okaxis`).
+2. Client Portal par **Pay Now** click karta hai.
+3. Live NPCI UPI QR Code generate hota hai (`DynamicUpiQrModal.tsx`) showing Net Owner Settlement & Platform Fee breakdown.
+4. Client Google Pay, PhonePe, Paytm, ya BHIM se QR scan karke payment karta hai.
+5. Client UTR reference (`UPI/619283719283/GPay`) daalta hai aur payment instant receipt status update ho jata hai!
+
+### 💻 EventOS Technical Route & Code References:
+- Frontend Settings: [`PaymentEngineSettings.tsx`](file:///d:/EventOs/web/src/components/settings/PaymentEngineSettings.tsx)
+- Frontend Modal: [`DynamicUpiQrModal.tsx`](file:///d:/EventOs/web/src/components/finance/DynamicUpiQrModal.tsx)
+- Backend Calculation Engine: [`FeeCalculationService.java`](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/payment/service/FeeCalculationService.java)
+- Backend Controller: [`PaymentEngineController.java`](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/controller/PaymentEngineController.java)
 
 ---
 

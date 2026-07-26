@@ -57,25 +57,35 @@ Instead of spending 3 hours manually crafting PDF estimates in Canva or Excel, E
 
 ---
 
-## 💳 3. DIRECT SETTLEMENT PAYMENTS & INVOICING (`/invoices`)
+## 💳 3. ENTERPRISE PAYMENT ENGINE & INVOICING (`/invoices`)
 
 ### How it works for the Owner:
-EventOS features a **Dual Payment Architecture**:
-1. **Layer 1 (Platform Subscription):** Stripe handles your SaaS subscription to EventOS.
-2. **Layer 2 (Agency Client Payments):** 100% direct settlement into your agency's bank account with **0% Platform Commission**.
+EventOS features a **Dual Payment Architecture with Configurable Platform Commission (v1.2 Engine)**:
+1. **Layer 1 (Platform SaaS Subscription):** Stripe handles your SaaS subscription tier.
+2. **Layer 2 (Agency Client Settlement):** Direct settlement to your bank account with configurable **Platform Commission Modes**:
+   - **`NO_FEE`**: 0% Platform Fee (100% money clears to owner).
+   - **`FIXED`**: Fixed flat fee per transaction (e.g. ₹99 per invoice payment).
+   - **`PERCENTAGE`**: Configurable rate (e.g. 2.0% platform fee).
+   - **`CUSTOM`**: Custom enterprise slab matrices for high-volume agencies.
 
-### Owner Payment Configuration:
-You enter your bank details in **Workspace Settings**:
+### Fee Bearer Allocation Rules (`feeBearer`):
+- **`OWNER_DEDUCTION`**: Platform fee is deducted from the Agency Owner's net settlement.  
+  *(Gross Invoice: ₹1,50,000 | Platform Fee 2%: ₹3,000 | **Net Owner Payout: ₹1,47,000**)*
+- **`CLIENT_SURCHARGE`**: Platform fee is added transparently on top of the client's invoice total.  
+  *(Client Pays: ₹1,53,000 | Platform Fee 2%: ₹3,000 | **Net Owner Payout: ₹1,50,000**)*
+
+### Owner Payment Configuration (`/settings?tab=payment_engine`):
+You configure your bank and UPI credentials in Workspace Settings:
 - **UPI VPA:** `agencyowner@okaxis`
 - **Account Number:** `918273645012`
 - **IFSC Code:** `UTIB0000123`
 - **Account Name:** `Royal Events & Scenography Pvt Ltd`
 
 ### Real-World Payment Flow:
-1. EventOS generates a live NPCI-compliant UPI QR code (`upi://pay?pa=agencyowner@okaxis&pn=Royal%20Events&am=150000...`).
+1. EventOS generates a live NPCI-compliant UPI QR code (`upi://pay?pa=agencyowner@okaxis&pn=Royal%20Events&am=150000...`) via `DynamicUpiQrModal.tsx`.
 2. Client scans the QR code using Google Pay, PhonePe, Paytm, or BHIM.
-3. **₹1,50,000 clears directly into your bank account instantly.**
-4. Client enters UTR reference (`UPI/619283719283/GPay`), and EventOS automatically issues an official payment receipt!
+3. Payment clears directly into your bank account according to the configured settlement mode (`DIRECT_SETTLEMENT`, `PLATFORM_SETTLEMENT`, or `AUTO_SETTLEMENT`).
+4. Client enters UTR reference (`UPI/619283719283/GPay`), and EventOS automatically issues an official tax receipt!
 
 ---
 

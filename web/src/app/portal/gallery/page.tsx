@@ -217,7 +217,7 @@ export default function PortalGalleryPage() {
     enabled: !!selectedAlbum
   });
 
-  const rawAlbumItems = albumItemsResponse?.data || [];
+  const rawAlbumItems = useMemo(() => albumItemsResponse?.data || [], [albumItemsResponse]);
 
   const items = useMemo(() => {
     return rawAlbumItems.map((item) => ({

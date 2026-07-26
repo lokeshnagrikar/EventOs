@@ -225,7 +225,7 @@ export default function CrmPage() {
     enabled: mounted
   });
 
-  const leads = leadsResponse?.data || [];
+  const leads = useMemo(() => leadsResponse?.data || [], [leadsResponse]);
   const pagination = leadsResponse?.pagination;
 
   // Calculate duplicate leads (sharing email or phone)

@@ -68,7 +68,7 @@ export default function PortalTimelinePage() {
     }
   });
 
-  const clientTimeline = timelineResponse?.data || [];
+  const clientTimeline = useMemo(() => timelineResponse?.data || [], [timelineResponse]);
 
   // Sort timeline chronologically
   const sortedTimeline = useMemo(() => {

@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { DashboardSkeleton } from "@/components/ui/skeletons";
 
@@ -140,10 +141,10 @@ export default function ClientDashboard() {
     }
   });
 
-  const clientQuotes = quotesData?.data || [];
-  const clientInvoices = invoicesData?.data || [];
-  const eventsList = eventsData?.data || [];
-  const clientTimeline = timelineData?.data || [];
+  const clientQuotes = useMemo(() => quotesData?.data || [], [quotesData]);
+  const clientInvoices = useMemo(() => invoicesData?.data || [], [invoicesData]);
+  const eventsList = useMemo(() => eventsData?.data || [], [eventsData]);
+  const clientTimeline = useMemo(() => timelineData?.data || [], [timelineData]);
 
   const activeEvent = eventsList[0] || null;
 

@@ -167,9 +167,9 @@ export default function AlbumDetailPage() {
   });
 
   const album = albumResponse?.data;
-  const rawItems = itemsResponse?.data || [];
-  const events = eventsResponse?.data || [];
-  const shareLinks = shareLinksResponse?.data || [];
+  const rawItems = useMemo(() => itemsResponse?.data || [], [itemsResponse]);
+  const events = useMemo(() => eventsResponse?.data || [], [eventsResponse]);
+  const shareLinks = useMemo(() => shareLinksResponse?.data || [], [shareLinksResponse]);
 
   const associatedEvent = events.find((e) => e.id === album?.eventId);
 
