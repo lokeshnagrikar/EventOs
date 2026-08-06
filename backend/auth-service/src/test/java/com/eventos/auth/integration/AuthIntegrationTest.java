@@ -24,9 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = {
-    "spring.data.redis.url=redis://localhost:6379"
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
 @SuppressWarnings("null")
