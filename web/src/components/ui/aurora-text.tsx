@@ -35,8 +35,9 @@ export function AuroraText({ children, className, speed = 6 }: AuroraTextProps) 
       )}
       style={{
         backgroundImage:
-          "linear-gradient(135deg, #7C3AED, #8B5CF6, #A855F7, #7C3AED)",
+          "linear-gradient(135deg, #7C3AED 0%, #9333EA 25%, #EC4899 50%, #8B5CF6 75%, #7C3AED 100%)",
         backgroundSize: "300% 300%",
+        filter: "drop-shadow(0 2px 10px rgba(124, 58, 237, 0.2))",
       }}
       animate={{
         backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],

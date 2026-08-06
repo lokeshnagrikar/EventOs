@@ -248,9 +248,9 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
 
         {/* Hero Headline & Description */}
         <div className="max-w-4xl flex flex-col items-center text-center">
-          <h1 className="text-4xl sm:text-6xl lg:text-[76px] font-extrabold tracking-tight leading-[1.05] font-heading text-balance text-pretty text-[#111827]">
-            <span className="gsap-title-word inline-block opacity-0 mr-3 text-[#111827]">Plan. Automate.</span>
-            <span className="gsap-title-word inline-block opacity-0 mr-3 text-[#111827]">Scale Events.</span>
+          <h1 className="text-4xl sm:text-6xl lg:text-[76px] font-extrabold tracking-tight leading-[1.05] font-heading text-balance text-pretty">
+            <span className="gsap-title-word inline-block opacity-0 mr-3 bg-clip-text text-transparent bg-gradient-to-b from-[#0F172A] via-[#1E293B] to-[#475569] drop-shadow-sm">Plan. Automate.</span>
+            <span className="gsap-title-word inline-block opacity-0 mr-3 bg-clip-text text-transparent bg-gradient-to-b from-[#0F172A] via-[#1E293B] to-[#475569] drop-shadow-sm">Scale Events.</span>
             <br className="hidden sm:inline" />
             <span className="gsap-title-word inline-block opacity-0 mt-1 sm:mt-2 w-full text-center">
               <RotatingHeroPhrase />

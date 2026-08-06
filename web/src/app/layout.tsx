@@ -19,7 +19,6 @@ const outfit = Outfit({
   display: "swap",
 });
 
-
 export const metadata: Metadata = {
   title: "EventOS | The Operating System for Event Businesses",
   description: "Centralize your leads, events, quotes, and invoice payments on the premium operating system designed specifically for event agencies, planners, and coordinators.",
