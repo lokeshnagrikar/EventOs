@@ -243,7 +243,7 @@ const features = [
   { icon: "solar:shield-check-bold-duotone", label: "Isolated & Secure", desc: "Each client sees only their data — zero cross-contamination." },
   { icon: "solar:link-circle-bold-duotone", label: "Unique Invite Link", desc: "One-click setup. Clients register via a secure invitation URL." },
   { icon: "solar:smartphone-bold-duotone", label: "Mobile-First Design", desc: "Optimized for phones — clients access on-the-go." },
-  { icon: "solar:pallete-bold-duotone", label: "White-Label Ready", desc: "Custom domain + logo mapping for Growth & Enterprise plans." },
+  { icon: "solar:pallete-bold-duotone", label: "White-Label Ready", desc: "Custom domain + logo mapping for Professional & Enterprise plans." },
 ];
 
 export function ClientPortalPreview() {
@@ -254,7 +254,7 @@ export function ClientPortalPreview() {
 
   return (
     <section
-      className="py-24 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden"
+      className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden"
       id="portal-preview"
     >
       {/* Background glows */}
@@ -335,7 +335,7 @@ export function ClientPortalPreview() {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-zinc-200">{feat.label}</h4>
-                    <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{feat.desc}</p>
+                    <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed" suppressHydrationWarning>{feat.desc}</p>
                   </div>
                 </motion.div>
               ))}

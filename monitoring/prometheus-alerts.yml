@@ -1,0 +1,47 @@
+groups:
+  - name: EventOS_Production_Alerts
+    rules:
+      - alert: ServiceDown
+        expr: up{job="eventos-microservices"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "EventOS Microservice {{ $labels.instance }} is DOWN"
+          description: "Instance {{ $labels.instance }} has been unreachable for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count[5m])) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx Error Rate (> 5%)"
+          description: "HTTP 5xx error rate is currently at {{ $value }}%."
+
+      - alert: HighApiLatency
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) > 0.500
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 95th Percentile API Latency (> 500ms)"
+          description: "API p95 latency has exceeded 500ms over the last 3 minutes."
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: hikaricp_connections_active / hikaricp_connections_max > 0.90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL HikariCP Connection Pool Near Exhaustion (> 90%)"
+          description: "Active HikariCP database connections have exceeded 90% of max capacity."
+
+      - alert: PaymentWebhookFailureSpike
+        expr: rate(payment_webhook_failures_total[10m]) > 3
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Stripe/Razorpay Payment Webhook Failure Spike"
+          description: "Payment webhook callback failure rate is unusually high."

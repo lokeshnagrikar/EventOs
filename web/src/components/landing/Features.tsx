@@ -208,7 +208,7 @@ export function Features() {
 
   return (
     <section
-      className="py-24 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden"
+      className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden"
       id="features"
     >
       {/* Dynamic Background Grid Pattern */}
@@ -228,17 +228,17 @@ export function Features() {
           transition={{ duration: 0.5 }}
           className="text-center max-w-3xl mx-auto space-y-4 mb-16"
         >
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 uppercase">
-            <Icon icon="solar:widget-bold-duotone" className="text-purple-400 text-sm" />
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 uppercase">
+            <Icon icon="solar:widget-bold-duotone" className="text-purple-600 text-sm" />
             End-to-End Operating System
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white font-heading text-balance">
+          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading text-balance">
             Everything your agency needs,{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
               in one workspace.
             </span>
           </h2>
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
             Stop stitching together 6 different subscriptions. EventOS brings leads, proposals, timelines, invoices, client portals, and secure gallery sharing into a single tenant database.
           </p>
         </motion.div>
@@ -257,43 +257,36 @@ export function Features() {
               <SpotlightCard
                 spotlightColor={feat.spotlightColor}
                 borderColor={feat.borderColor}
-                className="h-full group relative rounded-2xl border border-white/[0.06] bg-zinc-950/20 backdrop-blur-md p-6 flex flex-col justify-between gap-4 hover:border-white/[0.12] hover:bg-zinc-900/10 transition-all duration-500 hover:shadow-[0_0_50px_rgba(0,0,0,0.4)]"
+                className="h-full group relative rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-md p-6 flex flex-col justify-between gap-4 hover:border-purple-300 hover:bg-white transition-all duration-500 shadow-sm hover:shadow-md"
               >
-                <div className="space-y-4">
-                  {/* Icon + Badge Row */}
-                  <div className="flex items-center justify-between">
+                {/* Feature Graphic */}
+                <FeatureMicroGraphic type={feat.type} color={feat.iconColor} />
+
+                {/* Card Info */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
                     <div
-                      className="h-12 w-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
-                      style={{
-                        background: `${feat.iconColor}18`,
-                        border: `1px solid ${feat.iconColor}30`,
-                      }}
+                      className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: `${feat.iconColor}18`, border: `1px solid ${feat.iconColor}30` }}
                     >
-                      <Icon icon={feat.icon} style={{ color: feat.iconColor }} className="text-2xl" />
+                      <Icon icon={feat.icon} style={{ color: feat.iconColor }} className="text-lg" />
                     </div>
                     <span
-                      className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
-                      style={{
-                        background: `${feat.iconColor}18`,
-                        color: feat.iconColor,
-                        border: `1px solid ${feat.iconColor}30`,
-                      }}
+                      className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                      style={{ background: `${feat.iconColor}18`, color: feat.iconColor, border: `1px solid ${feat.iconColor}30` }}
                     >
                       {feat.badge}
                     </span>
                   </div>
 
-                  {/* Text */}
-                  <div className="space-y-2 text-left">
-                    <h3 className="text-base font-bold text-zinc-100 group-hover:text-white transition-colors">
-                      {feat.title}
-                    </h3>
-                    <p className="text-zinc-500 text-xs leading-relaxed">{feat.description}</p>
-                  </div>
-                </div>
+                  <h3 className="text-lg font-bold text-slate-900 leading-snug tracking-tight group-hover:text-purple-700 transition-colors">
+                    {feat.title}
+                  </h3>
 
-                {/* Animated Micro Graphic Component */}
-                <FeatureMicroGraphic type={feat.type} color={feat.iconColor} />
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    {feat.description}
+                  </p>
+                </div>
 
                 {/* Hover bottom bar */}
                 <div

@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { EmptyState } from "@/components/ui/EmptyState";
+import EmptyState from "@/components/ui/EmptyState";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { DashboardSkeleton } from "@/components/ui/skeletons";
 
@@ -214,7 +214,7 @@ export default function ClientDashboard() {
 
   return (
     <div className="space-y-8 animate-slide-in text-zinc-300 select-none">
-      
+
       {/* ─── DYNAMIC WELCOME HEADER ─── */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/[0.04] relative">
         <div className="flex items-center gap-4">
@@ -230,7 +230,7 @@ export default function ClientDashboard() {
             </p>
           </div>
         </div>
-        
+
         {/* Days remaining countdown circular progress widget */}
         {activeEvent && (
           <div className="flex items-center gap-4 bg-white/[0.02] backdrop-blur-md border border-white/[0.04] p-4.5 rounded-2xl relative shadow-md overflow-hidden shrink-0">
@@ -289,7 +289,7 @@ export default function ClientDashboard() {
 
       {/* ─── BENTO GRID STATS ─── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
+
         {/* Outstanding Balance */}
         <div onClick={() => router.push("/portal/invoices")} className="p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] backdrop-blur-md hover:border-purple-500/20 shadow-md flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
           <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Outstanding balance</span>
@@ -330,10 +330,10 @@ export default function ClientDashboard() {
 
       {/* ─── DUAL COLUMN INTERACTION SPACES ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
+
         {/* Left column: Event details & checklist */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* Guest Checklist Card */}
           <div className="p-6 border border-white/[0.04] bg-white/[0.01] backdrop-blur-md rounded-2xl space-y-4 shadow-sm">
             <div className="flex justify-between items-center">
@@ -376,14 +376,14 @@ export default function ClientDashboard() {
               <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-400">Campaign analytics progress</h3>
               <p className="text-[10px] text-zinc-550 mt-0.5">Overall task completions logged.</p>
             </div>
-            
+
             <div className="h-44 w-full text-xs">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analyticsData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <defs>
                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#a855f7" stopOpacity={0.85}/>
-                      <stop offset="100%" stopColor="#6366f1" stopOpacity={0.2}/>
+                      <stop offset="0%" stopColor="#a855f7" stopOpacity={0.85} />
+                      <stop offset="100%" stopColor="#6366f1" stopOpacity={0.2} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
@@ -400,17 +400,17 @@ export default function ClientDashboard() {
 
         {/* Right column: Quick Actions & Timeline milestones preview */}
         <div className="lg:col-span-1 space-y-6">
-          
+
           {/* Quick Actions Panel */}
           <div className="p-6 border border-white/[0.04] bg-white/[0.01] backdrop-blur-md rounded-2xl space-y-3.5 shadow-sm">
             <span className="text-[9.5px] text-zinc-550 uppercase font-black tracking-widest block">Quick Navigation Desk</span>
-            
+
             <div className="space-y-2 text-xs font-semibold text-zinc-350">
               <button onClick={() => router.push("/portal/timeline")} className="w-full p-3 border border-white/[0.05] bg-white/[0.01] rounded-xl text-left hover:border-purple-500/20 transition-all flex justify-between items-center group">
                 <span>View Timeline details</span>
                 <ArrowRight size={12} className="text-zinc-650 group-hover:translate-x-0.5 transition-transform" />
               </button>
-              
+
               <button onClick={() => router.push("/portal/invoices")} className="w-full p-3 border border-white/[0.05] bg-white/[0.01] rounded-xl text-left hover:border-purple-500/20 transition-all flex justify-between items-center group">
                 <span>View Invoices & receipts</span>
                 <ArrowRight size={12} className="text-zinc-650 group-hover:translate-x-0.5 transition-transform" />

@@ -96,23 +96,23 @@ export function Testimonials() {
           </span>
 
           {/* Aggregate star display */}
-          <div className="flex items-center justify-center gap-2">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
             <div className="flex gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Icon key={i} icon="solar:star-bold" className="text-amber-500 text-xl" />
               ))}
             </div>
-            <span className="text-white font-extrabold text-lg">5.0</span>
-            <span className="text-zinc-500 text-sm font-medium">from 200+ agencies</span>
+            <span className="text-slate-900 font-extrabold text-lg">5.0</span>
+            <span className="text-slate-600 text-sm font-semibold">from 200+ agencies</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading">
             Endorsed by leading{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-600">
               production teams.
             </span>
           </h2>
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
             See how high-volume event creators streamline their sales, billing, and scheduling using the EventOS suite.
           </p>
         </motion.div>

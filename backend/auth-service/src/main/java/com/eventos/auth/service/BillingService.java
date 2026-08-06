@@ -24,6 +24,7 @@ public class BillingService {
     private final MembershipRepository membershipRepository;
     private final AuditLogService auditLogService;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     public BillingService(PlanRepository planRepository,
                           SubscriptionRepository subscriptionRepository,
@@ -36,7 +37,8 @@ public class BillingService {
                           UserRepository userRepository,
                           MembershipRepository membershipRepository,
                           AuditLogService auditLogService,
-                          JwtService jwtService) {
+                          JwtService jwtService,
+                          EmailService emailService) {
         this.planRepository = planRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.paymentMethodRepository = paymentMethodRepository;
@@ -49,6 +51,7 @@ public class BillingService {
         this.membershipRepository = membershipRepository;
         this.auditLogService = auditLogService;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
 
     public List<Plan> getPlans() {
@@ -148,7 +151,7 @@ public class BillingService {
 
         // Generate Mock Invoice
         String invoiceNum = "INV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        Invoice invoice = Invoice.builder()
+        Invoice invoice = invoiceRepository.save(Invoice.builder()
                 .tenantId(tenantId)
                 .subscription(subscription)
                 .invoiceNumber(invoiceNum)
@@ -161,8 +164,7 @@ public class BillingService {
                 .dueDate(LocalDateTime.now())
                 .paidAt(LocalDateTime.now())
                 .pdfUrl("https://invoice-store.eventos.com/" + invoiceNum + ".pdf")
-                .build();
-        invoice = invoiceRepository.save(invoice);
+                .build());
 
         // Save default payment method if available
         List<PaymentMethod> pms = paymentMethodRepository.findByTenantIdAndIsDefaultTrue(tenantId);
@@ -180,6 +182,29 @@ public class BillingService {
         billingHistoryRepository.save(history);
 
         auditLogService.logEvent(tenantId, null, "SUBSCRIPTION_UPGRADED", "127.0.0.1", "System", "Upgraded subscription to plan: " + newPlan.getName());
+
+        // Dispatch 3D Crown Subscription Confirmation Email to Workspace Owner
+        try {
+            membershipRepository.findByTenantId(tenantId).stream()
+                    .filter(m -> "OWNER".equalsIgnoreCase(m.getRole().getName()))
+                    .findFirst()
+                    .ifPresent(ownerMembership -> {
+                        User owner = ownerMembership.getUser();
+                        if (owner != null) {
+                            emailService.sendSubscriptionReceiptEmail(
+                                    owner.getEmail(),
+                                    owner.getFirstName() + " " + owner.getLastName(),
+                                    newPlan.getName(),
+                                    invoice.getAmount().add(invoice.getTax()).toString(),
+                                    invoice.getCurrency(),
+                                    invoice.getInvoiceNumber(),
+                                    invoice.getPdfUrl()
+                            );
+                        }
+                    });
+        } catch (Exception e) {
+            // Non-blocking email dispatch fallback
+        }
 
         return subscription;
     }

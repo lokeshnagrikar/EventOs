@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion, useMotionValue, useTransform, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { Button } from "@/components/ui/button";
 import { AuroraText } from "@/components/ui/aurora-text";
@@ -14,6 +14,43 @@ import { gsap } from "gsap";
 import { useAuthModalStore } from "@/store/authModalStore";
 import dynamic from "next/dynamic";
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
+
+function RotatingHeroPhrase() {
+  const phrases = [
+    "From Lead to Invoice.",
+    "From Quote to Contract.",
+    "From Stage to Spotlight.",
+    "From Concept to Execution.",
+    "From Brief to Deposit."
+  ];
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % phrases.length);
+    }, 3200);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <span className="inline-flex items-center justify-center relative min-h-[1.25em] w-full">
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={phrases[index]}
+          initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
+          transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+          className="inline-block"
+        >
+          <AuroraText className="font-extrabold" speed={8}>
+            {phrases[index]}
+          </AuroraText>
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
 
 export function Hero({ preloaderActive = false }: { preloaderActive?: boolean }) {
   const router = useRouter();
@@ -103,44 +140,44 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
 
     tl.fromTo(
       ".gsap-badge",
-      { opacity: 0, scale: 0.9, y: -10 },
-      { opacity: 1, scale: 1, y: 0, duration: 0.5, delay: 0.2 }
+      { opacity: 0, scale: 0.96 },
+      { opacity: 1, scale: 1, duration: 0.4, delay: 0.1 }
     )
       .fromTo(
         ".gsap-title-word",
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, stagger: 0.12, duration: 0.6 },
-        "-=0.25"
+        { opacity: 0 },
+        { opacity: 1, stagger: 0.08, duration: 0.5 },
+        "-=0.2"
       )
       .fromTo(
         ".gsap-desc",
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        "-=0.3"
-      )
-      .fromTo(
-        ".gsap-cta",
-        { opacity: 0, y: 12 },
-        { opacity: 1, y: 0, stagger: 0.1, duration: 0.45 },
-        "-=0.25"
-      )
-      .fromTo(
-        ".gsap-trust",
         { opacity: 0 },
         { opacity: 1, duration: 0.4 },
         "-=0.2"
       )
       .fromTo(
+        ".gsap-cta",
+        { opacity: 0 },
+        { opacity: 1, stagger: 0.08, duration: 0.4 },
+        "-=0.2"
+      )
+      .fromTo(
+        ".gsap-trust",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3 },
+        "-=0.2"
+      )
+      .fromTo(
         ".gsap-mockup",
-        { opacity: 0, scale: 0.97, y: 25 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.7 },
-        "-=0.3"
+        { opacity: 0, scale: 0.98 },
+        { opacity: 1, scale: 1, duration: 0.5 },
+        "-=0.2"
       )
       .fromTo(
         ".gsap-stats",
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, stagger: 0.1, duration: 0.5 },
-        "-=0.4"
+        { opacity: 0 },
+        { opacity: 1, stagger: 0.08, duration: 0.4 },
+        "-=0.3"
       );
 
     return () => {
@@ -166,59 +203,58 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       ref={heroRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="min-h-[95vh] flex flex-col items-center justify-center pt-32 md:pt-36 pb-16 relative overflow-hidden bg-[#09090b] text-zinc-100"
+      className="min-h-[95vh] flex flex-col items-center justify-center pt-32 md:pt-36 pb-16 relative overflow-hidden bg-transparent text-zinc-100"
     >
       {/* Interactive Cursor Spotlight Glow */}
       <div
         className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-300"
         style={{
-          background: `radial-gradient(650px circle at ${spotlightPos.x}px ${spotlightPos.y}px, rgba(168, 85, 247, 0.12), transparent 75%)`,
+          background: `radial-gradient(800px circle at ${spotlightPos.x}px ${spotlightPos.y}px, rgba(168, 85, 247, 0.30), transparent 70%)`,
         }}
       />
 
-      {/* Laser-precision top horizon line */}
-      <div className="absolute top-0 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-purple-500/40 to-transparent pointer-events-none z-0" />
+      {/* Radiant Top Specular Horizon Light Bar */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent pointer-events-none z-0 opacity-90" />
 
-      {/* Tech Dot Matrix Grid Overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.18] pointer-events-none z-0"
-        style={{
-          backgroundImage: "radial-gradient(#71717A 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-          maskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, #000 65%, transparent 100%)",
-          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, #000 65%, transparent 100%)"
-        }}
-      />
+      {/* Luminous Ambient Mesh Light Flares (No Dots) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Large Central Glowing Violet Aura */}
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-gradient-to-b from-purple-400/40 via-indigo-500/30 to-transparent blur-[120px] rounded-full animate-pulse" />
+        
+        {/* Luminous Left Electric Cyan Wave */}
+        <div className="absolute top-10 -left-32 w-[600px] h-[600px] bg-gradient-to-tr from-cyan-400/30 via-indigo-500/25 to-transparent blur-[140px] rounded-full" />
+        
+        {/* Luminous Right Magenta Bloom */}
+        <div className="absolute top-20 -right-32 w-[600px] h-[600px] bg-gradient-to-tl from-pink-400/30 via-purple-500/25 to-transparent blur-[140px] rounded-full" />
 
-      {/* Top Specular Ambient Light Beam */}
-      <div className="absolute top-[-15%] left-1/4 right-1/4 h-[280px] bg-gradient-to-b from-purple-500/20 via-indigo-500/10 to-transparent blur-[130px] rounded-full pointer-events-none z-0" />
+        {/* Dynamic Center Beam Flare */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-purple-400/20 blur-[160px] rounded-full pointer-events-none" />
+      </div>
 
       <div className="max-w-7xl mx-auto px-6 w-full relative z-10 flex flex-col items-center text-center">
 
         {/* Announcement Badge */}
-        <div className="gsap-badge opacity-0 inline-flex items-center gap-2 px-3.5 py-1.5 bg-purple-500/[0.03] border border-purple-500/20 backdrop-blur-md rounded-full text-[11px] font-bold text-zinc-300 tracking-wide shadow-[0_10px_30px_rgba(124,58,237,0.05)] mb-3">
+        <div className="gsap-badge opacity-0 inline-flex items-center gap-2 px-3.5 py-1.5 bg-purple-500/[0.08] border border-purple-500/20 backdrop-blur-md rounded-full text-[11px] font-bold text-slate-700 tracking-wide shadow-[0_10px_30px_rgba(124,58,237,0.05)] mb-3">
           <span className="flex h-2 w-2 relative">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
           </span>
-          <Icon icon="solar:star-shine-bold-duotone" className="text-purple-400 text-xs" />
+          <Icon icon="solar:star-shine-bold-duotone" className="text-purple-600 text-xs" />
           <span>The #1 All-in-One AI Operating System for Event Businesses</span>
         </div>
 
         {/* Hero Headline & Description */}
         <div className="max-w-4xl flex flex-col items-center text-center">
-          <h1 className="text-4xl sm:text-6xl lg:text-[76px] font-extrabold tracking-tight leading-[1.05] font-heading text-balance text-pretty text-white">
-            <span className="gsap-title-word inline-block opacity-0 mr-3 text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-100 to-zinc-400">Plan. Automate.</span>
-            <span className="gsap-title-word inline-block opacity-0 mr-3 text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-100 to-zinc-400">Scale Events.</span>
+          <h1 className="text-4xl sm:text-6xl lg:text-[76px] font-extrabold tracking-tight leading-[1.05] font-heading text-balance text-pretty text-slate-900">
+            <span className="gsap-title-word inline-block opacity-0 mr-3 text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700">Plan. Automate.</span>
+            <span className="gsap-title-word inline-block opacity-0 mr-3 text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700">Scale Events.</span>
             <br className="hidden sm:inline" />
-            <span className="gsap-title-word inline-block opacity-0 mt-1 sm:mt-2">
-              <AuroraText className="font-extrabold" speed={8}>
-                From Lead to Invoice.
-              </AuroraText>
+            <span className="gsap-title-word inline-block opacity-0 mt-1 sm:mt-2 w-full text-center">
+              <RotatingHeroPhrase />
             </span>
           </h1>
 
-          <p className="gsap-desc opacity-0 text-zinc-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium font-sans mt-5 mb-8">
+          <p className="gsap-desc opacity-0 text-slate-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium font-sans mt-5 mb-8">
             The complete operating system for independent event coordinators and boutique agencies. Automate WhatsApp triggers, AI run-of-show timelines, mobile offline PWA check-ins, white-label client portals, and milestone invoicing.
           </p>
         </div>

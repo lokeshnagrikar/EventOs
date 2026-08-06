@@ -472,16 +472,3 @@ export default function InvoiceCenter() {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="border border-dashed border-zinc-850 rounded-2xl p-16 flex flex-col items-center justify-center text-center space-y-3">
-      <div className="h-10 w-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
-        <FileText size={16} />
-      </div>
-      <div>
-        <p className="font-extrabold text-zinc-300 text-xs">No Invoices Found</p>
-        <p className="text-[10px] text-zinc-550 mt-1 max-w-[280px]">Try adjusting your search query, status filters, or link to another contract.</p>
-      </div>
-    </div>
-  );
-}

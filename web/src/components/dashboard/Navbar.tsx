@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -11,20 +11,19 @@ import {
   ChevronRight, 
   Activity, 
   CheckCircle2, 
-  DollarSign, 
   MessageSquare,
-  Globe,
   Sun,
   Moon,
   Palette,
-  Laptop,
-
-  Wifi,
-  WifiOff
+  Check,
+  Zap,
+  Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useSocket } from "@/context/SocketContext";
+import { useToastStore } from "@/lib/toastStore";
+import { useAuthStore } from "@/store/authStore";
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -43,86 +42,29 @@ interface NotificationItem {
 export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
   const pathname = usePathname();
   const { status, subscribe, activeUsers } = useSocket();
+  const { addToast } = useToastStore();
+  const { user } = useAuthStore();
+
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<"dark" | "light">("dark");
   const [colorTheme, setColorTheme] = useState<string>("violet");
   const [colorsOpen, setColorsOpen] = useState(false);
+
+  // Dynamic notification items list
   const [notifications, setNotifications] = useState<NotificationItem[]>([
-    { id: "1", title: "New Lead Logged", desc: "Varun Mehta requested a quote for a Corporate Gala.", time: "10 mins ago", unread: true, type: "info" },
-    { id: "2", title: "Payment Received", desc: "INR 85,000 cleared for booking #EV-2026-902.", time: "2 hours ago", unread: true, type: "success" },
-    { id: "3", title: "Contract Signed", desc: "Shreya & Kabir finalized the Wedding planner agreement.", time: "1 day ago", unread: false, type: "success" },
+    { id: "1", title: "New Lead Logged", desc: "Rahul & Varsha requested a proposal for Udaipur Wedding.", time: "10 mins ago", unread: true, type: "info" },
+    { id: "2", title: "UPI Payment Received", desc: "₹1,50,000 cleared for booking #BK-2026-042.", time: "2 hours ago", unread: true, type: "success" },
+    { id: "3", title: "Proposal E-Signed", desc: "Client approved & signed Proposal #QT-2026-089.", time: "1 day ago", unread: false, type: "success" },
   ]);
 
+  // 1. Synchronize Dark / Light Theme on mount & listen to changes
   useEffect(() => {
-    // Detect theme class on load
-    const activeTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
-    setCurrentTheme(activeTheme);
-
-    // Detect and apply color theme on load
-    const savedColor = localStorage.getItem("colorTheme") || "violet";
-    setColorTheme(savedColor);
-    if (savedColor !== "violet") {
-      document.documentElement.setAttribute("data-theme", savedColor);
-    }
-
-    // Sync theme when updated from settings page
-
-    const handleThemeChange = (e: Event) => {
-      const customEvent = e as CustomEvent<"dark" | "light" | "system">;
-      let newTheme = customEvent.detail;
-      if (newTheme === "system") {
-        newTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      }
-      setCurrentTheme(newTheme as "dark" | "light");
-    };
-
-    // Listen to add-notification event for real-time alerts
-    const handleAddNotification = (e: Event) => {
-      const customEvent = e as CustomEvent<Omit<NotificationItem, "id" | "time" | "unread">>;
-      if (customEvent.detail) {
-        const newNotif: NotificationItem = {
-          id: Math.random().toString(36).substring(7),
-          title: customEvent.detail.title,
-          desc: customEvent.detail.desc,
-          time: "Just now",
-          unread: true,
-          type: customEvent.detail.type || "info"
-        };
-        setNotifications((prev) => [newNotif, ...prev]);
-      }
-    };
-
-    // Subscribe to websocket notifications topic
-    let unsubscribeNotifs: (() => void) | null = null;
-    if (status === "CONNECTED") {
-      unsubscribeNotifs = subscribe("/topic/notifications", (payload: any) => {
-        const newNotif: NotificationItem = {
-          id: Math.random().toString(36).substring(7),
-          title: payload.title || "Real-time Notification",
-          desc: payload.desc || payload.message || "New activity logged in workspace",
-          time: "Just now",
-          unread: true,
-          type: payload.type || "info"
-        };
-        setNotifications((prev) => [newNotif, ...prev]);
-      });
-    }
-
-    window.addEventListener("theme-changed", handleThemeChange);
-    window.addEventListener("add-notification", handleAddNotification);
-    return () => {
-      window.removeEventListener("theme-changed", handleThemeChange);
-      window.removeEventListener("add-notification", handleAddNotification);
-      if (unsubscribeNotifs) unsubscribeNotifs();
-    };
-  }, [status]);
-
-  const toggleTheme = () => {
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    setCurrentTheme(newTheme);
-    document.cookie = `theme=${newTheme}; path=/; SameSite=Lax; max-age=31536000`;
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
+    const isDarkClass = document.documentElement.classList.contains("dark");
+    const activeTheme = savedTheme || (isDarkClass ? "dark" : "dark");
     
-    if (newTheme === "dark") {
+    setCurrentTheme(activeTheme);
+    if (activeTheme === "dark") {
       document.documentElement.classList.add("dark");
       document.documentElement.classList.remove("light");
     } else {
@@ -130,10 +72,95 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
       document.documentElement.classList.remove("dark");
     }
 
-    // Sync other components
-    window.dispatchEvent(new CustomEvent("theme-changed", { detail: newTheme }));
+    // Load Accent Color Theme
+    const savedColor = localStorage.getItem("colorTheme") || "violet";
+    setColorTheme(savedColor);
+    if (savedColor !== "violet") {
+      document.documentElement.setAttribute("data-theme", savedColor);
+    }
+  }, []);
+
+  // 2. Real-Time Notification & Toast Handler
+  const handleIncomingNotification = useCallback((data: { title: string; desc: string; type?: "info" | "success" | "warning" | "error" }) => {
+    const notifId = Math.random().toString(36).substring(7);
+    const newNotif: NotificationItem = {
+      id: notifId,
+      title: data.title || "Real-Time Activity",
+      desc: data.desc || "New event logged in EventOS workspace",
+      time: "Just now",
+      unread: true,
+      type: data.type || "info"
+    };
+
+    setNotifications((prev) => [newNotif, ...prev]);
+
+    // Trigger Dynamic Floating Toast
+    addToast(data.desc, data.type || "info", {
+      title: data.title || "System Alert",
+      duration: 5000
+    });
+  }, [addToast]);
+
+  useEffect(() => {
+    // Listen to custom window events
+    const handleAddNotification = (e: Event) => {
+      const customEvent = e as CustomEvent<{ title: string; desc: string; type?: "info" | "success" | "warning" | "error" }>;
+      if (customEvent.detail) {
+        handleIncomingNotification(customEvent.detail);
+      }
+    };
+
+    const handleThemeChange = (e: Event) => {
+      const customEvent = e as CustomEvent<"dark" | "light">;
+      if (customEvent.detail) {
+        setCurrentTheme(customEvent.detail);
+      }
+    };
+
+    window.addEventListener("add-notification", handleAddNotification);
+    window.addEventListener("theme-changed", handleThemeChange);
+
+    // WebSocket subscription for live notifications
+    let unsubscribeNotifs: (() => void) | null = null;
+    if (status === "CONNECTED") {
+      unsubscribeNotifs = subscribe("/topic/notifications", (payload: any) => {
+        handleIncomingNotification({
+          title: payload.title || "Real-time Update",
+          desc: payload.desc || payload.message || "New activity detected",
+          type: payload.type || "info"
+        });
+      });
+    }
+
+    return () => {
+      window.removeEventListener("add-notification", handleAddNotification);
+      window.removeEventListener("theme-changed", handleThemeChange);
+      if (unsubscribeNotifs) unsubscribeNotifs();
+    };
+  }, [status, subscribe, handleIncomingNotification]);
+
+  // 3. Dynamic Theme Toggle Function
+  const toggleTheme = () => {
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+    setCurrentTheme(nextTheme);
+    localStorage.setItem("theme", nextTheme);
+    document.cookie = `theme=${nextTheme}; path=/; SameSite=Lax; max-age=31536000`;
+
+    if (nextTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+    } else {
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
+    }
+
+    window.dispatchEvent(new CustomEvent("theme-changed", { detail: nextTheme }));
+
+    // Trigger feedback toast
+    addToast(`Switched to ${nextTheme.toUpperCase()} mode`, "info", { duration: 2500 });
   };
 
+  // 4. Dynamic Color Accent Switcher
   const handleColorChange = (color: string) => {
     setColorTheme(color);
     localStorage.setItem("colorTheme", color);
@@ -143,16 +170,21 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
       document.documentElement.setAttribute("data-theme", color);
     }
     setColorsOpen(false);
+
+    // Trigger Toast
+    addToast(`Accent Theme set to ${color.toUpperCase()}`, "success", { duration: 2500 });
   };
 
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  };
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
-  const markAllRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, unread: false })));
-  };
+  // Dynamic Online Count: calculates real connected users or current user session
+  const onlineCount = activeUsers?.length > 0 ? activeUsers.length : (user ? 1 : 0);
 
-  // Convert pathname "/crm/new" to ["Dashboard", "CRM", "Log New Lead"]
+  // Dynamic Breadcrumb Generator
   const getBreadcrumbs = () => {
     const parts = pathname.split("/").filter(Boolean);
     const crumbs = [{ label: "Dashboard", href: "/dashboard" }];
@@ -161,9 +193,14 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
       if (part === "dashboard") return;
       
       let label = part.toUpperCase();
-      if (part === "crm") label = "CRM";
-      if (part === "new") label = "Log New Lead";
+      if (part === "crm") label = "CRM / Leads";
+      if (part === "quotes") label = "Quotations";
+      if (part === "events") label = "Events / Calendar";
+      if (part === "invoices") label = "Invoices & Billing";
+      if (part === "portal") label = "Client Portal";
+      if (part === "gallery") label = "Media Gallery";
       if (part === "calculator") label = "Budget Calculator";
+      if (part === "settings") label = "Workspace Settings";
       
       const href = "/" + parts.slice(0, idx + 1).join("/");
       crumbs.push({ label, href });
@@ -175,30 +212,28 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
   const crumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-30 h-[60px] w-full border-b border-white/[0.05] bg-[#09090b]/60 backdrop-blur-2xl px-5 flex items-center justify-between shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-colors">
+    <header className="sticky top-0 z-30 h-[60px] w-full border-b border-border bg-card/80 backdrop-blur-2xl px-5 flex items-center justify-between shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-colors select-none">
       
-      {/* Breadcrumbs / Back button */}
+      {/* ── LEFT: BREADCRUMBS & MOBILE MENU TRIGGER ── */}
       <div className="flex items-center gap-3">
-        {/* Mobile menu trigger */}
         <button
           onClick={onMenuToggle}
-          className="p-2 border border-white/[0.04] rounded-xl bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.08] md:hidden text-zinc-400 hover:text-zinc-150 transition-all cursor-pointer"
+          className="p-2 border border-border rounded-xl bg-card hover:bg-muted md:hidden text-muted-foreground hover:text-foreground transition-all cursor-pointer"
           aria-label="Toggle navigation menu"
         >
           <Menu size={16} />
         </button>
 
-        {/* Dynamic Breadcrumbs */}
-        <nav className="hidden sm:flex items-center gap-1.5 text-xs font-semibold select-none">
+        <nav className="hidden sm:flex items-center gap-1.5 text-xs font-semibold">
           {crumbs.map((crumb, idx) => {
             const isLast = idx === crumbs.length - 1;
             return (
               <React.Fragment key={crumb.href}>
-                {idx > 0 && <ChevronRight size={10} className="text-zinc-600" />}
+                {idx > 0 && <ChevronRight size={10} className="text-muted-foreground" />}
                 {isLast ? (
-                  <span className="text-zinc-200">{crumb.label}</span>
+                  <span className="text-foreground font-bold">{crumb.label}</span>
                 ) : (
-                  <Link href={crumb.href} className="text-zinc-500 hover:text-zinc-350 transition-colors">
+                  <Link href={crumb.href} className="text-muted-foreground hover:text-foreground transition-colors">
                     {crumb.label}
                   </Link>
                 )}
@@ -208,53 +243,54 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
         </nav>
       </div>
 
-      {/* Global Actions */}
-      <div className="flex items-center gap-3">
-        {/* Search Shortcut */}
+      {/* ── RIGHT: GLOBAL ACTIONS & DYNAMIC CONTROLS ── */}
+      <div className="flex items-center gap-2.5">
+        
+        {/* 1. Global Search Shortcut */}
         <button
           onClick={() => {
             if (onSearchClick) onSearchClick();
             window.dispatchEvent(new CustomEvent("open-global-search"));
           }}
-          className="hidden md:flex items-center justify-between gap-3 px-3.5 py-1.5 border border-white/[0.06] rounded-full bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.1] text-xs text-zinc-500 hover:text-zinc-300 transition-all w-52 select-none cursor-pointer group"
+          className="hidden md:flex items-center justify-between gap-3 px-3.5 py-1.5 border border-border rounded-full bg-muted/40 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-all w-52 cursor-pointer group"
         >
           <span className="flex items-center gap-2">
-            <Search size={12} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
-            <span className="text-[11px] font-medium">Search everything...</span>
+            <Search size={12} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+            <span className="text-[11px] font-medium">Search workspace...</span>
           </span>
-          <kbd className="text-[9px] bg-white/[0.05] px-1.5 py-0.5 rounded-md border border-white/[0.06] font-mono text-zinc-600">⌘K</kbd>
+          <kbd className="text-[9px] bg-card px-1.5 py-0.5 rounded-md border border-border font-mono text-muted-foreground">⌘K</kbd>
         </button>
 
-        <button
-          onClick={() => {
-            if (onSearchClick) onSearchClick();
-            window.dispatchEvent(new CustomEvent("open-global-search"));
-          }}
-          className="p-2 border border-white/[0.04] hover:bg-white/[0.03] hover:border-white/[0.08] rounded-xl text-zinc-400 hover:text-zinc-150 md:hidden transition-all cursor-pointer"
-          title="Search"
-        >
-          <Search size={14} />
-        </button>
-
-        {/* Dark/Light mode toggle */}
+        {/* 2. DYNAMIC DARK / LIGHT MODE TOGGLE BUTTON */}
         <button
           onClick={toggleTheme}
-          className="p-1.5 border border-white/[0.05] rounded-lg bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.1] text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer"
-          aria-label="Toggle theme mode"
-          title={`Switch to ${currentTheme === "dark" ? "light" : "dark"} mode`}
+          className={cn(
+            "p-2 border rounded-xl transition-all cursor-pointer flex items-center justify-center relative group",
+            currentTheme === "dark" 
+              ? "border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20" 
+              : "border-purple-500/20 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20"
+          )}
+          title={`Switch to ${currentTheme === "dark" ? "Light" : "Dark"} Mode`}
         >
-          {currentTheme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
+          <motion.div
+            key={currentTheme}
+            initial={{ scale: 0.5, rotate: -90 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            {currentTheme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+          </motion.div>
         </button>
 
-        {/* Color Theme Picker */}
+        {/* 3. DYNAMIC COLOR ACCENT PICKER */}
         <div className="relative">
           <button
             onClick={() => setColorsOpen(!colorsOpen)}
             className={cn(
-              "p-1.5 border border-white/[0.05] rounded-lg bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.1] text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer flex items-center justify-center",
-              colorsOpen && "bg-white/[0.05] border-white/[0.1]"
+              "p-2 border border-border rounded-xl bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer flex items-center justify-center relative",
+              colorsOpen && "bg-muted border-foreground/20"
             )}
-            title="Change color theme"
+            title="Change Accent Color Theme"
           >
             <Palette size={14} className={cn(
               colorTheme === "blue" && "text-blue-500",
@@ -263,6 +299,16 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
               colorTheme === "amber" && "text-amber-500",
               colorTheme === "violet" && "text-purple-500"
             )} />
+            <span 
+              className={cn(
+                "absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-background",
+                colorTheme === "blue" && "bg-blue-500",
+                colorTheme === "emerald" && "bg-emerald-500",
+                colorTheme === "rose" && "bg-rose-500",
+                colorTheme === "amber" && "bg-amber-500",
+                colorTheme === "violet" && "bg-purple-500"
+              )}
+            />
           </button>
           
           <AnimatePresence>
@@ -272,36 +318,40 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="absolute right-0 mt-2 w-36 bg-[#09090b]/95 border border-white/[0.08] backdrop-blur-xl rounded-xl p-2.5 shadow-2xl z-50 flex flex-col gap-1.5 text-xs text-zinc-300"
+                className="absolute right-0 mt-2.5 w-40 bg-card border border-border backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1 text-xs text-foreground"
               >
-                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500 block px-1 select-none mb-0.5">Colors</span>
-                <button onClick={() => handleColorChange("violet")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
-                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500 block shrink-0" />
-                  Violet (Default)
-                </button>
-                <button onClick={() => handleColorChange("blue")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 block shrink-0" />
-                  Blue
-                </button>
-                <button onClick={() => handleColorChange("emerald")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block shrink-0" />
-                  Emerald
-                </button>
-                <button onClick={() => handleColorChange("rose")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 block shrink-0" />
-                  Rose
-                </button>
-                <button onClick={() => handleColorChange("amber")} className="flex items-center gap-2 px-1.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-150 hover:bg-white/[0.03] rounded-lg transition-colors w-full text-left">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 block shrink-0" />
-                  Amber
-                </button>
+                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block px-2 py-1 select-none">
+                  Accent Color Themes
+                </span>
+
+                {[
+                  { id: "violet", name: "Violet", bg: "bg-purple-500" },
+                  { id: "blue", name: "Royal Blue", bg: "bg-blue-500" },
+                  { id: "emerald", name: "Emerald Green", bg: "bg-emerald-500" },
+                  { id: "rose", name: "Rose Pink", bg: "bg-rose-500" },
+                  { id: "amber", name: "Amber Gold", bg: "bg-amber-500" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleColorChange(item.id)}
+                    className={cn(
+                      "flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all w-full text-left cursor-pointer",
+                      colorTheme === item.id ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`w-3 h-3 rounded-full ${item.bg} block shrink-0 shadow-sm`} />
+                      <span>{item.name}</span>
+                    </div>
+                    {colorTheme === item.id && <Check size={12} className="text-foreground" />}
+                  </button>
+                ))}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-
-        {/* Notifications Icon with Dropdown */}
+        {/* 4. DYNAMIC NOTIFICATION BELL ICON & DROPDOWN */}
         <div
           className="relative"
           onKeyDown={(e) => {
@@ -313,20 +363,20 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className={cn(
-              "relative p-1.5 border border-white/[0.05] rounded-lg bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.1] text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer",
-              notificationsOpen && "bg-white/[0.05] border-white/[0.1]"
+              "relative p-2 border border-border rounded-xl bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer",
+              notificationsOpen && "bg-muted border-foreground/20"
             )}
             aria-label="View notifications"
-            aria-expanded={notificationsOpen}
-            aria-haspopup="true"
           >
-            <Bell size={13} />
+            <Bell size={14} />
             {unreadCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-0.5 -right-0.5 h-[7px] w-[7px] rounded-full bg-purple-500 ring-[1.5px] ring-[#09090b]"
-              />
+                className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-white font-extrabold text-[9px] flex items-center justify-center ring-2 ring-background shadow-md shadow-purple-500/40"
+              >
+                {unreadCount}
+              </motion.span>
             )}
           </button>
 
@@ -339,65 +389,147 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute right-0 mt-2.5 w-80 max-w-[calc(100vw-2rem)] border border-white/[0.08] bg-[#09090b]/95 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-50 overflow-hidden text-xs text-zinc-300"
-                  role="dialog"
-                  aria-label="Notifications panel"
+                  className="absolute right-0 mt-2.5 w-88 max-w-[calc(100vw-2rem)] border border-border bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-50 overflow-hidden text-xs text-foreground"
                 >
+                  {/* Header & Global Actions */}
                   <div className="flex items-center justify-between border-b border-border pb-3">
-                    <span className="font-extrabold text-foreground">System Activity notifications</span>
-                    {unreadCount > 0 && (
-                      <button 
-                        onClick={markAllRead} 
-                        className="text-[10px] text-purple-400 hover:text-purple-300 font-bold tracking-wide uppercase cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded"
+                    <div className="flex items-center gap-1.5">
+                      <Zap size={14} className="text-purple-500" />
+                      <span className="font-extrabold text-foreground">Workspace Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="bg-purple-500/20 text-purple-400 font-extrabold px-1.5 py-0.5 rounded-full text-[9px]">
+                          {unreadCount} new
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={markAllRead} 
+                          className="text-[10px] text-purple-400 hover:text-purple-300 font-bold uppercase tracking-wider cursor-pointer hover:underline"
+                        >
+                          Read all
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          const testEvents = [
+                            { title: "New Lead Logged", desc: "Varun & Priya requested pricing for Goa Concert 2026.", type: "info" as const, href: "/crm" },
+                            { title: "UPI Payment Received", desc: "₹85,000 cleared for Invoice #INV-2026-904.", type: "success" as const, href: "/finance" },
+                            { title: "Run-of-Show Alert", desc: "Soundcheck completed for Stage 1 Scenography.", type: "warning" as const, href: "/events" },
+                          ];
+                          const randomEvt = testEvents[Math.floor(Math.random() * testEvents.length)];
+                          handleIncomingNotification(randomEvt);
+                        }}
+                        className="text-[10px] bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-md font-bold transition-all cursor-pointer"
+                        title="Simulate Real-Time Incoming Notification Alert"
                       >
-                        Mark all read
+                        + Test Alert
                       </button>
-                    )}
+                    </div>
                   </div>
 
-                  <div className="divide-y divide-border max-h-64 overflow-y-auto">
+                  {/* Notification List */}
+                  <div className="divide-y divide-border/60 max-h-80 overflow-y-auto mt-1 pr-1">
                     {notifications.map((item) => (
-                      <div key={item.id} className={cn("py-3 flex gap-3 transition-colors", item.unread && "bg-muted/30")}>
-                        <div className={cn(
-                          "h-7 w-7 rounded-full flex items-center justify-center shrink-0 mt-0.5",
-                          item.type === "success" && "bg-emerald-500/10 text-emerald-500",
-                          item.type === "info" && "bg-purple-500/10 text-purple-400",
-                          item.type === "warning" && "bg-amber-500/10 text-amber-500",
-                        )}>
-                          {item.type === "success" && <CheckCircle2 size={12} />}
-                          {item.type === "info" && <Activity size={12} />}
-                          {item.type === "warning" && <MessageSquare size={12} />}
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          // Mark item as read
+                          setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n)));
+                          setNotificationsOpen(false);
+                          // Determine target route based on notification content
+                          if (item.title.includes("Lead") || item.desc.includes("proposal")) window.location.href = "/crm";
+                          else if (item.title.includes("Payment") || item.desc.includes("cleared")) window.location.href = "/finance";
+                          else if (item.title.includes("Proposal") || item.title.includes("Signed")) window.location.href = "/quotes";
+                          else window.location.href = "/dashboard";
+                        }}
+                        className={cn(
+                          "py-3 px-2 flex gap-3 transition-all rounded-xl cursor-pointer group hover:bg-muted/60 relative my-1",
+                          item.unread ? "bg-purple-500/5 border border-purple-500/15" : "hover:bg-muted/40"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "h-7 w-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm",
+                            item.type === "success" && "bg-emerald-500/10 text-emerald-500",
+                            item.type === "info" && "bg-purple-500/10 text-purple-400",
+                            item.type === "warning" && "bg-amber-500/10 text-amber-500",
+                            item.type === "error" && "bg-red-500/10 text-red-500"
+                          )}
+                        >
+                          {item.type === "success" && <CheckCircle2 size={13} />}
+                          {item.type === "info" && <Activity size={13} />}
+                          {item.type === "warning" && <MessageSquare size={13} />}
+                          {item.type === "error" && <Zap size={13} />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start gap-2">
-                            <span className={cn("font-bold block text-foreground truncate", item.unread && "text-foreground")}>{item.title}</span>
-                            <span className="text-[9px] text-muted-foreground shrink-0 font-medium whitespace-nowrap">{item.time}</span>
+                            <span className={cn("font-bold block text-foreground truncate text-xs group-hover:text-purple-400 transition-colors", item.unread && "font-black")}>
+                              {item.title}
+                            </span>
+                            <span className="text-[9px] text-muted-foreground shrink-0 font-medium">{item.time}</span>
                           </div>
-                          <p className="text-muted-foreground text-[11px] leading-normal mt-0.5">{item.desc}</p>
+                          <p className="text-muted-foreground text-[11px] leading-relaxed mt-0.5">{item.desc}</p>
+                          <span className="text-[9px] text-purple-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity mt-1 inline-flex items-center gap-1">
+                            Click to view details &rarr;
+                          </span>
                         </div>
+                        {/* Remove Notification Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNotifications((prev) => prev.filter((n) => n.id !== item.id));
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-red-400 transition-all rounded-md self-start"
+                          title="Remove notification"
+                        >
+                          &times;
+                        </button>
                       </div>
                     ))}
                     {notifications.length === 0 && (
-                      <p className="text-center py-6 text-muted-foreground italic">All notifications caught up.</p>
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Zap size={20} className="mx-auto mb-2 opacity-40 text-purple-400" />
+                        <p className="font-bold text-xs">All Caught Up!</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">No active notifications in your workspace.</p>
+                      </div>
                     )}
                   </div>
+
+                  {/* Footer Actions */}
+                  {notifications.length > 0 && (
+                    <div className="border-t border-border pt-2.5 mt-2 flex justify-between items-center text-[10px]">
+                      <button
+                        onClick={() => setNotifications([])}
+                        className="text-muted-foreground hover:text-red-400 transition-colors font-bold cursor-pointer"
+                      >
+                        Clear All
+                      </button>
+                      <span className="text-muted-foreground text-[9px]">Click notification to navigate</span>
+                    </div>
+                  )}
                 </motion.div>
               </>
             )}
           </AnimatePresence>
-        </div>        {/* Real-time Presence Bar & Connection Status */}
+        </div>
+
+        {/* 5. DYNAMIC REAL-TIME PRESENCE & CONNECTION STATUS */}
         <div className="flex items-center gap-2">
-          {/* Active Users */}
-          <div className="hidden lg:flex items-center gap-1.5 bg-white/[0.02] border border-white/[0.05] px-2.5 py-1 rounded-full text-[10px] font-bold text-zinc-500">
-            <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-            <span>{activeUsers.length} Online</span>
+          {/* Active Online User Count Pill */}
+          <div className="hidden lg:flex items-center gap-1.5 bg-card border border-border px-2.5 py-1.5 rounded-full text-[10px] font-bold text-muted-foreground shadow-sm">
+            <Users size={11} className="text-purple-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{onlineCount} {onlineCount === 1 ? "User Online" : "Users Online"}</span>
           </div>
 
+          {/* WebSocket Status Indicator */}
           <div className={cn(
-            "hidden md:flex items-center gap-1.5 px-2.5 py-1 border rounded-full text-[10px] font-bold select-none",
-            status === "CONNECTED" && "border-emerald-500/20 text-emerald-500 bg-emerald-500/5",
-            status === "RECONNECTING" && "border-amber-500/20 text-amber-500 bg-amber-500/5 animate-pulse",
-            status === "DISCONNECTED" && "border-red-500/20 text-red-500 bg-red-500/5"
+            "hidden md:flex items-center gap-1.5 px-2.5 py-1.5 border rounded-full text-[10px] font-extrabold select-none transition-all",
+            status === "CONNECTED" && "border-emerald-500/20 text-emerald-500 bg-emerald-500/10",
+            status === "RECONNECTING" && "border-amber-500/20 text-amber-500 bg-amber-500/10 animate-pulse",
+            status === "DISCONNECTED" && "border-red-500/20 text-red-500 bg-red-500/10"
           )}>
             <span className={cn(
               "h-1.5 w-1.5 rounded-full",
@@ -405,9 +537,10 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
               status === "RECONNECTING" && "bg-amber-500",
               status === "DISCONNECTED" && "bg-red-500"
             )} />
-            <span>{status === "CONNECTED" ? "Live" : status === "RECONNECTING" ? "Reconnecting" : "Offline"}</span>
+            <span>{status === "CONNECTED" ? "Live Sync" : status === "RECONNECTING" ? "Reconnecting" : "Offline"}</span>
           </div>
         </div>
+
       </div>
     </header>
   );

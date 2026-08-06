@@ -91,7 +91,7 @@ export function RunOfShowSimulator() {
   };
 
   return (
-    <section className="py-24 bg-[#09090b] relative overflow-hidden border-b border-white/5 font-sans" id="timeline-simulator">
+    <section className="py-24 bg-transparent relative overflow-hidden border-b border-purple-500/10 font-sans" id="timeline-simulator">
       {/* Background Radial Glows */}
       <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-[500px] h-[300px] bg-purple-600/10 blur-[130px] rounded-full pointer-events-none z-0" />
       <div className="absolute bottom-10 right-1/4 w-[450px] h-[250px] bg-cyan-500/10 blur-[130px] rounded-full pointer-events-none z-0" />

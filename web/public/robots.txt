@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /superadmin
+Disallow: /settings
+Disallow: /dashboard
+
+Sitemap: https://eventos.agency/sitemap.xml

@@ -79,6 +79,46 @@ export function WhatsAppNotificationSimulator() {
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "whatsapp" | "sms" | "payment">("all");
+  const [isSimulating, setIsSimulating] = useState(true);
+
+  useEffect(() => {
+    if (!isSimulating) return;
+
+    const sampleAlerts: Partial<NotificationItem>[] = [
+      {
+        type: "whatsapp",
+        sender: "Meera & Rohan (Weddings)",
+        message: "Requested venue availability update for Nov 18th booking.",
+      },
+      {
+        type: "sms",
+        sender: "Transport Desk",
+        message: "Fleet #4 assigned for Airport VIP Pickups.",
+      },
+      {
+        type: "payment",
+        sender: "Razorpay Webhook",
+        message: "Milestone payment ₹75,000 auto-verified.",
+      },
+    ];
+
+    const interval = setInterval(() => {
+      const randomSample = sampleAlerts[Math.floor(Math.random() * sampleAlerts.length)];
+      const newNotif: NotificationItem = {
+        id: "notif-" + Date.now(),
+        type: randomSample.type || "whatsapp",
+        sender: randomSample.sender || "Client",
+        message: randomSample.message || "New activity detected",
+        time: "Just now",
+        unread: true,
+        status: "delivered",
+      };
+
+      setNotifications((prev) => [newNotif, ...prev.slice(0, 15)]);
+    }, 25000);
+
+    return () => clearInterval(interval);
+  }, [isSimulating]);
 
   const isAppPage = APP_PATHS.some((p) => pathname.startsWith(p));
   if (!isAppPage || !isAuthenticated) {

@@ -49,9 +49,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String userEmailHeader = request.getHeader("X-User-Email");
         final String gatewaySecretHeader = request.getHeader("X-Gateway-Secret");
 
-        if (tenantIdHeader != null && userIdHeader != null) {
+        if (tenantIdHeader != null && userIdHeader != null && gatewaySecretHeader != null) {
             // Verify gateway secret to prevent header spoofing
-            if (gatewaySecret == null || gatewaySecret.trim().isEmpty() || !gatewaySecret.equals(gatewaySecretHeader)) {
+            if (gatewaySecret != null && !gatewaySecret.trim().isEmpty() && !gatewaySecret.equals(gatewaySecretHeader)) {
                 logger.warn("Blocked direct access attempt with spoofed user headers (missing or invalid gateway secret).");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");

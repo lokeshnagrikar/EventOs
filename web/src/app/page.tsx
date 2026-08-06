@@ -40,11 +40,11 @@ const Footer = dynamic(() => import("@/components/landing/Footer").then(m => ({ 
 // Simple fallback for dynamic sections
 function SectionSkeleton() {
   return (
-    <div className="py-24 border-b border-zinc-900 bg-[#09090B] w-full" aria-hidden="true">
+    <div className="py-24 border-b border-slate-200/70 bg-[#FAF9F6] w-full" aria-hidden="true">
       <div className="max-w-7xl mx-auto px-6 space-y-6">
-        <div className="h-4 w-40 bg-zinc-900 rounded-full mx-auto animate-pulse" />
-        <div className="h-8 w-96 bg-zinc-900 rounded-xl mx-auto animate-pulse" />
-        <div className="h-4 w-72 bg-zinc-900 rounded-full mx-auto animate-pulse" />
+        <div className="h-4 w-40 bg-slate-200/70 rounded-full mx-auto animate-pulse" />
+        <div className="h-8 w-96 bg-slate-200/70 rounded-xl mx-auto animate-pulse" />
+        <div className="h-4 w-72 bg-slate-200/70 rounded-full mx-auto animate-pulse" />
       </div>
     </div>
   );
@@ -151,8 +151,8 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
   return (
     <>
       <div className={cn(
-        "min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-650 selection:text-white transition-all duration-1000 ease-out origin-center",
-        preloaderActive ? "opacity-0 scale-[0.97] blur-md" : "opacity-100 scale-100 blur-none",
+        "min-h-screen bg-[#FAF9F6] text-slate-900 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-600 selection:text-white transition-opacity duration-500 ease-out",
+        preloaderActive ? "opacity-0" : "opacity-100",
         isAuthModalOpen ? "blur-md scale-[0.99] pointer-events-none" : ""
       )}>
         {/* Sticky Navigation */}

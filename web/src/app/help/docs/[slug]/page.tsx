@@ -40,8 +40,8 @@ export default function ArticlePage() {
 
   const { addBookmark, removeBookmark, isBookmarked, addRecentlyViewed } = useHelpStore();
 
-  const article = useMemo(() => ARTICLES.find((a) => a.slug === slug), [slug]);
-  const articleIndex = useMemo(() => ARTICLES.findIndex((a) => a.slug === slug), [slug]);
+  const article = useMemo(() => ARTICLES.find((a) => a.slug === slug || a.categorySlug === slug), [slug]);
+  const articleIndex = useMemo(() => ARTICLES.findIndex((a) => a.slug === article?.slug), [article]);
   const prevArticle = articleIndex > 0 ? ARTICLES[articleIndex - 1] : null;
   const nextArticle = articleIndex < ARTICLES.length - 1 ? ARTICLES[articleIndex + 1] : null;
   const relatedArticles = useMemo(() => {

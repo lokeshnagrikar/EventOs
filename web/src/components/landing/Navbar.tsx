@@ -83,116 +83,116 @@ export function Navbar({ activeSection }: NavbarProps) {
   }, [pathname, isOpen]);
 
   const solutions = [
-    { 
-      title: "Planner CRM", 
-      desc: "Manage client details, leads & pipeline", 
-      icon: "solar:users-group-rounded-bold-duotone", 
+    {
+      title: "Planner CRM",
+      desc: "Manage client details, leads & pipeline",
+      icon: "solar:users-group-rounded-bold-duotone",
       href: "/features",
-      iconColor: "text-purple-400",
-      hoverBg: "hover:bg-[#161320]",
-      hoverBorder: "hover:border-purple-500/30"
+      iconColor: "text-purple-600",
+      hoverBg: "hover:bg-purple-50/70",
+      hoverBorder: "hover:border-purple-200"
     },
-    { 
-      title: "Smart Quotes", 
-      desc: "Interactive pricing quotes & contracts", 
-      icon: "solar:document-text-bold-duotone", 
+    {
+      title: "Smart Quotes",
+      desc: "Interactive pricing quotes & contracts",
+      icon: "solar:document-text-bold-duotone",
       href: "/features",
-      iconColor: "text-blue-400",
-      hoverBg: "hover:bg-[#111624]",
-      hoverBorder: "hover:border-blue-500/30"
+      iconColor: "text-blue-600",
+      hoverBg: "hover:bg-blue-50/70",
+      hoverBorder: "hover:border-blue-200"
     },
-    { 
-      title: "Event Planning", 
-      desc: "Coordinated task lists & schedules", 
-      icon: "solar:calendar-bold-duotone", 
+    {
+      title: "Event Planning",
+      desc: "Coordinated task lists & schedules",
+      icon: "solar:calendar-bold-duotone",
       href: "/features",
-      iconColor: "text-emerald-400",
-      hoverBg: "hover:bg-[#111818]",
-      hoverBorder: "hover:border-emerald-500/30"
+      iconColor: "text-emerald-600",
+      hoverBg: "hover:bg-emerald-50/70",
+      hoverBorder: "hover:border-emerald-200"
     },
-    { 
-      title: "Instant Payments", 
-      desc: "Milestone invoicing & global gateway", 
-      icon: "solar:wallet-money-bold-duotone", 
+    {
+      title: "Instant Payments",
+      desc: "Milestone invoicing & global gateway",
+      icon: "solar:wallet-money-bold-duotone",
       href: "/features",
-      iconColor: "text-amber-400",
-      hoverBg: "hover:bg-[#181514]",
-      hoverBorder: "hover:border-amber-500/30"
+      iconColor: "text-amber-600",
+      hoverBg: "hover:bg-amber-50/70",
+      hoverBorder: "hover:border-amber-200"
     },
-    { 
-      title: "Gallery Delivery", 
-      desc: "Deliver photos to clients in style", 
-      icon: "solar:gallery-bold-duotone", 
+    {
+      title: "Gallery Delivery",
+      desc: "Deliver photos to clients in style",
+      icon: "solar:gallery-bold-duotone",
       href: "/features",
-      iconColor: "text-rose-400",
-      hoverBg: "hover:bg-[#191319]",
-      hoverBorder: "hover:border-rose-500/30"
+      iconColor: "text-rose-600",
+      hoverBg: "hover:bg-rose-50/70",
+      hoverBorder: "hover:border-rose-200"
     },
-    { 
-      title: "Client Portal", 
-      desc: "Self-service quote acceptance & pay", 
-      icon: "solar:window-frame-bold-duotone", 
+    {
+      title: "Client Portal",
+      desc: "Self-service quote acceptance & pay",
+      icon: "solar:window-frame-bold-duotone",
       href: "/features",
-      iconColor: "text-cyan-400",
-      hoverBg: "hover:bg-[#111820]",
-      hoverBorder: "hover:border-cyan-500/30"
+      iconColor: "text-cyan-600",
+      hoverBg: "hover:bg-cyan-50/70",
+      hoverBorder: "hover:border-cyan-200"
     },
   ];
 
   const resources = [
-    { 
-      title: "Quote Calculator 🧮", 
-      desc: "Live cost estimation & instant PDF export", 
-      icon: "solar:calculator-bold-duotone", 
+    {
+      title: "Quote Calculator 🧮",
+      desc: "Live cost estimation & instant PDF export",
+      icon: "solar:calculator-bold-duotone",
       href: "/quote-calculator",
-      iconColor: "text-purple-400",
-      hoverBg: "hover:bg-[#181324]",
-      hoverBorder: "hover:border-purple-500/30"
+      iconColor: "text-purple-600",
+      hoverBg: "hover:bg-purple-50/70",
+      hoverBorder: "hover:border-purple-200"
     },
-    { 
-      title: "Developer Docs", 
-      desc: "API payload schema & webhooks guide", 
-      icon: "solar:dialog-bold-duotone", 
+    {
+      title: "Developer Docs",
+      desc: "API payload schema & webhooks guide",
+      icon: "solar:dialog-bold-duotone",
       href: "/docs",
-      iconColor: "text-indigo-400",
-      hoverBg: "hover:bg-[#121424]",
-      hoverBorder: "hover:border-indigo-500/30"
+      iconColor: "text-indigo-600",
+      hoverBg: "hover:bg-indigo-50/70",
+      hoverBorder: "hover:border-indigo-200"
     },
-    { 
-      title: "Operational Blog", 
-      desc: "SaaS growth insights & product changelogs", 
-      icon: "solar:server-bold-duotone", 
+    {
+      title: "Operational Blog",
+      desc: "SaaS growth insights & product changelogs",
+      icon: "solar:server-bold-duotone",
       href: "/blog",
-      iconColor: "text-violet-400",
-      hoverBg: "hover:bg-[#151320]",
-      hoverBorder: "hover:border-violet-500/30"
+      iconColor: "text-violet-600",
+      hoverBg: "hover:bg-violet-50/70",
+      hoverBorder: "hover:border-violet-200"
     },
-    { 
-      title: "Download Templates", 
-      desc: "Operations checklists & invoicing sheets", 
-      icon: "solar:document-text-bold-duotone", 
+    {
+      title: "Download Templates",
+      desc: "Operations checklists & invoicing sheets",
+      icon: "solar:document-text-bold-duotone",
       href: "/resources",
-      iconColor: "text-sky-400",
-      hoverBg: "hover:bg-[#111724]",
-      hoverBorder: "hover:border-sky-500/30"
+      iconColor: "text-sky-600",
+      hoverBg: "hover:bg-sky-50/70",
+      hoverBorder: "hover:border-sky-200"
     },
-    { 
-      title: "Security & Trust", 
-      desc: "SOC2 compliance & multi-tenant isolation", 
-      icon: "solar:shield-bold-duotone", 
+    {
+      title: "Security & Trust",
+      desc: "SOC2 compliance & multi-tenant isolation",
+      icon: "solar:shield-bold-duotone",
       href: "/security",
-      iconColor: "text-teal-400",
-      hoverBg: "hover:bg-[#11181c]",
-      hoverBorder: "hover:border-teal-500/30"
+      iconColor: "text-teal-600",
+      hoverBg: "hover:bg-teal-50/70",
+      hoverBorder: "hover:border-teal-200"
     },
-    { 
-      title: "Solutions Directory", 
-      desc: "Tailored structures for event agencies", 
-      icon: "solar:window-frame-bold-duotone", 
+    {
+      title: "Solutions Directory",
+      desc: "Tailored structures for event agencies",
+      icon: "solar:window-frame-bold-duotone",
       href: "/solutions",
-      iconColor: "text-fuchsia-400",
-      hoverBg: "hover:bg-[#181320]",
-      hoverBorder: "hover:border-fuchsia-500/30"
+      iconColor: "text-fuchsia-600",
+      hoverBg: "hover:bg-fuchsia-50/70",
+      hoverBorder: "hover:border-fuchsia-200"
     },
   ];
 
@@ -260,17 +260,17 @@ export function Navbar({ activeSection }: NavbarProps) {
           setMousePos({ x: -999, y: -999 });
         }}
         className={cn(
-          "pointer-events-auto mx-auto flex items-center justify-between rounded-full border backdrop-blur-[45px] backdrop-saturate-[1.8] transition-all duration-700 ease-smooth relative group/navbar",
+          "pointer-events-auto mx-auto flex items-center justify-between rounded-full border backdrop-blur-[30px] backdrop-saturate-[1.5] transition-all duration-700 ease-smooth relative group/navbar",
           scrolled || isOpen
-            ? "max-w-5xl bg-[#070814]/75 border-white/15 px-5 py-2.5 shadow-[0_15px_40px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]"
-            : "max-w-6xl bg-[#070814]/35 border-white/10 px-6 py-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]"
+            ? "max-w-5xl bg-white/90 border-slate-200/90 px-5 py-2.5 shadow-[0_12px_32px_rgba(0,0,0,0.06)]"
+            : "max-w-6xl bg-white/75 border-slate-200/70 px-6 py-3.5 shadow-[0_6px_24px_rgba(0,0,0,0.04)]"
         )}
       >
-        {/* Top reflection line simulating macOS 3D glass shelf highlight */}
-        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
+        {/* Top reflection line simulating light glass shelf highlight */}
+        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-purple-300/40 to-transparent pointer-events-none" />
 
-        {/* Subtle static gradient sheen matching WebGL cyan/purple colors */}
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-cyan-500/4 to-purple-500/5 opacity-80 pointer-events-none rounded-full z-0" />
+        {/* Subtle static gradient sheen matching WebGL cyan/purple light colors */}
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-cyan-500/5 to-purple-500/5 opacity-100 pointer-events-none rounded-full z-0" />
 
         {/* Mouse tracking radial glow clipped to rounded capsule border */}
         <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none z-0">
@@ -278,7 +278,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             className="absolute inset-0 transition-opacity duration-300"
             style={{
               opacity: isHovered ? 1 : 0,
-              background: `radial-gradient(120px circle at ${mousePos.x}px ${mousePos.y}px, rgba(255, 255, 255, 0.05) 0%, transparent 100%)`,
+              background: `radial-gradient(120px circle at ${mousePos.x}px ${mousePos.y}px, rgba(147, 51, 234, 0.08) 0%, transparent 100%)`,
             }}
           />
         </div>
@@ -294,7 +294,12 @@ export function Navbar({ activeSection }: NavbarProps) {
           {/* Logo Emblem */}
           <img
             src="/logo/logo.png"
-            alt="EO"
+            alt="EventOS Logo"
+            width={44}
+            height={44}
+            decoding="async"
+            loading="eager"
+            suppressHydrationWarning
             className={cn(
               "object-contain transition-all duration-500 ease-out group-hover:scale-105 group-hover:rotate-[3deg]",
               scrolled ? "h-8 w-8" : "h-11 w-11"
@@ -303,34 +308,30 @@ export function Navbar({ activeSection }: NavbarProps) {
 
           {/* Vertical Separator */}
           <div className={cn(
-            "w-[1px] bg-white/[0.12] transition-all duration-500",
+            "w-[1px] bg-slate-300/70 transition-all duration-500",
             scrolled ? "h-6" : "h-9"
           )} />
 
           {/* Brand Text */}
           <div className="flex flex-col justify-center text-left transition-all duration-300 group-hover:translate-x-0.5">
             <h1 className={cn(
-              "font-extrabold leading-none tracking-tight text-white font-heading flex items-center transition-all duration-500",
+              "font-extrabold leading-none tracking-tight text-slate-900 font-heading flex items-center transition-all duration-500",
               scrolled ? "text-sm" : "text-lg"
             )}>
               Event
-              <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent ml-0.5 transition-all duration-300">
+              <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent ml-0.5 transition-all duration-300">
                 OS
               </span>
             </h1>
             {/* Hide tagline when scrolled for compact capsule */}
             <span className={cn(
-              "text-[8px] text-[#8E8A9F] font-bold tracking-[0.16em] uppercase block leading-none transition-all duration-500",
+              "text-[8px] text-slate-500 font-bold tracking-[0.16em] uppercase block leading-none transition-all duration-500",
               scrolled ? "mt-0 h-0 opacity-0 overflow-hidden" : "mt-1 opacity-100"
             )}>
               MANAGE. ENGAGE. ELEVATE.
             </span>
           </div>
         </div>
-
-
-
-
 
         {/* Desktop Nav Items */}
         <nav
@@ -343,15 +344,15 @@ export function Navbar({ activeSection }: NavbarProps) {
             onClick={(e) => handleNavClick(e, "#features")}
             onMouseEnter={() => setHoveredIndex(0)}
             className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-white/70 hover:text-white/95",
-              activeSection === "features" && "text-white font-semibold"
+              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-600 hover:text-slate-900",
+              activeSection === "features" && "text-purple-600 font-semibold"
             )}
           >
             Features
             {hoveredIndex === 0 && (
               <motion.div
                 layoutId="nav-hover-capsule"
-                className="absolute inset-0 rounded-full bg-white/[0.05] border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] -z-10"
+                className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -362,7 +363,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             {activeSection === "features" && (
               <motion.div
                 layoutId="activeNavIndicatorDot"
-                className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]"
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-purple-600 shadow-[0_0_6px_rgba(147,51,234,0.6)]"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -383,16 +384,16 @@ export function Navbar({ activeSection }: NavbarProps) {
           >
             <button
               className={cn(
-                "text-[13px] font-medium tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-white/70 hover:text-white/95 focus:outline-none",
-                (activeDropdown === "solutions" || activeSection === "modules") && "text-white font-semibold"
+                "text-[13px] font-medium tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-600 hover:text-slate-900 focus:outline-none",
+                (activeDropdown === "solutions" || activeSection === "modules") && "text-purple-600 font-semibold"
               )}
             >
               Solutions
-              <ChevronDown className={cn("w-3.5 h-3.5 text-white/60 transition-transform duration-200", activeDropdown === "solutions" && "rotate-180 text-white")} />
+              <ChevronDown className={cn("w-3.5 h-3.5 text-slate-500 transition-transform duration-200", activeDropdown === "solutions" && "rotate-180 text-purple-600")} />
               {hoveredIndex === 1 && (
                 <motion.div
                   layoutId="nav-hover-capsule"
-                  className="absolute inset-0 rounded-full bg-white/[0.05] border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] -z-10"
+                  className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
                   transition={{
                     type: "spring",
                     stiffness: 380,
@@ -403,7 +404,7 @@ export function Navbar({ activeSection }: NavbarProps) {
               {activeSection === "modules" && (
                 <motion.div
                   layoutId="activeNavIndicatorDot"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]"
+                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-purple-600 shadow-[0_0_6px_rgba(147,51,234,0.6)]"
                   transition={{
                     type: "spring",
                     stiffness: 380,
@@ -422,7 +423,7 @@ export function Navbar({ activeSection }: NavbarProps) {
                   transition={{ duration: 0.15, ease: "easeOut" }}
                   className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[460px] z-50 pointer-events-auto"
                 >
-                  <div className="grid grid-cols-2 gap-2.5 p-4 bg-[#0d0d14] border border-zinc-800 rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.98),0_0_30px_rgba(139,92,246,0.2)] backdrop-blur-2xl z-50 relative">
+                  <div className="grid grid-cols-2 gap-2.5 p-4 bg-white/95 border border-slate-200/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl z-50 relative">
                     {solutions.map((item) => (
                       <a
                         key={item.title}
@@ -435,14 +436,14 @@ export function Navbar({ activeSection }: NavbarProps) {
                         )}
                       >
                         <div className={cn(
-                          "h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/70 group-hover:bg-white/[0.08] shrink-0 transition-all duration-250",
+                          "h-8 w-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center group-hover:bg-white shrink-0 transition-all duration-250",
                           item.iconColor
                         )}>
                           <Icon icon={item.icon} className="text-base" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white/90 group-hover:text-white transition-colors">{item.title}</h4>
-                          <p className="text-[10px] text-white/50 mt-0.5 leading-snug group-hover:text-white/70">{item.desc}</p>
+                          <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-900 transition-colors">{item.title}</h4>
+                          <p className="text-[10px] text-slate-500 mt-0.5 leading-snug group-hover:text-slate-700">{item.desc}</p>
                         </div>
                       </a>
                     ))}
@@ -457,15 +458,15 @@ export function Navbar({ activeSection }: NavbarProps) {
             onClick={(e) => handleNavClick(e, "#pricing")}
             onMouseEnter={() => setHoveredIndex(2)}
             className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-white/70 hover:text-white/95",
-              activeSection === "pricing" && "text-white font-semibold"
+              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-600 hover:text-slate-900",
+              activeSection === "pricing" && "text-purple-600 font-semibold"
             )}
           >
             Pricing
             {hoveredIndex === 2 && (
               <motion.div
                 layoutId="nav-hover-capsule"
-                className="absolute inset-0 rounded-full bg-white/[0.05] border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] -z-10"
+                className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -476,7 +477,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             {activeSection === "pricing" && (
               <motion.div
                 layoutId="activeNavIndicatorDot"
-                className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]"
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-purple-600 shadow-[0_0_6px_rgba(147,51,234,0.6)]"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -497,16 +498,16 @@ export function Navbar({ activeSection }: NavbarProps) {
           >
             <button
               className={cn(
-                "text-[13px] font-medium tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-white/70 hover:text-white/95 focus:outline-none",
-                activeDropdown === "resources" && "text-white font-semibold"
+                "text-[13px] font-medium tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-600 hover:text-slate-900 focus:outline-none",
+                activeDropdown === "resources" && "text-purple-600 font-semibold"
               )}
             >
               Resources
-              <ChevronDown className={cn("w-3.5 h-3.5 text-white/60 transition-transform duration-200", activeDropdown === "resources" && "rotate-180 text-white")} />
+              <ChevronDown className={cn("w-3.5 h-3.5 text-slate-500 transition-transform duration-200", activeDropdown === "resources" && "rotate-180 text-purple-600")} />
               {hoveredIndex === 3 && (
                 <motion.div
                   layoutId="nav-hover-capsule"
-                  className="absolute inset-0 rounded-full bg-white/[0.05] border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] -z-10"
+                  className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
                   transition={{
                     type: "spring",
                     stiffness: 380,
@@ -525,7 +526,7 @@ export function Navbar({ activeSection }: NavbarProps) {
                   transition={{ duration: 0.15, ease: "easeOut" }}
                   className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[260px] z-50 pointer-events-auto"
                 >
-                  <div className="flex flex-col gap-1 p-2 bg-[#0d0d14] border border-zinc-800 rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.98),0_0_30px_rgba(139,92,246,0.2)] backdrop-blur-2xl z-50 relative">
+                  <div className="flex flex-col gap-1 p-2 bg-white/95 border border-slate-200/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl z-50 relative">
                     {resources.map((item) => (
                       <a
                         key={item.title}
@@ -538,14 +539,14 @@ export function Navbar({ activeSection }: NavbarProps) {
                         )}
                       >
                         <div className={cn(
-                          "h-7 w-7 rounded bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/70 group-hover:bg-white/[0.08] shrink-0 transition-all duration-250",
+                          "h-7 w-7 rounded bg-slate-100 border border-slate-200 flex items-center justify-center group-hover:bg-white shrink-0 transition-all duration-250",
                           item.iconColor
                         )}>
                           <Icon icon={item.icon} className="text-sm" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white/90 group-hover:text-white transition-colors">{item.title}</h4>
-                          <p className="text-[9px] text-white/50 mt-0.5 leading-snug group-hover:text-white/70">{item.desc}</p>
+                          <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-900 transition-colors">{item.title}</h4>
+                          <p className="text-[9px] text-slate-500 mt-0.5 leading-snug group-hover:text-slate-700">{item.desc}</p>
                         </div>
                       </a>
                     ))}
@@ -569,15 +570,15 @@ export function Navbar({ activeSection }: NavbarProps) {
             onClick={() => router.push("/demo")}
             onMouseEnter={() => setHoveredIndex(5)}
             className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-white/70 hover:text-white focus:outline-none flex items-center gap-1.5"
+              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-slate-700 hover:text-purple-700 focus:outline-none flex items-center gap-1.5"
             )}
           >
-            <Icon icon="solar:star-bold-duotone" className="text-xs text-white/50 transition-colors" />
+            <Icon icon="solar:star-bold-duotone" className="text-xs text-purple-600 transition-colors" />
             Live Demo
             {hoveredIndex === 5 && (
               <motion.div
                 layoutId="nav-hover-capsule"
-                className="absolute inset-0 rounded-full bg-white/[0.05] border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] -z-10"
+                className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -590,14 +591,14 @@ export function Navbar({ activeSection }: NavbarProps) {
             onClick={handleSignIn}
             onMouseEnter={() => setHoveredIndex(4)}
             className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-white/70 hover:text-white focus:outline-none"
+              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-slate-700 hover:text-purple-700 focus:outline-none"
             )}
           >
             Login
             {hoveredIndex === 4 && (
               <motion.div
                 layoutId="nav-hover-capsule"
-                className="absolute inset-0 rounded-full bg-white/[0.05] border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] -z-10"
+                className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -619,7 +620,7 @@ export function Navbar({ activeSection }: NavbarProps) {
         {/* Mobile menu toggle */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden h-9 w-9 border border-white/[0.06] bg-white/[0.02] backdrop-blur-[20px] hover:bg-white/[0.06] hover:border-white/[0.1] rounded-full flex items-center justify-center text-white/70 hover:text-white focus:outline-none transition-all shrink-0"
+          className="md:hidden h-9 w-9 border border-slate-200 bg-slate-100/80 backdrop-blur-[20px] hover:bg-slate-200 hover:border-slate-300 rounded-full flex items-center justify-center text-slate-700 hover:text-slate-900 focus:outline-none transition-all shrink-0"
           aria-expanded={isOpen}
           aria-label="Toggle navigation menu"
         >

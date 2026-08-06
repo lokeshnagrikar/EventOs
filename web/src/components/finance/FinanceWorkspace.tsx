@@ -51,6 +51,8 @@ import {
   Check,
   Ban
 } from "lucide-react";
+import { QuickActionsFAB } from "./QuickActionsFAB";
+import { EventFinancialAnalytics } from "./EventFinancialAnalytics";
 import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
 import EmptyState from "@/components/ui/EmptyState";
@@ -534,6 +536,9 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {/* ═══════════════════════════════════════════════ */}
       {activeTab === "dashboard" && (
         <div className="space-y-6">
+          {/* Live Financial Analytics & Profit Margins Component */}
+          <EventFinancialAnalytics />
+
           {/* Top KPI Grid: 4 primary metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <FinanceKpiCard title="Monthly Revenue" value={kpis.revenueMonth} icon={Coins} trend={{ value: 14, isPositive: true }} accent="from-purple-500 to-indigo-500" sparkData={[40, 50, 48, 65, kpis.revenueMonth / 1000]} />

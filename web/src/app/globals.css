@@ -5,8 +5,8 @@
 
 @layer base {
   :root {
-    /* Memora Design System — Light Mode UI Tokens */
-    --background: #F1F5F9; /* Soft off-white Slate 100 */
+    /* Memora Design System — Off-White Landing Theme UI Tokens */
+    --background: #FAF9F6; /* Premium Off-White Alabaster */
     --foreground: #0F172A; /* Slate 900 */
 
     --card: #FFFFFF; /* Pure White Card Surface */

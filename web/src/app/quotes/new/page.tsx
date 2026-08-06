@@ -181,7 +181,14 @@ export default function QuoteBuilderPage() {
       const response = await api.post("/crm/quotes", payload);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      const created = data?.data;
+      if (created) {
+        try {
+          const existing = JSON.parse(localStorage.getItem("eventos_created_quotes") || "[]");
+          localStorage.setItem("eventos_created_quotes", JSON.stringify([created, ...existing]));
+        } catch (e) {}
+      }
       const { completeStep } = useOnboardingStore.getState();
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
       completeStep("create_quote");

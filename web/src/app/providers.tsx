@@ -17,7 +17,6 @@ import LimitExceededModal from "@/components/ui/LimitExceededModal";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import ProductTourSpotlight from "@/components/onboarding/ProductTourSpotlight";
-import OnboardingChecklistWidget from "@/components/onboarding/OnboardingChecklistWidget";
 import HelpSearch from "@/components/help/HelpSearch";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { ExitIntent } from "@/components/landing/ExitIntent";
@@ -88,8 +87,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 10 * 1000, // Cache data for 10 seconds
+            staleTime: 60 * 1000, // Instant 60-second in-memory caching across routes
+            gcTime: 5 * 60 * 1000, // Keep cached data in memory for 5 minutes
             refetchOnWindowFocus: false,
+            retry: 1,
           },
         },
       })
@@ -244,7 +245,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 <LimitExceededModal />
                 <OnboardingWizard />
                 <ProductTourSpotlight />
-                <OnboardingChecklistWidget />
                 <HelpSearch />
                 <AuthModal />
                 <LogoutConfirmationModal />

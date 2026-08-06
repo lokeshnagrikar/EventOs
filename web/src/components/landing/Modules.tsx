@@ -200,17 +200,17 @@ export function Modules() {
           transition={{ duration: 0.5 }}
           className="text-center max-w-3xl mx-auto space-y-4 mb-16"
         >
-          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 uppercase">
-            <Icon icon="solar:widget-bold-duotone" className="text-purple-400 text-base" />
+          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-cyan-600 uppercase">
+            <Icon icon="solar:widget-bold-duotone" className="text-purple-600 text-base" />
             Complete Module Suite
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white font-heading text-balance">
+          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading text-balance">
             Six integrated modules.{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4]">
               One unified workspace.
             </span>
           </h2>
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
             Every EventOS module talks to the others. A lead becomes a quote becomes a booking becomes an invoice becomes a gallery — automatically.
           </p>
         </motion.div>
@@ -229,7 +229,7 @@ export function Modules() {
               <SpotlightCard
                 spotlightColor={mod.spotlightColor}
                 borderColor={mod.borderHover}
-                className="h-full rounded-2xl border border-white/[0.06] bg-zinc-950/20 backdrop-blur-md p-6 group hover:border-white/[0.12] hover:bg-zinc-900/10 transition-all duration-500 shadow-[0_0_30px_rgba(0,0,0,0.3)] hover:shadow-[0_0_50px_rgba(139,92,246,0.03)]"
+                className="h-full rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-md p-6 group hover:border-purple-300 hover:bg-white transition-all duration-500 shadow-sm hover:shadow-md"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between">
@@ -245,7 +245,7 @@ export function Modules() {
                       />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-zinc-100 group-hover:text-white transition-colors">
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">
                         {mod.label}
                       </h3>
                       <span
@@ -263,7 +263,7 @@ export function Modules() {
                 </div>
 
                 {/* Description */}
-                <p className="mt-3 text-zinc-500 text-xs leading-relaxed">{mod.description}</p>
+                <p className="mt-3 text-slate-600 text-xs leading-relaxed font-medium">{mod.description}</p>
 
                 {/* Mini Preview with smooth group-hover scale transition */}
                 <div className="transition-transform duration-500 group-hover:scale-[1.02] origin-bottom">

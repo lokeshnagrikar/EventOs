@@ -16,7 +16,7 @@ const faqs = [
     value: "q2",
     icon: "solar:palette-bold-duotone",
     question: "Can I use my own brand logo and custom domain?",
-    answer: "Absolutely. On our Growth and Enterprise plans, you can map your own domain (e.g., proposals.yourbrand.com) and customize email templates via SMTP, so your clients see a fully branded, professional portal — zero EventOS branding visible.",
+    answer: "Absolutely. On our Professional and Enterprise plans, you can map your own domain (e.g., proposals.yourbrand.com) and customize email templates via SMTP, so your clients see a fully branded, professional portal — zero EventOS branding visible.",
   },
   {
     value: "q3",
@@ -61,17 +61,17 @@ export function Faq() {
           transition={{ duration: 0.5 }}
           className="text-center space-y-4 mb-16"
         >
-          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 uppercase">
-            <Icon icon="solar:question-circle-bold-duotone" className="text-cyan-400 text-sm" />
+          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 uppercase">
+            <Icon icon="solar:question-circle-bold-duotone" className="text-cyan-600 text-sm" />
             Got Questions?
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading">
             Frequently Asked{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 to-blue-600">
               Questions
             </span>
           </h2>
-          <p className="text-zinc-400 text-sm leading-relaxed">
+          <p className="text-slate-600 text-sm leading-relaxed font-medium">
             Everything you need to know about EventOS security, billing, white-label options, and team management.
           </p>
         </motion.div>
@@ -82,25 +82,25 @@ export function Faq() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-[#0c0c0e]/40 border border-white/[0.08] rounded-2xl p-4 sm:p-6 backdrop-blur-2xl"
+          className="bg-white/80 border border-slate-200/80 shadow-md rounded-2xl p-4 sm:p-6 backdrop-blur-2xl"
         >
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, idx) => (
               <AccordionItem
                 key={faq.value}
                 value={faq.value}
-                className="border-b border-zinc-900/80 py-1 last:border-0 group/item"
+                className="border-b border-slate-200/80 py-1 last:border-0 group/item"
               >
-                <AccordionTrigger className="text-sm sm:text-base font-bold text-zinc-300 hover:text-white hover:no-underline focus:text-white py-4 flex items-center gap-3 [&>svg]:text-zinc-600">
+                <AccordionTrigger className="text-sm sm:text-base font-bold text-slate-900 hover:text-purple-600 hover:no-underline focus:text-purple-600 py-4 flex items-center gap-3 [&>svg]:text-slate-500">
                   <div className="flex items-center gap-3 text-left">
                     <Icon
                       icon={faq.icon}
-                      className="text-purple-400/70 text-xl shrink-0 group-data-[state=open]/item:text-purple-400 transition-colors"
+                      className="text-purple-600 text-xl shrink-0 group-data-[state=open]/item:text-purple-600 transition-colors"
                     />
                     {faq.question}
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="text-xs sm:text-sm text-zinc-400 leading-relaxed pt-1 pb-5 pl-9 border-l-2 border-purple-500/20 ml-3 group-data-[state=open]/item:border-purple-500/40 transition-colors">
+                <AccordionContent className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed pt-1 pb-5 pl-9 border-l-2 border-purple-500/30 ml-3 group-data-[state=open]/item:border-purple-500/60 transition-colors">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -116,7 +116,7 @@ export function Faq() {
           transition={{ duration: 0.4, delay: 0.2 }}
           className="mt-10 text-center"
         >
-          <p className="text-zinc-500 text-sm">
+          <p className="text-slate-600 font-medium text-sm">
             Still have questions?{" "}
             <a
               href="mailto:support@eventos.io"

@@ -264,12 +264,15 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     setError(null);
     setMagicLinkLoading(true);
     try {
-      await apiClient.post("/auth/magic-link", { email: emailVal });
+      const res = await apiClient.post("/auth/magic-link", { email: emailVal });
+      const magicUrl = res.data?.magicLinkUrl || res.data?.data?.magicLinkUrl;
       setMagicLinkSent(true);
       setMagicLinkTimer(60);
-      addToast("Magic Link sent to your email!", "success");
+      addToast(`Magic Link sent to ${emailVal}! Check inbox or click 1-click link.`, "success");
+      if (magicUrl) {
+        console.log("[MAGIC_LINK_URL]", magicUrl);
+      }
     } catch (err: any) {
-      // Fallback for demo/dev if backend route is in-progress
       setMagicLinkSent(true);
       setMagicLinkTimer(60);
       addToast(`Magic link sent to ${emailVal}! Check your inbox.`, "success");
@@ -632,7 +635,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         ) : (
           <div className="space-y-4">
             {/* 6 Digit Input Group */}
-            <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+            <div className="flex justify-center gap-1 sm:gap-2 px-1" onPaste={handleOtpPaste}>
               {otpValues.map((val, idx) => (
                 <input
                   key={idx}
@@ -643,7 +646,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                   disabled={otpLoading}
                   onChange={(e) => handleOtpChange(idx, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                  className="w-10 h-12 text-center text-lg font-bold bg-white/[0.03] border border-white/[0.08] focus:border-[#8B5CF6] focus:bg-[#09090b]/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all"
+                  className="w-8 sm:w-10 h-10 sm:h-12 text-center text-base sm:text-lg font-bold bg-white/[0.03] border border-white/[0.08] focus:border-[#8B5CF6] focus:bg-[#09090b]/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all shrink-0"
                 />
               ))}
             </div>
@@ -685,15 +688,14 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       animate="show"
       className={cn("space-y-3 sm:space-y-4", shouldShake ? "animate-shake" : "")}
     >
-      {/* Header logo */}
-      <motion.div variants={itemVariants} className="text-center space-y-1 select-none">
-        <div className="mx-auto h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-xl shadow-purple-500/10 select-none transform hover:rotate-12 hover:scale-105 transition-all duration-300">
-          <Sparkles size={14} className="text-white animate-pulse" />
-        </div>
-        <h2 className="text-base sm:text-lg font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
-          Event<span className="text-purple-400">OS</span>
+      {/* Modern Sleek Header - Vercel / Apple Minimalist Style */}
+      <motion.div variants={itemVariants} className="text-left space-y-1 select-none pb-2">
+        <h2 className="text-2xl font-bold tracking-tight text-white">
+          Sign in to EventOS
         </h2>
-        <p className="text-[8px] text-zinc-400 uppercase tracking-widest font-extrabold">The Operating System for Event Businesses</p>
+        <p className="text-xs text-zinc-400">
+          Welcome back! Please enter your account details.
+        </p>
       </motion.div>
 
       {/* Global Error Banner */}
@@ -727,7 +729,6 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           <span>{resendMessage}</span>
         </motion.div>
       )}
-
 
       {/* 1-Click Returning User Profile Card */}
       {lastUser && showReturningUserCard && (
@@ -776,7 +777,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       )}
 
       {/* Auth Mode Toggle Tabs (Password vs Magic Link vs WhatsApp OTP) */}
-      <motion.div variants={itemVariants} className="flex bg-zinc-900/90 p-1 rounded-xl border border-zinc-800 text-[10px] font-bold">
+      <motion.div variants={itemVariants} className="flex bg-[#141417] p-1 rounded-xl border border-zinc-800 text-xs font-medium">
         <button
           type="button"
           onClick={() => {
@@ -785,11 +786,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             setWhatsappSent(false);
           }}
           className={cn(
-            "flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
-            authMode === "password" ? "bg-zinc-800 text-purple-400 font-extrabold shadow-sm border border-purple-500/20" : "text-zinc-500 hover:text-zinc-300"
+            "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
+            authMode === "password" ? "bg-zinc-800 text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
           )}
         >
-          <KeyRound size={11} />
+          <KeyRound size={13} />
           <span>Password</span>
         </button>
         <button
@@ -799,11 +800,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             setWhatsappSent(false);
           }}
           className={cn(
-            "flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
-            authMode === "magic-link" ? "bg-zinc-800 text-purple-400 font-extrabold shadow-sm border border-purple-500/20" : "text-zinc-500 hover:text-zinc-300"
+            "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
+            authMode === "magic-link" ? "bg-zinc-800 text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
           )}
         >
-          <Sparkles size={11} className="text-purple-400 animate-pulse" />
+          <Sparkles size={13} className="text-purple-400" />
           <span>Magic Link</span>
         </button>
         <button
@@ -813,11 +814,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             setMagicLinkSent(false);
           }}
           className={cn(
-            "flex-1 py-1.5 rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
-            authMode === "whatsapp" ? "bg-zinc-800 text-emerald-400 font-extrabold shadow-sm border border-emerald-500/20" : "text-zinc-500 hover:text-zinc-300"
+            "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
+            authMode === "whatsapp" ? "bg-zinc-800 text-emerald-400 font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
           )}
         >
-          <MessageSquare size={11} className="text-emerald-400" />
+          <MessageSquare size={13} className="text-emerald-400" />
           <span>WhatsApp OTP</span>
         </button>
       </motion.div>
@@ -837,7 +838,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             </div>
 
             {/* 6 Digit WhatsApp Input */}
-            <div className="flex justify-center gap-1.5 pt-1">
+            <div className="flex justify-center gap-1 sm:gap-1.5 pt-1 px-1">
               {whatsappOtpValues.map((val, idx) => (
                 <input
                   key={idx}
@@ -856,7 +857,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                       verifyWhatsAppOtpCode(newVals.join(""));
                     }
                   }}
-                  className="w-9 h-11 text-center text-base font-bold bg-zinc-900 border border-zinc-700 focus:border-emerald-500 rounded-xl text-white focus:outline-none transition-all"
+                  className="w-8 sm:w-9 h-10 sm:h-11 text-center text-sm sm:text-base font-bold bg-zinc-900 border border-zinc-700 focus:border-emerald-500 rounded-xl text-white focus:outline-none transition-all shrink-0"
                 />
               ))}
             </div>
@@ -933,12 +934,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 placeholder="you@company.com"
                 autoFocus
                 autoComplete="email"
-                className={`w-full pl-9 pr-3 py-2.5 sm:py-2 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                className={`w-full pl-9 pr-3 py-2.5 bg-[#141417] border rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
                   errors.email 
                     ? "border-rose-500/50" 
-                    : focusedField === "email"
-                    ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                    : "border-border hover:border-zinc-700/30"
+                    : "border-zinc-800"
                 }`}
                 {...register("email")}
                 onChange={(e) => handleEmailInputChange(e.target.value)}
@@ -1054,12 +1053,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className={`w-full pl-9 pr-9 py-2.5 sm:py-2 bg-zinc-500/5 border rounded-xl text-sm sm:text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
+                  className={`w-full pl-9 pr-9 py-2.5 bg-[#141417] border rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
                     errors.password 
                       ? "border-rose-500/50" 
-                      : focusedField === "password"
-                      ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                      : "border-border hover:border-zinc-700/30"
+                      : "border-zinc-800"
                   }`}
                   {...register("password")}
                   onFocus={() => setFocusedField("password")}
@@ -1159,12 +1156,12 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 sm:py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-sm sm:text-xs rounded-xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-1.5 cursor-pointer"
+                className="w-full py-2.5 h-11 bg-white hover:bg-zinc-200 text-black font-semibold text-xs rounded-xl transition-all shadow-sm active:scale-[0.99] disabled:opacity-50 flex justify-center items-center gap-1.5 cursor-pointer"
               >
                 {loading ? (
                   <>
-                    <Loader2 size={12} className="animate-spin" />
-                    <span>Verifying...</span>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Signing in...</span>
                   </>
                 ) : (
                   "Sign In"
@@ -1184,14 +1181,14 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       </motion.div>
 
       {/* Social buttons */}
-      <motion.div variants={itemVariants} className="w-full flex justify-center py-1">
+      <motion.div variants={itemVariants} className="w-full flex justify-center py-0.5">
         <button
           type="button"
           disabled={loading || googleAuthenticating}
           onClick={() => loginWithGoogle()}
-          className="relative flex items-center justify-center w-full py-3 sm:py-2.5 px-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.15] rounded-xl text-sm sm:text-[11px] font-semibold text-zinc-300 hover:text-white transition-all active:scale-[0.98] cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative flex items-center justify-center w-full h-11 px-3 bg-[#141417] hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-medium text-zinc-200 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <svg className="h-3.5 w-3.5 mr-2" viewBox="0 0 24 24">
+          <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
             <path
               fill="currentColor"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -1232,6 +1229,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           )}
         </p>
       </motion.div>
+
       <AuthLoader isOpen={googleAuthenticating} type="login" />
     </motion.div>
   );

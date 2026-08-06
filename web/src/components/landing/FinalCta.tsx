@@ -38,7 +38,7 @@ export function FinalCta() {
   ];
 
   return (
-    <section className="py-24 border-b border-zinc-900 bg-[#09090B] w-full relative z-10">
+    <section className="py-24 border-b border-purple-500/10 bg-transparent w-full relative z-10">
       <div className="max-w-6xl mx-auto px-6">
         {/* Large Gradient Card */}
         <motion.div

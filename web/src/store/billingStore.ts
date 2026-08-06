@@ -73,6 +73,8 @@ export interface Invoice {
   dueDate: string;
   paidAt: string | null;
   pdfUrl: string;
+  planName?: string;
+  date?: string;
 }
 
 export interface WorkspaceSettings {
@@ -179,14 +181,29 @@ export const useBillingStore = create<BillingState>((set, get) => ({
   upgradeSubscription: async (planCode: string) => {
     set({ loading: true });
     try {
-      const res = await apiClient.post('/auth/billing/subscription/checkout', { planCode });
-      const { url } = res.data.data;
-      if (url) {
-        window.location.href = url;
+      // 1. Try Stripe Test Checkout Session if API key is active
+      try {
+        const checkoutRes = await apiClient.post('/auth/billing/subscription/checkout', { planCode });
+        const checkoutUrl = checkoutRes.data?.data?.url;
+        if (checkoutUrl && checkoutUrl.startsWith('http')) {
+          window.location.href = checkoutUrl;
+          return;
+        }
+      } catch (checkoutErr) {
+        console.log("Stripe Checkout not configured or direct mode active, executing direct subscription upgrade.");
       }
+
+      // 2. Direct database upgrade mode
+      const res = await apiClient.post('/auth/billing/subscription/upgrade', { planCode });
+      const updatedSubscription = res.data?.data;
+      if (updatedSubscription) {
+        set({ subscription: updatedSubscription });
+      }
+      await Promise.all([get().fetchSubscription(), get().fetchUsage(), get().fetchInvoices()]);
     } catch (e: any) {
-      set({ error: e.message });
-      throw e;
+      const errMsg = e.response?.data?.message || e.message || 'Failed to upgrade subscription';
+      set({ error: errMsg });
+      throw new Error(errMsg);
     } finally {
       set({ loading: false });
     }

@@ -64,7 +64,7 @@ export function Contact() {
   };
 
   return (
-    <section className="py-24 border-b border-white/5 bg-[#09090b] relative overflow-hidden font-sans" id="contact">
+    <section className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden font-sans" id="contact">
       {/* Laser-precision top horizon line */}
       <div className="absolute top-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent pointer-events-none" />
 
@@ -85,15 +85,16 @@ export function Contact() {
             className="lg:col-span-5 space-y-8"
           >
             <div className="space-y-4">
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold uppercase tracking-widest backdrop-blur-md">
-                <Sparkles size={13} className="text-purple-400" /> Glassmorphic Support Desk
+              <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 uppercase">
+                <Icon icon="solar:chat-round-dots-bold-duotone" className="text-purple-600 text-sm" />
+                Contact Enterprise Desk
               </span>
 
-              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight font-heading">
+              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight font-heading">
                 Let's scale your event enterprise together.
               </h2>
 
-              <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+              <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
                 Have questions about custom workflows, white-label setup, or enterprise migration? Drop us a line below. Our engineering team is here 24/7.
               </p>
             </div>
@@ -101,42 +102,42 @@ export function Contact() {
             {/* Glassmorphic Contact Cards */}
             <div className="space-y-4">
               {/* Card 1: Email */}
-              <div className="p-4 rounded-2xl bg-neutral-900/40 border border-white/10 backdrop-blur-xl hover:border-purple-500/30 transition-all duration-300 flex items-start gap-4 group">
-                <div className="h-11 w-11 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0 group-hover:scale-110 transition-transform">
+              <div className="p-4 rounded-2xl bg-white/80 border border-slate-200/80 shadow-md backdrop-blur-xl hover:border-purple-400 transition-all duration-300 flex items-start gap-4 group">
+                <div className="h-11 w-11 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-600 shrink-0 group-hover:scale-110 transition-transform">
                   <Mail size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white font-heading">Direct Email Desk</h4>
-                  <p className="text-xs text-zinc-400 mt-0.5">Rapid response within 12 hours</p>
-                  <a href="mailto:hello@eventos.io" className="text-xs font-bold text-purple-300 hover:text-purple-200 transition-colors mt-1 block">
+                  <h4 className="text-sm font-bold text-slate-900 font-heading">Direct Email Desk</h4>
+                  <p className="text-xs text-slate-600 mt-0.5 font-medium">Rapid response within 12 hours</p>
+                  <a href="mailto:hello@eventos.io" className="text-xs font-bold text-purple-700 hover:text-purple-900 transition-colors mt-1 block">
                     hello@eventos.io →
                   </a>
                 </div>
               </div>
 
               {/* Card 2: Hours */}
-              <div className="p-4 rounded-2xl bg-neutral-900/40 border border-white/10 backdrop-blur-xl hover:border-cyan-500/30 transition-all duration-300 flex items-start gap-4 group">
-                <div className="h-11 w-11 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 group-hover:scale-110 transition-transform">
+              <div className="p-4 rounded-2xl bg-white/80 border border-slate-200/80 shadow-md backdrop-blur-xl hover:border-cyan-400 transition-all duration-300 flex items-start gap-4 group">
+                <div className="h-11 w-11 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-600 shrink-0 group-hover:scale-110 transition-transform">
                   <Clock size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white font-heading">Operational SLA</h4>
-                  <p className="text-xs text-zinc-400 mt-0.5">Global support coverage</p>
-                  <p className="text-xs font-semibold text-zinc-300 mt-1">
+                  <h4 className="text-sm font-bold text-slate-900 font-heading">Operational SLA</h4>
+                  <p className="text-xs text-slate-600 mt-0.5 font-medium">Global support coverage</p>
+                  <p className="text-xs font-semibold text-slate-800 mt-1">
                     Monday – Friday, 9:00 AM – 6:00 PM (SGT)
                   </p>
                 </div>
               </div>
 
               {/* Card 3: Location */}
-              <div className="p-4 rounded-2xl bg-neutral-900/40 border border-white/10 backdrop-blur-xl hover:border-pink-500/30 transition-all duration-300 flex items-start gap-4 group">
-                <div className="h-11 w-11 rounded-xl bg-pink-500/15 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0 group-hover:scale-110 transition-transform">
+              <div className="p-4 rounded-2xl bg-white/80 border border-slate-200/80 shadow-md backdrop-blur-xl hover:border-pink-400 transition-all duration-300 flex items-start gap-4 group">
+                <div className="h-11 w-11 rounded-xl bg-pink-500/15 border border-pink-500/30 flex items-center justify-center text-pink-600 shrink-0 group-hover:scale-110 transition-transform">
                   <MapPin size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white font-heading">Global Headquarters</h4>
-                  <p className="text-xs text-zinc-400 mt-0.5">Isolated Enterprise Hub</p>
-                  <p className="text-xs font-semibold text-zinc-300 mt-1">
+                  <h4 className="text-sm font-bold text-slate-900 font-heading">Global Headquarters</h4>
+                  <p className="text-xs text-slate-600 mt-0.5 font-medium">Isolated Enterprise Hub</p>
+                  <p className="text-xs font-semibold text-slate-800 mt-1">
                     Singapore, Central Business District
                   </p>
                 </div>
@@ -152,7 +153,7 @@ export function Contact() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="lg:col-span-7"
           >
-            <div className="relative rounded-3xl border border-white/10 bg-neutral-900/50 backdrop-blur-2xl p-6 sm:p-10 shadow-[0_0_80px_rgba(139,92,246,0.18)] overflow-hidden">
+            <div className="relative rounded-3xl border border-slate-200/80 bg-white/90 backdrop-blur-2xl p-6 sm:p-10 shadow-xl overflow-hidden">
               {/* Glass Top Specular Sheen */}
               <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-purple-500/40 to-transparent pointer-events-none" />
               <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 blur-3xl pointer-events-none" />
@@ -167,17 +168,17 @@ export function Contact() {
                     onSubmit={handleSubmit}
                     className="space-y-6 relative z-10"
                   >
-                    <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-200">
                       <div>
-                        <h3 className="text-xl font-bold text-white font-heading">Submit Technical Inquiry</h3>
-                        <p className="text-xs text-zinc-400">Fill out your event details below to connect with an engineer.</p>
+                        <h3 className="text-xl font-bold text-slate-900 font-heading">Submit Technical Inquiry</h3>
+                        <p className="text-xs text-slate-600 font-medium">Fill out your event details below to connect with an engineer.</p>
                       </div>
-                      <Icon icon="solar:shield-check-bold-duotone" className="text-purple-400 text-2xl" />
+                      <Icon icon="solar:shield-check-bold-duotone" className="text-purple-600 text-2xl" />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label htmlFor="contact-name" className="text-xs font-bold text-zinc-200">
+                        <label htmlFor="contact-name" className="text-xs font-bold text-slate-800">
                           Full Name <span className="text-purple-400">*</span>
                         </label>
                         <input

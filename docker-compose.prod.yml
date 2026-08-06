@@ -2,30 +2,19 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:16-alpine
     container_name: eventos-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespassword}
     ports:
       - "5433:5432"
-    environment:
-      POSTGRES_USER: eventos_admin
-      POSTGRES_PASSWORD: eventos_secure_pass
-      POSTGRES_DB: eventos_root
     volumes:
-      - postgres-prod-data:/var/lib/postgresql/data
-      - ./docker/postgres/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
+      - postgres_prod_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U eventos_admin -d eventos_root"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,21 +22,12 @@ services:
   redis:
     image: redis:7.2-alpine
     container_name: eventos-redis-prod
+    restart: always
+    command: redis-server --save 60 1 --loglevel notice
     ports:
       - "6379:6379"
     volumes:
-      - redis-prod-data:/data
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 128M
-        reservations:
-          cpus: '0.10'
-          memory: 64M
+      - redis_prod_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -55,274 +35,63 @@ services:
       retries: 5
 
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:3.12-management-alpine
     container_name: eventos-rabbitmq-prod
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-eventos_guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-eventos_secret_2026}
     ports:
       - "5672:5672"
       - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: eventos_guest
-      RABBITMQ_DEFAULT_PASS: eventos_guest_pass
-    volumes:
-      - rabbitmq-prod-data:/var/lib/rabbitmq
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 15s
       timeout: 10s
       retries: 5
 
-  auth-service:
-    build:
-      context: ./backend
-      dockerfile: auth-service/Dockerfile
-    container_name: eventos-auth-service
-
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=auth_db
-      - POSTGRES_USER=eventos_admin
-      - POSTGRES_PASSWORD=eventos_secure_pass
-      - SPRING_PROFILES_ACTIVE=prod
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-
-  crm-service:
-    build:
-      context: ./backend
-      dockerfile: crm-service/Dockerfile
-    container_name: eventos-crm-service
-
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=crm_db
-      - POSTGRES_USER=eventos_admin
-      - POSTGRES_PASSWORD=eventos_secure_pass
-      - SPRING_PROFILES_ACTIVE=prod
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-
-  event-service:
-    build:
-      context: ./backend
-      dockerfile: event-service/Dockerfile
-    container_name: eventos-event-service
-
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=event_db
-      - POSTGRES_USER=eventos_admin
-      - POSTGRES_PASSWORD=eventos_secure_pass
-      - SPRING_PROFILES_ACTIVE=prod
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-
-  gallery-service:
-    build:
-      context: ./backend
-      dockerfile: gallery-service/Dockerfile
-    container_name: eventos-gallery-service
-
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=gallery_db
-      - POSTGRES_USER=eventos_admin
-      - POSTGRES_PASSWORD=eventos_secure_pass
-      - SPRING_PROFILES_ACTIVE=prod
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-
   api-gateway:
-    build:
-      context: ./backend
-      dockerfile: api-gateway/Dockerfile
-    container_name: eventos-api-gateway
+    image: ghcr.io/${GITHUB_REPOSITORY:-lokeshnagrikar/eventos}/api-gateway:latest
+    container_name: eventos-gateway-prod
+    restart: always
     ports:
       - "8080:8080"
     environment:
-      - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://auth-service:8081
-      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://crm-service:8082
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://event-service:8083
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://gallery-service:8084
-      - SPRING_PROFILES_ACTIVE=prod
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://eventos-frontend.onrender.com}
-
+      SPRING_PROFILES_ACTIVE: prod
     depends_on:
-      - auth-service
-      - crm-service
-      - event-service
-      - gallery-service
-    networks:
-      - eventos-prod-net
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  auth-service:
+    image: ghcr.io/${GITHUB_REPOSITORY:-lokeshnagrikar/eventos}/auth-service:latest
+    container_name: eventos-auth-prod
     restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
+      SPRING_DATA_REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-    container_name: eventos-frontend
+    image: ghcr.io/${GITHUB_REPOSITORY:-lokeshnagrikar/eventos}/web:latest
+    container_name: eventos-web-prod
+    restart: always
     ports:
       - "3000:3000"
-    depends_on:
-      api-gateway:
-        condition: service_healthy
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: eventos-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://api.eventos.agency
     depends_on:
-      - web
       - api-gateway
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 128M
-        reservations:
-          cpus: '0.10'
-          memory: 64M
-
-  prometheus:
-    image: prom/prometheus:v2.51.0
-    container_name: eventos-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./docker/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          cpus: '0.10'
-          memory: 128M
-
-  grafana:
-    image: grafana/grafana:10.4.1
-    container_name: eventos-grafana
-    ports:
-      - "3001:3000"
-    environment:
-      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
-    volumes:
-      - ./docker/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-    networks:
-      - eventos-prod-net
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          cpus: '0.10'
-          memory: 128M
 
 volumes:
-  postgres-prod-data:
-    driver: local
-  redis-prod-data:
-    driver: local
-  rabbitmq-prod-data:
-    driver: local
-
-networks:
-  eventos-prod-net:
-    driver: bridge
+  postgres_prod_data:
+  redis_prod_data:

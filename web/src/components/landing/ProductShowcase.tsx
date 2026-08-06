@@ -86,7 +86,7 @@ export function ProductShowcase() {
   };
 
   return (
-    <section className="py-24 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden font-sans" id="showcase">
+    <section className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden font-sans" id="showcase">
       {/* Background gradients */}
       <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-cyan-950/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-12 right-[10%] w-[350px] h-[350px] bg-purple-950/5 blur-[100px] rounded-full pointer-events-none" />

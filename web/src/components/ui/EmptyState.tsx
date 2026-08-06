@@ -25,6 +25,7 @@ interface EmptyStateProps {
   tutorialLabel?: string;
   tutorialPath?: string;
   className?: string;
+  compact?: boolean;
 }
 
 /* Vector SVG Illustrations for Empty States */
@@ -136,7 +137,8 @@ export default function EmptyState({
   secondaryAction,
   tutorialLabel,
   tutorialPath,
-  className
+  className,
+  compact = false
 }: EmptyStateProps) {
   const router = useRouter();
 
@@ -146,7 +148,8 @@ export default function EmptyState({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       className={cn(
-        "flex flex-col items-center justify-center p-8 md:p-12 text-center rounded-3xl border border-zinc-850/60 bg-zinc-950/40 backdrop-blur-xl space-y-4 max-w-md mx-auto my-6 shadow-2xl relative overflow-hidden",
+        "flex flex-col items-center justify-center text-center rounded-3xl border border-zinc-850/60 bg-zinc-950/40 backdrop-blur-xl max-w-md mx-auto shadow-2xl relative overflow-hidden",
+        compact ? "p-4 space-y-2 my-2" : "p-8 md:p-12 space-y-4 my-6",
         className
       )}
     >
@@ -165,8 +168,11 @@ export default function EmptyState({
           </motion.div>
         </div>
       ) : Icon ? (
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-950/40 border border-purple-500/30 text-purple-400 shadow-lg shadow-purple-950/50">
-          <Icon size={24} />
+        <div className={cn(
+          "flex items-center justify-center rounded-2xl bg-purple-950/40 border border-purple-500/30 text-purple-400 shadow-lg shadow-purple-950/50",
+          compact ? "h-10 w-10" : "h-14 w-14"
+        )}>
+          <Icon size={compact ? 18 : 24} />
         </div>
       ) : null}
 

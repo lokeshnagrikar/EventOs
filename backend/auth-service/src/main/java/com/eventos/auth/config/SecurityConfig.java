@@ -55,6 +55,7 @@ public class SecurityConfig {
             .cors(AbstractHttpConfigurer::disable)
             .headers(headers -> headers
                 .frameOptions(frame -> frame.deny())
+                .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
                 .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'none';"))
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -63,6 +64,10 @@ public class SecurityConfig {
                         "/login",
                         "/login/google",
                         "/register",
+                        "/magic-link",
+                        "/verify-magic-token",
+                        "/send-whatsapp-otp",
+                        "/verify-whatsapp-otp",
                         "/refresh",
                         "/switch",
                         "/forgot-password",
@@ -74,6 +79,7 @@ public class SecurityConfig {
                         "/captcha",
                         "/ws/**",
                         "/billing/webhook",
+                        "/billing/plans",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",

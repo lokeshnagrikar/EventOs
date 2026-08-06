@@ -714,6 +714,97 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/magic-link")
+    public ResponseEntity<?> sendMagicLink(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Email is required"));
+        }
+        try {
+            Map<String, Object> result = authService.sendMagicLink(email);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("MAGIC_LINK_FAILED", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[MAGIC_LINK] Magic link dispatch failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("MAGIC_LINK_FAILED", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-magic-token")
+    public ResponseEntity<?> verifyMagicToken(@RequestBody Map<String, String> request, HttpServletResponse response) {
+        String token = request.get("token");
+        if (token == null || token.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Magic Token is required"));
+        }
+        try {
+            Map<String, Object> authData = authService.verifyMagicToken(token);
+            String refreshToken = (String) authData.get("refreshToken");
+            if (refreshToken != null) {
+                ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
+                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+                authData.remove("refreshToken");
+            }
+            Map<String, Object> successResponse = new HashMap<>();
+            successResponse.put("success", true);
+            successResponse.put("data", authData);
+            return ResponseEntity.ok(successResponse);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("INVALID_MAGIC_TOKEN", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[VERIFY_MAGIC_TOKEN] Verification failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("VERIFICATION_FAILED", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/send-whatsapp-otp")
+    public ResponseEntity<?> sendWhatsAppOtp(@RequestBody Map<String, String> request) {
+        String phone = request.get("phone");
+        if (phone == null || phone.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Phone is required"));
+        }
+        try {
+            Map<String, Object> result = authService.sendWhatsAppOtp(phone);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("WHATSAPP_OTP_FAILED", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[WHATSAPP_OTP] WhatsApp OTP dispatch failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("WHATSAPP_OTP_FAILED", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-whatsapp-otp")
+    public ResponseEntity<?> verifyWhatsAppOtp(@RequestBody Map<String, String> request, HttpServletResponse response) {
+        String phone = request.get("phone");
+        String otp = request.get("otp");
+        if (phone == null || otp == null) {
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Phone and OTP are required"));
+        }
+        try {
+            Map<String, Object> authData = authService.verifyWhatsAppOtp(phone, otp);
+            String refreshToken = (String) authData.get("refreshToken");
+            if (refreshToken != null) {
+                ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
+                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+                authData.remove("refreshToken");
+            }
+            Map<String, Object> successResponse = new HashMap<>();
+            successResponse.put("success", true);
+            successResponse.put("data", authData);
+            return ResponseEntity.ok(successResponse);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("INVALID_WHATSAPP_OTP", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[VERIFY_WHATSAPP_OTP] Verification failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("VERIFICATION_FAILED", e.getMessage()));
+        }
+    }
+
     private Map<String, Object> createErrorResponse(String code, String message) {
         Map<String, Object> errorDetails = new HashMap<>();
         errorDetails.put("code", code);

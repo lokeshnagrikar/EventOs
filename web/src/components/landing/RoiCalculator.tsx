@@ -53,7 +53,7 @@ export function RoiCalculator() {
   };
 
   return (
-    <section className="py-24 bg-[#09090b] relative overflow-hidden border-b border-white/5 font-sans" id="roi-calculator">
+    <section className="py-24 bg-transparent relative overflow-hidden border-b border-purple-500/10 font-sans" id="roi-calculator">
       {/* Ambient background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-r from-purple-600/15 via-pink-600/10 to-cyan-500/15 blur-[140px] rounded-full pointer-events-none z-0" />
       <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:28px_28px] pointer-events-none z-0" />

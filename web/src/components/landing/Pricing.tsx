@@ -143,7 +143,7 @@ export function Pricing() {
 
   return (
     <section
-      className="min-h-screen py-24 mx-auto relative bg-[#09090b] overflow-hidden border-b border-white/5 font-sans"
+      className="min-h-screen py-24 mx-auto relative bg-transparent overflow-hidden border-b border-purple-500/10 font-sans"
       id="pricing"
       ref={pricingRef}
     >
@@ -168,15 +168,15 @@ export function Pricing() {
 
       {/* Header Container */}
       <article className="text-center mb-12 pt-8 max-w-3xl mx-auto space-y-4 relative z-10 px-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-widest backdrop-blur-md">
-          <Sparkles size={13} className="text-blue-400" /> Transparent Pricing
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-700 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
+          <Sparkles size={13} className="text-blue-600" /> Transparent Pricing
         </div>
 
-        <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight font-heading leading-tight">
+        <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight font-heading leading-tight">
           Plans tailored for your event business
         </h2>
 
-        <p className="text-zinc-400 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
+        <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-xl mx-auto font-medium">
           Trusted by event agencies and coordinators worldwide. Choose a tier to unlock automation, client portals, and multi-tenant scaling.
         </p>
 
@@ -200,8 +200,8 @@ export function Pricing() {
               className={cn(
                 "relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-500 border backdrop-blur-2xl",
                 plan.popular
-                  ? "bg-gradient-to-b from-neutral-900/90 via-neutral-900/95 to-black border-blue-500/60 shadow-[0_0_80px_rgba(49,49,245,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] z-20 scale-[1.02]"
-                  : "bg-neutral-900/40 hover:bg-neutral-900/70 border-white/10 hover:border-white/20 shadow-xl z-10"
+                  ? "bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white border-blue-500/60 shadow-xl z-20 scale-[1.02]"
+                  : "bg-white/80 hover:bg-white border-slate-200/80 hover:border-slate-300 shadow-md text-slate-900 z-10"
               )}
             >
               {/* Popular Badge */}
@@ -214,8 +214,8 @@ export function Pricing() {
               <div>
                 {/* Header */}
                 <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-white font-heading">{plan.name}</h3>
-                  <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed min-h-[36px]">{plan.desc}</p>
+                  <h3 className={cn("text-2xl font-bold font-heading", plan.popular ? "text-white" : "text-slate-900")}>{plan.name}</h3>
+                  <p className={cn("text-xs mt-1.5 leading-relaxed min-h-[36px] font-medium", plan.popular ? "text-slate-300" : "text-slate-600")}>{plan.desc}</p>
                 </div>
 
                 {/* Price Display */}

@@ -133,7 +133,7 @@ export function Workflow() {
   return (
     <section
       id="workflow"
-      className="py-24 border-b border-zinc-900 bg-[#09090B] relative overflow-hidden text-left"
+      className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden text-left"
     >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-purple-500/5 to-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
 
@@ -145,13 +145,13 @@ export function Workflow() {
             <Icon icon="solar:routing-bold-duotone" className="text-sm" />
             Integrated Lifecycle
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-heading">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading">
             The Complete Event{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 to-purple-600">
               Workflow
             </span>
           </h2>
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
             See how prospective leads turn into fully paid bookings and finished galleries inside the automated EventOS ecosystem — no context switching required.
           </p>
         </div>
@@ -173,7 +173,7 @@ export function Workflow() {
                 gradientStartColor={step.gradientFrom}
                 gradientStopColor={step.gradientTo}
                 pathColor={step.gradientFrom}
-                pathOpacity={0.12}
+                pathOpacity={0.25}
                 pathWidth={2.5}
               />
             ))}
@@ -187,22 +187,22 @@ export function Workflow() {
               >
                 <div
                   ref={refs[idx]}
-                  className={`h-16 w-16 rounded-full border-2 bg-zinc-950 flex items-center justify-center shadow-lg relative group transition-all duration-300 hover:bg-zinc-900 ${step.borderColor}`}
-                  style={{ boxShadow: `0 0 20px ${step.iconColor}15` }}
+                  className={`h-16 w-16 rounded-full border-2 bg-white flex items-center justify-center shadow-md relative group transition-all duration-300 hover:bg-slate-50 ${step.borderColor}`}
+                  style={{ boxShadow: `0 0 20px ${step.iconColor}20` }}
                 >
                   <Icon icon={step.icon} style={{ color: step.iconColor }} className="text-2xl" />
                   {/* Step number badge */}
                   <span
                     className="absolute -top-2 -right-2 h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-extrabold border text-white"
-                    style={{ background: step.iconColor, borderColor: "#09090B" }}
+                    style={{ background: step.iconColor, borderColor: "#FAF9F6" }}
                   >
                     {idx + 1}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-zinc-200">{step.title}</h3>
-                  <p className="text-zinc-500 text-[10px] sm:text-xs leading-relaxed max-w-[120px] mx-auto">
+                  <h3 className="text-sm font-bold text-slate-900">{step.title}</h3>
+                  <p className="text-slate-600 text-[10px] sm:text-xs leading-relaxed max-w-[120px] mx-auto font-medium">
                     {step.desc}
                   </p>
                 </div>
@@ -218,9 +218,9 @@ export function Workflow() {
             { value: "Zero", label: "Manual data re-entry between pipeline stages" },
             { value: "100%", label: "Automated invoice generation from bookings" },
           ].map((item) => (
-            <div key={item.label} className="gsap-workflow-stat opacity-0 text-center p-4 rounded-xl bg-zinc-950/40 border border-zinc-900">
-              <p className="text-lg font-extrabold text-white font-heading">{item.value}</p>
-              <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{item.label}</p>
+            <div key={item.label} className="gsap-workflow-stat opacity-0 text-center p-4 rounded-xl bg-white/80 border border-slate-200/80 shadow-sm backdrop-blur-md">
+              <p className="text-lg font-extrabold text-slate-900 font-heading">{item.value}</p>
+              <p className="text-[10px] text-slate-600 mt-1 leading-snug font-medium">{item.label}</p>
             </div>
           ))}
         </div>

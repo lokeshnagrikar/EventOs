@@ -23,6 +23,8 @@ import {
   Laptop,
   Smartphone,
   Globe,
+  ChevronRight,
+  ChevronDown,
   Trash2,
   Lock,
   Plus,
@@ -186,6 +188,9 @@ export default function SettingsPage() {
   const [customDomainInput, setCustomDomainInput] = useState("");
   const [dnsCheckLoading, setDnsCheckLoading] = useState(false);
   const [whiteLabelToggle, setWhiteLabelToggle] = useState(false);
+
+  // Mobile navigation drawer state
+  const [showMobileCategoryDrawer, setShowMobileCategoryDrawer] = useState(false);
 
   // New SaaS Billing & Subscriptions states
   const [couponInput, setCouponInput] = useState("");
@@ -1059,28 +1064,59 @@ export default function SettingsPage() {
     <PageShell
       title="Workspace Settings"
       subtitle="Configure branding design systems, user permissions, billing rules, and security."
-      className="p-0 max-w-none md:p-0"
+      className="p-6 max-w-7xl mx-auto"
     >
-      <div className="flex-1 flex overflow-hidden z-10 h-[calc(100vh-140px)] border border-zinc-850 bg-zinc-950/20 rounded-2xl" style={{ fontFamily: fontSelection }}>
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden z-10 min-h-[calc(100vh-180px)] md:h-[calc(100vh-160px)] border border-zinc-850 bg-zinc-950/40 backdrop-blur-xl rounded-2xl shadow-2xl" style={{ fontFamily: fontSelection }}>
 
-        {/* Sidebar */}
-        <aside className="w-64 border-r border-zinc-850 bg-[#111113]/30 backdrop-blur-md flex flex-col shrink-0">
-          <div className="p-4 border-b border-zinc-850 flex items-center gap-2 relative">
-            <Search className="absolute left-7 text-zinc-500" size={14} />
+        {/* Mobile Horizontal Scrollable Tab Bar */}
+        <div className="relative md:hidden border-b border-zinc-850 bg-[#0c0c0e]/95 shrink-0">
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0c0c0e] to-transparent pointer-events-none z-10" />
+          <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-[#0c0c0e] to-transparent pointer-events-none z-10" />
+          
+          <div className="p-3 flex items-center gap-2 overflow-x-auto scrollbar-none touch-pan-x pl-4 pr-6">
+            {allowedSections.map((s) => {
+              const Icon = s.icon;
+              const isActive = activeTab === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={(e) => {
+                    handleTabChange(s.id);
+                    e.currentTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+                  }}
+                  className={cn(
+                    "px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shrink-0 transition-all active:scale-95 border",
+                    isActive
+                      ? "bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white border-purple-400/60 shadow-lg shadow-purple-500/25 ring-1 ring-purple-400/30"
+                      : "bg-zinc-900/90 hover:bg-zinc-850 text-zinc-400 border-zinc-800 hover:text-white"
+                  )}
+                >
+                  <Icon size={14} className={isActive ? "text-white" : "text-zinc-400"} />
+                  <span className="whitespace-nowrap">{s.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Desktop Sidebar (Hidden on Mobile) */}
+        <aside className="hidden md:flex w-64 border-r border-zinc-850 bg-[#0c0c0e]/80 backdrop-blur-md flex-col shrink-0">
+          <div className="p-4 border-b border-zinc-850/80 flex items-center gap-2 relative">
+            <Search className="absolute left-7 text-zinc-400" size={14} />
             <input
               type="text"
               placeholder="Search settings tabs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-zinc-950/80 border border-zinc-850 rounded-lg text-xs placeholder-zinc-550 focus:outline-none focus:border-purple-500/50 transition-all font-medium text-white"
+              className="w-full pl-9 pr-3 py-2 bg-zinc-950/90 border border-zinc-800 rounded-xl text-xs placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 transition-all font-medium text-white shadow-inner"
             />
           </div>
 
-          <div data-lenis-prevent className="flex-1 overflow-y-auto p-3 space-y-4">
+          <div data-lenis-prevent className="flex-1 overflow-y-auto p-3 space-y-5 scrollbar-thin">
             {pinnedTabs.length > 0 && searchQuery === "" && (
               <div>
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider px-2 mb-1.5 block">Pinned Settings</span>
-                <div className="space-y-0.5">
+                <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-2 mb-2 block">Pinned Settings</span>
+                <div className="space-y-1">
                   {allowedSections.filter((s) => pinnedTabs.includes(s.id)).map((s) => {
                     const Icon = s.icon;
                     const isActive = activeTab === s.id;
@@ -1089,15 +1125,15 @@ export default function SettingsPage() {
                         key={s.id}
                         onClick={() => handleTabChange(s.id)}
                         className={cn(
-                          "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all text-left border",
+                          "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-left border",
                           isActive
-                            ? "bg-purple-950/20 text-purple-400 border-purple-900/40 shadow-sm"
-                            : "text-zinc-450 hover:text-zinc-200 hover:bg-zinc-850/40 border-transparent"
+                            ? "bg-purple-950/30 text-purple-300 border-purple-800/40 shadow-sm"
+                            : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-850/50 border-transparent"
                         )}
                       >
-                        <Icon size={13} />
+                        <Icon size={14} />
                         <span className="flex-1 truncate">{s.label}</span>
-                        <Star size={11} fill="currentColor" className="text-purple-400" onClick={(e) => { e.stopPropagation(); togglePin(s.id); }} />
+                        <Star size={12} fill="currentColor" className="text-purple-400" onClick={(e) => { e.stopPropagation(); togglePin(s.id); }} />
                       </button>
                     );
                   })}
@@ -1106,8 +1142,8 @@ export default function SettingsPage() {
             )}
 
             <div>
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider px-2 mb-1.5 block font-mono">Console Categories</span>
-              <div className="space-y-0.5">
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-2 mb-2 block">Console Categories</span>
+              <div className="space-y-1">
                 {filteredSections.map((s) => {
                   const Icon = s.icon;
                   const isActive = activeTab === s.id;
@@ -1135,7 +1171,7 @@ export default function SettingsPage() {
         </aside>
 
         {/* Content Panel */}
-        <main data-lenis-prevent className="flex-1 overflow-y-auto p-8 relative">
+        <main data-lenis-prevent className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 relative">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -2697,262 +2733,42 @@ export default function SettingsPage() {
                     )}
                   </AnimatePresence>
 
-                  {/* Cancellation Retention & Reason collection Modal */}
-                  <AnimatePresence>
-                    {showCancelConfirmationModal && (
-                      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          onClick={() => setShowCancelConfirmationModal(false)}
-                          className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 16 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: 16 }}
-                          className="relative w-full max-w-md overflow-hidden rounded-3xl border border-zinc-850 bg-zinc-950 p-6 space-y-5 shadow-2xl"
-                        >
-                          <div>
-                            <h3 className="text-sm font-black uppercase text-white tracking-wider">Cancel Subscription</h3>
-                            <p className="text-[10px] text-zinc-550 mt-1 uppercase font-black tracking-widest">We are sorry to see you go</p>
-                          </div>
-
-                          {!retentionDiscountOffered ? (
-                            <div className="space-y-4 text-xs font-semibold">
-                              <div className="space-y-2">
-                                <label className="text-[10px] text-zinc-450 block font-bold">Why are you canceling your subscription?</label>
-                                <div className="space-y-2">
-                                  {["Too Expensive", "Missing Features", "Switching to Competitor", "UI/UX Issues", "Other"].map((reason) => (
-                                    <label key={reason} className="flex items-center gap-2 text-zinc-350 cursor-pointer font-medium p-2 border border-zinc-900 bg-zinc-950/40 rounded-xl hover:bg-zinc-900 transition">
-                                      <input
-                                        type="radio"
-                                        name="cancelReason"
-                                        value={reason}
-                                        checked={cancellationReason === reason}
-                                        onChange={(e) => setCancellationReason(e.target.value)}
-                                        className="accent-purple-500"
-                                      />
-                                      <span>{reason}</span>
-                                    </label>
-                                  ))}
-                                </div>
-                              </div>
-
-                              <div className="space-y-1">
-                                <label className="text-[9px] text-zinc-500 block">Additional notes (optional)</label>
-                                <textarea
-                                  placeholder="Tell us how we can improve..."
-                                  value={cancellationNotes}
-                                  onChange={(e) => setCancellationNotes(e.target.value)}
-                                  className="w-full h-16 p-3 border border-zinc-850 bg-zinc-950/50 text-white text-[10px] rounded-xl outline-none resize-none font-sans"
-                                />
-                              </div>
-
-                              {/* Retention Promo Box */}
-                              <div className="p-4 border border-purple-500/20 bg-purple-500/5 rounded-2xl space-y-2">
-                                <span className="text-[8px] text-purple-400 uppercase font-black tracking-widest block">Special Account Offer</span>
-                                <p className="text-[9px] text-zinc-400 leading-normal font-sans">
-                                  Wait! We want to help you succeed. Claim a **50% off** discount on your workspace subscription for the next 3 months.
-                                </p>
-                                <button
-                                  onClick={() => {
-                                    setAppliedDiscountPercent(50);
-                                    setRetentionDiscountOffered(true);
-                                    addToast("50% retention discount applied to your upcoming cycles!", "success");
-                                  }}
-                                  className="px-3 py-1.5 bg-gradient-to-r from-purple-650 to-pink-650 text-white font-bold rounded-lg text-[9px] hover:shadow-lg transition"
-                                >
-                                  Claim 50% Discount
+                  {/* Billing history table */}
+                  <div className="space-y-3 pt-2">
+                    <h4 className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">Billing Receipts Ledger</h4>
+                    <div className="border border-zinc-850 rounded-2xl overflow-hidden text-xs">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-zinc-900/60 border-b border-zinc-850 text-[9px] uppercase tracking-wider text-zinc-400 font-mono">
+                            <th className="p-3 font-semibold">Date</th>
+                            <th className="p-3 font-semibold">Plan</th>
+                            <th className="p-3 font-semibold">Amount</th>
+                            <th className="p-3 font-semibold">Status</th>
+                            <th className="p-3 text-right font-semibold">Invoice</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-850 text-zinc-300 font-mono text-[11px]">
+                          {invoices.map((inv) => (
+                            <tr key={inv.id} className="hover:bg-zinc-900/40 transition">
+                              <td className="p-3 text-zinc-400">{new Date(inv.date || inv.billingPeriodStart || inv.dueDate || Date.now()).toLocaleDateString()}</td>
+                              <td className="p-3 font-bold text-white">{inv.planName || inv.invoiceNumber || "Subscription Plan"}</td>
+                              <td className="p-3 text-emerald-400">${(inv.amount / 100).toFixed(2)} USD</td>
+                              <td className="p-3">
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-sans font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                  {inv.status}
+                                </span>
+                              </td>
+                              <td className="p-3 text-right">
+                                <button className="text-[10px] font-sans text-purple-400 hover:text-purple-300 font-bold transition">
+                                  Download PDF
                                 </button>
-                              </div>
-
-                              <div className="flex gap-2.5 pt-2">
-                                <button
-                                  onClick={() => setShowCancelConfirmationModal(false)}
-                                  className="flex-1 py-2.5 border border-zinc-850 hover:bg-zinc-900 rounded-xl transition text-[10px] font-bold"
-                                >
-                                  Stay Subscribed
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    await cancelSubscription();
-                                    addToast("Subscription cancellation scheduled successfully.", "success");
-                                    setShowCancelConfirmationModal(false);
-                                  }}
-                                  className="flex-1 py-2.5 bg-red-955/20 border border-red-500/20 hover:bg-red-500/10 text-red-500 rounded-xl transition text-[10px] font-bold"
-                                >
-                                  Pause or Cancel
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="space-y-4 text-center font-semibold text-xs">
-                              <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-450">
-                                <Check size={24} />
-                              </div>
-                              <p className="text-zinc-200">Retention Offer Claimed!</p>
-                              <p className="text-[10px] text-zinc-500 leading-normal">
-                                Your subscription remains active. A 50% discount has been registered for your next 3 billing periods. Thank you for staying with EventOS!
-                              </p>
-                              <button
-                                onClick={() => setShowCancelConfirmationModal(false)}
-                                className="w-full py-2.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-855 text-white font-bold rounded-xl transition text-[10px]"
-                              >
-                                Return to Settings
-                              </button>
-                            </div>
-                          )}
-                        </motion.div>
-                      </div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Downgrade Capacity Warning Modal */}
-                  <AnimatePresence>
-                    {showDowngradeWarningModal && targetDowngradePlan && (
-                      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          onClick={() => {
-                            setShowDowngradeWarningModal(false);
-                            setTargetDowngradePlan(null);
-                          }}
-                          className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 16 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: 16 }}
-                          className="relative w-full max-w-md overflow-hidden rounded-3xl border border-amber-500/20 bg-zinc-950 p-6 space-y-4 shadow-2xl"
-                        >
-                          <div className="flex items-center gap-2">
-                            <AlertCircle className="text-amber-500" size={18} />
-                            <h3 className="text-sm font-black uppercase text-white tracking-wider">Cannot Downgrade Plan</h3>
-                          </div>
-                          <p className="text-[10px] text-zinc-450 leading-normal font-semibold">
-                            You cannot switch to the **{targetDowngradePlan.name}** plan because your current workspace usage exceeds its limits:
-                          </p>
-
-                          <div className="space-y-2 text-[10px] font-bold font-mono">
-                            {usage && usage.usersCount > targetDowngradePlan.maxUsers && (
-                              <div className="p-3 border border-red-500/20 bg-red-500/5 text-red-400 rounded-xl leading-relaxed">
-                                ⚠️ <strong>Team Limit Over:</strong> You have {usage.usersCount} team members. The target plan only allows {targetDowngradePlan.maxUsers} seats. Remove {usage.usersCount - targetDowngradePlan.maxUsers} members under "Users & Teams".
-                              </div>
-                            )}
-                            {usage && usage.storageBytes > targetDowngradePlan.maxStorage && (
-                              <div className="p-3 border border-red-500/20 bg-red-500/5 text-red-400 rounded-xl leading-relaxed">
-                                ⚠️ <strong>Storage Limit Over:</strong> You use {(usage.storageBytes / (1024 * 1024 * 1024)).toFixed(1)} GB. The target plan only allows {(targetDowngradePlan.maxStorage / (1024 * 1024 * 1024)).toFixed(0)} GB. Free up space under "CRM & Galleries".
-                              </div>
-                            )}
-                            {usage && usage.eventsCount > targetDowngradePlan.maxEvents && (
-                              <div className="p-3 border border-red-500/20 bg-red-500/5 text-red-400 rounded-xl leading-relaxed">
-                                ⚠️ <strong>Active Events Over:</strong> You have {usage.eventsCount} events. The target plan only allows {targetDowngradePlan.maxEvents} events. Archive {usage.eventsCount - targetDowngradePlan.maxEvents} events before proceeding.
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex gap-2.5 pt-2">
-                            <button
-                              onClick={() => {
-                                setShowDowngradeWarningModal(false);
-                                setTargetDowngradePlan(null);
-                              }}
-                              className="w-full py-2.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 font-bold rounded-xl transition text-[10px]"
-                            >
-                              Close & Review Usage
-                            </button>
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Seat Add Modal */}
-                  <AnimatePresence>
-                    {showSeatModal && (
-                      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          onClick={() => setShowSeatModal(false)}
-                          className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 16 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: 16 }}
-                          className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-zinc-850 bg-zinc-950 p-6 space-y-4 shadow-2xl"
-                        >
-                          <div>
-                            <h3 className="text-sm font-black uppercase text-white tracking-wider">Purchase Additional User Seats</h3>
-                            <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mt-1">Scale your event organization</p>
-                          </div>
-
-                          <div className="space-y-3 text-xs font-semibold">
-                            <div className="space-y-1">
-                              <label className="text-[9px] text-zinc-550 uppercase font-black">Number of additional seats</label>
-                              <div className="flex gap-2">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  max="20"
-                                  value={additionalSeatsInput}
-                                  onChange={(e) => setAdditionalSeatsInput(Math.max(1, parseInt(e.target.value) || 1))}
-                                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 text-white rounded-xl outline-none text-center font-bold"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="p-4 border border-purple-500/20 bg-purple-500/5 rounded-2xl space-y-2">
-                              <div className="flex justify-between font-mono text-[10px]">
-                                <span className="text-zinc-400">Unit Price:</span>
-                                <span className="text-white">$10.00 / seat / mo</span>
-                              </div>
-                              <div className="flex justify-between font-mono text-[10px] border-t border-zinc-900 pt-2 font-bold">
-                                <span className="text-zinc-300">Total Monthly Cost:</span>
-                                <span className="text-pink-400">${(additionalSeatsInput * 10).toFixed(2)} USD</span>
-                              </div>
-                            </div>
-
-                            <div className="flex gap-2.5 pt-2">
-                              <button
-                                onClick={() => setShowSeatModal(false)}
-                                className="flex-1 py-2 border border-zinc-855 rounded-xl hover:bg-zinc-900 hover:text-white transition text-[10px] font-bold"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (usage && subscription?.plan) {
-                                    subscription.plan.maxUsers += additionalSeatsInput;
-                                    setSeatHistory([
-                                      {
-                                        date: new Date().toISOString().split("T")[0],
-                                        description: `Added pack of ${additionalSeatsInput} custom seats`,
-                                        change: `+${additionalSeatsInput} seats`,
-                                        user: "Billing Admin"
-                                      },
-                                      ...seatHistory
-                                    ]);
-                                    addToast(`Successfully purchased ${additionalSeatsInput} extra seats!`, "success");
-                                  }
-                                  setShowSeatModal(false);
-                                }}
-                                className="flex-1 py-2 bg-gradient-to-r from-purple-650 to-pink-650 text-white font-bold rounded-xl hover:opacity-90 transition text-[10px]"
-                              >
-                                Confirm Purchase
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-                  </AnimatePresence>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -3430,6 +3246,337 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Mobile Category Switcher Drawer */}
+      <AnimatePresence>
+        {showMobileCategoryDrawer && (
+          <div className="fixed inset-0 z-[9999] flex items-end md:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMobileCategoryDrawer(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-full max-h-[85vh] flex flex-col rounded-t-3xl border-t border-zinc-800 bg-zinc-950 p-5 space-y-4 shadow-2xl"
+            >
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-850">
+                <div>
+                  <h3 className="text-sm font-extrabold uppercase text-white tracking-wider">Select Settings Tab</h3>
+                  <p className="text-[10px] text-zinc-400">Choose a category to configure</p>
+                </div>
+                <button
+                  onClick={() => setShowMobileCategoryDrawer(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3.5 top-3 text-zinc-500" size={14} />
+                <input
+                  type="text"
+                  placeholder="Search settings..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 outline-none"
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-[50vh]">
+                {filteredSections.map((s) => {
+                  const Icon = s.icon;
+                  const isActive = activeTab === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => {
+                        handleTabChange(s.id);
+                        setShowMobileCategoryDrawer(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-all text-left border",
+                        isActive
+                          ? "bg-purple-950/40 text-purple-300 border-purple-700/50 shadow-md"
+                          : "text-zinc-300 bg-zinc-900/60 hover:bg-zinc-900 border-zinc-850"
+                      )}
+                    >
+                      <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", isActive ? "bg-purple-500/20 text-purple-300" : "bg-zinc-800 text-zinc-400")}>
+                        <Icon size={15} />
+                      </div>
+                      <span className="flex-1 font-bold">{s.label}</span>
+                      {isActive && <Check size={16} className="text-purple-400" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Cancellation Retention & Reason collection Modal */}
+      <AnimatePresence>
+        {showCancelConfirmationModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCancelConfirmationModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              className="relative w-full max-w-md overflow-hidden rounded-3xl border border-zinc-850 bg-zinc-950 p-6 space-y-5 shadow-2xl z-10"
+            >
+              <div>
+                <h3 className="text-sm font-black uppercase text-white tracking-wider">Cancel Subscription</h3>
+                <p className="text-[10px] text-zinc-550 mt-1 uppercase font-black tracking-widest">We are sorry to see you go</p>
+              </div>
+
+              {!retentionDiscountOffered ? (
+                <div className="space-y-4 text-xs font-semibold">
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-zinc-450 block font-bold">Why are you canceling your subscription?</label>
+                    <div className="space-y-2">
+                      {["Too Expensive", "Missing Features", "Switching to Competitor", "UI/UX Issues", "Other"].map((reason) => (
+                        <label key={reason} className="flex items-center gap-2 text-zinc-350 cursor-pointer font-medium p-2 border border-zinc-900 bg-zinc-950/40 rounded-xl hover:bg-zinc-900 transition">
+                          <input
+                            type="radio"
+                            name="cancelReason"
+                            value={reason}
+                            checked={cancellationReason === reason}
+                            onChange={(e) => setCancellationReason(e.target.value)}
+                            className="accent-purple-500"
+                          />
+                          <span>{reason}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-zinc-500 block">Additional notes (optional)</label>
+                    <textarea
+                      placeholder="Tell us how we can improve..."
+                      value={cancellationNotes}
+                      onChange={(e) => setCancellationNotes(e.target.value)}
+                      className="w-full h-16 p-3 border border-zinc-850 bg-zinc-950/50 text-white text-[10px] rounded-xl outline-none resize-none font-sans"
+                    />
+                  </div>
+
+                  {/* Retention Promo Box */}
+                  <div className="p-4 border border-purple-500/20 bg-purple-500/5 rounded-2xl space-y-2">
+                    <span className="text-[8px] text-purple-400 uppercase font-black tracking-widest block">Special Account Offer</span>
+                    <p className="text-[9px] text-zinc-400 leading-normal font-sans">
+                      Wait! We want to help you succeed. Claim a <strong>50% off</strong> discount on your workspace subscription for the next 3 months.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setAppliedDiscountPercent(50);
+                        setRetentionDiscountOffered(true);
+                        addToast("50% retention discount applied to your upcoming cycles!", "success");
+                      }}
+                      className="px-3 py-1.5 bg-gradient-to-r from-purple-650 to-pink-650 text-white font-bold rounded-lg text-[9px] hover:shadow-lg transition"
+                    >
+                      Claim 50% Discount
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2.5 pt-2">
+                    <button
+                      onClick={() => setShowCancelConfirmationModal(false)}
+                      className="flex-1 py-2.5 border border-zinc-850 hover:bg-zinc-900 text-zinc-300 rounded-xl transition text-[10px] font-bold"
+                    >
+                      Stay Subscribed
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await cancelSubscription();
+                        addToast("Subscription cancellation scheduled successfully.", "success");
+                        setShowCancelConfirmationModal(false);
+                      }}
+                      className="flex-1 py-2.5 bg-red-955/20 border border-red-500/20 hover:bg-red-500/10 text-red-500 rounded-xl transition text-[10px] font-bold"
+                    >
+                      Pause or Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 text-center font-semibold text-xs">
+                  <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-450">
+                    <Check size={24} />
+                  </div>
+                  <p className="text-zinc-200">Retention Offer Claimed!</p>
+                  <p className="text-[10px] text-zinc-500 leading-normal">
+                    Your subscription remains active. A 50% discount has been registered for your next 3 billing periods. Thank you for staying with EventOS!
+                  </p>
+                  <button
+                    onClick={() => setShowCancelConfirmationModal(false)}
+                    className="w-full py-2.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-855 text-white font-bold rounded-xl transition text-[10px]"
+                  >
+                    Return to Settings
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Downgrade Capacity Warning Modal */}
+      <AnimatePresence>
+        {showDowngradeWarningModal && targetDowngradePlan && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setShowDowngradeWarningModal(false);
+                setTargetDowngradePlan(null);
+              }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              className="relative w-full max-w-md overflow-hidden rounded-3xl border border-amber-500/20 bg-zinc-950 p-6 space-y-4 shadow-2xl z-10"
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="text-amber-500" size={18} />
+                <h3 className="text-sm font-black uppercase text-white tracking-wider">Cannot Downgrade Plan</h3>
+              </div>
+              <p className="text-[10px] text-zinc-450 leading-normal font-semibold">
+                You cannot switch to the <strong>{targetDowngradePlan.name}</strong> plan because your current workspace usage exceeds its limits:
+              </p>
+
+              <div className="space-y-2 text-[10px] font-bold font-mono">
+                {usage && usage.usersCount > targetDowngradePlan.maxUsers && (
+                  <div className="p-3 border border-red-500/20 bg-red-500/5 text-red-400 rounded-xl leading-relaxed">
+                    ⚠️ <strong>Team Limit Over:</strong> You have {usage.usersCount} team members. The target plan only allows {targetDowngradePlan.maxUsers} seats. Remove {usage.usersCount - targetDowngradePlan.maxUsers} members under "Users & Teams".
+                  </div>
+                )}
+                {usage && usage.storageBytes > targetDowngradePlan.maxStorage && (
+                  <div className="p-3 border border-red-500/20 bg-red-500/5 text-red-400 rounded-xl leading-relaxed">
+                    ⚠️ <strong>Storage Limit Over:</strong> You use {(usage.storageBytes / (1024 * 1024 * 1024)).toFixed(1)} GB. The target plan only allows {(targetDowngradePlan.maxStorage / (1024 * 1024 * 1024)).toFixed(0)} GB. Free up space under "CRM & Galleries".
+                  </div>
+                )}
+                {usage && usage.eventsCount > targetDowngradePlan.maxEvents && (
+                  <div className="p-3 border border-red-500/20 bg-red-500/5 text-red-400 rounded-xl leading-relaxed">
+                    ⚠️ <strong>Active Events Over:</strong> You have {usage.eventsCount} events. The target plan only allows {targetDowngradePlan.maxEvents} events. Archive {usage.eventsCount - targetDowngradePlan.maxEvents} events before proceeding.
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  onClick={() => {
+                    setShowDowngradeWarningModal(false);
+                    setTargetDowngradePlan(null);
+                  }}
+                  className="w-full py-2.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 font-bold rounded-xl transition text-[10px]"
+                >
+                  Close & Review Usage
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Seat Add Modal */}
+      <AnimatePresence>
+        {showSeatModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSeatModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-zinc-850 bg-zinc-950 p-6 space-y-4 shadow-2xl z-10"
+            >
+              <div>
+                <h3 className="text-sm font-black uppercase text-white tracking-wider">Purchase Additional User Seats</h3>
+                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mt-1">Scale your event organization</p>
+              </div>
+
+              <div className="space-y-3 text-xs font-semibold">
+                <div className="space-y-1">
+                  <label className="text-[9px] text-zinc-550 uppercase font-black">Number of additional seats</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={additionalSeatsInput}
+                      onChange={(e) => setAdditionalSeatsInput(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 text-white rounded-xl outline-none text-center font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 border border-purple-500/20 bg-purple-500/5 rounded-2xl space-y-2">
+                  <div className="flex justify-between font-mono text-[10px]">
+                    <span className="text-zinc-400">Unit Price:</span>
+                    <span className="text-white">$10.00 / seat / mo</span>
+                  </div>
+                  <div className="flex justify-between font-mono text-[10px] border-t border-zinc-900 pt-2 font-bold">
+                    <span className="text-zinc-300">Total Monthly Cost:</span>
+                    <span className="text-pink-400">${(additionalSeatsInput * 10).toFixed(2)} USD</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2.5 pt-2">
+                  <button
+                    onClick={() => setShowSeatModal(false)}
+                    className="flex-1 py-2 border border-zinc-855 rounded-xl hover:bg-zinc-900 hover:text-white text-zinc-300 transition text-[10px] font-bold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (usage && subscription?.plan) {
+                        subscription.plan.maxUsers += additionalSeatsInput;
+                        setSeatHistory([
+                          {
+                            date: new Date().toISOString().split("T")[0],
+                            description: `Added pack of ${additionalSeatsInput} custom seats`,
+                            change: `+${additionalSeatsInput} seats`,
+                            user: "Billing Admin"
+                          },
+                          ...seatHistory
+                        ]);
+                        addToast(`Successfully purchased ${additionalSeatsInput} extra seats!`, "success");
+                      }
+                      setShowSeatModal(false);
+                    }}
+                    className="flex-1 py-2 bg-gradient-to-r from-purple-650 to-pink-650 text-white font-bold rounded-xl hover:opacity-90 transition text-[10px]"
+                  >
+                    Confirm Purchase
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </PageShell>
   );

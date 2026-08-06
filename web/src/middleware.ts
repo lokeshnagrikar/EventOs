@@ -34,8 +34,11 @@ export function middleware(request: NextRequest) {
                             pathname.startsWith("/reports");
 
   if (isProtectedRoute && !hasSession) {
-    const redirectPath = pathname.startsWith("/superadmin") ? "/superadmin/login" : "/login";
+    const redirectPath = pathname.startsWith("/superadmin") ? "/superadmin/login" : "/";
     const loginUrl = new URL(redirectPath, request.url);
+    if (!pathname.startsWith("/superadmin")) {
+      loginUrl.searchParams.set("login", "true");
+    }
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }

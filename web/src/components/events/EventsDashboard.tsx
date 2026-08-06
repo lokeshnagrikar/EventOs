@@ -175,7 +175,7 @@ export default function EventsDashboard() {
   const { completeStep } = useOnboardingStore();
 
   // Main operational console categories
-  const [mainCategory, setMainCategory] = useState<"pipelines" | "resources" | "vendors" | "inventory" | "vehicles">("pipelines");
+  const [mainCategory, setMainCategory] = useState<"pipelines" | "checkin" | "resources" | "vendors" | "inventory" | "vehicles">("pipelines");
 
   // Layout Tab selection: remembered in local storage
   const [activeTab, setActiveTab] = useState<"dashboard" | "grid" | "list" | "kanban" | "calendar" | "timeline" | "agenda">("dashboard");

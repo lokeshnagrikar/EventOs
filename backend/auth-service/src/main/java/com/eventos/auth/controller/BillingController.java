@@ -56,7 +56,7 @@ public class BillingController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/subscription/upgrade")
+    @PostMapping({"/subscription/upgrade", "/subscription/checkout"})
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> upgradeSubscription(
             @RequestBody Map<String, String> body,

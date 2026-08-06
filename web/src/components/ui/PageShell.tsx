@@ -139,29 +139,29 @@ export default function PageShell({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5"
+              className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-6 mb-6 pt-1"
             >
               <div>
                 {/* Breadcrumbs */}
                 {breadcrumbs && breadcrumbs.length > 0 && (
                   <nav
                     aria-label="Breadcrumb"
-                    className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium mb-2"
+                    className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-medium mb-3 tracking-wide"
                   >
                     {breadcrumbs.map((crumb, idx) => (
                       <React.Fragment key={idx}>
                         {idx > 0 && (
-                          <ChevronRight size={10} className="text-muted-foreground" />
+                          <ChevronRight size={12} className="text-zinc-600" />
                         )}
                         {crumb.href ? (
                           <Link
                             href={crumb.href}
-                            className="hover:text-foreground transition-colors"
+                            className="hover:text-white transition-colors"
                           >
                             {crumb.label}
                           </Link>
                         ) : (
-                          <span className="text-muted-foreground">{crumb.label}</span>
+                          <span className="text-zinc-400">{crumb.label}</span>
                         )}
                       </React.Fragment>
                     ))}
@@ -169,12 +169,12 @@ export default function PageShell({
                 )}
 
                 {title && (
-                  <h2 className="text-xl font-black tracking-tight text-foreground">
+                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white leading-snug">
                     {title}
                   </h2>
                 )}
                 {subtitle && (
-                  <p className="text-xs text-muted-foreground mt-1 font-medium">
+                  <p className="text-xs md:text-sm text-zinc-400 mt-2 font-normal leading-relaxed">
                     {subtitle}
                   </p>
                 )}

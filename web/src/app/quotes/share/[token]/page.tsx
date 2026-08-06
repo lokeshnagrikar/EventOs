@@ -105,21 +105,77 @@ export default function PublicQuoteSharePage() {
     const fetchPublicQuote = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/api/v1/crm/quotes/public/${token}`);
+        const { api } = await import("@/lib/api");
+        const response = await api.get(`/crm/quotes/${token}`);
         if (response.data?.data) {
           setQuote(response.data.data);
-        } else {
-          setQuote(DEMO_PUBLIC_QUOTE);
+          setLoading(false);
+          return;
         }
       } catch (err) {
-        // Fallback for public demo viewing
-        setQuote(DEMO_PUBLIC_QUOTE);
-      } finally {
-        setLoading(false);
+        // Try public endpoint fallback
+        try {
+          const { api } = await import("@/lib/api");
+          const publicRes = await api.get(`/crm/quotes/public/${token}`);
+          if (publicRes.data?.data) {
+            setQuote(publicRes.data.data);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {}
       }
+
+      // Check localStorage for quotes created in Quote Calculator or Quote Builder
+      try {
+        const localQuotesStr = localStorage.getItem("eventos_quotes_store") || localStorage.getItem("eventos_created_quotes");
+        if (localQuotesStr) {
+          const parsed = JSON.parse(localQuotesStr);
+          const found = Array.isArray(parsed)
+            ? parsed.find((q: any) => q.id === token || q.quoteNumber === token || q.id?.includes(token) || token?.includes(q.id))
+            : (parsed.id === token ? parsed : null);
+
+          if (found) {
+            setQuote({
+              id: found.id || token,
+              quoteNumber: found.quoteNumber || "EOS-Q-" + Math.floor(10000 + Math.random() * 90000),
+              status: found.status || "SENT",
+              templateName: found.templateName || "ELEGANT",
+              subtotal: found.subtotal || found.items?.reduce((a: number, i: any) => a + (i.total || (i.unitPrice * i.quantity)), 0) || 450000,
+              discount: found.discount || 0,
+              tax: found.tax || 0,
+              total: found.total || 450000,
+              clientName: found.clientName || found.leadName || "Client Sponsor",
+              clientEmail: found.clientEmail || "client@eventos.agency",
+              clientPhone: found.clientPhone || "+91 98765 43210",
+              eventName: found.eventName || found.title || "Custom Event Proposal",
+              eventDate: found.eventDate || "December 18, 2026",
+              venueName: found.venueName || "Venue Location",
+              clientNotes: found.clientNotes || "Custom quotation deliverables created via EventOS Proposal Studio.",
+              termsConditions: found.termsConditions || "30% advance deposit required upon digital signing. Remaining balance cleared 48h before event ingress.",
+              createdAt: found.createdAt || new Date().toISOString(),
+              items: found.items && found.items.length > 0 ? found.items.map((it: any, idx: number) => ({
+                id: String(idx + 1),
+                itemName: it.itemName || it.name || "Deliverable Item",
+                description: it.description || "",
+                unitPrice: it.unitPrice || 0,
+                quantity: it.quantity || 1,
+                total: it.total || ((it.unitPrice || 0) * (it.quantity || 1))
+              })) : DEMO_PUBLIC_QUOTE.items
+            });
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err) {}
+
+      // Default to DEMO preview
+      setQuote(DEMO_PUBLIC_QUOTE);
+      setLoading(false);
     };
 
-    fetchPublicQuote();
+    if (token) {
+      fetchPublicQuote();
+    }
   }, [token]);
 
   const handleCopyLink = () => {

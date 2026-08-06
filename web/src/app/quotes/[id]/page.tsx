@@ -8,6 +8,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import {
   ArrowLeft,
   Printer,
+  Download,
   Check,
   X as XIcon,
   AlertCircle,
@@ -19,6 +20,7 @@ import {
   Award,
   Share2,
   Copy,
+  Send,
   CheckCircle,
   MessageSquare,
   History,
@@ -87,6 +89,7 @@ export default function QuoteDetailPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
   const [signerName, setSignerName] = useState("");
   const [signerTitle, setSignerTitle] = useState("Client Sponsor");
   const [feedbackText, setFeedbackText] = useState("");
@@ -125,6 +128,18 @@ export default function QuoteDetailPage() {
   });
 
   const booking = bookingResponse?.data;
+
+  // Mutation to mark quote as SENT
+  const sendQuoteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.put(`/crm/quotes/${quoteId}/send`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+    }
+  });
 
   // Mutations
   const approveQuoteMutation = useMutation({
@@ -204,6 +219,49 @@ export default function QuoteDetailPage() {
       navigator.clipboard.writeText(publicShareUrl);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
+
+      // Auto-transition status from DRAFT -> SENT
+      if (quote?.status === "DRAFT") {
+        sendQuoteMutation.mutate();
+      }
+    }
+  };
+
+  const sendViaWhatsApp = () => {
+    if (typeof window === "undefined") return;
+    const phone = lead?.phone || lead?.contact?.phone || "";
+    const cleanPhone = phone.replace(/[^0-9]/g, "");
+    const publicShareUrl = `${window.location.origin}/quotes/share/${quoteId}`;
+    const textMessage = encodeURIComponent(
+      `Hello ${lead?.name || "Client"},\n\n` +
+      `Here is your official EventOS Proposal & Price Quote (#${quote?.quoteNumber}):\n` +
+      `💰 Contract Total: ₹${quote?.total?.toLocaleString("en-IN")}\n` +
+      `🔗 View & Sign Web Proposal: ${publicShareUrl}\n\n` +
+      `Please review and digitally approve on screen. Thank you!`
+    );
+
+    const waUrl = cleanPhone 
+      ? `https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${textMessage}`
+      : `https://wa.me/?text=${textMessage}`;
+
+    window.open(waUrl, "_blank");
+
+    if (quote?.status === "DRAFT") {
+      sendQuoteMutation.mutate();
+    }
+    setShowSendModal(false);
+  };
+
+  const handleDownloadPdf = () => {
+    if (quote?.pdfUrl) {
+      window.open(quote.pdfUrl, "_blank");
+    } else {
+      const originalTitle = document.title;
+      document.title = `EventOS_Quote_${quote?.quoteNumber || "Proposal"}_${lead?.name ? lead.name.replace(/\s+/g, "_") : "Client"}`;
+      window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 1000);
     }
   };
 
@@ -301,12 +359,29 @@ export default function QuoteDetailPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Primary Send Proposal Button */}
+          <button
+            onClick={() => setShowSendModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-emerald-500/20 cursor-pointer active:scale-[0.98]"
+          >
+            <Send size={13} />
+            <span>Send Proposal to Client</span>
+          </button>
+
           <button
             onClick={copyShareableLink}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 rounded-xl text-xs font-bold text-zinc-300 transition cursor-pointer"
           >
             {copiedLink ? <CheckCircle size={13} className="text-emerald-500" /> : <Share2 size={13} />}
-            <span>{copiedLink ? "Link Copied" : "Share proposal"}</span>
+            <span>{copiedLink ? "Link Copied" : "Share link"}</span>
+          </button>
+
+          <button
+            onClick={handleDownloadPdf}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/20 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+          >
+            <Download size={13} />
+            <span>Download PDF</span>
           </button>
 
           <button
@@ -639,6 +714,75 @@ export default function QuoteDetailPage() {
                 {rejectQuoteMutation.isPending ? "Submitting..." : "Submit Decline & Feedback"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Send Proposal to Client Modal */}
+      {showSendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="w-full max-w-md p-6 bg-[#09090B] border border-white/10 rounded-2xl shadow-2xl text-white space-y-5 relative">
+            <button 
+              onClick={() => setShowSendModal(false)} 
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition"
+            >
+              <XIcon size={16} />
+            </button>
+
+            <div className="space-y-1.5">
+              <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest block">
+                Proposal Delivery Hub
+              </span>
+              <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
+                <Send size={18} className="text-emerald-400" />
+                Send Web Proposal to Client
+              </h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Dispatch the interactive Web Proposal link to <strong className="text-zinc-200">{lead?.name || "Client"}</strong>. Status will automatically update from <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300 font-mono text-[10px]">DRAFT</span> ➔ <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-mono text-[10px]">SENT</span>.
+              </p>
+            </div>
+
+            <div className="p-3 bg-white/[0.02] border border-white/[0.06] rounded-xl space-y-2 text-xs">
+              <div className="flex justify-between items-center text-zinc-400">
+                <span>Quote Number:</span>
+                <span className="font-mono text-zinc-200 font-bold">{quote?.quoteNumber}</span>
+              </div>
+              <div className="flex justify-between items-center text-zinc-400">
+                <span>Client Name:</span>
+                <span className="text-zinc-200 font-bold">{lead?.name || "Unassigned"}</span>
+              </div>
+              <div className="flex justify-between items-center text-zinc-400">
+                <span>Client Phone:</span>
+                <span className="font-mono text-emerald-400 font-bold">{lead?.phone || lead?.contact?.phone || "Not Specified"}</span>
+              </div>
+              <div className="flex justify-between items-center text-zinc-400 border-t border-white/[0.06] pt-2">
+                <span>Contract Total:</span>
+                <span className="font-extrabold text-white text-sm">₹{quote?.total?.toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              {/* Option 1: WhatsApp Direct Dispatch */}
+              <button
+                onClick={sendViaWhatsApp}
+                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2.5 transition shadow-lg shadow-emerald-600/25 cursor-pointer active:scale-[0.98]"
+              >
+                <Share2 size={16} />
+                <span>Send via WhatsApp Web/App</span>
+              </button>
+
+              {/* Option 2: Copy Live Web Link */}
+              <button
+                onClick={() => {
+                  copyShareableLink();
+                  setShowSendModal(false);
+                }}
+                className="w-full py-2.5 px-4 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                {copiedLink ? <CheckCircle size={15} className="text-emerald-400" /> : <Copy size={15} />}
+                <span>{copiedLink ? "Web Link Copied to Clipboard!" : "Copy Web Proposal Link"}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
