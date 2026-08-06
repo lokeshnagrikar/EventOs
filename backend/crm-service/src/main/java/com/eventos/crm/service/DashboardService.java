@@ -65,8 +65,16 @@ public class DashboardService {
 
         BigDecimal pipelineValue = leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(tenantId,
                 List.of(LeadStatus.NEW, LeadStatus.CONTACTED, LeadStatus.QUALIFIED, LeadStatus.PROPOSAL_SENT, LeadStatus.NEGOTIATION));
+        if (pipelineValue == null) {
+            pipelineValue = BigDecimal.ZERO;
+        }
+
         BigDecimal wonValue = leadRepository.sumBudgetByTenantIdAndStatusInAndIsDeletedFalse(tenantId,
                 List.of(LeadStatus.WON));
+        if (wonValue == null) {
+            wonValue = BigDecimal.ZERO;
+        }
+
         BigDecimal revenueForecast = wonValue.add(pipelineValue.multiply(BigDecimal.valueOf(conversionRate / 100.0)));
 
         // 3. Retrieve Event/Financial metrics from event-service (with token
