@@ -52,7 +52,7 @@ export function BentoCard({
       className={cn(
         colSpanClass,
         rowSpanClass,
-        "rounded-2xl border border-zinc-900 bg-zinc-950/40 overflow-hidden transition-all duration-300",
+        "rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] shadow-sm hover:shadow-md transition-all duration-300",
         className
       )}
     >

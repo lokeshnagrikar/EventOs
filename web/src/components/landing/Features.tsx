@@ -10,26 +10,26 @@ function FeatureMicroGraphic({ type, color }: { type: string; color: string }) {
   switch (type) {
     case "ai_copilot":
       return (
-        <div className="h-16 w-full rounded-xl bg-purple-950/20 border border-purple-500/20 p-2 flex items-center justify-between overflow-hidden relative group-hover:border-purple-500/40 transition">
+        <div className="h-16 w-full rounded-xl bg-purple-50 border border-purple-200 p-2 flex items-center justify-between overflow-hidden relative group-hover:border-purple-300 transition">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-purple-400 animate-pulse shadow-[0_0_8px_#a855f7]" />
-            <span className="text-[9.5px] font-mono text-purple-300 font-bold">AI_SCHEDULER_RESOLVER</span>
+            <span className="h-2 w-2 rounded-full bg-purple-600 animate-pulse shadow-[0_0_8px_#9333ea]" />
+            <span className="text-[9.5px] font-mono text-purple-900 font-bold">AI_SCHEDULER_RESOLVER</span>
           </div>
-          <div className="flex items-center gap-1.5 font-mono text-[9px] text-purple-400">
-            <span className="px-1.5 py-0.5 rounded bg-purple-900/50 border border-purple-500/30 font-bold">0 CONFLICTS</span>
+          <div className="flex items-center gap-1.5 font-mono text-[9px] text-purple-700">
+            <span className="px-1.5 py-0.5 rounded bg-purple-100 border border-purple-300 font-extrabold text-purple-900">0 CONFLICTS</span>
           </div>
         </div>
       );
     case "white_label":
       return (
-        <div className="h-16 w-full rounded-xl bg-pink-950/20 border border-pink-500/20 p-2.5 flex flex-col justify-between overflow-hidden relative group-hover:border-pink-500/40 transition">
-          <div className="flex items-center justify-between text-[9px] font-bold text-pink-300">
-            <span className="font-mono text-pink-400">events.yourbrand.com</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-pink-400" />
+        <div className="h-16 w-full rounded-xl bg-pink-50 border border-pink-200 p-2.5 flex flex-col justify-between overflow-hidden relative group-hover:border-pink-300 transition">
+          <div className="flex items-center justify-between text-[9px] font-bold text-pink-900">
+            <span className="font-mono text-pink-700 font-extrabold">events.yourbrand.com</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-pink-600" />
           </div>
-          <div className="h-2 w-full bg-pink-900/30 rounded-full overflow-hidden">
+          <div className="h-2 w-full bg-pink-200/60 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
+              className="h-full bg-gradient-to-r from-pink-500 to-purple-600 rounded-full"
               animate={{ width: ["30%", "90%", "60%"] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
@@ -38,36 +38,36 @@ function FeatureMicroGraphic({ type, color }: { type: string; color: string }) {
       );
     case "offline_pwa":
       return (
-        <div className="h-16 w-full rounded-xl bg-cyan-950/20 border border-cyan-500/20 p-2.5 flex items-center justify-between overflow-hidden relative group-hover:border-cyan-500/40 transition">
+        <div className="h-16 w-full rounded-xl bg-cyan-50 border border-cyan-200 p-2.5 flex items-center justify-between overflow-hidden relative group-hover:border-cyan-300 transition">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-cyan-900/50 border border-cyan-500/30 flex items-center justify-center text-cyan-300 font-bold text-[10px]">
+            <div className="h-6 w-6 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold text-[10px]">
               PWA
             </div>
-            <span className="text-[9.5px] font-bold text-cyan-200">Offline Sync Queue</span>
+            <span className="text-[9.5px] font-extrabold text-cyan-900">Offline Sync Queue</span>
           </div>
-          <span className="text-[8.5px] font-bold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/30">
+          <span className="text-[8.5px] font-extrabold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-900 border border-cyan-300">
             Ready (100%)
           </span>
         </div>
       );
     case "whatsapp_messaging":
       return (
-        <div className="h-16 w-full rounded-xl bg-emerald-950/20 border border-emerald-500/20 p-2.5 flex flex-col justify-between overflow-hidden relative group-hover:border-emerald-500/40 transition">
-          <div className="flex items-center justify-between text-[9px] text-emerald-300 font-bold">
+        <div className="h-16 w-full rounded-xl bg-emerald-50 border border-emerald-200 p-2.5 flex flex-col justify-between overflow-hidden relative group-hover:border-emerald-300 transition">
+          <div className="flex items-center justify-between text-[9px] text-emerald-900 font-bold">
             <span>📲 Auto Payment Reminder</span>
-            <span className="text-[8px] text-emerald-400/80">Delivered ✓✓</span>
+            <span className="text-[8px] text-emerald-700 font-extrabold">Delivered ✓✓</span>
           </div>
-          <p className="text-[9.5px] text-emerald-200/90 truncate font-mono">
+          <p className="text-[9.5px] text-emerald-950 font-bold truncate font-mono">
             "Deposit of ₹50,000 confirmed for Royal Lawn Wedding!"
           </p>
         </div>
       );
     case "quotes_generator":
       return (
-        <div className="h-16 w-full rounded-xl bg-indigo-950/20 border border-indigo-500/20 p-2.5 flex items-center justify-between overflow-hidden relative group-hover:border-indigo-500/40 transition">
+        <div className="h-16 w-full rounded-xl bg-indigo-50 border border-indigo-200 p-2.5 flex items-center justify-between overflow-hidden relative group-hover:border-indigo-300 transition">
           <div className="space-y-1">
-            <span className="text-[9.5px] font-bold text-indigo-200 block">Interactive Quote PDF</span>
-            <span className="text-[8.5px] font-mono text-indigo-400 block">Ref #EOS-92810 • 30s</span>
+            <span className="text-[9.5px] font-extrabold text-indigo-900 block">Interactive Quote PDF</span>
+            <span className="text-[8.5px] font-mono text-indigo-700 font-bold block">Ref #EOS-92810 • 30s</span>
           </div>
           <span className="px-2 py-1 rounded-lg bg-indigo-600 text-white font-black text-[9px]">
             Signed ✓
@@ -76,33 +76,33 @@ function FeatureMicroGraphic({ type, color }: { type: string; color: string }) {
       );
     case "media_gallery":
       return (
-        <div className="h-16 w-full rounded-xl bg-amber-950/20 border border-amber-500/20 p-2 flex items-center justify-between overflow-hidden relative group-hover:border-amber-500/40 transition">
+        <div className="h-16 w-full rounded-xl bg-amber-50 border border-amber-200 p-2 flex items-center justify-between overflow-hidden relative group-hover:border-amber-300 transition">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-amber-900/40 border border-amber-500/30 flex items-center justify-center text-amber-300 font-bold text-xs">
+            <div className="h-8 w-8 rounded-lg bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-800 font-bold text-xs">
               📸
             </div>
             <div>
-              <span className="text-[9.5px] font-bold text-amber-200 block">Client Album (3.2 GB)</span>
-              <span className="text-[8.5px] text-amber-400/80 block">PIN Protected</span>
+              <span className="text-[9.5px] font-extrabold text-amber-900 block">Client Album (3.2 GB)</span>
+              <span className="text-[8.5px] text-amber-700 font-bold block">PIN Protected</span>
             </div>
           </div>
-          <span className="text-[8.5px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-500/30">
+          <span className="text-[8.5px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
             Passcode Active
           </span>
         </div>
       );
     case "lead_scoring":
       return (
-        <div className="h-16 w-full rounded-xl bg-rose-950/20 border border-rose-500/20 p-3 flex items-center justify-between overflow-hidden relative group-hover:border-rose-500/40 transition">
+        <div className="h-16 w-full rounded-xl bg-rose-50 border border-rose-200 p-3 flex items-center justify-between overflow-hidden relative group-hover:border-rose-300 transition">
           <div className="flex items-center gap-4">
             <div className="text-left">
-              <span className="text-[9px] font-bold text-rose-300 uppercase block">High-Value Lead Score</span>
-              <span className="text-xl font-black text-rose-400 font-mono">98 / 100</span>
+              <span className="text-[9px] font-extrabold text-rose-900 uppercase block">High-Value Lead Score</span>
+              <span className="text-xl font-black text-rose-700 font-mono">98 / 100</span>
             </div>
-            <div className="h-8 w-[1px] bg-rose-900/50" />
+            <div className="h-8 w-[1px] bg-rose-200" />
             <div className="text-left">
-              <span className="text-[9px] font-bold text-zinc-400 uppercase block">Conversion Probability</span>
-              <span className="text-xs font-bold text-emerald-400">94.2% Very High</span>
+              <span className="text-[9px] font-extrabold text-slate-600 uppercase block">Conversion Probability</span>
+              <span className="text-xs font-extrabold text-emerald-700">94.2% Very High</span>
             </div>
           </div>
           <span className="px-3 py-1.5 rounded-xl bg-rose-600 text-white font-extrabold text-[10px] shadow-md">
@@ -208,16 +208,12 @@ export function Features() {
 
   return (
     <section
-      className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden"
+      className="py-24 border-b border-[#E5E7EB] bg-[#F8F7FF] relative overflow-hidden"
       id="features"
     >
-      {/* Dynamic Background Grid Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none z-0" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.005)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.005)_1px,transparent_1px)] [background-size:120px_120px] pointer-events-none z-0" />
-
       {/* Background radial gradients */}
-      <div className="absolute bottom-0 right-[15%] w-[400px] h-[400px] bg-purple-950/10 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute top-12 left-[10%] w-[350px] h-[350px] bg-cyan-950/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-[15%] w-[400px] h-[400px] bg-purple-100/30 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-12 left-[10%] w-[350px] h-[350px] bg-indigo-100/30 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Section Header */}

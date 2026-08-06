@@ -64,14 +64,13 @@ export function Contact() {
   };
 
   return (
-    <section className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden font-sans" id="contact">
+    <section className="py-24 border-b border-[#E5E7EB] bg-[#F8F7FF] relative overflow-hidden font-sans" id="contact">
       {/* Laser-precision top horizon line */}
-      <div className="absolute top-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-purple-300/40 to-transparent pointer-events-none" />
 
-      {/* Background ambient glass radial glows */}
-      <div className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-600/10 blur-[140px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-10 left-10 w-[450px] h-[450px] bg-cyan-500/10 blur-[130px] rounded-full pointer-events-none z-0" />
-      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:32px_32px] pointer-events-none z-0" />
+      {/* Background ambient radial glows */}
+      <div className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-purple-100/30 blur-[140px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-10 left-10 w-[450px] h-[450px] bg-indigo-100/30 blur-[130px] rounded-full pointer-events-none z-0" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">

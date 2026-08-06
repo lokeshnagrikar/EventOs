@@ -148,14 +148,14 @@ export const TestimonialStack = ({
         }
 
         const tagClasses = (type: 'featured' | 'default') => type === 'featured' 
-          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
-          : 'bg-zinc-800 text-zinc-300 border border-white/[0.04]';
+          ? 'bg-purple-100 text-[#7C3AED] border border-purple-200' 
+          : 'bg-slate-100 text-slate-700 border border-slate-200';
           
         return (
           <div
             ref={el => cardRefs.current[index] = el}
             key={testimonial.id}
-            className="testimonial-card glass-effect backdrop-blur-xl transition-all duration-300 ease-out select-none cursor-grab active:cursor-grabbing border border-white/[0.08]"
+            className="testimonial-card bg-white transition-all duration-300 ease-out select-none cursor-grab active:cursor-grabbing border border-[#E5E7EB] shadow-xl rounded-2xl"
             style={style} // Apply dynamic styles here
             onMouseDown={(e) => handleDragStart(e, index)}
             onTouchStart={(e) => handleDragStart(e, index)}
@@ -164,21 +164,21 @@ export const TestimonialStack = ({
             <div className="p-6 md:p-8">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-white font-semibold text-base" style={{ background: testimonial.avatarGradient }}>
+                  <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm" style={{ background: testimonial.avatarGradient }}>
                     {testimonial.initials}
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold text-base md:text-lg leading-tight">{testimonial.name}</h3>
-                    <p className="text-xs md:text-sm text-zinc-400 mt-1">{testimonial.role}</p>
+                    <h3 className="text-[#111827] font-bold text-base md:text-lg leading-tight">{testimonial.name}</h3>
+                    <p className="text-xs md:text-sm text-[#4B5563] mt-1 font-medium">{testimonial.role}</p>
                   </div>
                 </div>
                 {/* Visual quote mark indicator */}
-                <span className="text-zinc-700/60 font-serif text-5xl leading-none select-none select-none">&ldquo;</span>
+                <span className="text-slate-300 font-serif text-5xl leading-none select-none">&ldquo;</span>
               </div>
               
-              <blockquote className="text-zinc-200/90 leading-relaxed text-sm md:text-base mb-6">"{testimonial.quote}"</blockquote>
+              <blockquote className="text-slate-800 font-medium leading-relaxed text-sm md:text-base mb-6">"{testimonial.quote}"</blockquote>
               
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-t border-white/[0.06] pt-4 gap-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-t border-[#E5E7EB] pt-4 gap-4">
                 <div className="flex flex-wrap gap-2">
                   {testimonial.tags.map((tag, i) => (
                     <span key={i} className={['text-[10px] font-bold uppercase tracking-wider', 'px-2.5', 'py-1', 'rounded-md', tagClasses(tag.type)].join(' ')}>
@@ -186,12 +186,12 @@ export const TestimonialStack = ({
                     </span>
                   ))}
                 </div>
-                <div className="flex items-center gap-4 text-xs text-zinc-400">
+                <div className="flex items-center gap-4 text-xs text-[#6B7280]">
                   {testimonial.stats.map((stat, i) => {
                     const IconComponent = stat.icon;
                     return (
-                      <span key={i} className="flex items-center">
-                        <IconComponent className="mr-1.5 h-3.5 w-3.5 text-zinc-500" />
+                      <span key={i} className="flex items-center font-medium">
+                        <IconComponent className="mr-1.5 h-3.5 w-3.5 text-slate-500" />
                         {stat.text}
                       </span>
                     );
@@ -209,7 +209,7 @@ export const TestimonialStack = ({
             key={index} 
             aria-label={`Go to testimonial ${index + 1}`} 
             onClick={() => navigate(index)} 
-            className={`pagination-dot transition-all duration-300 ${activeIndex === index ? 'active bg-white w-5 rounded-[4px]' : 'bg-white/20'}`} 
+            className={`pagination-dot transition-all duration-300 ${activeIndex === index ? 'active bg-[#7C3AED] w-5 rounded-[4px]' : 'bg-slate-300'}`} 
           />
         ))}
       </div>

@@ -39,6 +39,9 @@ public class AuthIntegrationTest {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private PlanRepository planRepository;
+
     @MockBean
     private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
 
@@ -65,6 +68,27 @@ public class AuthIntegrationTest {
             ownerRole = roleRepository.save(ownerRole);
         } else {
             ownerRole = roleOpt.get();
+        }
+
+        // Ensure free_trial plan exists in DB for tests
+        if (planRepository.findByCode("free_trial").isEmpty()) {
+            planRepository.save(Plan.builder()
+                    .name("Free Trial")
+                    .code("free_trial")
+                    .price(java.math.BigDecimal.ZERO)
+                    .currency("INR")
+                    .billingInterval("MONTHLY")
+                    .maxUsers(3)
+                    .maxStorage(5368709120L)
+                    .maxGalleryUploads(20)
+                    .maxEvents(5)
+                    .maxLeads(10)
+                    .maxAiCredits(50)
+                    .maxAutomationRuns(100)
+                    .maxApiCalls(1000)
+                    .customDomainSupported(false)
+                    .whiteLabelSupported(false)
+                    .build());
         }
 
         // Mock stringRedisTemplate behavior to avoid null pointers during login/lockout/rate limit checks

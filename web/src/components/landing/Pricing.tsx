@@ -75,18 +75,18 @@ const plans: Plan[] = [
 const PricingSwitch = ({ isYearly, onToggle }: { isYearly: boolean; onToggle: (yearly: boolean) => void }) => {
   return (
     <div className="flex justify-center">
-      <div className="relative z-10 mx-auto flex w-fit rounded-full bg-neutral-900/90 border border-white/10 p-1.5 backdrop-blur-xl shadow-2xl">
+      <div className="relative z-10 mx-auto flex w-fit rounded-full bg-white border border-slate-200 p-1.5 shadow-sm">
         <button
           onClick={() => onToggle(false)}
           className={cn(
             "relative z-10 w-fit h-9 rounded-full sm:px-6 px-4 flex items-center justify-center font-medium text-xs transition-colors cursor-pointer",
-            !isYearly ? "text-white" : "text-zinc-400 hover:text-zinc-200"
+            !isYearly ? "text-white" : "text-slate-600 hover:text-slate-900"
           )}
         >
           {!isYearly && (
             <motion.span
               layoutId="pricing-switch"
-              className="absolute top-0 left-0 h-9 w-full rounded-full border border-blue-400/40 shadow-[0_0_20px_rgba(59,130,246,0.5)] bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600"
+              className="absolute top-0 left-0 h-9 w-full rounded-full border border-purple-600 shadow-md shadow-purple-500/20 bg-[#7C3AED]"
               transition={{ type: "spring", stiffness: 500, damping: 35 }}
             />
           )}
@@ -97,13 +97,13 @@ const PricingSwitch = ({ isYearly, onToggle }: { isYearly: boolean; onToggle: (y
           onClick={() => onToggle(true)}
           className={cn(
             "relative z-10 w-fit h-9 rounded-full sm:px-6 px-4 flex items-center justify-center font-medium text-xs transition-colors cursor-pointer",
-            isYearly ? "text-white" : "text-zinc-400 hover:text-zinc-200"
+            isYearly ? "text-white" : "text-slate-600 hover:text-slate-900"
           )}
         >
           {isYearly && (
             <motion.span
               layoutId="pricing-switch"
-              className="absolute top-0 left-0 h-9 w-full rounded-full border border-blue-400/40 shadow-[0_0_20px_rgba(59,130,246,0.5)] bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600"
+              className="absolute top-0 left-0 h-9 w-full rounded-full border border-purple-600 shadow-md shadow-purple-500/20 bg-[#7C3AED]"
               transition={{ type: "spring", stiffness: 500, damping: 35 }}
             />
           )}
@@ -200,13 +200,13 @@ export function Pricing() {
               className={cn(
                 "relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-500 border backdrop-blur-2xl",
                 plan.popular
-                  ? "bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white border-blue-500/60 shadow-xl z-20 scale-[1.02]"
+                  ? "bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white border-purple-500/60 shadow-xl z-20 lg:scale-[1.02]"
                   : "bg-white/80 hover:bg-white border-slate-200/80 hover:border-slate-300 shadow-md text-slate-900 z-10"
               )}
             >
               {/* Popular Badge */}
               {plan.popular && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-[10px] font-black uppercase py-1 px-4 rounded-full tracking-widest shadow-lg shadow-blue-600/40 border border-blue-400/40 flex items-center gap-1.5">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7] text-white text-[10px] font-black uppercase py-1 px-4 rounded-full tracking-widest shadow-lg shadow-purple-600/30 border border-purple-400/40 flex items-center gap-1.5">
                   <Zap size={11} className="fill-white" /> Most Popular
                 </div>
               )}
@@ -214,24 +214,24 @@ export function Pricing() {
               <div>
                 {/* Header */}
                 <div className="mb-6">
-                  <h3 className={cn("text-2xl font-bold font-heading", plan.popular ? "text-white" : "text-slate-900")}>{plan.name}</h3>
-                  <p className={cn("text-xs mt-1.5 leading-relaxed min-h-[36px] font-medium", plan.popular ? "text-slate-300" : "text-slate-600")}>{plan.desc}</p>
+                  <h3 className={cn("text-2xl font-bold font-heading", plan.popular ? "text-white" : "text-[#111827]")}>{plan.name}</h3>
+                  <p className={cn("text-xs mt-1.5 leading-relaxed min-h-[36px] font-medium", plan.popular ? "text-slate-300" : "text-[#4B5563]")}>{plan.desc}</p>
                 </div>
 
                 {/* Price Display */}
-                <div className="mb-6 pb-6 border-b border-white/10">
+                <div className={cn("mb-6 pb-6 border-b", plan.popular ? "border-white/10" : "border-slate-200")}>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl sm:text-5xl font-black text-white font-heading tracking-tight">
+                    <span className={cn("text-4xl sm:text-5xl font-black font-heading tracking-tight", plan.popular ? "text-white" : "text-[#111827]")}>
                       {formatPrice(price)}
                     </span>
                     {price !== null && (
-                      <span className="text-zinc-400 text-xs font-medium">
+                      <span className={cn("text-xs font-medium", plan.popular ? "text-slate-400" : "text-[#4B5563]")}>
                         /{isYearly ? "month" : "month"}
                       </span>
                     )}
                   </div>
                   {isYearly && price !== null && (
-                    <p className="text-[10px] text-emerald-400 font-semibold mt-1">
+                    <p className="text-[10px] text-emerald-500 font-bold mt-1">
                       Billed annually (₹{(price * 12).toLocaleString()}/yr)
                     </p>
                   )}
@@ -239,14 +239,14 @@ export function Pricing() {
 
                 {/* Features */}
                 <div className="space-y-3.5 mb-8">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                  <h4 className={cn("text-xs font-bold uppercase tracking-wider", plan.popular ? "text-slate-300" : "text-slate-900")}>
                     {plan.features[0]}
                   </h4>
                   <ul className="space-y-2.5">
                     {plan.features.slice(1).map((feature, fIdx) => (
-                      <li key={fIdx} className="flex items-start gap-2.5 text-xs text-zinc-300">
-                        <span className="h-4 w-4 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                          <Check size={10} className="text-blue-400 stroke-[3]" />
+                      <li key={fIdx} className={cn("flex items-start gap-2.5 text-xs font-medium", plan.popular ? "text-slate-300" : "text-[#4B5563]")}>
+                        <span className={cn("h-4 w-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 border", plan.popular ? "bg-purple-500/20 border-purple-400/40" : "bg-purple-50 border-purple-200")}>
+                          <Check size={10} className={cn("stroke-[3]", plan.popular ? "text-purple-300" : "text-[#7C3AED]")} />
                         </span>
                         <span className="leading-tight">{feature}</span>
                       </li>
@@ -262,8 +262,8 @@ export function Pricing() {
                   className={cn(
                     "w-full py-3.5 px-6 rounded-2xl font-bold text-sm transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group",
                     plan.popular
-                      ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-600/30 border border-blue-400/40 hover:scale-[1.02] active:scale-[0.98]"
-                      : "bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98]"
+                      ? "bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7] hover:brightness-110 text-white shadow-lg shadow-purple-600/30 border border-purple-400/40 hover:scale-[1.02] active:scale-[0.98]"
+                      : "bg-[#7C3AED] hover:bg-[#6D28D9] text-white shadow-md shadow-purple-500/20 border border-purple-600/40 hover:scale-[1.02] active:scale-[0.98]"
                   )}
                 >
                   <span>{plan.cta}</span>

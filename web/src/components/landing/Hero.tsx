@@ -102,8 +102,9 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       label: "Events Managed",
       desc: "Weddings, galas & corporate events",
       icon: "solar:users-group-rounded-bold-duotone",
-      iconColor: "#8B5CF6",
-      bg: "from-purple-500/10 to-transparent",
+      badgeBg: "bg-purple-50 border-purple-200/80 text-[#7C3AED]",
+      bg: "from-purple-500/10 via-purple-500/5 to-transparent",
+      borderColor: "hover:border-purple-300",
     },
     {
       value: 500,
@@ -112,8 +113,9 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       label: "Revenue Processed",
       desc: "Across all tenant workspaces",
       icon: "solar:chart-bold-duotone",
-      iconColor: "#EC4899",
-      bg: "from-pink-500/10 to-transparent",
+      badgeBg: "bg-pink-50 border-pink-200/80 text-pink-600",
+      bg: "from-pink-500/10 via-pink-500/5 to-transparent",
+      borderColor: "hover:border-pink-300",
     },
     {
       value: 98,
@@ -121,8 +123,9 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       label: "Client Satisfaction",
       desc: "Outstanding NPS index globally",
       icon: "solar:star-bold-duotone",
-      iconColor: "#06B6D4",
-      bg: "from-cyan-500/10 to-transparent",
+      badgeBg: "bg-sky-50 border-sky-200/80 text-sky-600",
+      bg: "from-sky-500/10 via-sky-500/5 to-transparent",
+      borderColor: "hover:border-sky-300",
     },
   ];
 
@@ -203,58 +206,58 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       ref={heroRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="min-h-[95vh] flex flex-col items-center justify-center pt-32 md:pt-36 pb-16 relative overflow-hidden bg-transparent text-zinc-100"
+      className="min-h-[95vh] flex flex-col items-center justify-center pt-32 md:pt-36 pb-16 relative overflow-hidden bg-[#FFFFFF] text-slate-900"
     >
       {/* Interactive Cursor Spotlight Glow */}
       <div
         className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-300"
         style={{
-          background: `radial-gradient(800px circle at ${spotlightPos.x}px ${spotlightPos.y}px, rgba(168, 85, 247, 0.30), transparent 70%)`,
+          background: `radial-gradient(700px circle at ${spotlightPos.x}px ${spotlightPos.y}px, rgba(124, 58, 237, 0.08), transparent 70%)`,
         }}
       />
 
       {/* Radiant Top Specular Horizon Light Bar */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent pointer-events-none z-0 opacity-90" />
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-300/50 to-transparent pointer-events-none z-0" />
 
-      {/* Luminous Ambient Mesh Light Flares (No Dots) */}
+      {/* Luminous Ambient Radial Glow behind Hero */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Large Central Glowing Violet Aura */}
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-gradient-to-b from-purple-400/40 via-indigo-500/30 to-transparent blur-[120px] rounded-full animate-pulse" />
+        {/* Main Central Radial Glow */}
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[650px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-200/50 via-purple-100/30 to-transparent blur-[130px] rounded-full pointer-events-none" />
         
-        {/* Luminous Left Electric Cyan Wave */}
-        <div className="absolute top-10 -left-32 w-[600px] h-[600px] bg-gradient-to-tr from-cyan-400/30 via-indigo-500/25 to-transparent blur-[140px] rounded-full" />
+        {/* Left Electric Cyan/Indigo Ambient Bloom */}
+        <div className="absolute top-40 -left-20 w-[550px] h-[550px] bg-gradient-to-tr from-cyan-100/40 via-indigo-100/30 to-transparent blur-[140px] rounded-full pointer-events-none" />
         
-        {/* Luminous Right Magenta Bloom */}
-        <div className="absolute top-20 -right-32 w-[600px] h-[600px] bg-gradient-to-tl from-pink-400/30 via-purple-500/25 to-transparent blur-[140px] rounded-full" />
+        {/* Right Magenta/Violet Accent Glow */}
+        <div className="absolute top-48 -right-20 w-[550px] h-[550px] bg-gradient-to-tl from-purple-100/40 via-pink-100/30 to-transparent blur-[140px] rounded-full pointer-events-none" />
 
-        {/* Dynamic Center Beam Flare */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-purple-400/20 blur-[160px] rounded-full pointer-events-none" />
+        {/* Specular Horizontal Mesh Light Ray */}
+        <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[250px] bg-purple-200/20 blur-[150px] rounded-full pointer-events-none" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 w-full relative z-10 flex flex-col items-center text-center">
 
         {/* Announcement Badge */}
-        <div className="gsap-badge opacity-0 inline-flex items-center gap-2 px-3.5 py-1.5 bg-purple-500/[0.08] border border-purple-500/20 backdrop-blur-md rounded-full text-[11px] font-bold text-slate-700 tracking-wide shadow-[0_10px_30px_rgba(124,58,237,0.05)] mb-3">
+        <div className="gsap-badge opacity-0 inline-flex items-center gap-2 px-4 py-1.5 bg-purple-50 border border-purple-200/80 rounded-full text-[11px] font-bold text-[#7C3AED] tracking-wide shadow-sm mb-4">
           <span className="flex h-2 w-2 relative">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7C3AED]" />
           </span>
-          <Icon icon="solar:star-shine-bold-duotone" className="text-purple-600 text-xs" />
+          <Icon icon="solar:star-shine-bold-duotone" className="text-[#7C3AED] text-xs" />
           <span>The #1 All-in-One AI Operating System for Event Businesses</span>
         </div>
 
         {/* Hero Headline & Description */}
         <div className="max-w-4xl flex flex-col items-center text-center">
-          <h1 className="text-4xl sm:text-6xl lg:text-[76px] font-extrabold tracking-tight leading-[1.05] font-heading text-balance text-pretty text-slate-900">
-            <span className="gsap-title-word inline-block opacity-0 mr-3 text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700">Plan. Automate.</span>
-            <span className="gsap-title-word inline-block opacity-0 mr-3 text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700">Scale Events.</span>
+          <h1 className="text-4xl sm:text-6xl lg:text-[76px] font-extrabold tracking-tight leading-[1.05] font-heading text-balance text-pretty text-[#111827]">
+            <span className="gsap-title-word inline-block opacity-0 mr-3 text-[#111827]">Plan. Automate.</span>
+            <span className="gsap-title-word inline-block opacity-0 mr-3 text-[#111827]">Scale Events.</span>
             <br className="hidden sm:inline" />
             <span className="gsap-title-word inline-block opacity-0 mt-1 sm:mt-2 w-full text-center">
               <RotatingHeroPhrase />
             </span>
           </h1>
 
-          <p className="gsap-desc opacity-0 text-slate-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium font-sans mt-5 mb-8">
+          <p className="gsap-desc opacity-0 text-[#4B5563] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium font-sans mt-5 mb-8">
             The complete operating system for independent event coordinators and boutique agencies. Automate WhatsApp triggers, AI run-of-show timelines, mobile offline PWA check-ins, white-label client portals, and milestone invoicing.
           </p>
         </div>
@@ -274,7 +277,7 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
             className="gsap-cta opacity-0 w-full sm:w-auto flex items-center justify-center gap-2.5 px-8 py-6 rounded-full font-bold active:scale-[0.98] group cursor-pointer"
             size="xl"
           >
-            <Icon icon="solar:play-circle-bold-duotone" className="text-cyan-350 text-base group-hover:scale-110 transition-transform duration-200" />
+            <Icon icon="solar:play-circle-bold-duotone" className="text-purple-600 text-base group-hover:scale-110 transition-transform duration-200" />
             Book a Demo
           </LiquidButton>
         </div>
@@ -370,28 +373,30 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
               rotateY: springY,
               transformStyle: "preserve-3d",
             }}
-            className="relative rounded-2xl border border-white/[0.08] bg-white/[0.02] p-2 shadow-[0_0_80px_rgba(139,92,246,0.12)] backdrop-blur-xl transition-all duration-300"
+            className="relative rounded-2xl border border-slate-800 bg-[#0B0F19] p-2 shadow-[0_20px_70px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all duration-300"
           >
 
             {/* Browser header */}
-            <div className="flex items-center justify-between px-3 py-2.5 border-b border-white/[0.08] bg-white/[0.02] rounded-t-xl">
+            <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-800 bg-slate-900/90 rounded-t-xl">
               <div className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
-                <span className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
-                <span className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
-                <span className="text-[10px] text-zinc-500 font-mono ml-2 select-none">admin.eventos.io/dashboard</span>
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
+                <span className="text-[10px] text-slate-400 font-mono ml-2 select-none">admin.eventos.io/dashboard</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.08] px-2 py-0.5 rounded-md text-[10px] text-zinc-400">
+              <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700/60 px-2 py-0.5 rounded-md text-[10px] text-slate-300">
                 <Icon icon="solar:shield-check-bold-duotone" className="text-cyan-400 text-xs" />
                 <span>Tenant Isolation: active</span>
               </div>
-            </div>            {/* Dashboard Content Mockup */}
-            <div className="bg-transparent rounded-b-xl overflow-hidden aspect-[16/10] relative text-left flex">
+            </div>
+
+            {/* Dashboard Content Mockup */}
+            <div className="bg-[#0F172A] rounded-b-xl overflow-hidden min-h-[340px] sm:min-h-[420px] aspect-auto sm:aspect-[16/10] relative text-left flex">
               {/* Background grid */}
-              <div className="absolute inset-0 bg-[radial-gradient(#1c1917_1.2px,transparent_1.2px)] [background-size:22px_22px] opacity-10 pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(#334155_1.2px,transparent_1.2px)] [background-size:22px_22px] opacity-25 pointer-events-none" />
 
               {/* Sidebar Panel */}
-              <div className="w-10 sm:w-12 border-r border-white/[0.06] bg-white/[0.01] backdrop-blur-md flex flex-col items-center py-3 sm:py-4 justify-between relative z-10 shrink-0">
+              <div className="w-10 sm:w-12 border-r border-slate-800 bg-slate-900/90 backdrop-blur-md flex flex-col items-center py-3 sm:py-4 justify-between relative z-10 shrink-0">
                 {/* Top: Brand switcher */}
                 <div className="flex flex-col items-center gap-4">
                   <div className="h-6 w-6 rounded-lg bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white text-[10px] font-black shadow-md shadow-purple-500/20">
@@ -411,8 +416,8 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
                       <div
                         key={idx}
                         className={`h-7 w-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors ${item.active
-                          ? "bg-white/[0.04] text-purple-400 border border-white/[0.06]"
-                          : "text-zinc-650 hover:text-zinc-400"
+                          ? "bg-purple-600/30 text-purple-300 border border-purple-500/40"
+                          : "text-slate-400 hover:text-white"
                           }`}
                       >
                         <Icon icon={item.icon} className="text-xs sm:text-sm" />
@@ -423,24 +428,24 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
 
                 {/* Bottom: User avatar & status */}
                 <div className="relative">
-                  <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 border border-white/[0.08] flex items-center justify-center text-[8px] font-extrabold text-white">
+                  <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 border border-slate-700 flex items-center justify-center text-[8px] font-extrabold text-white">
                     U
                   </div>
-                  <span className="absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full bg-emerald-500 border border-zinc-950" />
+                  <span className="absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full bg-emerald-500 border border-slate-900" />
                 </div>
               </div>
 
               {/* Main Content Area */}
               <div className="relative z-10 flex-1 flex flex-col justify-between p-4 sm:p-5 gap-4">
                 {/* Mockup Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <div>
                     <span className="text-[9px] font-bold text-purple-400 uppercase tracking-widest">Workspace Dashboard</span>
                     <h4 className="text-base font-bold text-white font-heading">Event Command Center</h4>
                   </div>
                   <div className="flex gap-1.5">
                     {["Q", "B", "I"].map((l) => (
-                      <span key={l} className="h-7 w-7 rounded-lg bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-zinc-400 text-[10px] font-bold">
+                      <span key={l} className="h-7 w-7 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-300 text-[10px] font-bold">
                         {l}
                       </span>
                     ))}
@@ -450,12 +455,12 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
                 {/* Grid stats (frosted glass cards) */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1 items-center">
                   {[
-                    { title: "Lead Conversion Pipeline", value: "84.2%", delta: "↑ +4.2% vs last month", deltaColor: "text-emerald-400", hoverBorder: "hover:border-purple-500/30" },
-                    { title: "Active Event Bookings", value: "142 Projects", delta: "32 Weddings · 110 Corporate", deltaColor: "text-zinc-400", hoverBorder: "hover:border-pink-500/30" },
-                    { title: "Projected Revenue", value: "₹8.4M", delta: "Invoiced cleared: ₹7.2M", deltaColor: "text-zinc-500", valueColor: "text-[#06B6D4]", hoverBorder: "hover:border-cyan-500/30" },
+                    { title: "Lead Conversion Pipeline", value: "84.2%", delta: "↑ +4.2% vs last month", deltaColor: "text-emerald-400", hoverBorder: "hover:border-purple-500/40" },
+                    { title: "Active Event Bookings", value: "142 Projects", delta: "32 Weddings · 110 Corporate", deltaColor: "text-slate-400", hoverBorder: "hover:border-pink-500/40" },
+                    { title: "Projected Revenue", value: "₹8.4M", delta: "Invoiced cleared: ₹7.2M", deltaColor: "text-slate-400", valueColor: "text-cyan-400", hoverBorder: "hover:border-cyan-500/40" },
                   ].map((card, i) => (
-                    <div key={i} className={`p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-md flex flex-col justify-between h-24 transition-colors ${card.hoverBorder} group`}>
-                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">{card.title}</span>
+                    <div key={i} className={`p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur-md flex flex-col justify-between h-24 transition-colors ${card.hoverBorder} group`}>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{card.title}</span>
                       <div>
                         <span className={`text-xl font-extrabold block ${card.valueColor || "text-white"} font-heading`}>{card.value}</span>
                         <span className={`text-[9px] mt-0.5 block ${card.deltaColor}`}>{card.delta}</span>
@@ -465,11 +470,11 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
                 </div>
 
                 {/* Notification bar (frosted glass) */}
-                <div className="p-2.5 bg-white/[0.01] border border-white/[0.04] backdrop-blur-md rounded-lg flex items-center justify-between text-[11px] text-zinc-450">
+                <div className="p-2.5 bg-slate-900/90 border border-slate-800 backdrop-blur-md rounded-lg flex items-center justify-between text-[11px]">
                   <div className="flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="font-semibold text-zinc-300">Live Status:</span>
-                    <span className="text-zinc-400">Quote #QT-2026-041 accepted by client (Sanjay Shah)</span>
+                    <span className="font-semibold text-slate-200">Live Status:</span>
+                    <span className="text-slate-300">Quote #QT-2026-041 accepted by client (Sanjay Shah)</span>
                   </div>
                   <span className="text-[9px] text-purple-400 font-bold cursor-pointer hover:underline shrink-0">View Pipeline →</span>
                 </div>
@@ -481,15 +486,15 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
         {/* Statistics count row */}
         <div className="w-full pt-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
-            {stats.map((stat, idx) => (
+            {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="gsap-stats opacity-0 relative group p-6 rounded-2xl border border-white/[0.06] bg-white/[0.01] backdrop-blur-md overflow-hidden hover:border-white/[0.1] hover:bg-white/[0.03] transition-all duration-300"
+                className={`gsap-stats opacity-0 relative group p-6 rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md overflow-hidden ${stat.borderColor} shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${stat.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-400`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${stat.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                 <div className="relative z-10 flex items-center justify-between">
                   <div className="space-y-1.5 text-left">
-                    <span className="text-3xl font-extrabold text-white block tracking-tight font-heading">
+                    <span className="text-3xl sm:text-4xl font-black text-[#111827] block tracking-tight font-heading">
                       <NumberTicker
                         value={stat.value}
                         prefix={stat.prefix}
@@ -497,14 +502,13 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
                         duration={1800}
                       />
                     </span>
-                    <h5 className="text-xs font-bold text-zinc-300 tracking-wide uppercase">{stat.label}</h5>
-                    <p className="text-[11px] text-zinc-500 font-medium">{stat.desc}</p>
+                    <h5 className="text-xs font-extrabold text-slate-900 tracking-wide uppercase">{stat.label}</h5>
+                    <p className="text-[11px] text-[#4B5563] font-medium">{stat.desc}</p>
                   </div>
                   <div
-                    className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: `${stat.iconColor}18`, border: `1px solid ${stat.iconColor}30` }}
+                    className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 border transition-transform duration-300 group-hover:scale-110 ${stat.badgeBg}`}
                   >
-                    <Icon icon={stat.icon} style={{ color: stat.iconColor }} className="text-2xl" />
+                    <Icon icon={stat.icon} className="text-2xl" />
                   </div>
                 </div>
               </div>

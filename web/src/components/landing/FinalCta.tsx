@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { Button } from "@/components/ui/button";
+import { LiquidButton } from "@/components/ui/liquid-glass-button";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
@@ -38,7 +38,7 @@ export function FinalCta() {
   ];
 
   return (
-    <section className="py-24 border-b border-purple-500/10 bg-transparent w-full relative z-10">
+    <section className="py-24 border-b border-[#E5E7EB] bg-[#FFFFFF] w-full relative z-10">
       <div className="max-w-6xl mx-auto px-6">
         {/* Large Gradient Card */}
         <motion.div
@@ -46,41 +46,34 @@ export function FinalCta() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.55 }}
-          className="relative rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#8B5CF6]/12 via-[#EC4899]/8 to-[#06B6D4]/8 p-8 sm:p-16 overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.4),0_0_100px_rgba(139,92,246,0.07)] backdrop-blur-2xl"
+          className="relative rounded-3xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-indigo-50/50 p-8 sm:p-16 overflow-hidden shadow-xl shadow-purple-500/5"
         >
           {/* BorderBeam decoration */}
           {!shouldReduceMotion && (
-            <BorderBeam size={300} duration={14} borderWidth={1.5} colorFrom="#8B5CF6" colorTo="#06B6D4" />
+            <BorderBeam size={300} duration={14} borderWidth={1.5} colorFrom="#7C3AED" colorTo="#A855F7" />
           )}
 
           {/* Animated corner glows */}
-          <div className="absolute -right-20 -bottom-20 w-[350px] h-[350px] bg-purple-500/20 blur-[120px] rounded-full pointer-events-none" />
-          <div className="absolute -left-20 -top-20 w-[300px] h-[300px] bg-pink-500/12 blur-[100px] rounded-full pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[200px] bg-gradient-to-r from-purple-500/5 to-cyan-500/5 blur-2xl rounded-full pointer-events-none" />
-
-          {/* Subtle grid backdrop */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1f23_1px,transparent_1px),linear-gradient(to_bottom,#1f1f23_1px,transparent_1px)] bg-[size:32px_32px] opacity-8 pointer-events-none" />
-
-          {/* Gradient border ring */}
-          <div className="absolute inset-0 rounded-3xl border border-white/5 pointer-events-none" />
+          <div className="absolute -right-20 -bottom-20 w-[350px] h-[350px] bg-purple-200/40 blur-[120px] rounded-full pointer-events-none" />
+          <div className="absolute -left-20 -top-20 w-[300px] h-[300px] bg-indigo-100/40 blur-[100px] rounded-full pointer-events-none" />
 
           <div className="relative z-10 max-w-2xl mx-auto text-center space-y-8">
             {/* Badge */}
-            <span className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-widest text-[#06B6D4] bg-[#06B6D4]/10 border border-[#06B6D4]/25 px-4 py-1.5 rounded-full uppercase">
+            <span className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-widest text-[#7C3AED] bg-purple-100 border border-purple-200 px-4 py-1.5 rounded-full uppercase">
               <Icon icon="solar:gift-bold-duotone" className="text-sm" />
               Free 14-Day Trial — No Credit Card Required
             </span>
 
             {/* Headline */}
             <div className="space-y-4">
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight font-heading">
+              <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111827] leading-tight font-heading">
                 Streamline your event
                 <br />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#06B6D4]">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7]">
                   operations today.
                 </span>
               </h2>
-              <p className="text-zinc-300 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
+              <p className="text-[#4B5563] text-sm sm:text-base leading-relaxed max-w-xl mx-auto font-medium">
                 Connect your team, coordinate vendors, and delight clients from a single secure workspace. Cancel anytime, no lock-in.
               </p>
             </div>
@@ -112,16 +105,18 @@ export function FinalCta() {
                       placeholder="Enter your agency email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3.5 bg-zinc-950/80 border border-zinc-800 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all shadow-inner"
+                      className="w-full pl-10 pr-4 py-3.5 bg-white border border-[#E5E7EB] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 rounded-xl text-sm text-[#111827] font-semibold placeholder-[#6B7280] outline-none transition-all shadow-sm"
                     />
                   </div>
-                  <Button
+                  <LiquidButton
                     type="submit"
-                    className="bg-white hover:bg-zinc-100 text-zinc-950 rounded-xl font-bold px-6 shadow-lg transition-all active:scale-[0.98] flex items-center gap-2 whitespace-nowrap"
+                    variant="brand"
+                    className="rounded-xl font-bold px-6 active:scale-[0.98] flex items-center gap-2 whitespace-nowrap"
+                    size="lg"
                   >
                     Get Started
                     <Icon icon="solar:arrow-right-bold" className="text-sm" />
-                  </Button>
+                  </LiquidButton>
                 </motion.form>
               ) : (
                 <motion.div

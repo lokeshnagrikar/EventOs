@@ -26,9 +26,22 @@ spring:
         auto-startup: false
 
 app:
+  cors:
+    allowed-origins: http://localhost:3000
+  frontend-url: http://localhost:3000
   jwt:
     secret: 9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d
     expiration-ms: 900000
     refresh-expiration-ms: 604800000
   gateway:
     secret: eventos_gateway_secure_shared_secret
+  security:
+    log-tokens: true
+  recaptcha:
+    enabled: false
+    secret-key: mock_secret
+  google:
+    client-id: 1234567890-example.apps.googleusercontent.com
+  stripe:
+    api-key: mock_stripe_key
+    webhook-secret: mock_webhook_secret

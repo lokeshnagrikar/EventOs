@@ -46,8 +46,8 @@ export function Navbar({ activeSection }: NavbarProps) {
     const threshold = 120;
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const lastScrollY = lastScrollYRef.current;
+      const activeLenis = (window as any).lenis;
+      const currentScrollY = activeLenis ? activeLenis.scroll : window.scrollY;
 
       setScrolled(currentScrollY > 40);
 
@@ -56,18 +56,12 @@ export function Navbar({ activeSection }: NavbarProps) {
         return;
       }
 
-      // Always show at the top of the landing page hero section
-      if (currentScrollY <= threshold) {
+      // Show top Navbar ONLY when near top (Hero section <= 350px)
+      // When scrolled down, Navbar hides so FloatingDock takes over (never show together)
+      if (currentScrollY <= 350) {
         setVisible(true);
-        lastScrollYRef.current = currentScrollY;
-        return;
-      }
-
-      // Hide on scroll down, show on scroll up
-      if (currentScrollY > lastScrollY) {
+      } else {
         setVisible(false);
-      } else if (currentScrollY < lastScrollY) {
-        setVisible(true);
       }
 
       lastScrollYRef.current = currentScrollY;
@@ -260,14 +254,14 @@ export function Navbar({ activeSection }: NavbarProps) {
           setMousePos({ x: -999, y: -999 });
         }}
         className={cn(
-          "pointer-events-auto mx-auto flex items-center justify-between rounded-full border backdrop-blur-[30px] backdrop-saturate-[1.5] transition-all duration-700 ease-smooth relative group/navbar",
+          "pointer-events-auto mx-auto flex items-center justify-between rounded-full border backdrop-blur-2xl backdrop-saturate-[1.8] transition-all duration-700 ease-smooth relative group/navbar",
           scrolled || isOpen
-            ? "max-w-5xl bg-white/90 border-slate-200/90 px-5 py-2.5 shadow-[0_12px_32px_rgba(0,0,0,0.06)]"
-            : "max-w-6xl bg-white/75 border-slate-200/70 px-6 py-3.5 shadow-[0_6px_24px_rgba(0,0,0,0.04)]"
+            ? "max-w-5xl bg-white/75 border-white/80 px-5 py-2.5 shadow-[0_12px_36px_rgba(0,0,0,0.06),0_2px_8px_rgba(124,58,237,0.04),inset_0_1px_1.5px_rgba(255,255,255,0.9)]"
+            : "max-w-6xl bg-white/65 border-white/60 px-6 py-3.5 shadow-[0_8px_28px_rgba(0,0,0,0.04),0_2px_6px_rgba(124,58,237,0.03),inset_0_1px_1.5px_rgba(255,255,255,0.85)]"
         )}
       >
-        {/* Top reflection line simulating light glass shelf highlight */}
-        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-purple-300/40 to-transparent pointer-events-none" />
+        {/* Top specular glass sheen reflection line */}
+        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-purple-300/60 to-transparent pointer-events-none" />
 
         {/* Subtle static gradient sheen matching WebGL cyan/purple light colors */}
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-cyan-500/5 to-purple-500/5 opacity-100 pointer-events-none rounded-full z-0" />
@@ -608,9 +602,9 @@ export function Navbar({ activeSection }: NavbarProps) {
             )}
           </button>
           <LiquidButton
-            variant="appleGlassLight"
+            variant="appleGlass"
             onClick={handleStartTrial}
-            className="rounded-full text-xs font-bold uppercase tracking-wider active:scale-[0.98]"
+            className="rounded-full text-xs font-bold uppercase tracking-wider active:scale-[0.98] shadow-md shadow-purple-500/20"
             size="default"
           >
             Get Started

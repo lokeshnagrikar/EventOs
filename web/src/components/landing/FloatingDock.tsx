@@ -36,15 +36,15 @@ export function FloatingDock() {
       const currentScrollY = activeLenis ? activeLenis.scroll : window.scrollY;
       const lastScrollY = lastScrollYRef.current;
 
-      // Only show after scrolling past 200px
-      if (currentScrollY > 200) {
+      // Only show after scrolling past 350px (Navbar controls 0-350px)
+      if (currentScrollY > 350) {
         if (currentScrollY > lastScrollY) {
           setVisible(false); // scrolling down
         } else {
           setVisible(true); // scrolling up / idle
         }
       } else {
-        setVisible(false); // near the top of the page
+        setVisible(false); // near top of page (Navbar is active)
       }
 
       // Sync active section boundaries
@@ -69,7 +69,7 @@ export function FloatingDock() {
       const activeLenis = (window as any).lenis;
       if (activeLenis) {
         const onLenisScroll = (e: any) => {
-          if (e.scroll > 200) {
+          if (e.scroll > 350) {
             if (e.direction === 1) {
               setVisible(false);
             } else {
@@ -190,13 +190,13 @@ export function FloatingDock() {
           transition={{ type: "spring", stiffness: 220, damping: 28 }}
           onMouseMove={(e) => mouseX.set(e.clientX)}
           onMouseLeave={() => mouseX.set(Infinity)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] pointer-events-auto flex items-end h-[58px] gap-2.5 sm:gap-3 px-3.5 pb-2 rounded-[20px] border border-white/[0.06] bg-white/[0.02] backdrop-blur-[45px] backdrop-saturate-[1.8] shadow-[0_30px_70px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.08)]"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] pointer-events-auto flex items-end h-[58px] gap-2.5 sm:gap-3 px-3.5 pb-2 rounded-[20px] border border-slate-700/80 bg-slate-900/90 backdrop-blur-[45px] backdrop-saturate-[1.8] shadow-[0_20px_50px_rgba(15,23,42,0.4),0_0_20px_rgba(139,92,246,0.15)]"
         >
           {/* Top reflection line simulating macOS 3D glass shelf highlight */}
-          <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white/12 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
           
-          {/* Subtle ambient white bloom behind the glass dock */}
-          <div className="absolute -inset-1 bg-white/[0.01] blur-md rounded-[20px] pointer-events-none -z-10" />
+          {/* Subtle ambient bloom behind the dock */}
+          <div className="absolute -inset-1 bg-purple-500/10 blur-md rounded-[20px] pointer-events-none -z-10" />
 
           {dockItems.map((item) => (
             <DockIcon
@@ -235,10 +235,6 @@ const DockIcon = memo(function DockIcon({
   });
 
   // macOS fisheye magnification mapping:
-  // - Cursor on top (distance 0): Width scales to 54px (1.35x) and lifts by -9px
-  // - Adjacent (distance ~45px): Width scales to 48.8px (1.22x) and lifts by -4px
-  // - Next (distance ~90px): Width scales to 44.8px (1.12x) and lifts by -1.5px
-  // - Rest (distance > 150px): Width scales to 40px (1.0x) and lifts by 0px
   const widthTransform = useTransform(distance, [-150, -90, -45, 0, 45, 90, 150], [40, 44.8, 48.8, 54, 48.8, 44.8, 40]);
   const yTransform = useTransform(distance, [-150, -90, -45, 0, 45, 90, 150], [0, -1.5, -4, -9, -4, -1.5, 0]);
 
@@ -272,7 +268,7 @@ const DockIcon = memo(function DockIcon({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute bottom-full mb-3.5 px-2.5 py-1 text-[10px] font-medium tracking-wide text-white/90 bg-[#121216]/65 border border-white/[0.08] rounded-[6px] backdrop-blur-[10px] shadow-lg pointer-events-none whitespace-nowrap z-20"
+            className="absolute bottom-full mb-3.5 px-2.5 py-1 text-[10px] font-bold tracking-wide text-white bg-slate-900 border border-slate-700 rounded-[6px] shadow-xl pointer-events-none whitespace-nowrap z-20"
           >
             {item.label}
           </motion.span>
@@ -290,10 +286,10 @@ const DockIcon = memo(function DockIcon({
         className={cn(
           "flex items-center justify-center rounded-[12px] border transition-colors duration-250 relative overflow-hidden",
           isActive
-            ? "bg-white/[0.18] border-white/20 text-white shadow-[0_8px_16px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.12)]"
+            ? "bg-gradient-to-tr from-purple-600 to-indigo-600 border-purple-400 text-white shadow-lg shadow-purple-600/40"
             : hovered
-            ? "bg-white/[0.10] border-white/[0.15] text-white/90 shadow-[0_6px_12px_rgba(0,0,0,0.25)]"
-            : "bg-white/[0.06] border-white/[0.12] text-white/70 shadow-[0_4px_8px_rgba(0,0,0,0.1)]"
+            ? "bg-slate-800 border-slate-600 text-white shadow-md"
+            : "bg-slate-800/80 border-slate-700/80 text-slate-300 shadow-sm"
         )}
       >
         {/* Subtle top sheen refracting light to mimic physical visionOS material */}

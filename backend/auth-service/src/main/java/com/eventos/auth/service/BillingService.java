@@ -67,7 +67,23 @@ public class BillingService {
     @Transactional
     public Subscription initDefaultTenantSubscription(UUID tenantId) {
         Plan freeTrialPlan = planRepository.findByCode("free_trial")
-                .orElseThrow(() -> new IllegalStateException("Predefined plan 'free_trial' not found"));
+                .orElseGet(() -> planRepository.save(Plan.builder()
+                        .name("Free Trial")
+                        .code("free_trial")
+                        .price(BigDecimal.ZERO)
+                        .currency("INR")
+                        .billingInterval("MONTHLY")
+                        .maxUsers(3)
+                        .maxStorage(5368709120L)
+                        .maxGalleryUploads(20)
+                        .maxEvents(5)
+                        .maxLeads(10)
+                        .maxAiCredits(50)
+                        .maxAutomationRuns(100)
+                        .maxApiCalls(1000)
+                        .customDomainSupported(false)
+                        .whiteLabelSupported(false)
+                        .build()));
 
         Subscription subscription = Subscription.builder()
                 .tenantId(tenantId)

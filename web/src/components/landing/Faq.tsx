@@ -49,7 +49,7 @@ export function Faq() {
 
   return (
     <section
-      className="py-24 border-b border-zinc-900 bg-zinc-950/20 w-full relative z-10"
+      className="py-24 border-b border-[#E5E7EB] bg-[#FFFFFF] w-full relative z-10"
       id="faq"
     >
       <div className="max-w-4xl mx-auto px-6">
@@ -61,17 +61,17 @@ export function Faq() {
           transition={{ duration: 0.5 }}
           className="text-center space-y-4 mb-16"
         >
-          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 uppercase">
-            <Icon icon="solar:question-circle-bold-duotone" className="text-cyan-600 text-sm" />
+          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-[#7C3AED] uppercase">
+            <Icon icon="solar:question-circle-bold-duotone" className="text-[#7C3AED] text-sm" />
             Got Questions?
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#111827] font-heading">
             Frequently Asked{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 to-blue-600">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7]">
               Questions
             </span>
           </h2>
-          <p className="text-slate-600 text-sm leading-relaxed font-medium">
+          <p className="text-[#4B5563] text-sm leading-relaxed font-medium">
             Everything you need to know about EventOS security, billing, white-label options, and team management.
           </p>
         </motion.div>
@@ -82,7 +82,7 @@ export function Faq() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white/80 border border-slate-200/80 shadow-md rounded-2xl p-4 sm:p-6 backdrop-blur-2xl"
+          className="bg-white border border-[#E5E7EB] shadow-md rounded-2xl p-4 sm:p-6"
         >
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, idx) => (

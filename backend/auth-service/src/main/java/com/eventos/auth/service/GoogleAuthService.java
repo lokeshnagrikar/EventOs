@@ -16,7 +16,7 @@ public class GoogleAuthService {
 
     private final GoogleIdTokenVerifier verifier;
 
-    public GoogleAuthService(@Value("${app.google.client-id}") String googleClientId) {
+    public GoogleAuthService(@Value("${app.google.client-id:1234567890-example.apps.googleusercontent.com}") String googleClientId) {
         this.verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(),
                 new GsonFactory()

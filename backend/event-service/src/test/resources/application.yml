@@ -23,3 +23,11 @@ spring:
 app:
   jwt:
     secret: 9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d
+  gateway:
+    secret: eventos_gateway_secure_shared_secret
+
+service:
+  auth:
+    base-url: http://localhost:8081/api/v1/auth
+  crm:
+    base-url: http://localhost:8082/api/v1/crm

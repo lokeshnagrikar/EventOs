@@ -254,12 +254,12 @@ export function ClientPortalPreview() {
 
   return (
     <section
-      className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden"
+      className="py-24 border-b border-[#E5E7EB] bg-[#F8F7FF] relative overflow-hidden"
       id="portal-preview"
     >
       {/* Background glows */}
-      <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none -translate-y-1/2" />
-      <div className="absolute top-1/2 right-0 w-[350px] h-[350px] bg-purple-500/5 blur-[100px] rounded-full pointer-events-none -translate-y-1/2" />
+      <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-purple-100/30 blur-[120px] rounded-full pointer-events-none -translate-y-1/2" />
+      <div className="absolute top-1/2 right-0 w-[350px] h-[350px] bg-indigo-100/30 blur-[100px] rounded-full pointer-events-none -translate-y-1/2" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Section Header */}
@@ -331,11 +331,11 @@ export function ClientPortalPreview() {
                   className="flex items-start gap-4"
                 >
                   <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                    <Icon icon={feat.icon} className="text-indigo-400 text-xl" />
+                    <Icon icon={feat.icon} className="text-indigo-600 text-xl" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-zinc-200">{feat.label}</h4>
-                    <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed" suppressHydrationWarning>{feat.desc}</p>
+                    <h4 className="text-sm font-extrabold text-slate-900">{feat.label}</h4>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5 leading-relaxed" suppressHydrationWarning>{feat.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -343,11 +343,11 @@ export function ClientPortalPreview() {
 
             {/* CTA */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <button className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-all shadow-md shadow-indigo-500/10 w-full sm:w-auto">
+              <button className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-extrabold hover:opacity-90 transition-all shadow-md shadow-indigo-500/10 w-full sm:w-auto">
                 <Icon icon="solar:arrow-right-bold" className="text-base" />
                 Try the Portal Demo
               </button>
-              <button className="px-5 py-3 rounded-xl border border-zinc-800 text-zinc-400 text-sm font-bold hover:text-white hover:border-zinc-700 transition-all w-full sm:w-auto">
+              <button className="px-5 py-3 rounded-xl border border-slate-200/80 bg-white/80 text-slate-700 text-sm font-extrabold hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm w-full sm:w-auto">
                 Learn More
               </button>
             </div>

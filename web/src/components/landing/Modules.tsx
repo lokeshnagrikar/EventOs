@@ -20,12 +20,12 @@ const modules = [
     mini: (
       <div className="mt-4 space-y-2">
         {[
-          { label: "Inquiries", count: 8, color: "bg-purple-500/20 text-purple-400" },
-          { label: "Proposal Sent", count: 3, color: "bg-pink-500/20 text-pink-400" },
-          { label: "Booked", count: 5, color: "bg-cyan-500/20 text-cyan-400" },
+          { label: "Inquiries", count: 8, color: "bg-purple-100 text-purple-900" },
+          { label: "Proposal Sent", count: 3, color: "bg-pink-100 text-pink-900" },
+          { label: "Booked", count: 5, color: "bg-cyan-100 text-cyan-900" },
         ].map((col) => (
-          <div key={col.label} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white/[0.02] border border-white/[0.05] backdrop-blur-xs">
-            <span className="text-[10px] font-semibold text-zinc-400">{col.label}</span>
+          <div key={col.label} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200">
+            <span className="text-[10px] font-extrabold text-slate-700">{col.label}</span>
             <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${col.color}`}>{col.count}</span>
           </div>
         ))}
@@ -44,21 +44,21 @@ const modules = [
     badge: "Conversion",
     description: "Line-item digital proposals. Clients sign online, auto-convert to bookings instantly.",
     mini: (
-      <div className="mt-4 p-3 rounded-lg bg-white/[0.02] border border-white/[0.05] backdrop-blur-xs space-y-2">
+      <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
         <div className="flex justify-between text-[10px]">
-          <span className="text-zinc-500">Subtotal</span>
-          <span className="font-bold text-zinc-300">₹14,50,000</span>
+          <span className="text-slate-600 font-semibold">Subtotal</span>
+          <span className="font-extrabold text-slate-900">₹14,50,000</span>
         </div>
         <div className="flex justify-between text-[10px]">
-          <span className="text-zinc-500">GST 18%</span>
-          <span className="font-bold text-zinc-300">₹2,61,000</span>
+          <span className="text-slate-600 font-semibold">GST 18%</span>
+          <span className="font-extrabold text-slate-900">₹2,61,000</span>
         </div>
-        <div className="h-px bg-zinc-800" />
+        <div className="h-px bg-slate-200" />
         <div className="flex justify-between text-[10px]">
-          <span className="font-bold text-white">Total</span>
-          <span className="font-extrabold text-pink-400">₹17,11,000</span>
+          <span className="font-extrabold text-slate-900">Total</span>
+          <span className="font-extrabold text-pink-600">₹17,11,000</span>
         </div>
-        <button className="w-full mt-2 py-1.5 rounded-md bg-gradient-to-r from-pink-600/80 to-purple-600/80 text-[10px] font-bold text-white">
+        <button className="w-full mt-2 py-1.5 rounded-md bg-gradient-to-r from-pink-600 to-purple-600 text-[10px] font-bold text-white shadow-sm">
           Accept & Sign →
         </button>
       </div>
@@ -78,16 +78,16 @@ const modules = [
     mini: (
       <div className="mt-4 space-y-2">
         {[
-          { label: "Deposit (50%)", amount: "₹8,55,000", status: "Paid", statusColor: "text-emerald-400" },
-          { label: "Mid-Event (25%)", amount: "₹4,27,500", status: "Pending", statusColor: "text-amber-400" },
-          { label: "Final (25%)", amount: "₹4,27,500", status: "Upcoming", statusColor: "text-zinc-500" },
+          { label: "Deposit (50%)", amount: "₹8,55,000", status: "Paid", statusColor: "text-emerald-700" },
+          { label: "Mid-Event (25%)", amount: "₹4,27,500", status: "Pending", statusColor: "text-amber-700" },
+          { label: "Final (25%)", amount: "₹4,27,500", status: "Upcoming", statusColor: "text-slate-500" },
         ].map((row) => (
-          <div key={row.label} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white/[0.02] border border-white/[0.05] backdrop-blur-xs">
+          <div key={row.label} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200">
             <div>
-              <span className="text-[9px] font-semibold text-zinc-400 block">{row.label}</span>
-              <span className="text-xs font-bold text-white">{row.amount}</span>
+              <span className="text-[9px] font-bold text-slate-600 block">{row.label}</span>
+              <span className="text-xs font-black text-slate-900">{row.amount}</span>
             </div>
-            <span className={`text-[10px] font-bold ${row.statusColor}`}>{row.status}</span>
+            <span className={`text-[10px] font-extrabold ${row.statusColor}`}>{row.status}</span>
           </div>
         ))}
       </div>
@@ -112,10 +112,10 @@ const modules = [
           { time: "14:00", label: "Sound Check", done: false },
           { time: "17:00", label: "Guest Arrival", done: false },
         ].map((item) => (
-          <div key={item.time} className="flex items-center gap-2 py-1 px-3 rounded-lg bg-white/[0.02] border border-white/[0.05] backdrop-blur-xs">
-            <span className="font-mono text-[9px] font-bold text-cyan-400 w-10 shrink-0">{item.time}</span>
-            <span className="text-[10px] text-zinc-300 flex-1">{item.label}</span>
-            <div className={`h-2.5 w-2.5 rounded-full ${item.done ? "bg-emerald-500" : "bg-zinc-700"}`} />
+          <div key={item.time} className="flex items-center gap-2 py-1 px-3 rounded-lg bg-slate-50 border border-slate-200">
+            <span className="font-mono text-[9px] font-extrabold text-cyan-700 w-10 shrink-0">{item.time}</span>
+            <span className="text-[10px] text-slate-800 font-bold flex-1">{item.label}</span>
+            <div className={`h-2.5 w-2.5 rounded-full ${item.done ? "bg-emerald-500" : "bg-slate-300"}`} />
           </div>
         ))}
       </div>
@@ -137,14 +137,14 @@ const modules = [
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="aspect-square rounded-md bg-gradient-to-tr from-amber-500/10 to-orange-500/10 border border-zinc-800/60 flex items-center justify-center"
+            className="aspect-square rounded-md bg-amber-50 border border-amber-200 flex items-center justify-center"
           >
-            <Icon icon="solar:gallery-minimalistic-bold" className="text-zinc-600 text-base" />
+            <Icon icon="solar:gallery-minimalistic-bold" className="text-amber-700 text-base" />
           </div>
         ))}
-        <div className="col-span-4 flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] backdrop-blur-xs mt-1">
-          <span className="text-[9px] text-zinc-500">Expires in 30 days</span>
-          <span className="text-[9px] font-bold text-amber-400">Download ZIP →</span>
+        <div className="col-span-4 flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 mt-1">
+          <span className="text-[9px] text-slate-600 font-semibold">Expires in 30 days</span>
+          <span className="text-[9px] font-bold text-amber-700">Download ZIP →</span>
         </div>
       </div>
     ),
@@ -162,15 +162,15 @@ const modules = [
     description: "Dedicated client dashboard. Accept quotes, pay invoices, view timelines — no extra login required.",
     mini: (
       <div className="mt-4 space-y-2">
-        <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.05] backdrop-blur-xs">
-          <span className="text-[10px] text-zinc-400">Proposal Status</span>
-          <span className="text-[10px] font-bold text-emerald-400">✓ Accepted</span>
+        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <span className="text-[10px] text-slate-700 font-extrabold">Proposal Status</span>
+          <span className="text-[10px] font-bold text-emerald-700">✓ Accepted</span>
         </div>
-        <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.05] backdrop-blur-xs">
-          <span className="text-[10px] text-zinc-400">Outstanding Payment</span>
-          <span className="text-[10px] font-bold text-pink-400">₹50,000</span>
+        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <span className="text-[10px] text-slate-700 font-extrabold">Outstanding Payment</span>
+          <span className="text-[10px] font-bold text-pink-700">₹50,000</span>
         </div>
-        <button className="w-full py-1.5 rounded-md bg-gradient-to-r from-indigo-600/80 to-violet-600/80 text-[10px] font-bold text-white">
+        <button className="w-full py-1.5 rounded-md bg-gradient-to-r from-indigo-600 to-violet-600 text-[10px] font-bold text-white shadow-sm">
           Pay Now →
         </button>
       </div>
@@ -184,12 +184,12 @@ export function Modules() {
 
   return (
     <section
-      className="py-24 border-b border-zinc-900 bg-zinc-950/30 relative overflow-hidden"
+      className="py-24 border-b border-[#E5E7EB] bg-[#FFFFFF] relative overflow-hidden"
       id="modules"
     >
       {/* Background glows */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[300px] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[400px] h-[250px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[500px] h-[300px] bg-purple-100/30 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[250px] bg-indigo-100/30 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Section Header */}
@@ -200,17 +200,17 @@ export function Modules() {
           transition={{ duration: 0.5 }}
           className="text-center max-w-3xl mx-auto space-y-4 mb-16"
         >
-          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-cyan-600 uppercase">
-            <Icon icon="solar:widget-bold-duotone" className="text-purple-600 text-base" />
+          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-[#7C3AED] uppercase">
+            <Icon icon="solar:widget-bold-duotone" className="text-[#7C3AED] text-base" />
             Complete Module Suite
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading text-balance">
+          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-[#111827] font-heading text-balance">
             Six integrated modules.{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4]">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7]">
               One unified workspace.
             </span>
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
+          <p className="text-[#4B5563] text-sm sm:text-base leading-relaxed font-medium">
             Every EventOS module talks to the others. A lead becomes a quote becomes a booking becomes an invoice becomes a gallery — automatically.
           </p>
         </motion.div>

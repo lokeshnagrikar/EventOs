@@ -16,7 +16,7 @@ const COMPARISON_ROWS = [
 
 export function Competitors() {
   return (
-    <section className="py-20 border-b border-purple-500/10 bg-transparent relative overflow-hidden select-none">
+    <section className="py-20 border-b border-[#E5E7EB] bg-[#F8F7FF] relative overflow-hidden select-none">
       <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-12">
         {/* Header */}
         <motion.div

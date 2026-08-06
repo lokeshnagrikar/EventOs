@@ -74,12 +74,12 @@ export function Testimonials() {
 
   return (
     <section
-      className="py-24 border-b border-zinc-900 bg-zinc-950/20 relative overflow-hidden"
+      className="py-24 border-b border-[#E5E7EB] bg-[#FFFFFF] relative overflow-hidden"
       id="testimonials"
     >
       {/* Soft background glow circles to match glassmorphic stack */}
-      <div className="absolute top-1/4 left-1/4 w-[350px] h-[350px] bg-purple-950/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-950/5 blur-[140px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[450px] h-[450px] bg-purple-100/30 blur-[130px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] bg-indigo-100/30 blur-[140px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Section Header */}

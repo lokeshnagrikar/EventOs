@@ -86,34 +86,34 @@ export function ProductShowcase() {
   };
 
   return (
-    <section className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden font-sans" id="showcase">
+    <section className="py-24 border-b border-[#E5E7EB] bg-[#FFFFFF] relative overflow-hidden font-sans" id="showcase">
       {/* Background gradients */}
-      <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-cyan-950/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-12 right-[10%] w-[350px] h-[350px] bg-purple-950/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-purple-100/30 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-12 right-[10%] w-[350px] h-[350px] bg-indigo-100/30 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <div className="space-y-4 text-left max-w-2xl">
-            <span className="text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-[#06B6D4] uppercase block">
+            <span className="text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-[#06B6D4] uppercase block">
               Dynamic Interfaces
             </span>
-            <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+            <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading">
               Visual tools designed for production velocity.
             </h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
+            <p className="text-slate-600 text-sm leading-relaxed font-medium">
               Step into the operating system. Click through our primary client interface views to preview how your team and clients interact.
             </p>
           </div>
 
           {/* Desktop/Mobile Switcher */}
-          <div className="flex bg-zinc-950/80 border border-zinc-900 p-1 rounded-xl w-fit">
+          <div className="flex bg-white/80 border border-slate-200/80 p-1 rounded-xl w-fit shadow-sm">
             <button
               onClick={() => setDeviceMode("desktop")}
               className={`p-2 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
                 deviceMode === "desktop"
-                  ? "bg-zinc-900 text-white shadow-inner"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
               aria-label="Desktop Preview"
             >
@@ -124,8 +124,8 @@ export function ProductShowcase() {
               onClick={() => setDeviceMode("mobile")}
               className={`p-2 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
                 deviceMode === "mobile"
-                  ? "bg-zinc-900 text-white shadow-inner"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
               aria-label="Mobile Preview"
             >
@@ -136,7 +136,7 @@ export function ProductShowcase() {
         </div>
 
         {/* Tab Selection */}
-        <div className="flex flex-wrap gap-2 mb-8 bg-zinc-950/40 p-1.5 rounded-xl border border-zinc-900 w-fit">
+        <div className="flex overflow-x-auto max-w-full flex-nowrap sm:flex-wrap gap-2 mb-8 bg-white/80 p-1.5 rounded-xl border border-slate-200/80 w-fit shadow-sm scrollbar-none">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -144,13 +144,13 @@ export function ProductShowcase() {
               className={`relative px-4 py-2 rounded-lg flex items-center gap-2 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 activeTab === tab.id
                   ? "text-white"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {activeTab === tab.id && (
                 <motion.span
                   layoutId="activeShowcaseTab"
-                  className="absolute inset-0 bg-zinc-900 border border-zinc-800 rounded-lg shadow-inner"
+                  className="absolute inset-0 bg-slate-900 border border-slate-800 rounded-lg shadow-sm"
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
