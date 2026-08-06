@@ -18,6 +18,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,6 +52,12 @@ public class CrmIntegrationTest {
         private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
 
         @MockBean
+        private StringRedisTemplate stringRedisTemplate;
+
+        @MockBean
+        private ValueOperations<String, String> valueOperations;
+
+        @MockBean
         private ApplicationEventPublisher eventPublisher;
 
         @MockBean
@@ -64,6 +72,9 @@ public class CrmIntegrationTest {
         void setUp() {
                 tenantA = UUID.randomUUID();
                 tenantB = UUID.randomUUID();
+
+                when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+                when(valueOperations.get(anyString())).thenReturn(null);
 
                 // Setup Tenant A Owner Authentication
                 UserPrincipal principalA = new UserPrincipal(UUID.randomUUID(), tenantA, "ownerA@eventos.com", "OWNER");
