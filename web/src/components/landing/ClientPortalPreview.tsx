@@ -270,17 +270,17 @@ export function ClientPortalPreview() {
           transition={{ duration: 0.5 }}
           className="text-center max-w-3xl mx-auto space-y-4 mb-16"
         >
-          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 uppercase">
-            <Icon icon="solar:shield-user-bold-duotone" className="text-indigo-400 text-base" />
+          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 uppercase">
+            <Icon icon="solar:shield-user-bold-duotone" className="text-indigo-600 text-base" />
             White-Label Client Portal
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white font-heading text-balance">
+          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading text-balance">
             Give your clients a{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]">
               premium experience.
             </span>
           </h2>
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
             Every client gets a dedicated, secure portal — no extra app required. They can approve quotes, pay invoices, view timelines, and access galleries in one branded link.
           </p>
         </motion.div>
@@ -297,7 +297,7 @@ export function ClientPortalPreview() {
           >
             {/* Portal View Selector */}
             <div className="space-y-2">
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Preview Portal View</p>
+              <p className="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest">Preview Portal View</p>
               <div className="grid grid-cols-2 gap-2">
                 {portalViews.map((view) => (
                   <button
@@ -305,13 +305,13 @@ export function ClientPortalPreview() {
                     onClick={() => setActiveView(view.id)}
                     className={`flex items-center gap-2.5 p-3 rounded-xl text-left border transition-all duration-200 ${
                       activeView === view.id
-                        ? "border-indigo-500/40 bg-indigo-500/10 text-white"
-                        : "border-zinc-800 bg-zinc-950/40 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
+                        ? "border-indigo-500/40 bg-indigo-500/10 text-slate-900 font-bold"
+                        : "border-slate-200/80 bg-white/80 text-slate-600 hover:text-slate-900 hover:border-slate-300 shadow-sm"
                     }`}
                   >
                     <Icon
                       icon={view.icon}
-                      className={`text-lg shrink-0 ${activeView === view.id ? "text-indigo-400" : "text-zinc-600"}`}
+                      className={`text-lg shrink-0 ${activeView === view.id ? "text-indigo-600" : "text-slate-500"}`}
                     />
                     <span className="text-xs font-bold">{view.label}</span>
                   </button>

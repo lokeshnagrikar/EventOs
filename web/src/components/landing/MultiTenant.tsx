@@ -57,13 +57,13 @@ export function MultiTenant() {
             <Icon icon="solar:lock-keyhole-minimalistic-bold-duotone" className="text-sm" />
             Security & Infrastructure
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white font-heading text-balance">
+          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading text-balance">
             Enterprise-Grade{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-400">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-cyan-600">
               Multi-Tenancy
             </span>
           </h2>
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
             Engineered to secure tenant environments, protect planner databases, and provide isolated guest spaces for client portal approvals.
           </p>
         </motion.div>
@@ -81,7 +81,7 @@ export function MultiTenant() {
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
             >
-              <SpotlightCard className="p-5 bg-white/[0.02] border border-white/[0.06] backdrop-blur-md rounded-xl relative overflow-hidden group">
+              <SpotlightCard className="p-5 bg-white/80 border border-slate-200/80 shadow-md backdrop-blur-md rounded-xl relative overflow-hidden group hover:border-purple-300">
                 <div className="flex gap-4">
                   <div
                     className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 border"
@@ -93,8 +93,8 @@ export function MultiTenant() {
                     <Icon icon={feat.icon} style={{ color: feat.color }} className="text-xl" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-sm font-extrabold text-zinc-200">{feat.title}</h3>
-                    <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">{feat.desc}</p>
+                    <h3 className="text-sm font-extrabold text-slate-900">{feat.title}</h3>
+                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-medium">{feat.desc}</p>
                   </div>
                 </div>
               </SpotlightCard>

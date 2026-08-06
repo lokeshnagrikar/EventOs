@@ -106,17 +106,17 @@ export function RunOfShowSimulator() {
           transition={{ duration: 0.5 }}
           className="text-center max-w-3xl mx-auto space-y-4 mb-16"
         >
-          <span className="inline-flex items-center gap-1.5 text-xs font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 uppercase">
-            <Icon icon="solar:star-shine-bold-duotone" className="text-purple-400 text-sm" />
+          <span className="inline-flex items-center gap-1.5 text-xs font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 uppercase">
+            <Icon icon="solar:star-shine-bold-duotone" className="text-purple-600 text-sm" />
             AI Co-Pilot & Run-of-Show Engine
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white font-heading text-balance">
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 font-heading text-balance">
             Zero Venue Slot Conflicts.{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600">
               100% Automated.
             </span>
           </h2>
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed font-medium">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
             Test the live AI Conflict Engine below. When sound checks, stage rigging, or catering prep overlap, EventOS automatically recalculates the optimal run-of-show schedule and alerts vendors on WhatsApp.
           </p>
         </motion.div>

@@ -21,14 +21,14 @@ const brands = [
 
 function BrandPill({ brand }: { brand: (typeof brands)[0] }) {
   return (
-    <div className="flex items-center gap-2.5 px-5 py-2.5 mx-3 rounded-xl border border-zinc-900/70 bg-zinc-950/70 backdrop-blur-sm select-none hover:border-zinc-800 transition-colors group">
+    <div className="flex items-center gap-2.5 px-5 py-2.5 mx-3 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-sm select-none hover:border-purple-300 transition-colors shadow-sm group">
       <div
         className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
         style={{ background: `${brand.color}18`, border: `1px solid ${brand.color}30` }}
       >
         <Icon icon={brand.icon} style={{ color: brand.color }} className="text-base" />
       </div>
-      <span className="text-sm font-semibold text-zinc-400 group-hover:text-zinc-300 transition-colors tracking-tight whitespace-nowrap">
+      <span className="text-sm font-bold text-slate-800 group-hover:text-purple-700 transition-colors tracking-tight whitespace-nowrap">
         {brand.name}
       </span>
     </div>
@@ -40,7 +40,7 @@ export function TrustedBy() {
   const secondRow = brands.slice(4);
 
   return (
-    <section className="py-12 border-t border-b border-zinc-900 bg-zinc-950/30 w-full relative z-10 overflow-hidden">
+    <section className="py-12 border-t border-b border-slate-200/80 bg-[#FAF9F6] w-full relative z-10 overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -48,7 +48,7 @@ export function TrustedBy() {
         transition={{ duration: 0.4 }}
         className="max-w-7xl mx-auto px-6 mb-7"
       >
-        <p className="text-center text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+        <p className="text-center text-[10px] font-extrabold text-slate-600 uppercase tracking-widest">
           Trusted by high-end planners, luxury wedding agencies, and production teams globally
         </p>
       </motion.div>

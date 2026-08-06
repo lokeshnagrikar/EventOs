@@ -67,22 +67,22 @@ export function RoiCalculator() {
           transition={{ duration: 0.5 }}
           className="text-center max-w-3xl mx-auto space-y-4 mb-14"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold uppercase tracking-widest backdrop-blur-md font-mono">
-            <Calculator size={13} className="text-purple-400" /> Interactive Agency Yield Calculator
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-700 text-xs font-bold uppercase tracking-widest backdrop-blur-md font-mono">
+            <Calculator size={13} className="text-purple-600" /> Interactive Agency Yield Calculator
           </div>
 
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight font-heading leading-tight">
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight font-heading leading-tight">
             Calculate your agency's time & revenue gains
           </h2>
 
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed font-medium">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
             See how much manual coordination time, scope leakage, and uncollected milestone deposits EventOS recovers for your team every month.
           </p>
         </motion.div>
 
         {/* Preset Selector Chips */}
         <div className="flex flex-wrap justify-center items-center gap-3 mb-10">
-          <span className="text-xs font-bold text-zinc-500 uppercase tracking-wide mr-1">Quick Presets:</span>
+          <span className="text-xs font-extrabold text-slate-600 uppercase tracking-wide mr-1">Quick Presets:</span>
           {PRESETS.map((p) => (
             <button
               key={p.id}
@@ -90,11 +90,11 @@ export function RoiCalculator() {
               className={cn(
                 "px-4 py-2 rounded-xl text-xs font-extrabold transition border flex items-center gap-2 cursor-pointer active:scale-95",
                 activePreset === p.id
-                  ? "bg-purple-950 border-purple-500/50 text-purple-300 shadow-md shadow-purple-950"
-                  : "bg-zinc-950/80 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
+                  ? "bg-purple-900 border-purple-500/50 text-white shadow-md"
+                  : "bg-white/80 border-slate-200/80 text-slate-700 hover:text-slate-900 hover:border-slate-300 shadow-sm"
               )}
             >
-              <Icon icon={p.icon} className="text-purple-400 text-sm" />
+              <Icon icon={p.icon} className="text-purple-600 text-sm" />
               <span>{p.name}</span>
             </button>
           ))}

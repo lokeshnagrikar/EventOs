@@ -284,18 +284,18 @@ export default function AiAssistant() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="ai-trigger-btn fixed bottom-20 sm:bottom-6 right-4 sm:right-6 h-12 w-12 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 hover:border-white/40 text-white flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(120,119,198,0.35)] backdrop-blur-2xl z-[9999] group cursor-pointer overflow-hidden transition-all duration-300"
+        className="ai-trigger-btn fixed bottom-20 sm:bottom-6 right-4 sm:right-6 h-13 w-13 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-600 text-white flex items-center justify-center shadow-[0_8px_30px_rgba(147,51,234,0.45)] border-2 border-white/50 z-[9999] group cursor-pointer overflow-hidden transition-all duration-300"
         title="EventOS AI Co-pilot (Cmd + Space)"
       >
         {/* Ambient Glowing Aura Ring */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full opacity-40 group-hover:opacity-90 blur-md transition duration-500 -z-10" />
+        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full opacity-60 group-hover:opacity-100 blur-md transition duration-500 -z-10" />
 
         {/* Specular Liquid Light Highlight */}
-        <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 flex items-center justify-center shadow-md shrink-0 border border-white/20">
-          <Sparkles size={13} className="text-white animate-pulse" />
+        <div className="h-7 w-7 rounded-full bg-white/20 flex items-center justify-center shadow-inner shrink-0 border border-white/30 backdrop-blur-md">
+          <Sparkles size={16} className="text-white animate-pulse" />
         </div>
 
-        <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.9)] ring-2 ring-black/40" />
+        <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_10px_rgba(52,211,153,0.9)] ring-2 ring-purple-900" />
       </motion.button>
 
       {/* Ultra Glassmorphic Drawer Panel */}
