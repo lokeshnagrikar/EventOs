@@ -43,7 +43,7 @@ public class Album {
     @Column(nullable = false)
     private AlbumVisibility visibility;
 
-    @Column(name = "cover_image")
+    @Column(name = "cover_image", columnDefinition = "TEXT")
     private String coverImage;
 
     @CreationTimestamp

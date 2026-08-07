@@ -40,7 +40,7 @@ public class GalleryItem {
     @Column(nullable = false)
     private GalleryItemType type;
 
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String url;
 
     @Column(name = "public_id")
