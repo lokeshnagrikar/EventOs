@@ -81,7 +81,7 @@ export function Navbar({ activeSection }: NavbarProps) {
       title: "Planner CRM",
       desc: "Manage client details, leads & pipeline",
       icon: "solar:users-group-rounded-bold-duotone",
-      href: "/features",
+      href: "/#features",
       iconColor: "text-purple-600",
       hoverBg: "hover:bg-purple-50/70",
       hoverBorder: "hover:border-purple-200"
@@ -90,7 +90,7 @@ export function Navbar({ activeSection }: NavbarProps) {
       title: "Smart Quotes",
       desc: "Interactive pricing quotes & contracts",
       icon: "solar:document-text-bold-duotone",
-      href: "/features",
+      href: "/#quote-calculator",
       iconColor: "text-blue-600",
       hoverBg: "hover:bg-blue-50/70",
       hoverBorder: "hover:border-blue-200"
@@ -99,7 +99,7 @@ export function Navbar({ activeSection }: NavbarProps) {
       title: "Event Planning",
       desc: "Coordinated task lists & schedules",
       icon: "solar:calendar-bold-duotone",
-      href: "/features",
+      href: "/#workflow",
       iconColor: "text-emerald-600",
       hoverBg: "hover:bg-emerald-50/70",
       hoverBorder: "hover:border-emerald-200"
@@ -108,7 +108,7 @@ export function Navbar({ activeSection }: NavbarProps) {
       title: "Instant Payments",
       desc: "Milestone invoicing & global gateway",
       icon: "solar:wallet-money-bold-duotone",
-      href: "/features",
+      href: "/#modules",
       iconColor: "text-amber-600",
       hoverBg: "hover:bg-amber-50/70",
       hoverBorder: "hover:border-amber-200"
@@ -117,7 +117,7 @@ export function Navbar({ activeSection }: NavbarProps) {
       title: "Gallery Delivery",
       desc: "Deliver photos to clients in style",
       icon: "solar:gallery-bold-duotone",
-      href: "/features",
+      href: "/#modules",
       iconColor: "text-rose-600",
       hoverBg: "hover:bg-rose-50/70",
       hoverBorder: "hover:border-rose-200"
@@ -126,7 +126,7 @@ export function Navbar({ activeSection }: NavbarProps) {
       title: "Client Portal",
       desc: "Self-service quote acceptance & pay",
       icon: "solar:window-frame-bold-duotone",
-      href: "/features",
+      href: "/#portal-preview",
       iconColor: "text-cyan-600",
       hoverBg: "hover:bg-cyan-50/70",
       hoverBorder: "hover:border-cyan-200"
@@ -138,7 +138,7 @@ export function Navbar({ activeSection }: NavbarProps) {
       title: "Quote Calculator 🧮",
       desc: "Live cost estimation & instant PDF export",
       icon: "solar:calculator-bold-duotone",
-      href: "/quote-calculator",
+      href: "/#quote-calculator",
       iconColor: "text-purple-600",
       hoverBg: "hover:bg-purple-50/70",
       hoverBorder: "hover:border-purple-200"
@@ -183,7 +183,7 @@ export function Navbar({ activeSection }: NavbarProps) {
       title: "Solutions Directory",
       desc: "Tailored structures for event agencies",
       icon: "solar:window-frame-bold-duotone",
-      href: "/solutions",
+      href: "/#modules",
       iconColor: "text-fuchsia-600",
       hoverBg: "hover:bg-fuchsia-50/70",
       hoverBorder: "hover:border-fuchsia-200"
@@ -196,32 +196,42 @@ export function Navbar({ activeSection }: NavbarProps) {
     e.preventDefault();
     setIsOpen(false);
     setActiveDropdown(null);
-    if (href.startsWith("/")) {
-      router.push(href);
-      return;
-    }
-    const targetId = href.replace("#", "");
-    if (pathname === "/") {
-      const elem = document.getElementById(targetId);
-      if (elem) {
-        const lenis = (window as any).lenis;
-        if (lenis) {
-          lenis.scrollTo(elem, { offset: -80, duration: 1.2 });
-        } else {
-          const offset = 80;
-          const bodyRect = document.body.getBoundingClientRect().top;
-          const elementRect = elem.getBoundingClientRect().top;
-          const elementPosition = elementRect - bodyRect;
-          const offsetPosition = elementPosition - offset;
 
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth",
-          });
+    let targetHash = "";
+    if (href.startsWith("/#")) {
+      targetHash = href.substring(2);
+    } else if (href.startsWith("#")) {
+      targetHash = href.substring(1);
+    }
+
+    if (targetHash) {
+      if (pathname === "/") {
+        const elem = document.getElementById(targetHash);
+        if (elem) {
+          const lenis = (window as any).lenis;
+          if (lenis) {
+            lenis.scrollTo(elem, { offset: -80, duration: 1.2 });
+          } else {
+            const offset = 80;
+            const bodyRect = document.body.getBoundingClientRect().top;
+            const elementRect = elem.getBoundingClientRect().top;
+            const elementPosition = elementRect - bodyRect;
+            const offsetPosition = elementPosition - offset;
+
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: "smooth",
+            });
+          }
+          return;
         }
       }
-    } else {
-      router.push("/" + href);
+      router.push(`/#${targetHash}`);
+      return;
+    }
+
+    if (href.startsWith("/")) {
+      router.push(href);
     }
   };
 

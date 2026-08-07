@@ -166,7 +166,9 @@ export function EventQuoteCalculator({ isModal = false, onClose }: { isModal?: b
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 bg-zinc-950 text-white rounded-3xl border border-purple-500/20 shadow-2xl backdrop-blur-xl">
+    <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 bg-white/70 dark:bg-slate-900/80 text-slate-900 dark:text-white rounded-3xl border border-purple-200/80 dark:border-purple-500/30 shadow-[0_20px_60px_rgba(124,58,237,0.12),inset_0_1px_2px_rgba(255,255,255,0.9)] backdrop-blur-3xl backdrop-saturate-[2] relative overflow-hidden">
+      {/* Top specular glass sheen line */}
+      <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-purple-300/80 to-transparent pointer-events-none" />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-800">
         <div className="flex items-center gap-3">

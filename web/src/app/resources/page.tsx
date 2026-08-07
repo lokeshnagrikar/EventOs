@@ -40,7 +40,7 @@ export default function ResourcesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-650 selection:text-white">
+    <div className="min-h-screen bg-[#FAF9F6] text-slate-900 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-600 selection:text-white">
       <Navbar />
 
       <main className="flex-1 pt-32 pb-24 max-w-7xl mx-auto px-6 space-y-12 w-full">

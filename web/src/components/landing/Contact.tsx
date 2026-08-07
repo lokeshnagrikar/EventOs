@@ -260,7 +260,7 @@ export function Contact() {
                       ) : (
                         <>
                           <Send size={16} />
-                          <span>Submit Glassmorphic Inquiry</span>
+                          <span>Submit Inquiry</span>
                         </>
                       )}
                     </button>

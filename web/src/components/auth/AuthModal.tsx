@@ -74,15 +74,18 @@ export function AuthModal() {
             ref={modalRef}
             className={cn(
               "w-full z-10",
-              isMobile ? "w-full min-h-screen flex flex-col bg-[#0A0A0C] overflow-y-auto" : "max-w-[410px]"
+              isMobile ? "w-full min-h-screen flex flex-col bg-[#0A0A0C] overflow-y-auto" : "max-w-[420px]"
             )}
           >
             <div className={cn(
               "w-full relative text-foreground selection:bg-zinc-800 selection:text-white overflow-hidden",
               isMobile
                 ? "min-h-screen rounded-none border-none justify-start bg-[#0A0A0C] p-5"
-                : "bg-[#0C0C0E] border border-zinc-800/90 shadow-2xl backdrop-blur-xl rounded-2xl p-6 sm:p-7"
+                : "bg-white/40 dark:bg-white/[0.08] border border-white/60 dark:border-white/20 shadow-[0_20px_60px_rgba(0,0,0,0.12),inset_0_1px_2px_rgba(255,255,255,0.8)] backdrop-blur-3xl backdrop-saturate-[2] rounded-3xl p-6 sm:p-7"
             )}>
+              {/* Top Accent Gradient Line & Specular Rim */}
+              <div className="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] z-20" />
+              <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none z-20" />
               {/* Minimalist Close Button */}
               <button
                 onClick={closeModal}

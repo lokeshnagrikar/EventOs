@@ -229,8 +229,10 @@ export function Modules() {
               <SpotlightCard
                 spotlightColor={mod.spotlightColor}
                 borderColor={mod.borderHover}
-                className="h-full rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-md p-6 group hover:border-purple-300 hover:bg-white transition-all duration-500 shadow-sm hover:shadow-md"
+                className="h-full rounded-2xl border border-slate-200/90 bg-white/70 backdrop-blur-2xl backdrop-saturate-[1.8] p-6 group hover:border-purple-400 hover:bg-white/90 transition-all duration-500 shadow-[0_10px_30px_rgba(124,58,237,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.95)] hover:shadow-[0_16px_40px_rgba(124,58,237,0.15),inset_0_1px_1.5px_rgba(255,255,255,1)] relative overflow-hidden"
               >
+                {/* Top specular glass sheen line */}
+                <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-purple-300/60 to-transparent pointer-events-none" />
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">

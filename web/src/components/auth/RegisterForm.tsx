@@ -9,6 +9,7 @@ import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/lib/api-client";
 import { useToastStore } from "@/lib/toastStore";
 import { Button } from "@/components/ui/button";
+import { LiquidButton } from "@/components/ui/liquid-glass-button";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthModalStore } from "@/store/authModalStore";
@@ -745,12 +746,11 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   <input
                     id="companyName"
                     type="text"
-                    placeholder="John's Event os"
-                    autoComplete="organization"
-                    className={`w-full pl-9 pr-3 py-2 bg-[#141417] border rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
+                    placeholder="Acme Events Ltd."
+                    className={`w-full pl-9 pr-3 py-2 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
                       errors.companyName 
                         ? "border-rose-500/50" 
-                        : "border-zinc-800"
+                        : "border-white/10 hover:border-white/20"
                     }`}
                     {...register("companyName")}
                     onFocus={() => setFocusedField("companyName")}
@@ -776,10 +776,10 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="new-password"
-                    className={`w-full pl-9 pr-10 py-2 bg-[#141417] border rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
+                    className={`w-full pl-9 pr-10 py-2 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
                       errors.password 
                         ? "border-rose-500/50" 
-                        : "border-zinc-800"
+                        : "border-white/10 hover:border-white/20"
                     }`}
                     {...register("password")}
                     onFocus={() => setFocusedField("password")}
@@ -833,10 +833,10 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="new-password"
-                    className={`w-full pl-9 pr-10 py-2 bg-[#141417] border rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
+                    className={`w-full pl-9 pr-10 py-2 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
                       errors.confirmPassword 
                         ? "border-rose-500/50" 
-                        : "border-zinc-800"
+                        : "border-white/10 hover:border-white/20"
                     }`}
                     {...register("confirmPassword")}
                     onFocus={() => setFocusedField("confirmPassword")}
@@ -860,15 +860,17 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                 <button
                   type="button"
                   onClick={prevStep}
-                  className="col-span-2 h-11 border border-zinc-800 hover:bg-zinc-800 text-white font-medium text-xs rounded-xl transition-all flex items-center justify-center gap-1 active:scale-[0.99]"
+                  className="col-span-2 h-11 border border-white/15 bg-white/[0.05] hover:bg-white/[0.09] text-white font-medium text-xs rounded-xl transition-all flex items-center justify-center gap-1 active:scale-[0.99] cursor-pointer"
                 >
                   <ArrowLeft size={13} />
                   Back
                 </button>
-                <Button
+                <LiquidButton
                   type="submit"
+                  variant="brand"
                   disabled={loading}
-                  className="col-span-3 h-11 bg-white hover:bg-zinc-200 text-black font-semibold text-xs rounded-xl transition-all active:scale-[0.99] disabled:opacity-50 flex justify-center items-center gap-1.5"
+                  className="col-span-3 h-11 rounded-xl font-bold text-xs shadow-lg shadow-purple-500/30 flex justify-center items-center gap-1.5 cursor-pointer"
+                  size="default"
                 >
                   {loading ? (
                     <>
@@ -878,7 +880,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   ) : (
                     "Build Workspace"
                   )}
-                </Button>
+                </LiquidButton>
               </div>
             </motion.div>
           )}

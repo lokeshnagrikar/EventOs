@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
 import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles, CheckCircle2, ArrowRight, X, Wand2, MessageSquare, Phone, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LiquidButton } from "@/components/ui/liquid-glass-button";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { analytics } from "@/lib/analytics";
@@ -934,10 +935,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 placeholder="you@company.com"
                 autoFocus
                 autoComplete="email"
-                className={`w-full pl-9 pr-3 py-2.5 bg-[#141417] border rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
+                className={`w-full pl-9 pr-3 py-2.5 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
                   errors.email 
                     ? "border-rose-500/50" 
-                    : "border-zinc-800"
+                    : "border-white/10 hover:border-white/20"
                 }`}
                 {...register("email")}
                 onChange={(e) => handleEmailInputChange(e.target.value)}
@@ -1053,10 +1054,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className={`w-full pl-9 pr-9 py-2.5 bg-[#141417] border rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
+                  className={`w-full pl-9 pr-9 py-2.5 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
                     errors.password 
                       ? "border-rose-500/50" 
-                      : "border-zinc-800"
+                      : "border-white/10 hover:border-white/20"
                   }`}
                   {...register("password")}
                   onFocus={() => setFocusedField("password")}
@@ -1096,67 +1097,14 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               </span>
             </motion.div>
 
-            {/* CAPTCHA challenges */}
-            {showCaptcha && (
-              <motion.div variants={itemVariants} className="space-y-2 p-2.5 bg-white/[0.02] border border-white/[0.08] rounded-xl animate-slide-in">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                    Security Verification
-                  </label>
-                  {!realRecaptchaEnabled && (
-                    <button
-                      type="button"
-                      onClick={fetchCaptchaDetails}
-                      className="text-[9px] text-purple-400 hover:underline"
-                    >
-                      Refresh Captcha
-                    </button>
-                  )}
-                </div>
-                {realRecaptchaEnabled ? (
-                  <div className="flex justify-center py-1">
-                    <ReCAPTCHA
-                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "your_site_key"}
-                      onChange={(token) => setCaptchaToken(token)}
-                      theme="dark"
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      {captchaImageUrl && (
-                        <img
-                          src={captchaImageUrl}
-                          alt="Captcha Challenge"
-                          className="h-8 rounded border border-zinc-800 bg-white"
-                          onError={() => fetchCaptchaDetails()}
-                        />
-                      )}
-                      <input
-                        type="text"
-                        placeholder="CAPTCHA value"
-                        value={captchaInput}
-                        onChange={(e) => setCaptchaInput(e.target.value)}
-                        onFocus={() => setFocusedField("captcha")}
-                        onBlur={() => setFocusedField(null)}
-                        className={`flex-grow px-2.5 py-1.5 bg-zinc-500/5 border rounded-xl text-xs placeholder-zinc-550 text-foreground focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
-                          focusedField === "captcha"
-                            ? "border-[#8B5CF6] bg-background/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]"
-                            : "border-border hover:border-zinc-700/30"
-                        }`}
-                      />
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
             {/* Action button */}
             <motion.div variants={itemVariants}>
-              <Button
+              <LiquidButton
                 type="submit"
+                variant="brand"
                 disabled={loading}
-                className="w-full py-2.5 h-11 bg-white hover:bg-zinc-200 text-black font-semibold text-xs rounded-xl transition-all shadow-sm active:scale-[0.99] disabled:opacity-50 flex justify-center items-center gap-1.5 cursor-pointer"
+                className="w-full py-3 h-11 rounded-xl font-bold text-sm shadow-lg shadow-purple-500/30 flex justify-center items-center gap-1.5 cursor-pointer"
+                size="lg"
               >
                 {loading ? (
                   <>
@@ -1166,7 +1114,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 ) : (
                   "Sign In"
                 )}
-              </Button>
+              </LiquidButton>
             </motion.div>
           </>
         )}
@@ -1186,7 +1134,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           type="button"
           disabled={loading || googleAuthenticating}
           onClick={() => loginWithGoogle()}
-          className="relative flex items-center justify-center w-full h-11 px-3 bg-[#141417] hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-medium text-zinc-200 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative flex items-center justify-center w-full h-11 px-3 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 backdrop-blur-md rounded-xl text-xs font-semibold text-white transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
             <path

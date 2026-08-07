@@ -10,9 +10,9 @@ export const metadata = {
 
 export default function QuoteCalculatorPage() {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col justify-between selection:bg-purple-500 selection:text-white">
+    <div className="min-h-screen bg-[#FAF9F6] text-slate-900 flex flex-col justify-between selection:bg-purple-600 selection:text-white">
       <Navbar />
-      <main className="flex-1 pt-24 pb-16 px-4 sm:px-6">
+      <main className="flex-1 pt-28 pb-16 px-4 sm:px-6 max-w-7xl mx-auto w-full">
         <EventQuoteCalculator />
       </main>
       <Footer />

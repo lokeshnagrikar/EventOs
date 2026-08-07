@@ -4,21 +4,23 @@ import React from "react";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { AuroraBackground } from "@/components/ui/aurora-background";
 import { Sparkles, ShieldCheck, Zap, Users, FileText } from "lucide-react";
 import Link from "next/link";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen w-full bg-[#09090B] text-zinc-100 flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-hidden selection:bg-purple-600/35 selection:text-white">
-      {/* Decorative Radial Grid / Dots */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1c1917_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-20 pointer-events-none z-0" />
-      
-      {/* Gradient Glows */}
-      <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-gradient-to-r from-purple-600/15 via-pink-500/10 to-cyan-500/10 blur-[130px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-0 right-10 w-[300px] h-[300px] bg-purple-600/10 blur-[100px] rounded-full pointer-events-none z-0" />
+    <AuroraBackground className="min-h-screen w-full bg-[#FAF9F6]/95 dark:bg-[#07090F]/80 text-zinc-100 flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-hidden selection:bg-purple-600/35 selection:text-white">
+      {/* Liquid Glass Orb 1 */}
+      <div className="absolute top-[10%] left-[15%] w-[450px] h-[450px] bg-gradient-to-tr from-[#7C3AED]/40 via-[#EC4899]/30 to-cyan-500/25 blur-[100px] rounded-full pointer-events-none animate-pulse duration-[8000ms]" />
+      {/* Liquid Glass Orb 2 */}
+      <div className="absolute bottom-[10%] right-[15%] w-[500px] h-[500px] bg-gradient-to-br from-indigo-600/35 via-[#9333EA]/35 to-pink-500/25 blur-[110px] rounded-full pointer-events-none animate-pulse duration-[10000ms]" />
+
+      {/* Decorative Glass Mesh Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(124,58,237,0.15)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none z-0" />
 
       {/* Sparkles / Particles */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-25">
+      <div className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-30">
         <SparklesCore
           id="tsparticlesauth"
           background="transparent"
@@ -45,34 +47,35 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   </div>
                 </div>
                 <div>
-                  <span className="text-lg font-bold tracking-tight text-white font-mono">EventOS</span>
-                  <span className="text-[10px] uppercase tracking-widest text-purple-400 block -mt-1 font-semibold">Enterprise</span>
+                  <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white font-mono">EventOS</span>
+                  <span className="text-[10px] uppercase tracking-widest text-purple-600 dark:text-purple-400 block -mt-1 font-semibold">Enterprise</span>
                 </div>
               </Link>
               
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-medium text-emerald-400">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 backdrop-blur-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 API Online (12ms)
               </div>
             </div>
 
-            <SpotlightCard className="bg-white/[0.015] border border-white/[0.08] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.4)] shadow-purple-500/[0.03] backdrop-blur-xl relative overflow-hidden transition-all duration-300">
-              {/* Top Accent Gradient Line */}
-              <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#06B6D4] opacity-90 z-20" />
+            <SpotlightCard className="bg-white/40 dark:bg-white/[0.06] border border-white/60 dark:border-white/20 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.08),inset_0_1px_2px_rgba(255,255,255,0.8)] backdrop-blur-3xl backdrop-saturate-[2] relative overflow-hidden transition-all duration-300">
+              {/* Top Accent Gradient Line & Specular Rim */}
+              <div className="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] z-20" />
+              <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none z-20" />
               
               <div className="p-5 sm:p-7 pt-7 sm:pt-8">
                 {children}
               </div>
             </SpotlightCard>
-
+            
             {/* Bottom Security Trust Signals */}
-            <div className="mt-5 flex items-center justify-between text-[11px] text-zinc-500 px-1">
+            <div className="mt-5 flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400 px-1">
               <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 <span>2048-Bit RSA Encrypted</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-pink-400" />
+                <Zap className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
                 <span>Bank-Grade SSL</span>
               </div>
             </div>
@@ -80,7 +83,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* RIGHT COLUMN: Live Interactive Product Preview (Col-span 6/7) */}
-        <div className="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-center gap-6 border border-white/[0.08] bg-white/[0.01] rounded-3xl p-8 lg:p-10 backdrop-blur-2xl relative overflow-hidden shadow-2xl shadow-purple-950/20">
+        <div className="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-center gap-6 border border-white/60 dark:border-white/20 bg-white/30 dark:bg-white/[0.04] rounded-3xl p-8 lg:p-10 backdrop-blur-3xl backdrop-saturate-[2] relative overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.08),inset_0_1px_2px_rgba(255,255,255,0.7)]">
+          {/* Top specular glass sheen line */}
+          <div className="absolute top-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
+          {/* Top specular glass sheen line */}
+          <div className="absolute top-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
           
           {/* Subtle Ambient Background Gradient */}
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-purple-600/10 blur-[100px] pointer-events-none" />
@@ -186,6 +193,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
       </div>
-    </div>
+    </AuroraBackground>
   );
 }

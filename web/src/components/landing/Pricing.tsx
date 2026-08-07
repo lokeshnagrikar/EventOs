@@ -143,7 +143,7 @@ export function Pricing() {
 
   return (
     <section
-      className="min-h-screen py-24 mx-auto relative bg-transparent overflow-hidden border-b border-purple-500/10 font-sans"
+      className="min-h-screen pt-24 pb-36 mx-auto relative bg-transparent overflow-visible border-b border-purple-500/10 font-sans"
       id="pricing"
       ref={pricingRef}
     >
@@ -167,7 +167,7 @@ export function Pricing() {
       />
 
       {/* Header Container */}
-      <article className="text-center mb-12 pt-8 max-w-3xl mx-auto space-y-4 relative z-10 px-6">
+      <article className="text-center mb-16 pt-8 max-w-3xl mx-auto space-y-4 relative z-10 px-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-700 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
           <Sparkles size={13} className="text-blue-600" /> Transparent Pricing
         </div>
@@ -200,13 +200,13 @@ export function Pricing() {
               className={cn(
                 "relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-500 border backdrop-blur-2xl",
                 plan.popular
-                  ? "bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white border-purple-500/60 shadow-xl z-20 lg:scale-[1.02]"
-                  : "bg-white/80 hover:bg-white border-slate-200/80 hover:border-slate-300 shadow-md text-slate-900 z-10"
+                  ? "bg-gradient-to-b from-[#0F172A]/95 via-[#1E1B4B]/90 to-[#0F172A]/95 backdrop-blur-2xl border-purple-400/60 text-white shadow-[0_20px_50px_rgba(124,58,237,0.25),inset_0_1px_1.5px_rgba(255,255,255,0.3)] z-20 lg:scale-[1.02]"
+                  : "bg-white/70 backdrop-blur-2xl backdrop-saturate-[1.8] border-slate-200/90 hover:border-purple-300 shadow-[0_10px_30px_rgba(124,58,237,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.95)] hover:shadow-[0_16px_40px_rgba(124,58,237,0.15)] text-slate-900 z-10"
               )}
             >
               {/* Popular Badge */}
               {plan.popular && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7] text-white text-[10px] font-black uppercase py-1 px-4 rounded-full tracking-widest shadow-lg shadow-purple-600/30 border border-purple-400/40 flex items-center gap-1.5">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7] text-white text-[10px] font-black uppercase py-1 px-4 rounded-full tracking-widest shadow-lg shadow-purple-600/30 border border-purple-400/40 flex items-center gap-1.5 z-30">
                   <Zap size={11} className="fill-white" /> Most Popular
                 </div>
               )}
