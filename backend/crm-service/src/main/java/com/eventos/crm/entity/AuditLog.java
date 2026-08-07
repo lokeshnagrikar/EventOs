@@ -30,7 +30,7 @@ public class AuditLog extends AbstractTenantAwareEntity {
     @Column(name = "performed_by")
     private UUID performedBy;
 
-    @Column(name = "payload_diff")
+    @Column(name = "payload_diff", columnDefinition = "TEXT")
     private String payloadDiff;
 
     @Column(name = "created_at", nullable = false, updatable = false)

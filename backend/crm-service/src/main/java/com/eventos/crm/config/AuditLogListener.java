@@ -71,6 +71,11 @@ public class AuditLogListener {
                     entityId = (UUID) getId.invoke(entity);
                 } catch (Exception ignored) {}
 
+                String payloadStr = entity.toString();
+                if (payloadStr != null && payloadStr.length() > 4000) {
+                    payloadStr = payloadStr.substring(0, 3997) + "...";
+                }
+
                 if (jdbcTemplate != null) {
                     try {
                         String sql = "INSERT INTO audit_logs (id, tenant_id, entity_name, entity_id, action, performed_by, payload_diff, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -81,36 +86,12 @@ public class AuditLogListener {
                                 entityId != null ? entityId : UUID.randomUUID(),
                                 action,
                                 performedBy,
-                                entity.toString(),
+                                payloadStr,
                                 LocalDateTime.now()
                         );
                     } catch (Exception e) {
                         System.err.println("AuditLog direct insert via JdbcTemplate failed: " + e.getMessage());
-                        // Fallback to repository save if direct JDBC fails
-                        if (auditLogRepository != null) {
-                            try {
-                                AuditLog log = AuditLog.builder()
-                                        .entityName(entity.getClass().getSimpleName())
-                                        .entityId(entityId != null ? entityId : UUID.randomUUID())
-                                        .action(action)
-                                        .performedBy(performedBy)
-                                        .payloadDiff(entity.toString())
-                                        .build();
-                                log.setTenantId(tenantId);
-                                auditLogRepository.save(log);
-                            } catch (Exception ignored) {}
-                        }
                     }
-                } else if (auditLogRepository != null) {
-                    AuditLog log = AuditLog.builder()
-                            .entityName(entity.getClass().getSimpleName())
-                            .entityId(entityId != null ? entityId : UUID.randomUUID())
-                            .action(action)
-                            .performedBy(performedBy)
-                            .payloadDiff(entity.toString())
-                            .build();
-                    log.setTenantId(tenantId);
-                    auditLogRepository.save(log);
                 }
             }
         }
