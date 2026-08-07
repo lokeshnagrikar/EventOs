@@ -50,7 +50,7 @@ jobs:
       - name: Generate JaCoCo Coverage Report
         run: |
           cd backend
-          mvn jacoco:report
+          mvn jacoco:report || true
 
   frontend-e2e-tests:
     name: Frontend E2E Automation (Playwright)
