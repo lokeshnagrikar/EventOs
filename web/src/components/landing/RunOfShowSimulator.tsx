@@ -121,7 +121,7 @@ export function RunOfShowSimulator() {
         </motion.div>
 
         {/* Interactive Simulator Shell */}
-        <div className="max-w-4xl mx-auto bg-zinc-950/70 border border-purple-500/30 rounded-3xl p-6 sm:p-8 shadow-[0_25px_80px_rgba(0,0,0,0.8),0_0_40px_rgba(168,85,247,0.12)] backdrop-blur-2xl relative overflow-hidden space-y-6">
+        <div className="max-w-4xl mx-auto bg-zinc-950/70 border border-purple-500/30 rounded-3xl p-4 sm:p-8 shadow-[0_25px_80px_rgba(0,0,0,0.8),0_0_40px_rgba(168,85,247,0.12)] backdrop-blur-2xl relative overflow-hidden space-y-6">
           {/* Top Line Accent */}
           <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500" />
 

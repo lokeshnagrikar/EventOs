@@ -177,14 +177,14 @@ export function EventQuoteCalculator({ isModal = false, onClose }: { isModal?: b
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                 Instant Event Quote Generator
               </h2>
-              <span className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 font-bold text-[10px] rounded-full uppercase tracking-wider">
+              <span className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 font-bold text-[10px] rounded-full uppercase tracking-wider">
                 PDF Export
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
               Calculate live itemized event estimates & export official client proposals in 1-click.
             </p>
           </div>

@@ -110,7 +110,7 @@ export function RoiCalculator() {
             className="lg:col-span-7 rounded-3xl border border-purple-500/30 bg-zinc-950/70 backdrop-blur-2xl p-6 sm:p-8 space-y-8 flex flex-col justify-between shadow-2xl relative overflow-hidden"
           >
             <div className="space-y-7">
-              <div className="flex justify-between items-center pb-3 border-b border-zinc-850">
+              <div className="flex flex-wrap justify-between items-center gap-2 pb-3 border-b border-zinc-850">
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                   <Icon icon="solar:slider-vertical-bold-duotone" className="text-purple-400" />
                   <span>Configure Agency Parameters</span>

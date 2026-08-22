@@ -201,7 +201,7 @@ export function Testimonials() {
         </motion.div>
 
         {/* 3-Column Smooth Marquee Grid */}
-        <div className="flex justify-center gap-6 mt-8 [mask-image:linear-gradient(to_bottom,transparent,black_15%,black_85%,transparent)] max-h-[700px] overflow-hidden">
+        <div className="flex justify-center gap-6 mt-8 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)] max-h-[520px] sm:max-h-[700px] overflow-hidden">
           <TestimonialsColumn testimonials={col1} duration={22} />
           <TestimonialsColumn testimonials={col2} className="hidden md:block" duration={28} reverse />
           <TestimonialsColumn testimonials={col3} className="hidden lg:block" duration={25} />

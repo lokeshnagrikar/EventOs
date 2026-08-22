@@ -172,13 +172,12 @@ export function Contact() {
                         <h3 className="text-xl font-bold text-slate-900 font-heading">Submit Technical Inquiry</h3>
                         <p className="text-xs text-slate-600 font-medium">Fill out your event details below to connect with an engineer.</p>
                       </div>
-                      <Icon icon="solar:shield-check-bold-duotone" className="text-purple-600 text-2xl" />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div className="space-y-2">
                         <label htmlFor="contact-name" className="text-xs font-bold text-slate-800">
-                          Full Name <span className="text-purple-400">*</span>
+                          Full Name <span className="text-purple-600 font-extrabold">*</span>
                         </label>
                         <input
                           id="contact-name"
@@ -188,12 +187,12 @@ export function Contact() {
                           value={formData.name}
                           onChange={handleChange}
                           placeholder="Jane Doe"
-                          className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-400/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-purple-500/20 backdrop-blur-md transition-all"
+                          className="w-full bg-slate-50/80 border border-slate-200/90 rounded-2xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-500/20 backdrop-blur-md transition-all"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="contact-email" className="text-xs font-bold text-zinc-200">
-                          Business Email <span className="text-purple-400">*</span>
+                        <label htmlFor="contact-email" className="text-xs font-bold text-slate-800">
+                          Business Email <span className="text-purple-600 font-extrabold">*</span>
                         </label>
                         <input
                           id="contact-email"
@@ -203,13 +202,13 @@ export function Contact() {
                           value={formData.email}
                           onChange={handleChange}
                           placeholder="jane@agency.com"
-                          className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-400/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-purple-500/20 backdrop-blur-md transition-all"
+                          className="w-full bg-slate-50/80 border border-slate-200/90 rounded-2xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-500/20 backdrop-blur-md transition-all"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="contact-team" className="text-xs font-bold text-zinc-200">
+                      <label htmlFor="contact-team" className="text-xs font-bold text-slate-800">
                         Agency Team Size
                       </label>
                       <div className="relative">
@@ -218,22 +217,22 @@ export function Contact() {
                           name="teamSize"
                           value={formData.teamSize}
                           onChange={handleChange}
-                          className="w-full bg-[#111116] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 backdrop-blur-md transition-all appearance-none cursor-pointer"
+                          className="w-full bg-slate-50/80 border border-slate-200/90 rounded-2xl px-4 py-3.5 text-sm text-slate-900 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-500/20 backdrop-blur-md transition-all appearance-none cursor-pointer"
                         >
-                          <option value="1-5">1 – 5 Coordinators</option>
-                          <option value="6-15">6 – 15 Coordinators</option>
-                          <option value="16-50">16 – 50 Coordinators</option>
-                          <option value="50+">50+ Enterprise Planners</option>
+                          <option value="1-5" className="bg-white text-slate-900">1 – 5 Coordinators</option>
+                          <option value="6-15" className="bg-white text-slate-900">6 – 15 Coordinators</option>
+                          <option value="16-50" className="bg-white text-slate-900">16 – 50 Coordinators</option>
+                          <option value="50+" className="bg-white text-slate-900">50+ Enterprise Planners</option>
                         </select>
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-zinc-400">
+                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-600">
                           <Icon icon="solar:alt-arrow-down-bold" className="text-sm" />
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="contact-message" className="text-xs font-bold text-zinc-200">
-                        Inquiry Message <span className="text-purple-400">*</span>
+                      <label htmlFor="contact-message" className="text-xs font-bold text-slate-800">
+                        Inquiry Message <span className="text-purple-600 font-extrabold">*</span>
                       </label>
                       <textarea
                         id="contact-message"
@@ -243,7 +242,7 @@ export function Contact() {
                         value={formData.message}
                         onChange={handleChange}
                         placeholder="Tell us about your event operations, team size, and requirements..."
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-400/50 focus:bg-white/[0.05] focus:ring-2 focus:ring-purple-500/20 backdrop-blur-md transition-all resize-none"
+                        className="w-full bg-slate-50/80 border border-slate-200/90 rounded-2xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-500/20 backdrop-blur-md transition-all resize-none"
                       />
                     </div>
 

@@ -23,7 +23,7 @@ export const TestimonialsColumn = (props: {
     <div className={props.className}>
       <motion.div
         animate={{
-          translateY: props.reverse ? ["-50%", "0%"] : ["0%", "-50%"],
+          y: props.reverse ? ["-50%", "0%"] : ["0%", "-50%"],
         }}
         transition={{
           duration: props.duration || 10,

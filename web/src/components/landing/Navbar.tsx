@@ -266,15 +266,15 @@ export function Navbar({ activeSection }: NavbarProps) {
         className={cn(
           "pointer-events-auto mx-auto flex items-center justify-between rounded-full border backdrop-blur-2xl backdrop-saturate-[1.8] transition-all duration-700 ease-smooth relative group/navbar",
           scrolled || isOpen
-            ? "max-w-5xl bg-white/75 border-white/80 px-5 py-2.5 shadow-[0_12px_36px_rgba(0,0,0,0.06),0_2px_8px_rgba(124,58,237,0.04),inset_0_1px_1.5px_rgba(255,255,255,0.9)]"
-            : "max-w-6xl bg-white/65 border-white/60 px-6 py-3.5 shadow-[0_8px_28px_rgba(0,0,0,0.04),0_2px_6px_rgba(124,58,237,0.03),inset_0_1px_1.5px_rgba(255,255,255,0.85)]"
+            ? "max-w-5xl bg-slate-950/85 border-purple-500/30 px-5 py-2.5 shadow-[0_16px_40px_rgba(0,0,0,0.3),0_2px_10px_rgba(124,58,237,0.15),inset_0_1px_1.5px_rgba(255,255,255,0.2)]"
+            : "max-w-6xl bg-slate-900/80 border-purple-500/25 px-6 py-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.2),0_2px_8px_rgba(124,58,237,0.12),inset_0_1px_1.5px_rgba(255,255,255,0.15)]"
         )}
       >
         {/* Top specular glass sheen reflection line */}
-        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-purple-300/60 to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-purple-400/70 to-transparent pointer-events-none" />
 
         {/* Subtle static gradient sheen matching WebGL cyan/purple light colors */}
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-cyan-500/5 to-purple-500/5 opacity-100 pointer-events-none rounded-full z-0" />
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-cyan-500/10 to-purple-500/10 opacity-100 pointer-events-none rounded-full z-0" />
 
         {/* Mouse tracking radial glow clipped to rounded capsule border */}
         <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none z-0">
@@ -282,7 +282,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             className="absolute inset-0 transition-opacity duration-300"
             style={{
               opacity: isHovered ? 1 : 0,
-              background: `radial-gradient(120px circle at ${mousePos.x}px ${mousePos.y}px, rgba(147, 51, 234, 0.08) 0%, transparent 100%)`,
+              background: `radial-gradient(120px circle at ${mousePos.x}px ${mousePos.y}px, rgba(168, 85, 247, 0.15) 0%, transparent 100%)`,
             }}
           />
         </div>
@@ -312,24 +312,24 @@ export function Navbar({ activeSection }: NavbarProps) {
 
           {/* Vertical Separator */}
           <div className={cn(
-            "w-[1px] bg-slate-300/70 transition-all duration-500",
+            "w-[1px] bg-white/20 transition-all duration-500",
             scrolled ? "h-6" : "h-9"
           )} />
 
           {/* Brand Text */}
           <div className="flex flex-col justify-center text-left transition-all duration-300 group-hover:translate-x-0.5">
             <h1 className={cn(
-              "font-extrabold leading-none tracking-tight text-slate-900 font-heading flex items-center transition-all duration-500",
+              "font-extrabold leading-none tracking-tight text-white font-heading flex items-center transition-all duration-500",
               scrolled ? "text-sm" : "text-lg"
             )}>
               Event
-              <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent ml-0.5 transition-all duration-300">
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 bg-clip-text text-transparent ml-0.5 transition-all duration-300">
                 OS
               </span>
             </h1>
             {/* Hide tagline when scrolled for compact capsule */}
             <span className={cn(
-              "text-[8px] text-slate-500 font-bold tracking-[0.16em] uppercase block leading-none transition-all duration-500",
+              "text-[8px] text-slate-400 font-bold tracking-[0.16em] uppercase block leading-none transition-all duration-500",
               scrolled ? "mt-0 h-0 opacity-0 overflow-hidden" : "mt-1 opacity-100"
             )}>
               MANAGE. ENGAGE. ELEVATE.
@@ -348,15 +348,15 @@ export function Navbar({ activeSection }: NavbarProps) {
             onClick={(e) => handleNavClick(e, "#features")}
             onMouseEnter={() => setHoveredIndex(0)}
             className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-600 hover:text-slate-900",
-              activeSection === "features" && "text-purple-600 font-semibold"
+              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-300 hover:text-white",
+              activeSection === "features" && "text-purple-300 font-semibold"
             )}
           >
             Features
             {hoveredIndex === 0 && (
               <motion.div
                 layoutId="nav-hover-capsule"
-                className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
+                className="absolute inset-0 rounded-full bg-white/10 border border-white/15 shadow-sm -z-10"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -367,7 +367,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             {activeSection === "features" && (
               <motion.div
                 layoutId="activeNavIndicatorDot"
-                className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-purple-600 shadow-[0_0_6px_rgba(147,51,234,0.6)]"
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)]"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -388,16 +388,16 @@ export function Navbar({ activeSection }: NavbarProps) {
           >
             <button
               className={cn(
-                "text-[13px] font-medium tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-600 hover:text-slate-900 focus:outline-none",
-                (activeDropdown === "solutions" || activeSection === "modules") && "text-purple-600 font-semibold"
+                "text-[13px] font-medium tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-300 hover:text-white focus:outline-none",
+                (activeDropdown === "solutions" || activeSection === "modules") && "text-purple-300 font-semibold"
               )}
             >
               Solutions
-              <ChevronDown className={cn("w-3.5 h-3.5 text-slate-500 transition-transform duration-200", activeDropdown === "solutions" && "rotate-180 text-purple-600")} />
+              <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-200", activeDropdown === "solutions" && "rotate-180 text-purple-300")} />
               {hoveredIndex === 1 && (
                 <motion.div
                   layoutId="nav-hover-capsule"
-                  className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
+                  className="absolute inset-0 rounded-full bg-white/10 border border-white/15 shadow-sm -z-10"
                   transition={{
                     type: "spring",
                     stiffness: 380,
@@ -408,7 +408,7 @@ export function Navbar({ activeSection }: NavbarProps) {
               {activeSection === "modules" && (
                 <motion.div
                   layoutId="activeNavIndicatorDot"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-purple-600 shadow-[0_0_6px_rgba(147,51,234,0.6)]"
+                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)]"
                   transition={{
                     type: "spring",
                     stiffness: 380,
@@ -427,27 +427,20 @@ export function Navbar({ activeSection }: NavbarProps) {
                   transition={{ duration: 0.15, ease: "easeOut" }}
                   className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[460px] z-50 pointer-events-auto"
                 >
-                  <div className="grid grid-cols-2 gap-2.5 p-4 bg-white/95 border border-slate-200/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl z-50 relative">
+                  <div className="grid grid-cols-2 gap-2.5 p-4 bg-slate-950/95 border border-purple-500/30 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.5),inset_0_1px_1.5px_rgba(255,255,255,0.15)] backdrop-blur-2xl z-50 relative">
                     {solutions.map((item) => (
                       <a
                         key={item.title}
                         href={item.href}
                         onClick={(e) => handleNavClick(e, item.href)}
-                        className={cn(
-                          "flex items-start gap-3 p-2.5 rounded-xl border border-transparent group transition-all duration-250",
-                          item.hoverBg,
-                          item.hoverBorder
-                        )}
+                        className="flex items-start gap-3 p-2.5 rounded-xl border border-transparent hover:border-purple-500/30 hover:bg-purple-950/40 group transition-all duration-250"
                       >
-                        <div className={cn(
-                          "h-8 w-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center group-hover:bg-white shrink-0 transition-all duration-250",
-                          item.iconColor
-                        )}>
+                        <div className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-purple-900/40 group-hover:border-purple-400/40 shrink-0 transition-all duration-250 text-purple-300">
                           <Icon icon={item.icon} className="text-base" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-900 transition-colors">{item.title}</h4>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-snug group-hover:text-slate-700">{item.desc}</p>
+                          <h4 className="text-xs font-bold text-slate-100 group-hover:text-purple-300 transition-colors">{item.title}</h4>
+                          <p className="text-[10px] text-slate-400 mt-0.5 leading-snug group-hover:text-slate-200">{item.desc}</p>
                         </div>
                       </a>
                     ))}
@@ -462,15 +455,15 @@ export function Navbar({ activeSection }: NavbarProps) {
             onClick={(e) => handleNavClick(e, "#pricing")}
             onMouseEnter={() => setHoveredIndex(2)}
             className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-600 hover:text-slate-900",
-              activeSection === "pricing" && "text-purple-600 font-semibold"
+              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-300 hover:text-white",
+              activeSection === "pricing" && "text-purple-300 font-semibold"
             )}
           >
             Pricing
             {hoveredIndex === 2 && (
               <motion.div
                 layoutId="nav-hover-capsule"
-                className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
+                className="absolute inset-0 rounded-full bg-white/10 border border-white/15 shadow-sm -z-10"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -481,7 +474,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             {activeSection === "pricing" && (
               <motion.div
                 layoutId="activeNavIndicatorDot"
-                className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-purple-600 shadow-[0_0_6px_rgba(147,51,234,0.6)]"
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)]"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -502,16 +495,16 @@ export function Navbar({ activeSection }: NavbarProps) {
           >
             <button
               className={cn(
-                "text-[13px] font-medium tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-600 hover:text-slate-900 focus:outline-none",
-                activeDropdown === "resources" && "text-purple-600 font-semibold"
+                "text-[13px] font-medium tracking-wide flex items-center gap-1 transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-300 hover:text-white focus:outline-none",
+                activeDropdown === "resources" && "text-purple-300 font-semibold"
               )}
             >
               Resources
-              <ChevronDown className={cn("w-3.5 h-3.5 text-slate-500 transition-transform duration-200", activeDropdown === "resources" && "rotate-180 text-purple-600")} />
+              <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-200", activeDropdown === "resources" && "rotate-180 text-purple-300")} />
               {hoveredIndex === 3 && (
                 <motion.div
                   layoutId="nav-hover-capsule"
-                  className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
+                  className="absolute inset-0 rounded-full bg-white/10 border border-white/15 shadow-sm -z-10"
                   transition={{
                     type: "spring",
                     stiffness: 380,
@@ -530,27 +523,20 @@ export function Navbar({ activeSection }: NavbarProps) {
                   transition={{ duration: 0.15, ease: "easeOut" }}
                   className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[260px] z-50 pointer-events-auto"
                 >
-                  <div className="flex flex-col gap-1 p-2 bg-white/95 border border-slate-200/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl z-50 relative">
+                  <div className="flex flex-col gap-1 p-2 bg-slate-950/95 border border-purple-500/30 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.5),inset_0_1px_1.5px_rgba(255,255,255,0.15)] backdrop-blur-2xl z-50 relative">
                     {resources.map((item) => (
                       <a
                         key={item.title}
                         href={item.href}
                         onClick={(e) => handleNavClick(e, item.href)}
-                        className={cn(
-                          "flex items-start gap-3 p-2 rounded-xl border border-transparent group transition-all duration-250",
-                          item.hoverBg,
-                          item.hoverBorder
-                        )}
+                        className="flex items-start gap-3 p-2 rounded-xl border border-transparent hover:border-purple-500/30 hover:bg-purple-950/40 group transition-all duration-250"
                       >
-                        <div className={cn(
-                          "h-7 w-7 rounded bg-slate-100 border border-slate-200 flex items-center justify-center group-hover:bg-white shrink-0 transition-all duration-250",
-                          item.iconColor
-                        )}>
+                        <div className="h-7 w-7 rounded bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-purple-900/40 group-hover:border-purple-400/40 shrink-0 transition-all duration-250 text-purple-300">
                           <Icon icon={item.icon} className="text-sm" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-900 transition-colors">{item.title}</h4>
-                          <p className="text-[9px] text-slate-500 mt-0.5 leading-snug group-hover:text-slate-700">{item.desc}</p>
+                          <h4 className="text-xs font-bold text-slate-100 group-hover:text-purple-300 transition-colors">{item.title}</h4>
+                          <p className="text-[9px] text-slate-400 mt-0.5 leading-snug group-hover:text-slate-200">{item.desc}</p>
                         </div>
                       </a>
                     ))}
@@ -574,15 +560,15 @@ export function Navbar({ activeSection }: NavbarProps) {
             onClick={() => router.push("/demo")}
             onMouseEnter={() => setHoveredIndex(5)}
             className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-slate-700 hover:text-purple-700 focus:outline-none flex items-center gap-1.5"
+              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-slate-300 hover:text-white focus:outline-none flex items-center gap-1.5"
             )}
           >
-            <Icon icon="solar:star-bold-duotone" className="text-xs text-purple-600 transition-colors" />
+            <Icon icon="solar:star-bold-duotone" className="text-xs text-purple-400 transition-colors" />
             Live Demo
             {hoveredIndex === 5 && (
               <motion.div
                 layoutId="nav-hover-capsule"
-                className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
+                className="absolute inset-0 rounded-full bg-white/10 border border-white/15 shadow-sm -z-10"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -595,14 +581,14 @@ export function Navbar({ activeSection }: NavbarProps) {
             onClick={handleSignIn}
             onMouseEnter={() => setHoveredIndex(4)}
             className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-slate-700 hover:text-purple-700 focus:outline-none"
+              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-slate-300 hover:text-white focus:outline-none"
             )}
           >
             Login
             {hoveredIndex === 4 && (
               <motion.div
                 layoutId="nav-hover-capsule"
-                className="absolute inset-0 rounded-full bg-slate-100/90 border border-slate-200/90 shadow-sm -z-10"
+                className="absolute inset-0 rounded-full bg-white/10 border border-white/15 shadow-sm -z-10"
                 transition={{
                   type: "spring",
                   stiffness: 380,
@@ -624,7 +610,7 @@ export function Navbar({ activeSection }: NavbarProps) {
         {/* Mobile menu toggle */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden h-9 w-9 border border-slate-200 bg-slate-100/80 backdrop-blur-[20px] hover:bg-slate-200 hover:border-slate-300 rounded-full flex items-center justify-center text-slate-700 hover:text-slate-900 focus:outline-none transition-all shrink-0"
+          className="md:hidden h-9 w-9 border border-white/20 bg-white/10 backdrop-blur-[20px] hover:bg-white/20 rounded-full flex items-center justify-center text-white focus:outline-none transition-all shrink-0"
           aria-expanded={isOpen}
           aria-label="Toggle navigation menu"
         >

@@ -20,7 +20,7 @@ function RotatingHeroPhrase() {
     "From Lead to Invoice.",
     "From Quote to Contract.",
     "From Stage to Spotlight.",
-    "From Concept to Execution.",
+    // "From Concept to Execution.",
     "From Brief to Deposit."
   ];
   const [index, setIndex] = useState(0);
@@ -223,10 +223,10 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         {/* Main Central Radial Glow */}
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[650px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-200/50 via-purple-100/30 to-transparent blur-[130px] rounded-full pointer-events-none" />
-        
+
         {/* Left Electric Cyan/Indigo Ambient Bloom */}
         <div className="absolute top-40 -left-20 w-[550px] h-[550px] bg-gradient-to-tr from-cyan-100/40 via-indigo-100/30 to-transparent blur-[140px] rounded-full pointer-events-none" />
-        
+
         {/* Right Magenta/Violet Accent Glow */}
         <div className="absolute top-48 -right-20 w-[550px] h-[550px] bg-gradient-to-tl from-purple-100/40 via-pink-100/30 to-transparent blur-[140px] rounded-full pointer-events-none" />
 
@@ -237,13 +237,13 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       <div className="max-w-7xl mx-auto px-6 w-full relative z-10 flex flex-col items-center text-center">
 
         {/* Announcement Badge */}
-        <div className="gsap-badge opacity-0 inline-flex items-center gap-2 px-4 py-1.5 bg-purple-50 border border-purple-200/80 rounded-full text-[11px] font-bold text-[#7C3AED] tracking-wide shadow-sm mb-4">
-          <span className="flex h-2 w-2 relative">
+        <div className="gsap-badge opacity-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 bg-purple-50 border border-purple-200/80 rounded-full text-[10px] sm:text-[11px] font-bold text-[#7C3AED] tracking-wide shadow-sm mb-4 max-w-[92vw]">
+          <span className="flex h-2 w-2 relative shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7C3AED]" />
           </span>
-          <Icon icon="solar:star-shine-bold-duotone" className="text-[#7C3AED] text-xs" />
-          <span>The #1 All-in-One AI Operating System for Event Businesses</span>
+          <Icon icon="solar:star-shine-bold-duotone" className="text-[#7C3AED] text-xs shrink-0" />
+          <span className="truncate">The #1 All-in-One AI Operating System for Event Businesses</span>
         </div>
 
         {/* Hero Headline & Description */}
