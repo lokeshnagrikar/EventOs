@@ -27,6 +27,7 @@ web/.env.local
 
 # Logs and temporary files
 *.log
+*.pem
 **/logs/
 logs/
 **/application.json

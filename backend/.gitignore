@@ -1,0 +1,8 @@
+
+# Temporary crash & runtime logs
+hs_err_pid*.log
+replay_pid*.log
+logs/
+pdf-forge-exports/
+test-results/
+*.pem

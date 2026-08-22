@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { NumberTicker } from "@/components/ui/number-ticker";
 import { AuroraBackground } from "@/components/ui/aurora-background";
+import { AnimatedMeshGradient } from "@/components/ui/AnimatedMeshGradient";
 import { analytics } from "@/lib/analytics";
 
 import { gsap } from "gsap";
@@ -219,20 +220,8 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       {/* Radiant Top Specular Horizon Light Bar */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-300/50 to-transparent pointer-events-none z-0" />
 
-      {/* Luminous Ambient Radial Glow behind Hero */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Main Central Radial Glow */}
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[650px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-200/50 via-purple-100/30 to-transparent blur-[130px] rounded-full pointer-events-none" />
-
-        {/* Left Electric Cyan/Indigo Ambient Bloom */}
-        <div className="absolute top-40 -left-20 w-[550px] h-[550px] bg-gradient-to-tr from-cyan-100/40 via-indigo-100/30 to-transparent blur-[140px] rounded-full pointer-events-none" />
-
-        {/* Right Magenta/Violet Accent Glow */}
-        <div className="absolute top-48 -right-20 w-[550px] h-[550px] bg-gradient-to-tl from-purple-100/40 via-pink-100/30 to-transparent blur-[140px] rounded-full pointer-events-none" />
-
-        {/* Specular Horizontal Mesh Light Ray */}
-        <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[250px] bg-purple-200/20 blur-[150px] rounded-full pointer-events-none" />
-      </div>
+      {/* Animated Mesh Gradient Background */}
+      <AnimatedMeshGradient />
 
       <div className="max-w-7xl mx-auto px-6 w-full relative z-10 flex flex-col items-center text-center">
 
