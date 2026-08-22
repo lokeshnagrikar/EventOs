@@ -1,22 +1,45 @@
 "use client";
 
 import React from "react";
-import { Check, X, ShieldAlert } from "lucide-react";
-import { Icon } from "@iconify/react";
+import { Layers, WifiOff, Zap, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const COMPARISON_ROWS = [
-  { feature: "Consolidated Workspace (CRM + Ledger + Gallery)", eventos: "✔ Yes", honeybook: "✕ No", hubspot: "✕ No", clickup: "✕ No", pixieset: "✕ No", quickbooks: "✕ No" },
-  { feature: "Schema-Based Multi-Tenant DB Isolation", eventos: "✔ Yes (Private Schema)", honeybook: "✕ Shared DB", hubspot: "✕ Shared DB", clickup: "✕ Shared DB", pixieset: "✕ Shared DB", quickbooks: "✕ Shared DB" },
-  { feature: "High-Res proofing galleries CDN integration", eventos: "✔ Yes (AWS S3/CloudFront)", honeybook: "✕ No", hubspot: "✕ No", clickup: "✕ No", pixieset: "✔ Yes", quickbooks: "✕ No" },
-  { feature: "Timeline Overlap Scheduling Alerts", eventos: "✔ Yes (WebSocket sync)", honeybook: "✕ No", hubspot: "✕ No", clickup: "✔ Yes (Basic)", pixieset: "✕ No", quickbooks: "✕ No" },
-  { feature: "Milestone Proposal contract acceptance", eventos: "✔ Yes (Secure E-Sign)", honeybook: "✔ Yes", hubspot: "✕ No", clickup: "✕ No", pixieset: "✕ No", quickbooks: "✕ No" },
-  { feature: "Unified Operational Monthly Cost", eventos: "₹1,999 / mo", honeybook: "₹3,200 / mo", hubspot: "₹7,500 / mo", clickup: "₹1,500 / mo", pixieset: "₹2,500 / mo", quickbooks: "₹2,200 / mo" },
-];
-
 export function Competitors() {
+  const points = [
+    {
+      icon: Layers,
+      title: "Single Workspace — Zero Tool Switching",
+      description:
+        "Stop paying for 4-6 disconnected tools. EventOS combines your CRM, itemized PDF quotes, run-of-show timelines, and photo delivery galleries under one unified dashboard.",
+      badge: "All-in-One Engine",
+      color: "from-purple-500/10 to-indigo-500/10",
+      borderColor: "border-purple-200/80 hover:border-purple-300",
+      iconBg: "bg-purple-50 text-purple-600 border-purple-200/80",
+    },
+    {
+      icon: WifiOff,
+      title: "Offline Mobile Check-In for Remote Venues",
+      description:
+        "Banquet lawns, resort gardens, and basement venues often have weak signal. Our PWA allows guest check-in without internet, auto-syncing when back online.",
+      badge: "Built for Real Venues",
+      color: "from-cyan-500/10 to-blue-500/10",
+      borderColor: "border-cyan-200/80 hover:border-cyan-300",
+      iconBg: "bg-cyan-50 text-cyan-600 border-cyan-200/80",
+    },
+    {
+      icon: Zap,
+      title: "From Lead to Deposit Payment in 1 System",
+      description:
+        "Convert WhatsApp inquiries into signed PDF proposals in 45 seconds, collect 0% fee UPI QR deposits, and track invoice milestones without leaving the platform.",
+      badge: "End-to-End Workflow",
+      color: "from-pink-500/10 to-purple-500/10",
+      borderColor: "border-pink-200/80 hover:border-pink-300",
+      iconBg: "bg-pink-50 text-pink-600 border-pink-200/80",
+    },
+  ];
+
   return (
-    <section className="py-20 border-b border-[#E5E7EB] bg-[#F8F7FF] relative overflow-hidden select-none">
+    <section className="py-20 border-b border-slate-200/80 bg-[#F8F7FF] relative overflow-hidden select-none">
       <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-12">
         {/* Header */}
         <motion.div
@@ -26,52 +49,54 @@ export function Competitors() {
           transition={{ duration: 0.5 }}
           className="text-center max-w-3xl mx-auto space-y-3"
         >
-          <span className="text-xs font-extrabold tracking-widest text-purple-700 uppercase block font-mono">
-            Subscription Consolidator
+          <span className="text-xs font-black uppercase tracking-widest text-purple-700 block font-mono">
+            Architectural Advantage
           </span>
           <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading">
-            Ditch fragmented bills. Reclaim control.
+            Why EventOS Wins for Event & Wedding Agencies
           </h3>
           <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
-            Why event Planners and photography studio collectives waste ₹28,000+/mo across disconnected tools, and how EventOS replaces them under a single architecture.
+            Designed specifically for high-volume event creators who need speed, mobile reliability, and complete operational control.
           </p>
         </motion.div>
 
-        {/* Comparison Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="border border-slate-200/80 rounded-2xl overflow-x-auto bg-white/80 backdrop-blur-xl shadow-md"
-        >
-          <table className="w-full text-left border-collapse text-[11px] sm:text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-100/90 font-black text-slate-900">
-                <th className="p-4 uppercase tracking-wider font-extrabold w-[35%]">Feature Sets</th>
-                <th className="p-4 uppercase tracking-wider font-extrabold text-center text-purple-700">EventOS</th>
-                <th className="p-4 uppercase tracking-wider font-extrabold text-center">HoneyBook</th>
-                <th className="p-4 uppercase tracking-wider font-extrabold text-center">HubSpot</th>
-                <th className="p-4 uppercase tracking-wider font-extrabold text-center">ClickUp</th>
-                <th className="p-4 uppercase tracking-wider font-extrabold text-center">Pixieset</th>
-                <th className="p-4 uppercase tracking-wider font-extrabold text-center">QuickBooks</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 font-medium text-slate-600">
-              {COMPARISON_ROWS.map((row, idx) => (
-                <tr key={row.feature} className="hover:bg-purple-50/50 transition">
-                  <td className="p-4 text-slate-900 font-bold">{row.feature}</td>
-                  <td className="p-4 text-center font-black text-purple-700 bg-purple-50">{row.eventos}</td>
-                  <td className="p-4 text-center font-mono">{row.honeybook}</td>
-                  <td className="p-4 text-center font-mono">{row.hubspot}</td>
-                  <td className="p-4 text-center font-mono">{row.clickup}</td>
-                  <td className="p-4 text-center font-mono">{row.pixieset}</td>
-                  <td className="p-4 text-center font-mono">{row.quickbooks}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </motion.div>
+        {/* 3-Point Value Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {points.map((pt, idx) => {
+            const IconComponent = pt.icon;
+            return (
+              <motion.div
+                key={pt.title}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className={`p-7 rounded-2xl border ${pt.borderColor} bg-white/95 backdrop-blur-md shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between space-y-5 group`}
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center border ${pt.iconBg} transition-transform duration-300 group-hover:scale-110`}>
+                      <IconComponent size={22} />
+                    </div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                      {pt.badge}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-base sm:text-lg font-extrabold text-slate-900 font-heading flex items-center gap-2">
+                      <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                      {pt.title}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                      {pt.description}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

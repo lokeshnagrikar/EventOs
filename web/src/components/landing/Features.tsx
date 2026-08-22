@@ -121,7 +121,7 @@ const features = [
     icon: "solar:cpu-bold-duotone",
     title: "AI Co-pilot & Auto Scheduler",
     description:
-      "AI algorithm that builds optimal vendor & timeline schedules without overlapping venue slots. Automatically resolves run-of-show sound checks and ingress conflicts.",
+      "Paste your event brief. AI auto-generates the run-of-show: 09:00 AM Sound Check (Venue: free), 11:30 AM Décor setup (Vendor: available), 14:00 PM Guest arrival. If conflicts are found, get instant alerts with suggested reschedules.",
     badge: "AI Automation",
     iconColor: "#8B5CF6",
     spotlightColor: "rgba(139,92,246,0.15)",
@@ -169,8 +169,8 @@ const features = [
     icon: "solar:document-text-bold-duotone",
     title: "AI Proposal & Quote Generator",
     description:
-      "Generate custom branded web & PDF proposals from client briefs in under 30 seconds with line-item scope breakdowns and digital signature clearing.",
-    badge: "Quotes",
+      "From client WhatsApp message to signed quote in 45 seconds: 'Budget: 5 lakh, 300 guests, Taj Delhi, Wedding' → AI generates itemized proposal with catering, décor, and photography pricing.",
+    badge: "AI Proposal Generator",
     iconColor: "#6366F1",
     spotlightColor: "rgba(99,102,241,0.15)",
     borderColor: "rgba(99,102,241,0.35)",
@@ -193,7 +193,7 @@ const features = [
     icon: "solar:flame-bold-duotone",
     title: "AI Lead Scoring & Churn Predictor",
     description:
-      "Intelligently predicts lead conversion likelihood (0-100), flags high-risk client cancellations before they happen, and triggers 1-click retention workflows.",
+      "Flags high-risk cancellations before they happen: 'Deposit pending 7+ days' + 'Client replies slowing down' → Score drops to 42/100 + auto-triggers 'payment reminder' WhatsApp.",
     badge: "Predictive Intelligence",
     iconColor: "#F43F5E",
     spotlightColor: "rgba(244,63,94,0.15)",

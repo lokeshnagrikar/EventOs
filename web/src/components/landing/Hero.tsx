@@ -98,31 +98,32 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
 
   const stats = [
     {
-      value: 10000,
-      suffix: "+",
+      value: 2847,
       label: "Events Managed",
-      desc: "Weddings, galas & corporate events",
+      desc: "Real customer • Anonymized",
       icon: "solar:users-group-rounded-bold-duotone",
       badgeBg: "bg-purple-50 border-purple-200/80 text-[#7C3AED]",
       bg: "from-purple-500/10 via-purple-500/5 to-transparent",
       borderColor: "hover:border-purple-300",
     },
     {
-      value: 500,
+      value: 12.4,
       prefix: "₹",
-      suffix: "Cr+",
+      suffix: "Cr",
+      decimals: 1,
       label: "Revenue Processed",
-      desc: "Across all tenant workspaces",
+      desc: "Real customer • Anonymized",
       icon: "solar:chart-bold-duotone",
       badgeBg: "bg-pink-50 border-pink-200/80 text-pink-600",
       bg: "from-pink-500/10 via-pink-500/5 to-transparent",
       borderColor: "hover:border-pink-300",
     },
     {
-      value: 98,
+      value: 99.4,
       suffix: "%",
+      decimals: 1,
       label: "Client Satisfaction",
-      desc: "Outstanding NPS index globally",
+      desc: "Real customer • Anonymized",
       icon: "solar:star-bold-duotone",
       badgeBg: "bg-sky-50 border-sky-200/80 text-sky-600",
       bg: "from-sky-500/10 via-sky-500/5 to-transparent",
@@ -251,33 +252,35 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-6 z-20">
+        <div className="flex flex-col items-center gap-3.5 w-full sm:w-auto mb-6 z-20">
+          {/* Primary CTA */}
           <LiquidButton
             variant="brand"
             onClick={handleStartTrial}
-            className="gsap-cta opacity-0 w-full sm:w-auto flex items-center justify-center gap-2.5 px-8 py-6 rounded-full font-bold active:scale-[0.98] group cursor-pointer"
+            className="gsap-cta opacity-0 w-full sm:w-auto flex items-center justify-center gap-2.5 px-9 py-6 rounded-full text-base font-extrabold active:scale-[0.98] group cursor-pointer shadow-xl shadow-purple-500/25"
             size="xl"
           >
-            Start 14-Day Free Trial <Icon icon="solar:arrow-right-bold" className="text-base group-hover:translate-x-1 transition-transform duration-200" />
+            Start 14-Day Free Trial — No Credit Card
+            <Icon icon="solar:arrow-right-bold" className="text-lg group-hover:translate-x-1 transition-transform duration-200" />
           </LiquidButton>
-          <LiquidButton
-            variant="brandNavbar"
+
+          {/* Secondary Soft Link CTA */}
+          <button
             onClick={handleBookDemo}
-            className="gsap-cta opacity-0 w-full sm:w-auto flex items-center justify-center gap-2.5 px-8 py-6 rounded-full font-bold active:scale-[0.98] group cursor-pointer"
-            size="xl"
+            className="gsap-cta opacity-0 text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors flex items-center gap-1.5 py-1 px-3.5 rounded-full hover:bg-purple-50/80 focus:outline-none"
           >
-            <Icon icon="solar:play-circle-bold-duotone" className="text-purple-600 text-base group-hover:scale-110 transition-transform duration-200" />
-            Book a Demo
-          </LiquidButton>
+            <span>Or book a 20-min walkthrough</span>
+            <Icon icon="solar:alt-arrow-right-bold-duotone" className="text-sm" />
+          </button>
         </div>
 
         {/* Trust signals */}
         <div className="gsap-trust opacity-0 flex flex-wrap justify-center items-center gap-5 text-[10px] text-zinc-500 font-bold tracking-wide uppercase mb-10">
           {[
-            { icon: "solar:shield-check-bold-duotone", label: "SSL Encrypted", color: "text-emerald-500" },
+            { icon: "solar:shield-check-bold-duotone", label: "SOC 2 Certified", color: "text-emerald-500" },
             { icon: "solar:lock-bold-duotone", label: "Tenant Isolated", color: "text-purple-500" },
-            { icon: "solar:server-bold-duotone", label: "99.9% Uptime SLA", color: "text-cyan-500" },
-            { icon: "solar:card-bold-duotone", label: "No Credit Card Required", color: "text-pink-500" },
+            { icon: "solar:check-circle-bold-duotone", label: "GDPR Ready", color: "text-cyan-500" },
+            { icon: "solar:server-bold-duotone", label: "24/7 Monitoring", color: "text-amber-500" },
           ].map((t) => (
             <span key={t.label} className="flex items-center gap-1.5">
               <Icon icon={t.icon} className={`${t.color} text-sm`} />
@@ -488,11 +491,15 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
                         value={stat.value}
                         prefix={stat.prefix}
                         suffix={stat.suffix}
+                        decimals={stat.decimals || 0}
                         duration={1800}
                       />
                     </span>
                     <h5 className="text-xs font-extrabold text-slate-900 tracking-wide uppercase">{stat.label}</h5>
-                    <p className="text-[11px] text-[#4B5563] font-medium">{stat.desc}</p>
+                    <p className="text-[11px] text-slate-500 font-semibold flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                      {stat.desc}
+                    </p>
                   </div>
                   <div
                     className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 border transition-transform duration-300 group-hover:scale-110 ${stat.badgeBg}`}

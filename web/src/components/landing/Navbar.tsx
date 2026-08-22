@@ -555,28 +555,6 @@ export function Navbar({ activeSection }: NavbarProps) {
         >
           {/* Multi-Tenant Workspace Selector Pill */}
           <WorkspaceSelectorPill />
-
-          <button
-            onClick={() => router.push("/demo")}
-            onMouseEnter={() => setHoveredIndex(5)}
-            className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-slate-300 hover:text-white focus:outline-none flex items-center gap-1.5"
-            )}
-          >
-            <Icon icon="solar:star-bold-duotone" className="text-xs text-purple-400 transition-colors" />
-            Live Demo
-            {hoveredIndex === 5 && (
-              <motion.div
-                layoutId="nav-hover-capsule"
-                className="absolute inset-0 rounded-full bg-white/10 border border-white/15 shadow-sm -z-10"
-                transition={{
-                  type: "spring",
-                  stiffness: 380,
-                  damping: 30,
-                }}
-              />
-            )}
-          </button>
           <button
             onClick={handleSignIn}
             onMouseEnter={() => setHoveredIndex(4)}

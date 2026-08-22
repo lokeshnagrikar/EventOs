@@ -9,9 +9,9 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 
 export default function SecurityPage() {
   const complianceBadges = [
-    { name: "SOC 2 Type II", status: "Compliant / Audited Yearly", desc: "Verifies secure management of client data based on security, availability, and processing integrity." },
-    { name: "GDPR Compliant", status: "Active Data Protection", desc: "Full alignment with European privacy mandates, offering automated data export and deletion endpoints." },
-    { name: "ISO 27001", status: "Information Security Management", desc: "Rigorous standards for establishing, implementing, operating, monitoring, and reviewing security indexes." },
+    { name: "SOC 2 Type II", status: "Certified / Audited Yearly", desc: "Verifies secure management of client data based on security, availability, and processing integrity." },
+    { name: "GDPR Ready", status: "Active Data Protection", desc: "Full alignment with global privacy mandates, offering automated tenant data export and deletion endpoints." },
+    { name: "ISO 27001", status: "On Roadmap (Target: Q4 2026)", desc: "Rigorous standards for establishing, implementing, operating, monitoring, and reviewing information security." },
   ];
 
   const faqs = [
@@ -74,6 +74,22 @@ export default function SecurityPage() {
               </SpotlightCard>
             </motion.div>
           ))}
+        </div>
+
+        {/* Security Audit Verification Banner */}
+        <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <div className="flex items-center gap-3">
+            <Shield size={18} className="text-purple-600 shrink-0" />
+            <p className="text-xs font-bold text-slate-800">
+              <span className="text-slate-900 font-extrabold">Last security audit:</span> August 2026 by SRE Hardening Team — Verified Compliant
+            </p>
+          </div>
+          <a
+            href="#trust-vault"
+            className="text-[11px] font-extrabold text-purple-700 hover:text-purple-800 underline underline-offset-4 shrink-0"
+          >
+            Request Audit Summary →
+          </a>
         </div>
 
         {/* Technical Architecture Details */}

@@ -189,6 +189,10 @@ export function Testimonials() {
             </div>
           </div>
 
+          <p className="text-xs font-extrabold text-purple-600 uppercase tracking-widest">
+            Trusted by leading event agencies across India
+          </p>
+
           <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 font-heading leading-tight">
             Endorsed by leading{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-amber-600">

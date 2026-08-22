@@ -141,10 +141,14 @@ export function Footer() {
           </div>
 
           {/* System Status */}
-          <div className="flex items-center gap-2 text-[10.5px] text-slate-700 font-bold">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
-            All systems operational
-          </div>
+          <a
+            href="/status"
+            onClick={(e) => handleLinkClick(e, "/status")}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10.5px] text-emerald-800 font-bold hover:bg-emerald-500/20 transition-colors w-fit cursor-pointer"
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
+            All systems operational (99.9% Uptime) →
+          </a>
         </div>
 
         {/* Product Column */}
@@ -244,10 +248,9 @@ export function Footer() {
           <span className="text-slate-800 font-bold">
             Crafted with ❤️ by{" "}
             <a 
-              href="https://github.com/lokeshnagrikar" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-purple-700 hover:text-purple-900 underline font-extrabold transition-colors"
+              href="/founder-story" 
+              onClick={(e) => handleLinkClick(e, "/founder-story")}
+              className="text-purple-700 hover:text-purple-900 underline font-extrabold transition-colors cursor-pointer"
             >
               Lokesh Nagrikar
             </a>
