@@ -132,13 +132,13 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 # NEXT_PUBLIC_API_URL=https://api.eventos.agency
 
 # 2. Stripe Public Key (For client-side checkout modal)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51TqAjmFCMhuUalQalqyiIpcMyFgqWZC2Kk2bKE77rhatnxRSCUayirAcbhowC3uqlVU4rPnnZkm0VKEhYgs7JI7700YOA7Hptl
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
 
 # 3. Google OAuth Client ID (For Google Login button)
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=171503360314-e51mor0dee5v5f5jqi3gincelrhuva4l.apps.googleusercontent.com
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 
 # 4. Google ReCAPTCHA Site Key (For contact & signup forms)
-NEXT_PUBLIC_RECAPTCHA_SITE_KEY=6LfVWistAAAAAPqNUggTPWJ6UyCepnH6esLk9Xmx
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your_recaptcha_site_key_here
 ```
 
 ---
