@@ -101,7 +101,7 @@
    - **Runtime**: `Docker`
    - **Dockerfile Path**: `backend/auth-service/Dockerfile`
    - **Docker Context**: `backend`
-   - **Plan**: `Free`
+   - **Plan**: `Free` 
 
 4. Under **Environment Variables**, add ALL of these:
 
