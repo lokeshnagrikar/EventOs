@@ -29,7 +29,7 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/crm_db?sslmode=disable
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:crm_db}?sslmode=disable
     username: ${POSTGRES_USER:eventos_admin}
     password: ${POSTGRES_PASSWORD:eventos_secure_pass}
     driver-class-name: org.postgresql.Driver

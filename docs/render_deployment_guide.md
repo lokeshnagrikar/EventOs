@@ -179,7 +179,7 @@
 
 3. **Environment Variables** (same as CRM Service but change `POSTGRES_DB`):
 
-| Key | Value |
+| Key | Value | 
 |---|---|
 | `POSTGRES_DB` | `event_db` |
 | *(all other keys)* | *(same as CRM Service)* |
