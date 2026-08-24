@@ -1,5 +1,5 @@
 server:
-  port: 8084
+  port: ${PORT:${SERVER_PORT:8084}}
   servlet:
     context-path: /api/v1/gallery
   tomcat:

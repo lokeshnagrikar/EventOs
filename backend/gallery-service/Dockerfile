@@ -29,4 +29,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=240s --retries=10 \
   CMD curl -f http://127.0.0.1:8084/api/v1/gallery/actuator/health || exit 1
 
 # Hardened JRE production execution
-ENTRYPOINT ["java", "-XX:+UseG1GC", "-Xms256m", "-Xmx512m", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseSerialGC", "-Xms64m", "-Xmx192m", "-XX:TieredStopAtLevel=1", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]

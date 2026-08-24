@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: ${PORT:${SERVER_PORT:8081}}
   servlet:
     context-path: /api/v1/auth
   tomcat:

@@ -29,4 +29,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=240s --retries=10 \
   CMD curl -f http://127.0.0.1:8083/api/v1/events/actuator/health || exit 1
 
 # Development-optimized JVM execution to speed up container startup on local hosts
-ENTRYPOINT ["java", "-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC", "-Xmx256m", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseSerialGC", "-Xms64m", "-Xmx192m", "-XX:TieredStopAtLevel=1", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]
