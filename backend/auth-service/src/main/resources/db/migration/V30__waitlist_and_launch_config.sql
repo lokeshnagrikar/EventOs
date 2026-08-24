@@ -136,6 +136,14 @@ $$;
 
 
 -- 5. Strict Row Level Security (RLS) Configuration
+-- Ensure service_role exists on standard PostgreSQL instances
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'service_role') THEN 
+    CREATE ROLE service_role; 
+  END IF; 
+END $$;
+
 ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
 ALTER TABLE launch_config ENABLE ROW LEVEL SECURITY;
 
