@@ -52,11 +52,14 @@ spring:
       port: ${REDIS_PORT:6379}
       connect-timeout: 2000
   rabbitmq:
+    addresses: ${SPRING_RABBITMQ_ADDRESSES:}
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:eventos_guest}
     password: ${RABBITMQ_PASS:eventos_guest_pass}
     virtual-host: ${RABBITMQ_VHOST:/}
+    ssl:
+      enabled: ${RABBITMQ_SSL_ENABLED:false}
   mail:
     host: ${SMTP_HOST:smtp.gmail.com}
     port: ${SMTP_PORT:587}
