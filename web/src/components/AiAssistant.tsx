@@ -43,7 +43,7 @@ function parseBoldText(text: string) {
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
-        <strong key={i} className="font-semibold text-white bg-white/10 px-1.5 py-0.5 rounded-md border border-white/15 backdrop-blur-sm font-sans">
+        <strong key={i} className="font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded-md border border-purple-200/80 dark:border-purple-800/40 font-sans">
           {part.slice(2, -2)}
         </strong>
       );
@@ -67,9 +67,9 @@ function renderFormattedText(text: string) {
             return (
               <div key={lIdx} className={isBullet ? "flex items-start gap-2.5 pl-1" : ""}>
                 {isBullet && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 mt-2 shrink-0 shadow-[0_0_8px_rgba(168,85,247,0.6)]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-purple-500 mt-2 shrink-0 shadow-[0_0_6px_rgba(168,85,247,0.5)]" />
                 )}
-                <span className="leading-relaxed text-zinc-100 text-[12.5px]">{parseBoldText(content)}</span>
+                <span className="leading-relaxed text-slate-800 dark:text-slate-100 text-[13px]">{parseBoldText(content)}</span>
               </div>
             );
           })}
@@ -77,7 +77,7 @@ function renderFormattedText(text: string) {
       );
     }
     return (
-      <p key={pIdx} className="mb-2 last:mb-0 leading-relaxed text-zinc-100 text-[12.5px]">
+      <p key={pIdx} className="mb-2 last:mb-0 leading-relaxed text-slate-800 dark:text-slate-100 text-[13px]">
         {parseBoldText(para)}
       </p>
     );
@@ -326,14 +326,17 @@ export default function AiAssistant() {
             exit={{ opacity: 0, scale: 0.94, y: 16 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             ref={containerRef}
-            className="fixed bottom-36 sm:bottom-24 right-4 sm:right-6 w-[calc(100vw-32px)] sm:w-[420px] h-[520px] sm:h-[580px] max-h-[calc(100vh-160px)] bg-[#09090e]/75 border border-white/15 rounded-[26px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_25px_80px_rgba(0,0,0,0.85)] backdrop-blur-[36px] backdrop-saturate-[1.8] flex flex-col overflow-hidden z-[9999] font-sans antialiased"
+            className="fixed bottom-36 sm:bottom-24 right-4 sm:right-6 w-[calc(100vw-32px)] sm:w-[430px] h-[540px] sm:h-[600px] max-h-[calc(100vh-160px)] bg-white/95 dark:bg-[#0B0F19]/95 border border-slate-200/90 dark:border-slate-800/80 rounded-[28px] shadow-[0_25px_70px_rgba(15,23,42,0.18),0_0_0_1px_rgba(255,255,255,0.8)] backdrop-blur-[40px] backdrop-saturate-[2.0] flex flex-col overflow-hidden z-[9999] font-sans antialiased"
           >
+            {/* Top Accent Gradient Line */}
+            <div className="h-1 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 w-full shrink-0" />
+
             {/* Ambient Inner Glass Light Blobs */}
-            <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-purple-500/15 blur-3xl -z-10" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 w-56 h-56 rounded-full bg-blue-500/15 blur-3xl -z-10" />
+            <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-purple-500/10 blur-3xl -z-10" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 w-56 h-56 rounded-full bg-indigo-500/10 blur-3xl -z-10" />
 
             {/* Glassmorphic Header Bar */}
-            <div className="px-5 py-4 border-b border-white/10 bg-white/[0.03] backdrop-blur-md flex items-center justify-between z-10">
+            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-md flex items-center justify-between z-10">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 flex items-center justify-center shrink-0 lottie-theme-bot">
                   <DotLottieReact
@@ -345,25 +348,25 @@ export default function AiAssistant() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-xs text-white tracking-tight">EventOS Intelligence</h3>
-                    <span className="px-2 py-0.5 rounded-full bg-white/[0.08] border border-white/15 text-[9px] font-medium text-white/90 font-mono backdrop-blur-sm">
+                    <h3 className="font-bold text-xs text-slate-900 dark:text-white tracking-tight">EventOS Copilot</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/60 text-[9px] font-bold text-purple-700 dark:text-purple-300 font-mono">
                       {aiConfig.provider}
                     </span>
                   </div>
-                  <p className="text-[10px] text-zinc-300/80 font-medium flex items-center gap-1.5 mt-0.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(192,132,252,0.9)]" />
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
                     {pageContext.name}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="hidden sm:inline-flex items-center gap-1 text-[9.5px] text-zinc-300/80 bg-white/[0.06] border border-white/10 px-2 py-0.5 rounded-full font-mono backdrop-blur-sm">
+                <span className="hidden sm:inline-flex items-center gap-1 text-[9.5px] text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md font-mono">
                   <Command size={9} /> Space
                 </span>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="h-7 w-7 rounded-full bg-white/[0.06] hover:bg-white/[0.15] border border-white/10 text-zinc-300 hover:text-white flex items-center justify-center transition cursor-pointer backdrop-blur-sm"
+                  className="h-7 w-7 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition cursor-pointer"
                 >
                   <X size={14} />
                 </button>
@@ -405,10 +408,10 @@ export default function AiAssistant() {
                     {/* Glassmorphic Message Card Bubble */}
                     <div
                       className={cn(
-                        "p-3.5 text-[12.5px] leading-relaxed relative overflow-hidden font-sans backdrop-blur-xl shadow-lg transition-all",
+                        "p-4 text-[13px] leading-relaxed relative overflow-hidden font-sans transition-all",
                         msg.sender === "user"
-                          ? "bg-gradient-to-r from-purple-600/90 via-indigo-600/90 to-purple-600/90 border border-purple-300/30 text-white rounded-[20px] rounded-tr-sm shadow-[0_8px_25px_rgba(139,92,246,0.3)]"
-                          : "bg-white/[0.05] border border-white/10 text-zinc-100 rounded-[20px] rounded-tl-sm shadow-[0_4px_20px_rgba(0,0,0,0.25)]"
+                          ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white rounded-[20px] rounded-tr-sm shadow-md shadow-purple-500/20"
+                          : "bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 rounded-[20px] rounded-tl-sm shadow-xs"
                       )}
                     >
                       {renderFormattedText(msg.text)}
@@ -423,15 +426,15 @@ export default function AiAssistant() {
                                 router.push(res.link);
                                 setIsOpen(false);
                               }}
-                              className="p-3 border border-white/10 hover:border-purple-400/40 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] backdrop-blur-md cursor-pointer flex items-center justify-between transition-all shadow-sm"
+                              className="p-3 border border-slate-200 hover:border-purple-300 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-900/60 cursor-pointer flex items-center justify-between transition-all shadow-xs"
                             >
                               <div>
-                                <span className="font-semibold text-white block text-[12px]">{res.title}</span>
-                                <span className="text-[10px] text-zinc-300/70 block mt-0.5">{res.date}</span>
+                                <span className="font-semibold text-slate-900 dark:text-white block text-[12px]">{res.title}</span>
+                                <span className="text-[10px] text-slate-500 block mt-0.5">{res.date}</span>
                               </div>
                               <div className="text-right">
-                                <span className="text-[11px] font-semibold text-emerald-400 block">{res.budget}</span>
-                                <span className="text-[9px] font-medium uppercase px-2 py-0.5 rounded-full border bg-emerald-500/15 border-emerald-500/30 text-emerald-300 backdrop-blur-sm mt-1 inline-block">
+                                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 block">{res.budget}</span>
+                                <span className="text-[9px] font-medium uppercase px-2 py-0.5 rounded-full border bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300 mt-1 inline-block">
                                   {res.status}
                                 </span>
                               </div>
@@ -442,27 +445,27 @@ export default function AiAssistant() {
 
                       {/* Timeline Widget */}
                       {msg.type === "timeline" && msg.data?.items && (
-                        <div className="mt-3 space-y-2.5 border-l border-white/20 pl-4 py-1 text-[11.5px]">
+                        <div className="mt-3 space-y-2.5 border-l-2 border-purple-300 dark:border-purple-800 pl-4 py-1 text-[11.5px]">
                           {msg.data.items.map((item: any, idx: number) => (
                             <div key={idx} className="relative">
-                              <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
-                              <span className="font-semibold text-cyan-300 block">{item.time}</span>
-                              <span className="font-medium text-white block mt-0.5">{item.event}</span>
-                              <span className="text-[10px] text-zinc-300/70 block">{item.note}</span>
+                              <span className="absolute -left-[22px] top-1.5 h-2 w-2 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.8)]" />
+                              <span className="font-semibold text-purple-700 dark:text-purple-300 block">{item.time}</span>
+                              <span className="font-medium text-slate-800 dark:text-white block mt-0.5">{item.event}</span>
+                              <span className="text-[10px] text-slate-500 block">{item.note}</span>
                             </div>
                           ))}
                           <button
                             onClick={() => copyToClipboard(msg.data.items.map((i: any) => `[${i.time}] ${i.event} - ${i.note}`).join("\n"), msg.id)}
-                            className="mt-2.5 flex items-center gap-1.5 text-[10px] font-medium text-cyan-300 hover:text-white transition bg-white/[0.06] hover:bg-white/[0.14] px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md cursor-pointer"
+                            className="mt-2.5 flex items-center gap-1.5 text-[10px] font-medium text-purple-600 dark:text-purple-300 hover:text-purple-800 bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 px-3 py-1.5 rounded-full border border-purple-200 dark:border-purple-800/50 cursor-pointer transition"
                           >
-                            {copiedId === msg.id ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                            {copiedId === msg.id ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
                             {copiedId === msg.id ? "Copied Timeline" : "Copy Timeline"}
                           </button>
                         </div>
                       )}
                     </div>
 
-                    <span className="text-[9px] text-zinc-400/70 font-medium block pl-1">
+                    <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium block pl-1">
                       {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
 
@@ -473,11 +476,11 @@ export default function AiAssistant() {
                           <button
                             key={i}
                             onClick={sug.action}
-                            className="px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.12] border border-white/10 hover:border-purple-400/40 text-zinc-200 hover:text-white transition-all cursor-pointer text-[10.5px] font-medium flex items-center gap-1.5 shadow-sm backdrop-blur-md"
+                            className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800/90 hover:bg-purple-50 dark:hover:bg-purple-950/40 border border-slate-200/90 dark:border-slate-700 hover:border-purple-300 text-slate-700 dark:text-slate-200 hover:text-purple-700 dark:hover:text-purple-300 transition-all cursor-pointer text-[11px] font-semibold flex items-center gap-2 shadow-xs group"
                           >
-                            <Sparkles size={10} className="text-cyan-400" />
+                            <Sparkles size={11} className="text-purple-500 group-hover:scale-110 transition-transform" />
                             {sug.label}
-                            <ChevronRight size={10} className="text-zinc-400" />
+                            <ChevronRight size={11} className="text-slate-400 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all ml-auto" />
                           </button>
                         ))}
                       </div>
@@ -506,8 +509,8 @@ export default function AiAssistant() {
             </div>
 
             {/* Glassmorphic Input Pill Bar */}
-            <div className="p-3.5 border-t border-white/10 bg-white/[0.02] backdrop-blur-md z-10">
-              <div className="flex items-center gap-2 bg-white/[0.04] border border-white/15 focus-within:border-purple-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_20px_rgba(168,85,247,0.25)] rounded-full px-4 py-1.5 transition-all shadow-inner backdrop-blur-xl">
+            <div className="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 backdrop-blur-md z-10">
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-400/20 rounded-full px-4 py-2 transition-all shadow-sm">
                 <input
                   type="text"
                   value={input}
@@ -516,13 +519,13 @@ export default function AiAssistant() {
                     if (e.key === "Enter") handleSendText(input);
                   }}
                   placeholder={`Ask ${pageContext.name} AI...`}
-                  className="flex-1 bg-transparent py-1 text-xs text-white placeholder-zinc-400 outline-none font-medium"
+                  className="flex-1 bg-transparent py-1 text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none font-medium"
                 />
                 <button
                   onClick={() => handleSendText(input)}
-                  className="h-7 w-7 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-500 hover:scale-105 active:scale-95 text-white flex items-center justify-center shrink-0 transition cursor-pointer shadow-[0_4px_15px_rgba(147,51,234,0.4)] border border-white/20"
+                  className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-105 active:scale-95 text-white flex items-center justify-center shrink-0 transition cursor-pointer shadow-md shadow-purple-500/25"
                 >
-                  <Send size={12} />
+                  <Send size={13} />
                 </button>
               </div>
             </div>

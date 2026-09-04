@@ -243,7 +243,7 @@ const features = [
   { icon: "solar:shield-check-bold-duotone", label: "Isolated & Secure", desc: "Each client sees only their data — zero cross-contamination." },
   { icon: "solar:link-circle-bold-duotone", label: "Unique Invite Link", desc: "One-click setup. Clients register via a secure invitation URL." },
   { icon: "solar:smartphone-bold-duotone", label: "Mobile-First Design", desc: "Optimized for phones — clients access on-the-go." },
-  { icon: "solar:pallete-bold-duotone", label: "White-Label Ready", desc: "Custom domain + logo mapping for Professional & Enterprise plans." },
+  { icon: "solar:pallete-bold-duotone", label: "White-Label Ready", desc: "Custom domain + logo mapping for Professional & Agency plans." },
 ];
 
 export function ClientPortalPreview() {

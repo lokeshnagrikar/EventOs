@@ -55,7 +55,7 @@ export default function TermsOfServicePage() {
             </h2>
             <ul className="list-disc pl-5 space-y-1 text-zinc-400">
               <li><strong>14-Day Free Trial:</strong> Full access to features without a credit card required during trial.</li>
-              <li><strong>Subscription Billing:</strong> Monthly/Annual subscriptions (Starter at ₹1,999/mo, Professional at ₹5,999/mo, or Enterprise at ₹11,999/mo) billed via automated recurring payments.</li>
+              <li><strong>Subscription Billing:</strong> Monthly/Annual subscriptions (Starter at ₹1,999/mo, Professional at ₹5,999/mo, or Agency at ₹11,999/mo) billed via automated recurring payments.</li>
               <li><strong>Upgrades & Downgrades:</strong> You may change your subscription tier anytime from your Workspace Billing tab.</li>
             </ul>
           </section>

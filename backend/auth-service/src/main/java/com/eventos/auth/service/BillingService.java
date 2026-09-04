@@ -599,7 +599,7 @@ public class BillingService {
             planDistribution.add(item);
         }
         if (planDistribution.isEmpty()) {
-            planDistribution.add(Map.of("name", "Enterprise", "value", 45, "color", "#a855f7"));
+            planDistribution.add(Map.of("name", "Agency", "value", 45, "color", "#a855f7"));
             planDistribution.add(Map.of("name", "Professional", "value", 35, "color", "#ec4899"));
             planDistribution.add(Map.of("name", "Starter", "value", 15, "color", "#3b82f6"));
             planDistribution.add(Map.of("name", "Free Trial", "value", 5, "color", "#10b981"));

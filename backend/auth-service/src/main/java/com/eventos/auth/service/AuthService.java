@@ -767,9 +767,11 @@ public class AuthService {
         String plan = tenant.getSubscriptionPlan();
         if (plan != null) {
             if ("STARTER".equalsIgnoreCase(plan)) {
-                limit = 1;
-            } else if ("GROWTH".equalsIgnoreCase(plan)) {
-                limit = 3;
+                limit = 2;
+            } else if ("PROFESSIONAL".equalsIgnoreCase(plan) || "GROWTH".equalsIgnoreCase(plan)) {
+                limit = 5;
+            } else if ("AGENCY".equalsIgnoreCase(plan) || "ENTERPRISE".equalsIgnoreCase(plan)) {
+                limit = 0; // unlimited
             }
         }
 

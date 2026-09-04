@@ -16,7 +16,7 @@ const faqs = [
     value: "q2",
     icon: "solar:palette-bold-duotone",
     question: "Can I use my own brand logo and custom domain?",
-    answer: "Absolutely. On our Professional and Enterprise plans, you can map your own domain (e.g., proposals.yourbrand.com) and customize email templates via SMTP, so your clients see a fully branded, professional portal — zero EventOS branding visible.",
+    answer: "Absolutely. On our Professional and Agency plans, you can map your own domain (e.g., proposals.yourbrand.com) and customize email templates via SMTP, so your clients see a fully branded, professional portal — zero EventOS branding visible.",
   },
   {
     value: "q3",

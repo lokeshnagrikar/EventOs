@@ -385,12 +385,12 @@ public class BillingController {
             com.stripe.Stripe.apiKey = stripeApiKey;
 
             String priceId;
-            if ("growth".equalsIgnoreCase(planCode)) {
-                priceId = System.getenv().getOrDefault("STRIPE_PRICE_GROWTH", "price_growth_monthly");
-            } else if ("enterprise".equalsIgnoreCase(planCode)) {
-                priceId = System.getenv().getOrDefault("STRIPE_PRICE_ENTERPRISE", "price_enterprise_monthly");
+            if ("agency".equalsIgnoreCase(planCode) || "enterprise".equalsIgnoreCase(planCode)) {
+                priceId = System.getenv().getOrDefault("STRIPE_PRICE_AGENCY", System.getenv().getOrDefault("STRIPE_PRICE_ENTERPRISE", "price_agency_monthly"));
+            } else if ("professional".equalsIgnoreCase(planCode) || "growth".equalsIgnoreCase(planCode)) {
+                priceId = System.getenv().getOrDefault("STRIPE_PRICE_PROFESSIONAL", System.getenv().getOrDefault("STRIPE_PRICE_GROWTH", "price_professional_monthly"));
             } else {
-                priceId = System.getenv().getOrDefault("STRIPE_PRICE_STANDARD", "price_standard_monthly");
+                priceId = System.getenv().getOrDefault("STRIPE_PRICE_STARTER", System.getenv().getOrDefault("STRIPE_PRICE_STANDARD", "price_starter_monthly"));
             }
 
             com.stripe.param.checkout.SessionCreateParams params = com.stripe.param.checkout.SessionCreateParams
