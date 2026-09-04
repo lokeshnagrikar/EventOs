@@ -87,7 +87,7 @@ app:
   gateway:
     secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
   security:
-    log-tokens: ${LOG_SENSITIVE_TOKENS:true}
+    log-tokens: ${LOG_SENSITIVE_TOKENS:false}
     cookie:
       secure: ${COOKIE_SECURE:}
       samesite: ${COOKIE_SAMESITE:}

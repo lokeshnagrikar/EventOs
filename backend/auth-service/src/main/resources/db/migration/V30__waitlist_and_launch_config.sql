@@ -136,14 +136,6 @@ $$;
 
 
 -- 5. Strict Row Level Security (RLS) Configuration
--- Ensure service_role exists on standard PostgreSQL instances
-DO $$ 
-BEGIN 
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'service_role') THEN 
-    CREATE ROLE service_role; 
-  END IF; 
-END $$;
-
 ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
 ALTER TABLE launch_config ENABLE ROW LEVEL SECURITY;
 
@@ -161,15 +153,6 @@ FOR INSERT
 TO public 
 WITH CHECK (true);
 
--- B) Service role / Owner role has full access (SELECT, UPDATE, DELETE)
-CREATE POLICY "Service role & admin can read waitlist" 
-ON waitlist 
-FOR ALL 
-TO service_role 
-USING (true) 
-WITH CHECK (true);
-
-
 -- Launch Config Table RLS Policies:
 -- A) Public can READ pricing & cap info (for landing page / checkout calculation)
 CREATE POLICY "Public can view launch config pricing" 
@@ -178,10 +161,34 @@ FOR SELECT
 TO public 
 USING (true);
 
--- B) Service role / Owner role can UPDATE config parameters
-CREATE POLICY "Service role & admin full launch config access" 
-ON launch_config 
-FOR ALL 
-TO service_role 
-USING (true) 
-WITH CHECK (true);
+-- Dynamic Policy Creation for Admin / Service Role Access:
+DO $$ 
+DECLARE
+    v_has_service_role BOOLEAN;
+BEGIN 
+    -- Attempt to create service_role if missing (works when running with CREATEROLE privilege)
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'service_role') THEN 
+        BEGIN
+            CREATE ROLE service_role WITH NOLOGIN; 
+        EXCEPTION WHEN OTHERS THEN
+            NULL;
+        END;
+    END IF; 
+
+    SELECT EXISTS (SELECT FROM pg_roles WHERE rolname = 'service_role') INTO v_has_service_role;
+
+    -- B) Waitlist Admin Policy
+    IF v_has_service_role THEN
+        EXECUTE 'CREATE POLICY "Service role & admin can read waitlist" ON waitlist FOR ALL TO service_role USING (true) WITH CHECK (true)';
+    ELSE
+        EXECUTE 'CREATE POLICY "Service role & admin can read waitlist" ON waitlist FOR ALL TO CURRENT_USER USING (true) WITH CHECK (true)';
+    END IF;
+
+    -- B) Launch Config Admin Policy
+    IF v_has_service_role THEN
+        EXECUTE 'CREATE POLICY "Service role & admin full launch config access" ON launch_config FOR ALL TO service_role USING (true) WITH CHECK (true)';
+    ELSE
+        EXECUTE 'CREATE POLICY "Service role & admin full launch config access" ON launch_config FOR ALL TO CURRENT_USER USING (true) WITH CHECK (true)';
+    END IF;
+END $$;
+

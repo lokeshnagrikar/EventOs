@@ -10,6 +10,8 @@ web/build/
 **/target/
 **/bin/
 *.class
+BOOT-INF/
+META-INF/
 .metadata
 .classpath
 .project
