@@ -32,7 +32,7 @@ const DotLottieReact = dynamic(
       <img
         src="/chatbot-animated.gif"
         alt="EventOS AI"
-        className="w-full h-full object-contain pointer-events-none"
+        className="w-full h-full object-contain pointer-events-none lottie-theme-bot"
       />
     ),
   }
@@ -307,7 +307,7 @@ export default function AiAssistant() {
         {/* Subtle organic purple ambient pulse beneath the mascot */}
         <div className="absolute inset-2 bg-gradient-to-tr from-purple-600/35 via-indigo-500/25 to-pink-500/25 rounded-full blur-xl opacity-60 group-hover:opacity-100 transition-opacity -z-10" />
 
-        <div className="w-full h-full flex items-center justify-center p-0.5">
+        <div className="w-full h-full flex items-center justify-center p-0.5 lottie-theme-bot">
           <DotLottieReact
             src={CHATBOT_LOTTIE_URL}
             loop
@@ -335,7 +335,7 @@ export default function AiAssistant() {
             {/* Glassmorphic Header Bar */}
             <div className="px-5 py-4 border-b border-white/10 bg-white/[0.03] backdrop-blur-md flex items-center justify-between z-10">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 flex items-center justify-center shrink-0">
+                <div className="h-9 w-9 flex items-center justify-center shrink-0 lottie-theme-bot">
                   <DotLottieReact
                     src={CHATBOT_LOTTIE_URL}
                     loop
@@ -386,7 +386,7 @@ export default function AiAssistant() {
                       "h-7 w-7 flex items-center justify-center shrink-0 mt-0.5",
                       msg.sender === "user"
                         ? "rounded-full bg-white/15 border border-white/25 text-white"
-                        : ""
+                        : "lottie-theme-bot"
                     )}
                   >
                     {msg.sender === "user" ? (
@@ -488,7 +488,7 @@ export default function AiAssistant() {
 
               {isTyping && (
                 <div className="flex gap-3 max-w-[80%] mr-auto">
-                  <div className="h-7 w-7 flex items-center justify-center shrink-0">
+                  <div className="h-7 w-7 flex items-center justify-center shrink-0 lottie-theme-bot">
                     <DotLottieReact
                       src={CHATBOT_LOTTIE_URL}
                       loop

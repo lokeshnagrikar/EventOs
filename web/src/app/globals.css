@@ -573,8 +573,8 @@ html.lenis body {
   animation-play-state: paused;
 }
 
-
-
-
-
-
+/* EventOS AI Chatbot Theme Filter: Shifts cyan accents to brand electric purple #8B5CF6 while preserving metallic white body */
+.lottie-theme-bot {
+  filter: hue-rotate(85deg) saturate(1.35) brightness(1.02);
+  -webkit-filter: hue-rotate(85deg) saturate(1.35) brightness(1.02);
+}

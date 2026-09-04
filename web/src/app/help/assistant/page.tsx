@@ -31,7 +31,7 @@ const DotLottieReact = dynamic(
       <img
         src="/chatbot-animated.gif"
         alt="EventOS AI"
-        className="w-full h-full object-contain pointer-events-none"
+        className="w-full h-full object-contain pointer-events-none lottie-theme-bot"
       />
     ),
   }
@@ -166,7 +166,7 @@ export default function AiAssistantPage() {
         
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-4 border-b border-zinc-850/60 bg-zinc-950/40">
-          <div className="h-10 w-10 flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 flex items-center justify-center shrink-0 lottie-theme-bot">
             <DotLottieReact
               src={CHATBOT_LOTTIE_URL}
               loop
@@ -196,7 +196,7 @@ export default function AiAssistantPage() {
                   {/* Avatar */}
                   <div className={cn(
                     "h-8 w-8 flex items-center justify-center shrink-0",
-                    isAi ? "" : "rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400"
+                    isAi ? "lottie-theme-bot" : "rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400"
                   )}>
                     {isAi ? (
                       <DotLottieReact
@@ -265,7 +265,7 @@ export default function AiAssistantPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex gap-3 mr-auto"
               >
-                <div className="h-8 w-8 flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 flex items-center justify-center shrink-0 lottie-theme-bot">
                   <DotLottieReact
                     src={CHATBOT_LOTTIE_URL}
                     loop
