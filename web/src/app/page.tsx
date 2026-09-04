@@ -15,7 +15,6 @@ import { Preloader } from "@/components/landing/preloader/Preloader";
 // Above-the-fold sections loaded eagerly for fast LCP
 import { Navbar } from "@/components/landing/Navbar";
 import { Hero } from "@/components/landing/Hero";
-import { TrustedBy } from "@/components/landing/TrustedBy";
 
 // Below-the-fold sections dynamically imported for smaller initial bundle
 const Features = dynamic(() => import("@/components/landing/Features").then(m => ({ default: m.Features })), { ssr: true });
@@ -169,10 +168,7 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
             <Hero preloaderActive={preloaderActive} />
           </div>
 
-          {/* 2. Trusted By Brand Marquee */}
-          <TrustedBy />
-
-          {/* 3. Features Showcase — BentoGrid + SpotlightCards */}
+          {/* 2. Features Showcase — BentoGrid + SpotlightCards */}
           <div id="features">
             <Suspense fallback={<SectionSkeleton />}>
               <Features />

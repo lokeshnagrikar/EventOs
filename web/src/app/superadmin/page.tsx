@@ -193,9 +193,19 @@ export default function SuperAdminDashboard() {
     }
   }, [socketStatus, socketSubscribe, addToast]);
 
+  // Role-based access guard
+  useEffect(() => {
+    if (mounted) {
+      if (!user || user.role !== "SUPER_ADMIN") {
+        addToast("Access Denied: Platform Superadmin console requires SUPER_ADMIN role.", "error");
+        router.push("/superadmin/login");
+      }
+    }
+  }, [mounted, user, router, addToast]);
+
   // Fetch real superadmin data
   useEffect(() => {
-    if (!mounted || !user) return;
+    if (!mounted || !user || user.role !== "SUPER_ADMIN") return;
 
     const fetchSuperAdminData = async () => {
       try {

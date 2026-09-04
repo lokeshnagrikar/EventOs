@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Calendar, Wallet, ImageIcon, Sparkles, Layout, HelpCircle } from "lucide-react";
-import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { Users, Calendar, Wallet, ImageIcon, HelpCircle, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthModalStore } from "@/store/authModalStore";
 
 const FEATURES_DEEP = [
   {
@@ -56,18 +56,19 @@ const FEATURES_DEEP = [
 export default function FeaturesPage() {
   const [activeTab, setActiveTab] = useState("crm");
   const featureData = FEATURES_DEEP.find((f) => f.id === activeTab) || FEATURES_DEEP[0];
+  const openModal = useAuthModalStore((state) => state.openModal);
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-650 selection:text-white">
+    <div className="min-h-screen bg-[#FAF9F6] text-slate-900 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-600 selection:text-white">
       <Navbar />
 
-      <main className="flex-1 pt-32 pb-24 max-w-7xl mx-auto px-6 space-y-20 w-full">
+      <main className="flex-1 pt-32 pb-24 max-w-7xl mx-auto px-6 space-y-16 w-full">
         {/* Hero */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <motion.span
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-xs font-black uppercase tracking-widest bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent"
+            className="text-xs font-black uppercase tracking-widest text-purple-700 block font-mono"
           >
             SaaS Feature Matrix
           </motion.span>
@@ -75,7 +76,7 @@ export default function FeaturesPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl font-black tracking-tight text-white leading-none"
+            className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 font-heading leading-tight"
           >
             Event Management Engines. Consolidate Workloads.
           </motion.h1>
@@ -83,14 +84,14 @@ export default function FeaturesPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-base text-zinc-400 font-semibold"
+            className="text-base text-slate-600 font-medium"
           >
             Ditch multiple subscription costs. EventOS integrates CRM, invoicing ledgers, calendars, and secure galleries in a single workspace.
           </motion.p>
         </div>
 
         {/* Modular Tabs Selector */}
-        <div className="flex flex-wrap justify-center gap-2 select-none">
+        <div className="flex flex-wrap justify-center gap-3 select-none">
           {FEATURES_DEEP.map((feat) => {
             const Icon = feat.icon;
             const isActive = feat.id === activeTab;
@@ -99,13 +100,13 @@ export default function FeaturesPage() {
                 key={feat.id}
                 onClick={() => setActiveTab(feat.id)}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer",
+                  "flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-extrabold transition-all border cursor-pointer",
                   isActive
-                    ? "bg-purple-500/10 text-purple-400 border-purple-500/25 shadow-lg shadow-purple-500/5"
-                    : "bg-zinc-950/40 text-zinc-450 hover:text-zinc-200 border-zinc-850 hover:border-zinc-700"
+                    ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-500/20"
+                    : "bg-white text-slate-700 hover:text-slate-900 border-slate-200/80 hover:border-purple-300 shadow-sm"
                 )}
               >
-                <Icon size={13} />
+                <Icon size={15} />
                 {feat.title}
               </button>
             );
@@ -120,25 +121,25 @@ export default function FeaturesPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.2 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#121214]/10 border border-zinc-850 p-8 rounded-3xl"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start bg-white border border-slate-200/90 p-8 sm:p-10 rounded-3xl shadow-sm"
           >
             <div className="space-y-4">
-              <span className="text-[9px] text-purple-450 uppercase font-black tracking-widest block font-mono">Module Specification</span>
-              <h3 className="text-xl font-black text-white">{featureData.title}</h3>
-              <p className="text-xs text-zinc-300 font-bold leading-relaxed">{featureData.overview}</p>
-              <p className="text-xs text-zinc-500 leading-relaxed font-semibold">{featureData.details}</p>
+              <span className="text-[10px] text-purple-700 uppercase font-extrabold tracking-widest block font-mono">Module Specification</span>
+              <h3 className="text-2xl font-black text-slate-900 font-heading">{featureData.title}</h3>
+              <p className="text-sm text-slate-600 font-medium leading-relaxed">{featureData.overview}</p>
+              <p className="text-xs text-slate-500 leading-relaxed font-medium pt-2 border-t border-slate-100">{featureData.details}</p>
             </div>
 
             <div className="space-y-4">
-              <span className="text-[9px] text-purple-450 uppercase font-black tracking-widest block font-mono">Module FAQ</span>
+              <span className="text-[10px] text-purple-700 uppercase font-extrabold tracking-widest block font-mono">Module FAQ</span>
               <div className="space-y-3">
                 {featureData.faqs.map((faq) => (
-                  <div key={faq.q} className="p-4 border border-zinc-850 bg-zinc-950/40 rounded-xl space-y-1.5">
-                    <h4 className="text-[11px] font-black text-zinc-200 flex items-center gap-1.5">
-                      <HelpCircle size={12} className="text-purple-400 shrink-0" />
+                  <div key={faq.q} className="p-5 border border-slate-200/80 bg-slate-50/50 rounded-2xl space-y-1.5">
+                    <h4 className="text-xs font-extrabold text-slate-900 flex items-center gap-2 font-heading">
+                      <HelpCircle size={15} className="text-purple-600 shrink-0" />
                       {faq.q}
                     </h4>
-                    <p className="text-[10px] text-zinc-500 font-semibold leading-relaxed pl-4.5">{faq.a}</p>
+                    <p className="text-xs text-slate-600 font-medium leading-relaxed pl-5.5">{faq.a}</p>
                   </div>
                 ))}
               </div>
@@ -147,13 +148,17 @@ export default function FeaturesPage() {
         </AnimatePresence>
 
         {/* CTA */}
-        <div className="p-12 border border-zinc-800 bg-zinc-955 rounded-3xl text-center space-y-4 select-none">
-          <h3 className="text-xl font-black text-white uppercase tracking-tight">Experience EventOS platform features live</h3>
-          <p className="text-xs text-zinc-400 font-semibold max-w-xl mx-auto leading-relaxed">
-            One-click interactive demo access to the client portal and developer marketplace dashboard, no sign-up or credit card authorization required.
+        <div className="p-8 sm:p-12 border border-slate-800 bg-slate-900 text-white rounded-3xl text-center space-y-6 shadow-xl">
+          <h3 className="text-xl sm:text-3xl font-black font-heading tracking-tight">Experience EventOS platform features live</h3>
+          <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-xl mx-auto leading-relaxed">
+            One-click interactive access to your client portal and developer marketplace dashboard, no sign-up or credit card required.
           </p>
-          <button className="px-6 py-2.5 bg-purple-650 hover:bg-purple-600 text-white rounded-xl text-xs font-bold transition cursor-pointer">
-            Explore Interactive Demo
+          <button
+            onClick={() => openModal("register")}
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white rounded-full text-xs font-extrabold shadow-lg shadow-purple-500/25 hover:brightness-110 active:scale-95 transition cursor-pointer"
+          >
+            <span>Start 14-Day Free Trial</span>
+            <ArrowRight size={16} />
           </button>
         </div>
       </main>

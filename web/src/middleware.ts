@@ -4,11 +4,14 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSession = request.cookies.get("hasSession")?.value;
+  const userRole = request.cookies.get("user_role")?.value;
 
   const isAuthRoute = pathname.startsWith("/login") || 
                       pathname.startsWith("/register") || 
                       pathname.startsWith("/forgot-password") || 
                       pathname.startsWith("/reset-password");
+
+  const isSuperAdminRoute = pathname.startsWith("/superadmin") && pathname !== "/superadmin/login";
                       
   const isProtectedRoute = pathname.startsWith("/portal") || 
                             pathname.startsWith("/onboarding") || 
@@ -29,10 +32,11 @@ export function middleware(request: NextRequest) {
                             pathname.startsWith("/developer") ||
                             pathname.startsWith("/import") ||
                             pathname.startsWith("/automation") ||
-                            (pathname.startsWith("/superadmin") && pathname !== "/superadmin/login") ||
+                            isSuperAdminRoute ||
                             pathname.startsWith("/finance") ||
                             pathname.startsWith("/reports");
 
+  // Require session for protected routes
   if (isProtectedRoute && !hasSession) {
     const redirectPath = pathname.startsWith("/superadmin") ? "/superadmin/login" : "/";
     const loginUrl = new URL(redirectPath, request.url);
@@ -43,8 +47,22 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Superadmin console role enforcement
+  if (isSuperAdminRoute && userRole !== "SUPER_ADMIN") {
+    const loginUrl = new URL("/superadmin/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Redirect authenticated users away from public auth routes
   if (isAuthRoute && hasSession) {
-    return NextResponse.redirect(new URL("/workspace-select", request.url));
+    if (userRole === "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/superadmin", request.url));
+    } else if (userRole === "CLIENT") {
+      return NextResponse.redirect(new URL("/portal", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/workspace-select", request.url));
+    }
   }
 
   return NextResponse.next();

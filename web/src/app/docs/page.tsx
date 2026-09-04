@@ -43,7 +43,7 @@ export default function DocsPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl font-black tracking-tight text-white leading-none"
+            className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 font-heading leading-none"
           >
             Integrate EventOS with Your Core Stack.
           </motion.h1>
@@ -51,7 +51,7 @@ export default function DocsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-base text-zinc-400 font-semibold"
+            className="text-base text-slate-600 font-semibold"
           >
             Construct custom client portals, trigger webhook payloads on booking confirmations, and manage API keys dynamically.
           </motion.p>

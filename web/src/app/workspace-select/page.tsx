@@ -58,6 +58,8 @@ export default function WorkspaceSelectPage() {
       // Redirect based on the newly assumed role
       if (role === "CLIENT") {
         router.push("/portal");
+      } else if (role === "SUPER_ADMIN") {
+        router.push("/superadmin");
       } else {
         router.push("/dashboard");
       }

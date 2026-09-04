@@ -502,6 +502,8 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         router.push(redirectUrl);
       } else if (role === "CLIENT") {
         router.push("/portal");
+      } else if (role === "SUPER_ADMIN") {
+        router.push("/superadmin");
       } else {
         router.push("/workspace-select");
       }
