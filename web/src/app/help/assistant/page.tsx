@@ -16,9 +16,26 @@ import {
   Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import PageShell from "@/components/ui/PageShell";
 import { ARTICLES, FAQS, Article } from "@/lib/helpData";
 import { generateAIResponse } from "@/lib/aiProvider";
+
+const CHATBOT_LOTTIE_URL = "https://lottie.host/81c78ae8-59f5-4e19-bc6c-b7c5ba867ffd/Id8PQ7Y2HD.lottie";
+
+const DotLottieReact = dynamic(
+  () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
+  {
+    ssr: false,
+    loading: () => (
+      <img
+        src="/chatbot-animated.gif"
+        alt="EventOS AI"
+        className="w-full h-full object-contain pointer-events-none"
+      />
+    ),
+  }
+);
 
 interface ChatMessage {
   id: string;
@@ -149,8 +166,13 @@ export default function AiAssistantPage() {
         
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-4 border-b border-zinc-850/60 bg-zinc-950/40">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/20 animate-pulse">
-            <Sparkles size={16} />
+          <div className="h-10 w-10 flex items-center justify-center shrink-0">
+            <DotLottieReact
+              src={CHATBOT_LOTTIE_URL}
+              loop
+              autoplay
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <h2 className="text-xs font-black uppercase text-zinc-200 tracking-wider">EventOS AI Support</h2>
@@ -173,10 +195,19 @@ export default function AiAssistantPage() {
                 >
                   {/* Avatar */}
                   <div className={cn(
-                    "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm border",
-                    isAi ? "bg-purple-500/10 border-purple-500/20 text-purple-400" : "bg-zinc-900 border-zinc-800 text-zinc-400"
+                    "h-8 w-8 flex items-center justify-center shrink-0",
+                    isAi ? "" : "rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400"
                   )}>
-                    {isAi ? <Bot size={14} /> : <User size={14} />}
+                    {isAi ? (
+                      <DotLottieReact
+                        src={CHATBOT_LOTTIE_URL}
+                        loop
+                        autoplay
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <User size={14} />
+                    )}
                   </div>
 
                   {/* Bubble */}
@@ -234,8 +265,13 @@ export default function AiAssistantPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex gap-3 mr-auto"
               >
-                <div className="h-8 w-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
-                  <Bot size={14} />
+                <div className="h-8 w-8 flex items-center justify-center shrink-0">
+                  <DotLottieReact
+                    src={CHATBOT_LOTTIE_URL}
+                    loop
+                    autoplay
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div className="px-4 py-3 rounded-2xl bg-zinc-900/60 border border-zinc-850 text-zinc-400 flex items-center gap-1 shadow-md">
                   <Loader2 size={12} className="animate-spin text-purple-400" />

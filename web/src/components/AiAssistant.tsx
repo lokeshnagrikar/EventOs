@@ -18,8 +18,25 @@ import {
   ExternalLink
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 import { generateAIResponse, getAIConfig } from "@/lib/aiProvider";
 import { cn } from "@/lib/utils";
+
+const CHATBOT_LOTTIE_URL = "https://lottie.host/81c78ae8-59f5-4e19-bc6c-b7c5ba867ffd/Id8PQ7Y2HD.lottie";
+
+const DotLottieReact = dynamic(
+  () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
+  {
+    ssr: false,
+    loading: () => (
+      <img
+        src="/chatbot-animated.gif"
+        alt="EventOS AI"
+        className="w-full h-full object-contain pointer-events-none"
+      />
+    ),
+  }
+);
 
 function parseBoldText(text: string) {
   const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -279,23 +296,25 @@ export default function AiAssistant() {
 
   return (
     <>
-      {/* Liquid Glass Floating Trigger Orb */}
+      {/* Floating Animated Lottie AI Mascot (Without Circle Border) */}
       <motion.button
-        whileHover={{ scale: 1.08 }}
+        whileHover={{ scale: 1.14, y: -4 }}
         whileTap={{ scale: 0.94 }}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="ai-trigger-btn fixed bottom-20 sm:bottom-6 right-4 sm:right-6 h-13 w-13 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-600 text-white flex items-center justify-center shadow-[0_8px_30px_rgba(147,51,234,0.45)] border-2 border-white/50 z-[9999] group cursor-pointer overflow-hidden transition-all duration-300"
-        title="EventOS AI Co-pilot (Cmd + Space)"
+        className="ai-trigger-btn fixed bottom-20 sm:bottom-6 right-4 sm:right-6 w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center z-[9999] group cursor-pointer focus:outline-none select-none drop-shadow-[0_12px_28px_rgba(147,51,234,0.35)]"
+        title="EventOS AI Assistant (Cmd + Space)"
       >
-        {/* Ambient Glowing Aura Ring */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full opacity-60 group-hover:opacity-100 blur-md transition duration-500 -z-10" />
+        {/* Subtle organic purple ambient pulse beneath the mascot */}
+        <div className="absolute inset-2 bg-gradient-to-tr from-purple-600/35 via-indigo-500/25 to-pink-500/25 rounded-full blur-xl opacity-60 group-hover:opacity-100 transition-opacity -z-10" />
 
-        {/* Specular Liquid Light Highlight */}
-        <div className="h-7 w-7 rounded-full bg-white/20 flex items-center justify-center shadow-inner shrink-0 border border-white/30 backdrop-blur-md">
-          <Sparkles size={16} className="text-white animate-pulse" />
+        <div className="w-full h-full flex items-center justify-center p-0.5">
+          <DotLottieReact
+            src={CHATBOT_LOTTIE_URL}
+            loop
+            autoplay
+            className="w-full h-full object-contain pointer-events-none filter drop-shadow-md"
+          />
         </div>
-
-        <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_10px_rgba(52,211,153,0.9)] ring-2 ring-purple-900" />
       </motion.button>
 
       {/* Ultra Glassmorphic Drawer Panel */}
@@ -316,8 +335,13 @@ export default function AiAssistant() {
             {/* Glassmorphic Header Bar */}
             <div className="px-5 py-4 border-b border-white/10 bg-white/[0.03] backdrop-blur-md flex items-center justify-between z-10">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/25 shrink-0 border border-white/20">
-                  <Sparkles size={15} />
+                <div className="h-9 w-9 flex items-center justify-center shrink-0">
+                  <DotLottieReact
+                    src={CHATBOT_LOTTIE_URL}
+                    loop
+                    autoplay
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -327,7 +351,7 @@ export default function AiAssistant() {
                     </span>
                   </div>
                   <p className="text-[10px] text-zinc-300/80 font-medium flex items-center gap-1.5 mt-0.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(192,132,252,0.9)]" />
                     {pageContext.name}
                   </p>
                 </div>
@@ -359,13 +383,22 @@ export default function AiAssistant() {
                   {/* Avatar Icon */}
                   <div
                     className={cn(
-                      "h-7 w-7 rounded-full flex items-center justify-center shrink-0 border shadow-sm mt-0.5 backdrop-blur-md",
+                      "h-7 w-7 flex items-center justify-center shrink-0 mt-0.5",
                       msg.sender === "user"
-                        ? "bg-white/15 border-white/25 text-white"
-                        : "bg-gradient-to-tr from-cyan-500/20 via-indigo-500/20 to-purple-500/20 border-white/20 text-purple-300"
+                        ? "rounded-full bg-white/15 border border-white/25 text-white"
+                        : ""
                     )}
                   >
-                    {msg.sender === "user" ? <User size={12} /> : <Bot size={12} />}
+                    {msg.sender === "user" ? (
+                      <User size={12} />
+                    ) : (
+                      <DotLottieReact
+                        src={CHATBOT_LOTTIE_URL}
+                        loop
+                        autoplay
+                        className="w-full h-full object-contain"
+                      />
+                    )}
                   </div>
 
                   <div className="space-y-2 flex-1 min-w-0">
@@ -455,8 +488,13 @@ export default function AiAssistant() {
 
               {isTyping && (
                 <div className="flex gap-3 max-w-[80%] mr-auto">
-                  <div className="h-7 w-7 rounded-full bg-white/15 border border-white/25 text-purple-300 flex items-center justify-center shrink-0 backdrop-blur-md">
-                    <Loader2 size={12} className="animate-spin" />
+                  <div className="h-7 w-7 flex items-center justify-center shrink-0">
+                    <DotLottieReact
+                      src={CHATBOT_LOTTIE_URL}
+                      loop
+                      autoplay
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                   <div className="px-4 py-3 bg-white/[0.05] border border-white/10 rounded-[20px] rounded-tl-sm flex items-center gap-1.5 backdrop-blur-xl">
                     <span className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
