@@ -539,6 +539,41 @@ html.lenis body {
   pointer-events: none;
 }
 
+/* ─── Vertical Testimonial Marquee ─────────────────────────────────────────── */
+@keyframes marquee-vertical {
+  0% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes marquee-vertical-reverse {
+  0% {
+    transform: translateY(-50%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+.animate-marquee-vertical {
+  animation: marquee-vertical var(--marquee-duration, 25s) linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-vertical-reverse {
+  animation: marquee-vertical-reverse var(--marquee-duration, 25s) linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-vertical:hover,
+.animate-marquee-vertical-reverse:hover {
+  animation-play-state: paused;
+}
+
+
 
 
 

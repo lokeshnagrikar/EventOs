@@ -155,7 +155,7 @@ export function Testimonials() {
 
   return (
     <section
-      className="py-24 border-b border-[#E5E7EB] bg-[#FFFFFF] relative overflow-hidden"
+      className="py-24 border-b border-slate-200/80 bg-[#FAF9F6] relative overflow-hidden"
       id="testimonials"
     >
       {/* Soft background glow circles */}

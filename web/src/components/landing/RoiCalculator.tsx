@@ -53,7 +53,7 @@ export function RoiCalculator() {
   };
 
   return (
-    <section className="py-24 bg-[#FFFFFF] relative overflow-hidden border-b border-[#E5E7EB] font-sans" id="roi-calculator">
+    <section className="py-24 bg-[#FAF9F6] relative overflow-hidden border-b border-slate-200/80 font-sans" id="roi-calculator">
       {/* Ambient background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-purple-100/30 blur-[140px] rounded-full pointer-events-none z-0" />
 
@@ -107,15 +107,15 @@ export function RoiCalculator() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="lg:col-span-7 rounded-3xl border border-purple-500/30 bg-zinc-950/70 backdrop-blur-2xl p-6 sm:p-8 space-y-8 flex flex-col justify-between shadow-2xl relative overflow-hidden"
+            className="lg:col-span-7 rounded-3xl border border-slate-200/90 bg-white/95 backdrop-blur-xl p-6 sm:p-8 space-y-8 flex flex-col justify-between shadow-xl shadow-slate-200/40 relative overflow-hidden"
           >
             <div className="space-y-7">
-              <div className="flex flex-wrap justify-between items-center gap-2 pb-3 border-b border-zinc-850">
-                <h3 className="text-lg font-black text-white flex items-center gap-2">
-                  <Icon icon="solar:slider-vertical-bold-duotone" className="text-purple-400" />
+              <div className="flex flex-wrap justify-between items-center gap-2 pb-3 border-b border-slate-100">
+                <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                  <Icon icon="solar:slider-vertical-bold-duotone" className="text-purple-600" />
                   <span>Configure Agency Parameters</span>
                 </h3>
-                <span className="text-[10px] font-mono font-extrabold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-3 py-1 rounded-full">
+                <span className="text-[10px] font-mono font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full">
                   Monthly Volume: {formatCurrency(totalMonthlyVolume)}
                 </span>
               </div>
@@ -123,8 +123,8 @@ export function RoiCalculator() {
               {/* Slider 1: Events per Month */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-bold text-zinc-200">Events Managed per Month</label>
-                  <span className="font-extrabold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20 font-mono">
+                  <label className="font-bold text-slate-800">Events Managed per Month</label>
+                  <span className="font-extrabold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200 font-mono">
                     {eventsPerMonth} Events
                   </span>
                 </div>
@@ -137,9 +137,9 @@ export function RoiCalculator() {
                     setActivePreset(null);
                     setEventsPerMonth(Number(e.target.value));
                   }}
-                  className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-purple-600"
                 />
-                <div className="flex justify-between text-[10px] text-zinc-500 font-bold font-mono">
+                <div className="flex justify-between text-[10px] text-slate-500 font-bold font-mono">
                   <span>1 Event</span>
                   <span>20 Events</span>
                   <span>40+ Events</span>
@@ -149,8 +149,8 @@ export function RoiCalculator() {
               {/* Slider 2: Average Event Budget */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-bold text-zinc-200">Average Event Budget / Quote Value</label>
-                  <span className="font-extrabold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 font-mono">
+                  <label className="font-bold text-slate-800">Average Event Budget / Quote Value</label>
+                  <span className="font-extrabold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 font-mono">
                     {formatCurrency(avgBudget)}
                   </span>
                 </div>
@@ -164,9 +164,9 @@ export function RoiCalculator() {
                     setActivePreset(null);
                     setAvgBudget(Number(e.target.value));
                   }}
-                  className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                  className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                 />
-                <div className="flex justify-between text-[10px] text-zinc-500 font-bold font-mono">
+                <div className="flex justify-between text-[10px] text-slate-500 font-bold font-mono">
                   <span>₹50K</span>
                   <span>₹15 Lakh</span>
                   <span>₹30 Lakh+</span>
@@ -176,8 +176,8 @@ export function RoiCalculator() {
               {/* Slider 3: Team Members */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-bold text-zinc-200">Coordinators & Team Seats</label>
-                  <span className="font-extrabold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20 font-mono">
+                  <label className="font-bold text-slate-800">Coordinators & Team Seats</label>
+                  <span className="font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200 font-mono">
                     {teamSize} Members
                   </span>
                 </div>
@@ -190,9 +190,9 @@ export function RoiCalculator() {
                     setActivePreset(null);
                     setTeamSize(Number(e.target.value));
                   }}
-                  className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                  className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                 />
-                <div className="flex justify-between text-[10px] text-zinc-500 font-bold font-mono">
+                <div className="flex justify-between text-[10px] text-slate-500 font-bold font-mono">
                   <span>1 Solo Coordinator</span>
                   <span>10 Seats</span>
                   <span>20 Seats</span>
@@ -200,8 +200,8 @@ export function RoiCalculator() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-zinc-850 flex items-center gap-3 text-xs text-zinc-400 font-medium">
-              <ShieldCheck size={16} className="text-purple-400 shrink-0" />
+            <div className="pt-4 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-500 font-medium">
+              <ShieldCheck size={16} className="text-purple-600 shrink-0" />
               <span>Yield benchmarks calibrated from 10,000+ Indian wedding & event agency operations.</span>
             </div>
           </motion.div>
@@ -212,56 +212,56 @@ export function RoiCalculator() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="lg:col-span-5 rounded-3xl border border-purple-500/30 bg-gradient-to-b from-zinc-950 via-zinc-950 to-black backdrop-blur-2xl p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-[0_0_80px_rgba(139,92,246,0.25)] relative overflow-hidden"
+            className="lg:col-span-5 rounded-3xl border border-purple-200/90 bg-white/95 backdrop-blur-xl p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-xl shadow-purple-500/10 relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 w-36 h-36 bg-purple-500/15 blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-36 h-36 bg-purple-100/40 blur-3xl pointer-events-none" />
 
             <div>
-              <span className="text-[10px] font-black uppercase text-purple-400 tracking-widest block mb-1 font-mono">
+              <span className="text-[10px] font-black uppercase text-purple-700 tracking-widest block mb-1 font-mono">
                 Realized Agency Monthly Yield
               </span>
-              <h4 className="text-2xl font-black text-white font-heading">Monthly Time & Capital Recovered</h4>
+              <h4 className="text-2xl font-black text-slate-900 font-heading">Monthly Time & Capital Recovered</h4>
 
               {/* Dynamic Stats Grid */}
               <div className="space-y-4 mt-6">
-                <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
+                    <div className="h-10 w-10 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 shrink-0">
                       <Clock size={20} />
                     </div>
                     <div>
-                      <span className="text-xs text-zinc-400 block font-bold">Time Reclaimed</span>
-                      <span className="text-xl font-extrabold text-white font-mono">{hoursSavedPerMonth} hrs/mo</span>
+                      <span className="text-xs text-slate-500 block font-bold">Time Reclaimed</span>
+                      <span className="text-xl font-black text-slate-900 font-mono">{hoursSavedPerMonth} hrs/mo</span>
                     </div>
                   </div>
-                  <span className="text-[10px] text-purple-300 font-bold bg-purple-950 border border-purple-500/30 px-2.5 py-1 rounded-full font-mono">
+                  <span className="text-[10px] text-purple-700 font-bold bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-full font-mono">
                     +{Math.round(hoursSavedPerMonth / 8)} Days Saved
                   </span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
                       <TrendingUp size={20} />
                     </div>
                     <div>
-                      <span className="text-xs text-zinc-400 block font-bold">Scope Leakage Recovered</span>
-                      <span className="text-xl font-extrabold text-emerald-400 font-mono">{formatCurrency(revenueRecoveredPerMonth)}/mo</span>
+                      <span className="text-xs text-slate-500 block font-bold">Scope Leakage Recovered</span>
+                      <span className="text-xl font-black text-emerald-600 font-mono">{formatCurrency(revenueRecoveredPerMonth)}/mo</span>
                     </div>
                   </div>
-                  <span className="text-[10px] text-emerald-300 font-bold bg-emerald-950 border border-emerald-500/30 px-2.5 py-1 rounded-full font-mono">
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full font-mono">
                     Protected
                   </span>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-950/80 via-pink-950/60 to-purple-950/80 border border-purple-500/40 flex items-center justify-between shadow-lg">
+                <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 border-2 border-purple-200/90 flex items-center justify-between shadow-xs">
                   <div>
-                    <span className="text-[10px] font-black text-purple-300 uppercase tracking-widest block font-mono">Estimated Annual Return</span>
-                    <span className="text-3xl font-black text-white font-mono tracking-tight">{estimatedRoiMultiplier}x ROI</span>
+                    <span className="text-[10px] font-black text-purple-800 uppercase tracking-widest block font-mono">Estimated Annual Return</span>
+                    <span className="text-3xl font-black text-purple-900 font-mono tracking-tight">{estimatedRoiMultiplier}x ROI</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-zinc-400 block font-bold">Annual Net Value</span>
-                    <span className="text-base font-extrabold text-purple-300 font-mono">{formatCurrency(annualValueCreated)}</span>
+                    <span className="text-[10px] text-slate-500 block font-bold">Annual Net Value</span>
+                    <span className="text-base font-black text-purple-700 font-mono">{formatCurrency(annualValueCreated)}</span>
                   </div>
                 </div>
               </div>
@@ -269,7 +269,7 @@ export function RoiCalculator() {
 
             <button
               onClick={() => openModal("register")}
-              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-500 hover:to-pink-500 text-white font-extrabold text-xs transition-all duration-300 shadow-lg shadow-purple-600/25 border border-purple-400/40 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group"
+              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white font-extrabold text-xs transition-all duration-300 shadow-lg shadow-purple-600/20 border border-purple-400/30 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group"
             >
               <span>Activate Your Agency Yield — Start 14-Day Free Trial</span>
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />

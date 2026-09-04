@@ -11,36 +11,36 @@ const portalViews = [
     icon: "solar:home-bold-duotone",
     preview: (
       <div className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
           <div>
-            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Client Portal</p>
-            <h4 className="text-sm font-bold text-white">Preeti & Arjun — Wedding</h4>
+            <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Client Portal</p>
+            <h4 className="text-sm font-bold text-slate-900">Preeti & Arjun — Wedding</h4>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-bold">
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
             Active
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Event Date", value: "18 Oct 2026", icon: "solar:calendar-bold", color: "text-indigo-400" },
-            { label: "Venue", value: "Taj Hotel, Delhi", icon: "solar:map-point-bold", color: "text-pink-400" },
-            { label: "Guest Count", value: "450 Guests", icon: "solar:users-group-bold", color: "text-purple-400" },
-            { label: "Planner", value: "Sen Weddings", icon: "solar:user-check-bold", color: "text-cyan-400" },
+            { label: "Event Date", value: "18 Oct 2026", icon: "solar:calendar-bold", color: "text-indigo-600" },
+            { label: "Venue", value: "Taj Hotel, Delhi", icon: "solar:map-point-bold", color: "text-pink-600" },
+            { label: "Guest Count", value: "450 Guests", icon: "solar:users-group-bold", color: "text-purple-600" },
+            { label: "Planner", value: "Sen Weddings", icon: "solar:user-check-bold", color: "text-cyan-600" },
           ].map((item) => (
-            <div key={item.label} className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/60 space-y-1">
+            <div key={item.label} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1 shadow-xs">
               <div className="flex items-center gap-1.5">
                 <Icon icon={item.icon} className={`text-sm ${item.color}`} />
-                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wide">{item.label}</span>
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">{item.label}</span>
               </div>
-              <p className="text-xs font-bold text-zinc-200">{item.value}</p>
+              <p className="text-xs font-bold text-slate-900">{item.value}</p>
             </div>
           ))}
         </div>
 
-        <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center gap-2">
-          <Icon icon="solar:bell-bold-duotone" className="text-indigo-400 text-lg shrink-0" />
-          <span className="text-[10px] text-indigo-300 font-medium">
+        <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center gap-2">
+          <Icon icon="solar:bell-bold-duotone" className="text-indigo-600 text-lg shrink-0" />
+          <span className="text-[10px] text-indigo-900 font-semibold">
             Your planner has updated the event timeline. Review new changes.
           </span>
         </div>
@@ -53,12 +53,12 @@ const portalViews = [
     icon: "solar:document-text-bold-duotone",
     preview: (
       <div className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
           <div>
-            <p className="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Quote #QT-2026-088</p>
-            <h4 className="text-sm font-bold text-white">Wedding Event Proposal</h4>
+            <p className="text-[10px] font-bold text-pink-600 uppercase tracking-widest">Quote #QT-2026-088</p>
+            <h4 className="text-sm font-bold text-slate-900">Wedding Event Proposal</h4>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 font-bold">
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-bold">
             Pending Review
           </span>
         </div>
@@ -70,22 +70,22 @@ const portalViews = [
             { item: "Catering (450 pax)", amount: "₹4,50,000" },
             { item: "LED Wall & Sound System", amount: "₹1,50,000" },
           ].map((row) => (
-            <div key={row.item} className="flex justify-between items-center px-3 py-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-[10px]">
-              <span className="text-zinc-400">{row.item}</span>
-              <span className="font-bold text-white">{row.amount}</span>
+            <div key={row.item} className="flex justify-between items-center px-3 py-2 rounded-lg bg-slate-50 border border-slate-200/80 text-[10px]">
+              <span className="text-slate-600 font-medium">{row.item}</span>
+              <span className="font-bold text-slate-900">{row.amount}</span>
             </div>
           ))}
-          <div className="flex justify-between items-center px-3 py-2.5 rounded-lg bg-pink-500/10 border border-pink-500/20 text-[10px]">
-            <span className="font-bold text-white">Total (incl. 18% GST)</span>
-            <span className="font-extrabold text-pink-400">₹17,11,000</span>
+          <div className="flex justify-between items-center px-3 py-2.5 rounded-lg bg-pink-50 border border-pink-200 text-[10px]">
+            <span className="font-bold text-slate-900">Total (incl. 18% GST)</span>
+            <span className="font-black text-pink-600 text-xs">₹17,11,000</span>
           </div>
         </div>
 
         <div className="flex gap-2">
-          <button className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 text-[11px] font-bold text-white">
+          <button className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 text-[11px] font-bold text-white shadow-xs">
             ✓ Accept Proposal
           </button>
-          <button className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-[11px] font-bold text-zinc-400">
+          <button className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-slate-50">
             Message
           </button>
         </div>
@@ -98,41 +98,41 @@ const portalViews = [
     icon: "solar:wallet-money-bold-duotone",
     preview: (
       <div className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
           <div>
-            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Invoice #INV-2026-041</p>
-            <h4 className="text-sm font-bold text-white">Deposit Payment (50%)</h4>
+            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Invoice #INV-2026-041</p>
+            <h4 className="text-sm font-bold text-slate-900">Deposit Payment (50%)</h4>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20 font-bold">
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-bold">
             Due Today
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/60 space-y-3">
-          <div className="flex justify-between text-[10px]">
-            <span className="text-zinc-500">Invoice Amount</span>
-            <span className="font-bold text-white">₹8,55,500</span>
+        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3 shadow-xs">
+          <div className="flex justify-between text-[11px]">
+            <span className="text-slate-500 font-medium">Invoice Amount</span>
+            <span className="font-bold text-slate-900">₹8,55,500</span>
           </div>
-          <div className="flex justify-between text-[10px]">
-            <span className="text-zinc-500">Due Date</span>
-            <span className="font-bold text-amber-400">19 Jun 2026</span>
+          <div className="flex justify-between text-[11px]">
+            <span className="text-slate-500 font-medium">Due Date</span>
+            <span className="font-bold text-amber-600">19 Jun 2026</span>
           </div>
-          <div className="h-px bg-zinc-800" />
-          <div className="flex justify-between">
-            <span className="text-xs font-bold text-white">Total Due</span>
-            <span className="text-base font-extrabold text-emerald-400">₹8,55,500</span>
+          <div className="h-px bg-slate-200" />
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-extrabold text-slate-900">Total Due</span>
+            <span className="text-base font-black text-emerald-600">₹8,55,500</span>
           </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">Pay with</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Pay with</p>
           {["UPI / Google Pay", "Net Banking", "Credit / Debit Card"].map((method) => (
             <button
               key={method}
-              className="w-full py-2.5 px-4 rounded-xl bg-zinc-900/60 border border-zinc-800 text-left text-[11px] font-semibold text-zinc-300 hover:border-emerald-500/30 hover:text-white transition-all flex items-center justify-between"
+              className="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-left text-[11px] font-bold text-slate-800 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all flex items-center justify-between shadow-xs"
             >
-              {method}
-              <Icon icon="solar:arrow-right-bold" className="text-zinc-600 text-sm" />
+              <span>{method}</span>
+              <Icon icon="solar:arrow-right-bold" className="text-slate-400 text-sm" />
             </button>
           ))}
         </div>
@@ -145,10 +145,10 @@ const portalViews = [
     icon: "solar:clock-square-bold-duotone",
     preview: (
       <div className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
           <div>
-            <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Event Day Timeline</p>
-            <h4 className="text-sm font-bold text-white">18 Oct 2026 — Wedding Day</h4>
+            <p className="text-[10px] font-bold text-cyan-600 uppercase tracking-widest">Event Day Timeline</p>
+            <h4 className="text-sm font-bold text-slate-900">18 Oct 2026 — Wedding Day</h4>
           </div>
         </div>
 
@@ -166,19 +166,19 @@ const portalViews = [
                 <div
                   className={`h-5 w-5 rounded-full flex items-center justify-center text-[8px] font-extrabold border transition-all ${
                     item.done
-                      ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                      ? "bg-emerald-50 border-emerald-300 text-emerald-700"
                       : item.current
-                      ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-400 animate-pulse"
-                      : "bg-zinc-900 border-zinc-800 text-zinc-600"
+                      ? "bg-cyan-50 border-cyan-300 text-cyan-700 font-bold"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
                   }`}
                 >
                   {item.done ? "✓" : i + 1}
                 </div>
-                {i < 5 && <div className={`w-px h-5 ${item.done ? "bg-emerald-500/30" : "bg-zinc-800"}`} />}
+                {i < 5 && <div className={`w-px h-5 ${item.done ? "bg-emerald-300" : "bg-slate-200"}`} />}
               </div>
               <div className="pb-3">
-                <span className="font-mono text-[9px] font-bold text-zinc-500">{item.time}</span>
-                <p className={`text-[10px] font-semibold ${item.done ? "text-zinc-500" : item.current ? "text-cyan-300" : "text-zinc-400"}`}>
+                <span className="font-mono text-[9px] font-bold text-slate-500">{item.time}</span>
+                <p className={`text-[11px] font-bold ${item.done ? "text-slate-500" : item.current ? "text-cyan-700" : "text-slate-800"}`}>
                   {item.label}
                 </p>
               </div>
@@ -194,42 +194,42 @@ const portalViews = [
     icon: "solar:chat-round-dots-bold-duotone",
     preview: (
       <div className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
           <div>
-            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">WhatsApp Auto-Bot</p>
-            <h4 className="text-sm font-bold text-white">Client Conversation Thread</h4>
+            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">WhatsApp Auto-Bot</p>
+            <h4 className="text-sm font-bold text-slate-900">Client Conversation Thread</h4>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-bold flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Live Sync
           </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 space-y-3 font-sans text-xs">
+        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 font-sans text-xs">
           <div className="flex flex-col items-start space-y-1">
-            <span className="text-[9px] font-bold text-zinc-500">Priya Sharma (Bride) • 02:14 PM</span>
-            <div className="p-2.5 rounded-2xl rounded-tl-none bg-zinc-900 border border-zinc-800 text-zinc-200 max-w-[85%] leading-relaxed text-[11px]">
+            <span className="text-[9px] font-bold text-slate-500">Priya Sharma (Bride) • 02:14 PM</span>
+            <div className="p-2.5 rounded-2xl rounded-tl-none bg-white border border-slate-200 text-slate-800 max-w-[85%] leading-relaxed text-[11px] shadow-xs">
               "Hey! Have you updated the Mandap floral staging timeline?"
             </div>
           </div>
 
           <div className="flex flex-col items-end space-y-1">
-            <span className="text-[9px] font-bold text-emerald-400">EventOS Bot ✓✓ • 02:15 PM</span>
-            <div className="p-2.5 rounded-2xl rounded-tr-none bg-emerald-950/60 border border-emerald-500/30 text-emerald-200 max-w-[85%] leading-relaxed text-[11px]">
-              "Hi Priya! 🌸 Stage Mandap setup is 100% complete. Here is your live event link: <span className="underline font-mono">eventos.app/share/p-9281</span>"
+            <span className="text-[9px] font-bold text-emerald-600">EventOS Bot ✓✓ • 02:15 PM</span>
+            <div className="p-2.5 rounded-2xl rounded-tr-none bg-emerald-50 border border-emerald-200 text-emerald-950 max-w-[85%] leading-relaxed text-[11px] shadow-xs font-medium">
+              "Hi Priya! 🌸 Stage Mandap setup is 100% complete. Here is your live event link: <span className="underline font-mono text-emerald-700">eventos.app/share/p-9281</span>"
             </div>
           </div>
 
           <div className="flex flex-col items-start space-y-1">
-            <span className="text-[9px] font-bold text-zinc-500">Priya Sharma • 02:16 PM</span>
-            <div className="p-2.5 rounded-2xl rounded-tl-none bg-zinc-900 border border-zinc-800 text-zinc-200 max-w-[85%] leading-relaxed text-[11px]">
+            <span className="text-[9px] font-bold text-slate-500">Priya Sharma • 02:16 PM</span>
+            <div className="p-2.5 rounded-2xl rounded-tl-none bg-white border border-slate-200 text-slate-800 max-w-[85%] leading-relaxed text-[11px] shadow-xs">
               "Awesome! Clearing deposit payment right now."
             </div>
           </div>
 
           <div className="flex flex-col items-end space-y-1">
-            <span className="text-[9px] font-bold text-emerald-400">EventOS Bot ✓✓ • 02:17 PM</span>
-            <div className="p-2.5 rounded-2xl rounded-tr-none bg-emerald-950/60 border border-emerald-500/30 text-emerald-200 max-w-[85%] leading-relaxed text-[11px]">
+            <span className="text-[9px] font-bold text-emerald-600">EventOS Bot ✓✓ • 02:17 PM</span>
+            <div className="p-2.5 rounded-2xl rounded-tr-none bg-emerald-50 border border-emerald-200 text-emerald-950 max-w-[85%] leading-relaxed text-[11px] shadow-xs font-medium">
               "Deposit payment of ₹1,50,000 received via GPay UPI ✓✓. Receipt #EOS-INV-928 generated!"
             </div>
           </div>
@@ -254,7 +254,7 @@ export function ClientPortalPreview() {
 
   return (
     <section
-      className="py-24 border-b border-[#E5E7EB] bg-[#F8F7FF] relative overflow-hidden"
+      className="py-24 border-b border-slate-200/80 bg-[#FAF9F6] relative overflow-hidden"
       id="portal-preview"
     >
       {/* Background glows */}
@@ -364,25 +364,30 @@ export function ClientPortalPreview() {
             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 via-purple-500/5 to-transparent blur-2xl rounded-3xl pointer-events-none" />
 
             {/* Mockup Window */}
-            <div className="relative rounded-2xl border border-white/[0.08] bg-[#0c0c0e]/45 shadow-[0_0_60px_rgba(99,102,241,0.08)] backdrop-blur-2xl overflow-hidden">
+            <div className="relative rounded-2xl border border-slate-200/90 bg-white/95 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl overflow-hidden">
               {/* Window dots */}
-              <div className="flex items-center gap-1.5 px-4 py-3 border-b border-zinc-900 bg-zinc-950/60">
-                <div className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
-                <div className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
-                <div className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
-                <span className="text-[10px] font-mono text-zinc-600 ml-2">portal.eventos.io/client/preeti-arjun</span>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200/80 bg-slate-50/80">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2.5 w-2.5 rounded-full bg-rose-400/80" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
+                </div>
+                <div className="text-[10px] font-mono text-slate-600 bg-white px-3 py-0.5 rounded-md border border-slate-200 shadow-2xs">
+                  portal.eventos.io/client/preeti-arjun
+                </div>
+                <div className="w-8" />
               </div>
 
               {/* Tab Navigation inside portal */}
-              <div className="flex gap-1 px-4 pt-3 pb-0 border-b border-zinc-900">
+              <div className="flex gap-1 px-4 pt-2.5 pb-0 border-b border-slate-200/80 bg-slate-50/40">
                 {portalViews.map((view) => (
                   <button
                     key={view.id}
                     onClick={() => setActiveView(view.id)}
                     className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold rounded-t-lg transition-all relative border-b-2 -mb-px ${
                       activeView === view.id
-                        ? "text-indigo-400 border-indigo-500 bg-indigo-500/5"
-                        : "text-zinc-600 border-transparent hover:text-zinc-400"
+                        ? "text-indigo-600 border-indigo-600 bg-white shadow-xs"
+                        : "text-slate-500 border-transparent hover:text-slate-900"
                     }`}
                   >
                     <Icon icon={view.icon} className="text-sm" />
@@ -392,7 +397,7 @@ export function ClientPortalPreview() {
               </div>
 
               {/* Content Area */}
-              <div className="p-5 min-h-[360px]">
+              <div className="p-5 min-h-[360px] bg-white">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeView}
@@ -413,12 +418,12 @@ export function ClientPortalPreview() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.5 }}
-              className="absolute -bottom-4 -right-4 flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-950/60 border border-white/[0.08] backdrop-blur-md shadow-xl"
+              className="absolute -bottom-4 -right-4 flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/95 border border-slate-200/90 backdrop-blur-md shadow-xl shadow-slate-900/5"
             >
-              <Icon icon="solar:shield-check-bold-duotone" className="text-emerald-400 text-xl" />
+              <Icon icon="solar:shield-check-bold-duotone" className="text-emerald-600 text-xl" />
               <div>
-                <p className="text-[10px] font-extrabold text-white">Tenant Isolated</p>
-                <p className="text-[9px] text-zinc-500">Zero data cross-contamination</p>
+                <p className="text-[11px] font-extrabold text-slate-900">Tenant Isolated</p>
+                <p className="text-[10px] text-slate-500 font-medium">Zero data cross-contamination</p>
               </div>
             </motion.div>
           </motion.div>

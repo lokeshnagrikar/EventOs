@@ -91,7 +91,7 @@ export function RunOfShowSimulator() {
   };
 
   return (
-    <section className="py-24 bg-[#FFFFFF] relative overflow-hidden border-b border-[#E5E7EB] font-sans" id="timeline-simulator">
+    <section className="py-24 bg-[#FAF9F6] relative overflow-hidden border-b border-slate-200/80 font-sans" id="timeline-simulator">
       {/* Background Radial Glows */}
       <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-[500px] h-[300px] bg-purple-100/30 blur-[130px] rounded-full pointer-events-none z-0" />
       <div className="absolute bottom-10 right-1/4 w-[450px] h-[250px] bg-indigo-100/30 blur-[130px] rounded-full pointer-events-none z-0" />
@@ -121,17 +121,17 @@ export function RunOfShowSimulator() {
         </motion.div>
 
         {/* Interactive Simulator Shell */}
-        <div className="max-w-4xl mx-auto bg-zinc-950/70 border border-purple-500/30 rounded-3xl p-4 sm:p-8 shadow-[0_25px_80px_rgba(0,0,0,0.8),0_0_40px_rgba(168,85,247,0.12)] backdrop-blur-2xl relative overflow-hidden space-y-6">
+        <div className="max-w-4xl mx-auto bg-white/95 border border-slate-200/90 rounded-3xl p-5 sm:p-8 shadow-xl shadow-slate-200/50 backdrop-blur-xl relative overflow-hidden space-y-6">
           {/* Top Line Accent */}
           <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500" />
 
           {/* Simulator Bar Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-zinc-850">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-slate-100">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-purple-400 bg-purple-950/60 border border-purple-500/30 px-3 py-1 rounded-full inline-block mb-1 font-mono">
+              <span className="text-[10px] font-black uppercase tracking-widest text-purple-700 bg-purple-50 border border-purple-200 px-3 py-1 rounded-full inline-block mb-1 font-mono">
                 LIVE DEMO • Event ID: #EOS-ROYAL-928
               </span>
-              <h3 className="text-lg font-black text-white">Royal Palace Wedding — Run of Show Timeline</h3>
+              <h3 className="text-lg font-black text-slate-900 font-heading">Royal Palace Wedding — Run of Show Timeline</h3>
             </div>
 
             <div className="flex items-center gap-2">
@@ -139,7 +139,7 @@ export function RunOfShowSimulator() {
                 <button
                   onClick={handleResolveConflict}
                   disabled={isResolving}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-extrabold text-xs shadow-lg shadow-purple-500/20 active:scale-95 transition flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 hover:opacity-95 text-white font-extrabold text-xs shadow-lg shadow-purple-500/20 active:scale-95 transition flex items-center gap-2 cursor-pointer"
                 >
                   {isResolving ? (
                     <>
@@ -148,7 +148,7 @@ export function RunOfShowSimulator() {
                     </>
                   ) : (
                     <>
-                      <Zap size={14} className="text-cyan-300" />
+                      <Zap size={14} className="text-cyan-200" />
                       <span>Run AI Conflict Resolver</span>
                     </>
                   )}
@@ -157,14 +157,14 @@ export function RunOfShowSimulator() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleSendWhatsapp}
-                    className="px-4 py-2 rounded-xl bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition hover:bg-emerald-900/60 flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold transition hover:bg-emerald-100 flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   >
-                    <MessageSquare size={13} className="text-emerald-400" />
+                    <MessageSquare size={13} className="text-emerald-600" />
                     <span>{whatsappSent ? "Vendor Alert Sent ✓" : "Notify Vendor on WhatsApp"}</span>
                   </button>
                   <button
                     onClick={handleReset}
-                    className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white text-xs font-bold transition cursor-pointer"
+                    className="px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer"
                   >
                     Reset Demo
                   </button>
@@ -182,19 +182,19 @@ export function RunOfShowSimulator() {
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 className={cn(
                   "p-4 sm:p-5 rounded-2xl border transition-all text-xs relative overflow-hidden",
-                  item.status === "completed" && "bg-zinc-900/30 border-zinc-800 text-zinc-400",
-                  item.status === "scheduled" && "bg-zinc-900/50 border-zinc-800 text-zinc-300",
-                  item.status === "conflict" && "bg-amber-950/30 border-amber-500/50 text-amber-200 shadow-[0_0_30px_rgba(245,158,11,0.15)] animate-pulse",
-                  item.status === "resolved" && "bg-emerald-950/30 border-emerald-500/50 text-emerald-200 shadow-[0_0_30px_rgba(16,185,129,0.15)]"
+                  item.status === "completed" && "bg-slate-50/70 border-slate-200/80 text-slate-500",
+                  item.status === "scheduled" && "bg-white border-slate-200 text-slate-800 shadow-2xs",
+                  item.status === "conflict" && "bg-amber-50/80 border-2 border-amber-400 text-amber-950 shadow-md shadow-amber-500/10 animate-pulse",
+                  item.status === "resolved" && "bg-emerald-50/80 border-2 border-emerald-400 text-emerald-950 shadow-md shadow-emerald-500/10"
                 )}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-24 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center font-mono font-black text-sm text-purple-300 shrink-0">
+                    <div className="h-10 w-24 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-mono font-black text-sm text-indigo-700 shrink-0 shadow-2xs">
                       {item.time}
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-white text-sm flex items-center gap-2">
+                      <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
                         <span>{item.title}</span>
                         {item.id === "t2" && item.status === "conflict" && (
                           <span className="flex h-2 w-2 relative">
@@ -203,8 +203,8 @@ export function RunOfShowSimulator() {
                           </span>
                         )}
                       </h4>
-                      <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">
-                        {item.vendor} • <span className="text-zinc-300">{item.location}</span>
+                      <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                        {item.vendor} • <span className="text-slate-700">{item.location}</span>
                       </p>
                     </div>
                   </div>
@@ -212,10 +212,10 @@ export function RunOfShowSimulator() {
                   <div className="flex items-center gap-2 self-start sm:self-center">
                     <span className={cn(
                       "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border font-mono",
-                      item.status === "completed" && "bg-zinc-900 text-zinc-400 border-zinc-800",
-                      item.status === "scheduled" && "bg-purple-950/60 text-purple-300 border-purple-500/30",
-                      item.status === "conflict" && "bg-amber-950 text-amber-400 border-amber-500/50 font-bold",
-                      item.status === "resolved" && "bg-emerald-950 text-emerald-400 border-emerald-500/50 font-bold"
+                      item.status === "completed" && "bg-slate-100 text-slate-600 border-slate-200",
+                      item.status === "scheduled" && "bg-purple-50 text-purple-700 border-purple-200",
+                      item.status === "conflict" && "bg-amber-100 text-amber-800 border-amber-300 font-bold",
+                      item.status === "resolved" && "bg-emerald-100 text-emerald-800 border-emerald-300 font-bold"
                     )}>
                       {item.status === "completed" ? "Done ✓" :
                        item.status === "scheduled" ? "Scheduled" :
@@ -231,9 +231,9 @@ export function RunOfShowSimulator() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-3 p-3 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-200 text-[11px] font-bold flex items-center gap-2"
+                      className="mt-3 p-3 rounded-xl bg-amber-100/90 border border-amber-300 text-amber-900 text-[11px] font-bold flex items-center gap-2"
                     >
-                      <AlertTriangle size={15} className="text-amber-400 shrink-0" />
+                      <AlertTriangle size={15} className="text-amber-600 shrink-0" />
                       <span>{item.conflictText}</span>
                     </motion.div>
                   )}
@@ -243,9 +243,9 @@ export function RunOfShowSimulator() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-3 p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold flex items-center gap-2"
+                      className="mt-3 p-3 rounded-xl bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-[11px] font-bold flex items-center gap-2"
                     >
-                      <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+                      <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
                       <span>{item.resolutionText}</span>
                     </motion.div>
                   )}
@@ -255,14 +255,14 @@ export function RunOfShowSimulator() {
           </div>
 
           {/* Simulator Footer Security Note */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-zinc-500 font-bold border-t border-zinc-900">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-slate-500 font-bold border-t border-slate-100">
             <div className="flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-purple-400" />
+              <ShieldCheck size={14} className="text-purple-600" />
               <span>Multi-Vendor Conflict Resolution Algorithm v2.4 Active</span>
             </div>
             <button
               onClick={() => openModal("register")}
-              className="text-purple-400 hover:text-purple-300 transition flex items-center gap-1 font-extrabold cursor-pointer"
+              className="text-purple-600 hover:text-purple-700 transition flex items-center gap-1 font-extrabold cursor-pointer"
             >
               <span>Unlock AI Scheduler for Your Agency</span>
               <ArrowRight size={12} />

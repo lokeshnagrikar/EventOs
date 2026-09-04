@@ -190,13 +190,13 @@ export function FloatingDock() {
           transition={{ type: "spring", stiffness: 220, damping: 28 }}
           onMouseMove={(e) => mouseX.set(e.clientX)}
           onMouseLeave={() => mouseX.set(Infinity)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] pointer-events-auto flex items-end h-[58px] gap-2.5 sm:gap-3 px-3.5 pb-2 rounded-[20px] border border-slate-700/80 bg-slate-900/90 backdrop-blur-[45px] backdrop-saturate-[1.8] shadow-[0_20px_50px_rgba(15,23,42,0.4),0_0_20px_rgba(139,92,246,0.15)]"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] pointer-events-auto flex items-end h-[60px] gap-2.5 sm:gap-3 px-3.5 pb-2 rounded-[22px] border border-white/70 bg-white/80 backdrop-blur-[35px] backdrop-saturate-[2.0] shadow-[0_20px_45px_rgba(15,23,42,0.12),0_0_0_1px_rgba(255,255,255,0.9),inset_0_1px_2px_rgba(255,255,255,1)]"
         >
           {/* Top reflection line simulating macOS 3D glass shelf highlight */}
-          <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
           
           {/* Subtle ambient bloom behind the dock */}
-          <div className="absolute -inset-1 bg-purple-500/10 blur-md rounded-[20px] pointer-events-none -z-10" />
+          <div className="absolute -inset-1 bg-purple-500/15 blur-lg rounded-[24px] pointer-events-none -z-10" />
 
           {dockItems.map((item) => (
             <DockIcon
@@ -268,7 +268,7 @@ const DockIcon = memo(function DockIcon({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute bottom-full mb-3.5 px-2.5 py-1 text-[10px] font-bold tracking-wide text-white bg-slate-900 border border-slate-700 rounded-[6px] shadow-xl pointer-events-none whitespace-nowrap z-20"
+            className="absolute bottom-full mb-3.5 px-2.5 py-1 text-[10.5px] font-extrabold tracking-wide text-slate-900 bg-white/95 border border-slate-200/90 rounded-[8px] shadow-lg pointer-events-none whitespace-nowrap z-20"
           >
             {item.label}
           </motion.span>
@@ -284,18 +284,18 @@ const DockIcon = memo(function DockIcon({
           y: yOffset,
         }}
         className={cn(
-          "flex items-center justify-center rounded-[12px] border transition-colors duration-250 relative overflow-hidden",
+          "flex items-center justify-center rounded-[14px] border transition-colors duration-250 relative overflow-hidden",
           isActive
-            ? "bg-gradient-to-tr from-purple-600 to-indigo-600 border-purple-400 text-white shadow-lg shadow-purple-600/40"
+            ? "bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-600 border-purple-400 text-white shadow-lg shadow-purple-600/35"
             : hovered
-            ? "bg-slate-800 border-slate-600 text-white shadow-md"
-            : "bg-slate-800/80 border-slate-700/80 text-slate-300 shadow-sm"
+            ? "bg-white border-purple-300 text-purple-700 shadow-md"
+            : "bg-white/85 border-slate-200/90 text-slate-700 shadow-2xs"
         )}
       >
         {/* Subtle top sheen refracting light to mimic physical visionOS material */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/8 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-transparent to-transparent pointer-events-none" />
 
-        <Icon icon={item.icon} className="text-lg relative z-10 transition-colors duration-250" />
+        <Icon icon={item.icon} className="text-xl relative z-10 transition-colors duration-250" />
       </motion.div>
 
       {/* macOS indicator dot under the app tile */}
@@ -307,7 +307,7 @@ const DockIcon = memo(function DockIcon({
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
-              className="h-1 w-1 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]"
+              className="h-1.5 w-1.5 rounded-full bg-purple-600 shadow-[0_0_8px_rgba(147,51,234,0.7)]"
             />
           )}
         </AnimatePresence>

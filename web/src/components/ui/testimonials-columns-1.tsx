@@ -19,19 +19,14 @@ export const TestimonialsColumn = (props: {
   duration?: number;
   reverse?: boolean;
 }) => {
+  const animClass = props.reverse ? "animate-marquee-vertical-reverse" : "animate-marquee-vertical";
+  const animDuration = `${props.duration || 25}s`;
+
   return (
     <div className={props.className}>
-      <motion.div
-        animate={{
-          y: props.reverse ? ["-50%", "0%"] : ["0%", "-50%"],
-        }}
-        transition={{
-          duration: props.duration || 10,
-          repeat: Infinity,
-          ease: "linear",
-          repeatType: "loop",
-        }}
-        className="flex flex-col gap-6 pb-6 bg-transparent"
+      <div
+        className={`flex flex-col gap-6 pb-6 bg-transparent ${animClass}`}
+        style={{ ["--marquee-duration" as any]: animDuration }}
       >
         {[
           ...new Array(2).fill(0).map((_, index) => (
@@ -86,7 +81,7 @@ export const TestimonialsColumn = (props: {
             </React.Fragment>
           )),
         ]}
-      </motion.div>
+      </div>
     </div>
   );
 };
