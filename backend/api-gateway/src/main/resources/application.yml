@@ -28,7 +28,7 @@ spring:
         - id: auth-websocket
           uri: ${AUTH_SERVICE_WS_URL:ws://localhost:8081}
           predicates:
-            - Path=/api/v1/auth/ws/**
+            - Path=/api/v1/auth/ws, /api/v1/auth/ws/**
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
