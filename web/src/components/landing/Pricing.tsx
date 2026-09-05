@@ -55,11 +55,7 @@ export function Pricing() {
 
   const handleCtaClick = (plan: PricingPlan) => {
     analytics.trackCta(`pricing_${plan.id}`, plan.name, "pricing");
-    if (plan.id !== "agency") {
-      openModal("register");
-    } else {
-      router.push("mailto:sales@eventos.io?subject=EventOS%20Agency%20Demo%20Inquiry");
-    }
+    openModal("waitlist");
   };
 
   return (

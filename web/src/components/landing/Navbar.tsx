@@ -238,8 +238,8 @@ export function Navbar({ activeSection }: NavbarProps) {
   const openModal = useAuthModalStore((state) => state.openModal);
 
   const handleStartTrial = () => {
-    analytics.trackCta("nav_trial", "Get Started", "nav");
-    openModal("register");
+    analytics.trackCta("nav_trial", "Join Private Beta", "nav");
+    openModal("waitlist");
   };
 
   const handleSignIn = () => {
@@ -581,7 +581,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             className="rounded-full text-xs font-bold uppercase tracking-wider active:scale-[0.98] shadow-md shadow-purple-500/20"
             size="default"
           >
-            Get Started
+            Join Private Beta
           </LiquidButton>
         </div>
 
@@ -760,7 +760,7 @@ export function Navbar({ activeSection }: NavbarProps) {
                   className="w-full rounded-full font-bold text-xs uppercase tracking-wider"
                   size="lg"
                 >
-                  Get Started
+                  Join Private Beta
                 </LiquidButton>
               </div>
             </div>

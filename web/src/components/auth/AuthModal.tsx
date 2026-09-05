@@ -4,6 +4,7 @@ import React, { useEffect, useRef, Suspense } from "react";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
+import { WaitlistForm } from "./WaitlistForm";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -74,7 +75,7 @@ export function AuthModal() {
             ref={modalRef}
             className={cn(
               "w-full z-10",
-              isMobile ? "w-full min-h-screen flex flex-col bg-[#0A0A0C] overflow-y-auto" : "max-w-[420px]"
+              isMobile ? "w-full min-h-screen flex flex-col bg-[#0A0A0C] overflow-y-auto" : "max-w-[440px]"
             )}
           >
             <div className={cn(
@@ -96,7 +97,9 @@ export function AuthModal() {
               </button>
 
               <Suspense fallback={<div className="text-xs text-zinc-500 text-center py-10 font-mono">Loading authentication...</div>}>
-                {mode === "login" ? (
+                {mode === "waitlist" ? (
+                  <WaitlistForm prefilledEmail={prefilledEmail} />
+                ) : mode === "login" ? (
                   <LoginForm isModal onSwitchMode={setMode} />
                 ) : (
                   <RegisterForm isModal onSwitchMode={setMode} prefilledEmail={prefilledEmail} />

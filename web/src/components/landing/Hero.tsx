@@ -193,13 +193,13 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
   const openModal = useAuthModalStore((state) => state.openModal);
 
   const handleStartTrial = () => {
-    analytics.trackCta("hero_trial", "Start Free Trial", "hero");
-    openModal("register");
+    analytics.trackCta("hero_trial", "Join Private Beta", "hero");
+    openModal("waitlist");
   };
 
   const handleBookDemo = () => {
-    analytics.trackCta("hero_demo", "Book a Demo", "hero");
-    openModal("login");
+    analytics.trackCta("hero_demo", "Get Early Access", "hero");
+    openModal("waitlist");
   };
 
   return (
@@ -224,6 +224,111 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       {/* Animated Mesh Gradient Background */}
       <AnimatedMeshGradient />
 
+      {/* Full-Width Edge-to-Edge Architectural Drafting Grid with Precision Crosshairs (+) */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        style={{
+          maskImage: "radial-gradient(ellipse 100% 85% at 50% 35%, black 45%, transparent 95%)",
+          WebkitMaskImage: "radial-gradient(ellipse 100% 85% at 50% 35%, black 45%, transparent 95%)",
+        }}
+        aria-hidden="true"
+      >
+        <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="architectural-drafting-grid" width="48" height="48" patternUnits="userSpaceOnUse">
+              {/* Subtle hairline drafting grid lines */}
+              <path
+                d="M 48 0 L 0 0 0 48"
+                fill="none"
+                stroke="rgba(148, 163, 184, 0.22)"
+                strokeWidth="0.75"
+              />
+              {/* Precision Architectural Crosshair (+) at grid intersections */}
+              <path
+                d="M 0 -4 L 0 4 M -4 0 L 4 0"
+                fill="none"
+                stroke="rgba(124, 58, 237, 0.45)"
+                strokeWidth="1.2"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#architectural-drafting-grid)" />
+        </svg>
+      </div>
+
+      {/* Architectural Blueprint Drafting Rulers & Technical Framing (Left & Right Flanks) */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden max-w-[1700px] mx-auto px-4 sm:px-8 hidden lg:block" aria-hidden="true">
+        {/* Left Drafting Flank */}
+        <div className="absolute top-28 left-6 bottom-24 flex flex-col justify-between items-start text-[9px] font-mono text-slate-400 select-none opacity-70">
+          {/* Top Corner Registration Bracket */}
+          <div className="flex items-center gap-2">
+            <span className="text-purple-600 font-bold text-xs">┌</span>
+            <span className="tracking-widest uppercase text-[8px] text-slate-400">SCALE: 1:100</span>
+          </div>
+
+          {/* Vertical Ruler Hash Marks */}
+          <div className="my-auto space-y-8 pl-1 border-l border-slate-300/70">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-px bg-slate-400" />
+              <span className="text-[8px] tracking-wider text-slate-400">GRID · 48PX</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-px bg-slate-300" />
+              <span className="text-[8px] tracking-wider text-slate-400">AXIS // 00°N</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-px bg-slate-400" />
+              <span className="text-[8px] tracking-wider text-purple-600/90 font-semibold">ZONE · STAGE</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-px bg-slate-300" />
+              <span className="text-[8px] tracking-wider text-slate-400">Y: 000.48</span>
+            </div>
+          </div>
+
+          {/* Bottom Corner Registration Bracket */}
+          <div className="flex items-center gap-2">
+            <span className="text-purple-600 font-bold text-xs">└</span>
+            <span className="tracking-widest uppercase text-[8px] text-slate-400">SYS_ID // EVT-OS</span>
+          </div>
+        </div>
+
+        {/* Right Drafting Flank */}
+        <div className="absolute top-28 right-6 bottom-24 flex flex-col justify-between items-end text-[9px] font-mono text-slate-400 select-none opacity-70">
+          {/* Top Corner Registration Bracket */}
+          <div className="flex items-center gap-2">
+            <span className="tracking-widest uppercase text-[8px] text-slate-400">CANVAS: WIDE</span>
+            <span className="text-purple-600 font-bold text-xs">┐</span>
+          </div>
+
+          {/* Vertical Ruler Hash Marks */}
+          <div className="my-auto space-y-8 pr-1 border-r border-slate-300/70 text-right">
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-[8px] tracking-wider text-slate-400">ELEV · +0.00M</span>
+              <span className="w-2.5 h-px bg-slate-400" />
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-[8px] tracking-wider text-slate-400">RES // HD</span>
+              <span className="w-1.5 h-px bg-slate-300" />
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-[8px] tracking-wider text-emerald-600/90 font-semibold">PERIMETER · ACTIVE</span>
+              <span className="w-2.5 h-px bg-slate-400" />
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-[8px] tracking-wider text-slate-400">X: 1440.00</span>
+              <span className="w-1.5 h-px bg-slate-300" />
+            </div>
+          </div>
+
+          {/* Bottom Corner Registration Bracket */}
+          <div className="flex items-center gap-2">
+            <span className="tracking-widest uppercase text-[8px] text-slate-400">STATUS // READY</span>
+            <span className="text-purple-600 font-bold text-xs">┘</span>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-6 w-full relative z-10 flex flex-col items-center text-center">
 
         {/* Announcement Badge */}
@@ -238,16 +343,16 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
 
         {/* Hero Headline & Description */}
         <div className="max-w-4xl flex flex-col items-center text-center">
-          <h1 className="text-4xl sm:text-6xl lg:text-[76px] font-extrabold tracking-tight leading-[1.05] font-heading text-balance text-pretty">
-            <span className="gsap-title-word inline-block opacity-0 mr-3 bg-clip-text text-transparent bg-gradient-to-b from-[#0F172A] via-[#1E293B] to-[#475569] drop-shadow-sm">Plan. Automate.</span>
-            <span className="gsap-title-word inline-block opacity-0 mr-3 bg-clip-text text-transparent bg-gradient-to-b from-[#0F172A] via-[#1E293B] to-[#475569] drop-shadow-sm">Scale Events.</span>
+          <h1 className="text-4xl sm:text-6xl lg:text-[76px] font-extrabold tracking-[-0.035em] leading-[1.04] font-heading text-balance text-pretty">
+            <span className="gsap-title-word inline-block opacity-0 mr-3 bg-clip-text text-transparent bg-gradient-to-b from-[#0B0F19] via-[#1E293B] to-[#475569] drop-shadow-sm">Plan. Automate.</span>
+            <span className="gsap-title-word inline-block opacity-0 mr-3 bg-clip-text text-transparent bg-gradient-to-b from-[#0B0F19] via-[#1E293B] to-[#475569] drop-shadow-sm">Scale Events.</span>
             <br className="hidden sm:inline" />
             <span className="gsap-title-word inline-block opacity-0 mt-1 sm:mt-2 w-full text-center">
               <RotatingHeroPhrase />
             </span>
           </h1>
 
-          <p className="gsap-desc opacity-0 text-[#4B5563] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium font-sans mt-5 mb-8">
+          <p className="gsap-desc opacity-0 text-slate-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-normal font-sans mt-5 mb-8 tracking-[-0.01em]">
             The complete operating system for independent event coordinators and boutique agencies. Automate WhatsApp triggers, AI run-of-show timelines, mobile offline PWA check-ins, white-label client portals, and milestone invoicing.
           </p>
         </div>
@@ -260,16 +365,16 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
             className="gsap-cta opacity-0 w-full sm:w-auto flex items-center justify-center gap-2.5 px-9 py-6 rounded-full text-base font-extrabold active:scale-[0.98] group cursor-pointer shadow-xl shadow-purple-500/25"
             size="xl"
           >
-            Start 14-Day Free Trial — No Credit Card
+            Join Private Beta →
             <Icon icon="solar:arrow-right-bold" className="text-lg group-hover:translate-x-1 transition-transform duration-200" />
           </LiquidButton>
 
           {/* Secondary Soft Link CTA */}
           <button
             onClick={handleBookDemo}
-            className="gsap-cta opacity-0 text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors flex items-center gap-1.5 py-1 px-3.5 rounded-full hover:bg-purple-50/80 focus:outline-none"
+            className="gsap-cta opacity-0 text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors flex items-center gap-1.5 py-1 px-3.5 rounded-full hover:bg-purple-50/80 focus:outline-none cursor-pointer"
           >
-            <span>Or book a 20-min walkthrough</span>
+            <span>Get Early Access</span>
             <Icon icon="solar:alt-arrow-right-bold-duotone" className="text-sm" />
           </button>
         </div>

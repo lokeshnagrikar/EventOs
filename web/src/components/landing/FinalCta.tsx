@@ -20,13 +20,13 @@ export function FinalCta() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) {
-      analytics.trackCta("final_cta_submit", "Get Started Email", "final_cta");
+      analytics.trackCta("final_cta_submit", "Join Private Beta Email", "final_cta");
       setSubmitted(true);
       setTimeout(() => {
-        openModal("register", email);
+        openModal("waitlist", email);
         setSubmitted(false);
         setEmail("");
-      }, 1200);
+      }, 600);
     }
   };
 
@@ -61,20 +61,20 @@ export function FinalCta() {
             {/* Badge */}
             <span className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-widest text-[#7C3AED] bg-purple-100 border border-purple-200 px-4 py-1.5 rounded-full uppercase">
               <Icon icon="solar:gift-bold-duotone" className="text-sm" />
-              Free 14-Day Trial — No Credit Card Required
+              Private Beta Cohort • Limited to 25 Founding Agencies
             </span>
 
             {/* Headline */}
             <div className="space-y-4">
               <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111827] leading-tight font-heading">
-                Streamline your event
+                Be the first to run your agency
                 <br />
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7]">
-                  operations today.
+                  on EventOS.
                 </span>
               </h2>
               <p className="text-[#4B5563] text-sm sm:text-base leading-relaxed max-w-xl mx-auto font-medium">
-                Connect your team, coordinate vendors, and delight clients from a single secure workspace. Cancel anytime, no lock-in.
+                We're onboarding a select group of 25 founding agencies with lifetime perks, 1-on-1 founder support, and early access.
               </p>
             </div>
 
@@ -114,7 +114,7 @@ export function FinalCta() {
                     className="rounded-xl font-bold px-6 active:scale-[0.98] flex items-center gap-2 whitespace-nowrap"
                     size="lg"
                   >
-                    Get Started
+                    Join Private Beta →
                     <Icon icon="solar:arrow-right-bold" className="text-sm" />
                   </LiquidButton>
                 </motion.form>

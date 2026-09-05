@@ -40,8 +40,8 @@ export const PRICING_PLANS: PricingPlan[] = [
     annualSavingsFormatted: `Save ₹${((STARTER_MONTHLY - STARTER_ANNUAL_MONTHLY) * 12).toLocaleString("en-IN")}/yr`,
     valueCallout: "Save 20+ hrs/mo · Replace manual proposal & admin work",
     popular: false,
-    cta: "Start 14-Day Free Trial →",
-    ctaSubtext: "No credit card required · 100% risk-free",
+    cta: "Join Private Beta →",
+    ctaSubtext: "Founding Member Spot · 1-on-1 Founder Onboarding",
     features: [
       "Up to 5 active events",
       "2 team seats",
@@ -69,8 +69,8 @@ export const PRICING_PLANS: PricingPlan[] = [
     annualSavingsFormatted: `Save ₹${((PROFESSIONAL_MONTHLY - PROFESSIONAL_ANNUAL_MONTHLY) * 12).toLocaleString("en-IN")}/yr`,
     valueCallout: "Save 150+ hrs/mo · Reduce costly coordination errors",
     popular: true,
-    cta: "Start 14-Day Free Trial →",
-    ctaSubtext: "No credit card required · 100% risk-free",
+    cta: "Join Private Beta →",
+    ctaSubtext: "Founding Member Spot · 1-on-1 Founder Onboarding",
     features: [
       "Everything in Starter, plus:",
       "Up to 20 active events/month",
@@ -102,8 +102,8 @@ export const PRICING_PLANS: PricingPlan[] = [
     annualSavingsFormatted: `Save ₹${((AGENCY_MONTHLY - AGENCY_ANNUAL_MONTHLY) * 12).toLocaleString("en-IN")}/yr`,
     valueCallout: "Scale operations without adding administrative complexity",
     popular: false,
-    cta: "Schedule a 20-Min Demo →",
-    ctaSubtext: "Custom onboarding · Dedicated support",
+    cta: "Request Founder Access →",
+    ctaSubtext: "Custom onboarding · Direct founder support",
     infrastructureNote: "Dedicated AWS infrastructure available for qualifying accounts",
     features: [
       "Everything in Professional, plus:",

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type AuthModalMode = "login" | "register" | "logout";
+export type AuthModalMode = "login" | "register" | "logout" | "waitlist";
 
 interface AuthModalState {
   isOpen: boolean;
