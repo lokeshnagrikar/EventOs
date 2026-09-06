@@ -771,9 +771,17 @@ export default function BookingsDashboard() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-500 uppercase font-black">Contract PDF URL</label>
-                <input type="text" value={contractUrl} onChange={(e) => setContractUrl(e.target.value)} placeholder="https://aws-s3/contracts/file.pdf"
-                  className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                <div className="flex justify-between items-center">
+                  <label className="text-[9px] text-zinc-500 uppercase font-black">Contract PDF URL (Optional)</label>
+                  <span className="text-[9px] text-zinc-500">Auto-filled if booked via Quote</span>
+                </div>
+                <input 
+                  type="url" 
+                  value={contractUrl} 
+                  onChange={(e) => setContractUrl(e.target.value)} 
+                  placeholder="https://res.cloudinary.com/... or leave blank"
+                  className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none" 
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-zinc-850">

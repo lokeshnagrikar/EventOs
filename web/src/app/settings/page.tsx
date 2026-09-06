@@ -635,7 +635,7 @@ export default function SettingsPage() {
       addToast("Password changed successfully! Active sessions revoked. Please log in again.", "success");
       setTimeout(() => {
         clearAuth();
-        router.push("/login");
+        router.push("/?login=true");
       }, 2000);
     },
     onError: (err: any) => {

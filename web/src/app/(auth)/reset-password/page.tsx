@@ -113,7 +113,7 @@ function ResetPasswordForm() {
           </p>
         </div>
         <Button
-          onClick={() => router.push("/login")}
+          onClick={() => router.push("/?login=true")}
           className="w-full py-5 bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all"
         >
           Proceed to Login
@@ -254,7 +254,7 @@ function ResetPasswordForm() {
 
       <div className="text-center pt-4 border-t border-zinc-850">
         <a
-          href="/login"
+          href="/?login=true"
           className="text-xs text-zinc-400 hover:text-white flex items-center justify-center gap-2 transition-all"
         >
           <ArrowLeft size={14} />

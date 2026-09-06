@@ -93,7 +93,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       const storedRole = getCookieValue("user_role");
       
       if (!storedName || storedRole !== "CLIENT") {
-        router.push("/login");
+        router.push("/?login=true");
         return;
       }
       
@@ -108,17 +108,16 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   // Scroll to bottom of chat
   useEffect(() => {
-    if (showChatDrawer) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chatMessages, showChatDrawer]);
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
 
-  // Cmd+K Event listener for Global Search
+  // Keyboard shortcut (Escape to close search/notifications)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setShowSearchModal(prev => !prev);
+      if (e.key === "Escape") {
+        setShowSearchModal(false);
+        setShowNotificationDrawer(false);
+        setShowChatDrawer(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -137,7 +136,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     document.cookie = "user_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     document.cookie = "hasSession=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    router.push(isExpired ? "/login?expired=true" : "/login");
+    router.push(isExpired ? "/?login=true&expired=true" : "/?login=true");
   };
 
   // Inactivity timeout

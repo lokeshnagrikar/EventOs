@@ -256,7 +256,7 @@ export default function QuoteDetailPage() {
     if (quote?.pdfUrl && !quote.pdfUrl.includes("dummy.pdf")) {
       window.open(quote.pdfUrl, "_blank");
     } else {
-      window.open(`/api/v1/crm/quotes/${id}/pdf`, "_blank");
+      window.open(`/api/v1/crm/quotes/${quoteId}/pdf`, "_blank");
     }
   };
 

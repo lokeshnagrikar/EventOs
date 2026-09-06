@@ -1451,6 +1451,12 @@ public class AuthService {
         }
 
         String cleanEmail = email.trim().toLowerCase();
+
+        // Ensure user exists before sending magic link
+        if (!userRepository.existsByEmail(cleanEmail)) {
+            throw new IllegalArgumentException("No registered account found with email: " + cleanEmail);
+        }
+
         String magicToken = UUID.randomUUID().toString();
         String redisKey = "MAGIC_LINK:" + magicToken;
 
@@ -1498,14 +1504,21 @@ public class AuthService {
         }
 
         if (email == null || email.trim().isEmpty()) {
-            // Fallback for valid token format
-            email = "owner@eventos.co";
+            throw new IllegalArgumentException("Magic Link token is invalid or has expired");
         }
 
         final String targetEmail = email;
         User user = userRepository.findByEmail(targetEmail)
-                .orElseGet(() -> userRepository.findAll().stream().findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("No user profile found")));
+                .orElseThrow(() -> new IllegalArgumentException("No registered account found for email: " + targetEmail));
+
+        // Single-use token: invalidate token immediately after successful retrieval
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.delete(redisKey);
+            }
+        } catch (Exception e) {
+            log.warn("[MAGIC_LINK] Failed to invalidate used token {}: {}", token, e.getMessage());
+        }
 
         Membership selectedMembership = membershipRepository.findAllByUserId(user.getId())
                 .stream().findFirst()
@@ -1583,14 +1596,22 @@ public class AuthService {
             log.warn("[WHATSAPP_OTP] Redis lookup failed for phone {}", cleanPhone);
         }
 
-        boolean isValid = "123456".equals(otp) || (cachedOtp != null && cachedOtp.equals(otp));
+        boolean isValid = cachedOtp != null && cachedOtp.equals(otp);
         if (!isValid) {
             throw new IllegalArgumentException("Invalid or expired 6-digit WhatsApp OTP code");
         }
 
+        // Invalidate OTP immediately after successful verification
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.delete(redisKey);
+            }
+        } catch (Exception e) {
+            log.warn("[WHATSAPP_OTP] Failed to delete OTP for phone {}: {}", cleanPhone, e.getMessage());
+        }
+
         User user = userRepository.findByPhone(cleanPhone)
-                .orElseGet(() -> userRepository.findAll().stream().findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("No user profile found for phone number")));
+                .orElseThrow(() -> new IllegalArgumentException("No registered user found for phone number: " + cleanPhone));
 
         Membership selectedMembership = membershipRepository.findAllByUserId(user.getId())
                 .stream().findFirst()

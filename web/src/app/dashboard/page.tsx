@@ -235,6 +235,10 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const triggerConfettiAnimation = useCallback(() => {
+    addToast("🎉 Milestone celebration achieved! Goals on track.", "success");
+  }, [addToast]);
+
 
 
   // 1. Fetch CRM & Event metrics dynamically from backend

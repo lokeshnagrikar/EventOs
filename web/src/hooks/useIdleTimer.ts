@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
 
-const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 Minutes Inactivity Timeout
+const IDLE_TIMEOUT_MS = 60 * 60 * 1000; // 1 Hour Inactivity Timeout
 
 export function useIdleTimer() {
   const router = useRouter();
@@ -30,7 +30,7 @@ export function useIdleTimer() {
         document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         
         addToast("Logged out due to 15 minutes of inactivity for your security.", "info");
-        router.push("/login?expired=true");
+        router.push("/?login=true&expired=true");
       }, IDLE_TIMEOUT_MS);
     };
 

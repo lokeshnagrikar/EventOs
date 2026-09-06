@@ -36,6 +36,25 @@ export function middleware(request: NextRequest) {
                             pathname.startsWith("/finance") ||
                             pathname.startsWith("/reports");
 
+  // Direct /login and /register visitors to the unified landing modal
+  if (pathname === "/login") {
+    const url = new URL("/", request.url);
+    url.searchParams.set("login", "true");
+    request.nextUrl.searchParams.forEach((val, key) => {
+      url.searchParams.set(key, val);
+    });
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === "/register") {
+    const url = new URL("/", request.url);
+    url.searchParams.set("register", "true");
+    request.nextUrl.searchParams.forEach((val, key) => {
+      url.searchParams.set(key, val);
+    });
+    return NextResponse.redirect(url);
+  }
+
   // Require session for protected routes
   if (isProtectedRoute && !hasSession) {
     const redirectPath = pathname.startsWith("/superadmin") ? "/superadmin/login" : "/";

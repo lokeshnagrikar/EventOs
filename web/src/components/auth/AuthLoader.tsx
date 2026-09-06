@@ -10,37 +10,34 @@ interface AuthLoaderProps {
 }
 
 export function AuthLoader({ isOpen, type = "login" }: AuthLoaderProps) {
-  const [messageIndex, setMessageIndex] = useState(0);
+  const [stepIndex, setStepIndex] = useState(0);
 
-  const messages = type === "register" 
+  const steps = type === "register"
     ? [
-        "Connecting with Google authentication...",
-        "Validating secure identity credentials...",
-        "Provisioning your database tenant...",
-        "Deploying your EventOS workspace...",
-        "Configuring owner permissions...",
-        "Almost ready to build events...",
+        { label: "Google Account Connected", desc: "Identity verified successfully" },
+        { label: "Creating Workspace & Tenant", desc: "Provisioning isolated database storage" },
+        { label: "Initializing EventOS", desc: "Launching your creative studio" },
       ]
     : [
-        "Verifying Google credentials...",
-        "Authorizing secure API tokens...",
-        "Resolving workspace memberships...",
-        "Configuring security session...",
-        "Optimizing dashboards...",
+        { label: "Google Account Verified", desc: "Access credentials authenticated" },
+        { label: "Loading Workspace Memberships", desc: "Syncing role permissions & access tokens" },
+        { label: "Welcome to EventOS", desc: "Preparing your dashboard" },
       ];
 
   useEffect(() => {
     if (!isOpen) {
-      setMessageIndex(0);
+      setStepIndex(0);
       return;
     }
 
-    const interval = setInterval(() => {
-      setMessageIndex((prev) => (prev < messages.length - 1 ? prev + 1 : prev));
-    }, 1800);
+    const t1 = setTimeout(() => setStepIndex(1), 1200);
+    const t2 = setTimeout(() => setStepIndex(2), 2600);
 
-    return () => clearInterval(interval);
-  }, [isOpen, messages.length]);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [isOpen]);
 
   return (
     <AnimatePresence>
@@ -49,61 +46,97 @@ export function AuthLoader({ isOpen, type = "login" }: AuthLoaderProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md cursor-wait select-none"
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/75 backdrop-blur-xl cursor-wait select-none p-4"
         >
-          {/* Subtle background glow */}
-          <div className="absolute h-96 w-96 rounded-full bg-purple-500/10 blur-[100px] pointer-events-none animate-pulse" />
+          {/* Ambient Lighting Gradients */}
+          <div className="absolute h-80 w-80 rounded-full bg-gradient-to-tr from-purple-600/20 via-pink-500/15 to-blue-500/20 blur-[90px] pointer-events-none" />
 
-          {/* Loader Card */}
+          {/* Sleek Floating Card */}
           <motion.div
-            initial={{ scale: 0.9, y: 10 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, y: 10 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="flex flex-col items-center max-w-sm px-8 py-10 text-center rounded-2xl bg-zinc-900/40 border border-white/[0.06] shadow-2xl relative z-10"
+            initial={{ scale: 0.95, y: 15, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0.95, y: 15, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 350, damping: 28 }}
+            className="w-full max-w-sm p-6 sm:p-7 rounded-3xl bg-zinc-950/80 border border-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-2xl relative z-10 flex flex-col items-center text-center space-y-6"
           >
-            {/* Spinning Glowing Circle */}
-            <div className="relative h-20 w-20 flex items-center justify-center">
-              {/* Outer Gradient Spinner */}
+            {/* Google Brand Quad-Color Animated Ring with Logo */}
+            <div className="relative h-16 w-16 flex items-center justify-center">
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-500 border-r-pink-500 border-b-cyan-500 shadow-[0_0_20px_rgba(139,92,246,0.15)]"
-              />
-              
-              {/* Inner Pulsing Core */}
-              <motion.div
-                animate={{ scale: [0.95, 1.05, 0.95] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="h-14 w-14 rounded-full bg-zinc-950/80 border border-white/[0.08] flex items-center justify-center text-purple-400"
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 rounded-full p-[2px] bg-gradient-to-tr from-[#4285F4] via-[#EA4335] via-[#FBBC05] to-[#34A853]"
               >
-                <Sparkles size={20} className="animate-pulse" />
+                <div className="w-full h-full bg-zinc-950 rounded-full" />
               </motion.div>
+
+              {/* Google SVG Icon inside */}
+              <div className="relative z-10 w-11 h-11 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center backdrop-blur-md">
+                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+              </div>
             </div>
 
-            {/* Status Messages */}
-            <div className="mt-8 space-y-2">
-              <h3 className="text-sm font-bold tracking-tight text-white flex items-center justify-center gap-1.5">
-                <Shield size={13} className="text-purple-400 animate-pulse" />
-                Securing Authentication
+            {/* Header Title */}
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-white tracking-tight">
+                {type === "register" ? "Setting up EventOS Workspace" : "Signing In With Google"}
               </h3>
-              
-              {/* Cycling dynamic text with slide-fade transition */}
-              <div className="h-6 overflow-hidden flex items-center justify-center">
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={messageIndex}
-                    initial={{ y: 8, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -8, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="text-[11px] text-zinc-400 font-semibold tracking-wide"
+              <p className="text-[11px] text-zinc-400">
+                Please wait a moment while we authenticate your session.
+              </p>
+            </div>
+
+            {/* Linear Progress Steps */}
+            <div className="w-full space-y-2 text-left pt-1">
+              {steps.map((step, idx) => {
+                const isDone = idx < stepIndex;
+                const isCurrent = idx === stepIndex;
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-300 ${
+                      isCurrent
+                        ? "bg-white/[0.06] border-purple-500/40 shadow-sm shadow-purple-500/10"
+                        : isDone
+                        ? "bg-emerald-500/10 border-emerald-500/20 opacity-80"
+                        : "bg-transparent border-transparent opacity-40"
+                    }`}
                   >
-                    {messages[messageIndex]}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
+                    <div
+                      className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${
+                        isDone
+                          ? "bg-emerald-500 text-black"
+                          : isCurrent
+                          ? "bg-purple-500 text-white animate-pulse"
+                          : "bg-zinc-800 text-zinc-500"
+                      }`}
+                    >
+                      {isDone ? "✓" : idx + 1}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-semibold text-white truncate">{step.label}</div>
+                      <div className="text-[10px] text-zinc-400 truncate">{step.desc}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         </motion.div>

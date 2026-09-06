@@ -22,7 +22,7 @@ export default function WorkspaceSelectPage() {
     setMounted(true);
     // If no memberships or user, redirect to login
     if (memberships.length === 0 && !user) {
-      router.push("/login");
+      router.push("/?login=true");
     }
   }, [memberships, user, router]);
 
@@ -80,7 +80,7 @@ export default function WorkspaceSelectPage() {
     } finally {
       clearAuth();
       addToast("Signed out successfully.", "info");
-      router.push("/login");
+      router.push("/?login=true");
     }
   };
 

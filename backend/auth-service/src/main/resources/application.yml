@@ -89,7 +89,7 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   jwt:
     secret: ${JWT_SECRET_KEY:9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d}
-    expiration-ms: ${JWT_EXPIRATION_MS:900000}          # 15 mins
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}          # 1 hour
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
     private-key: ${JWT_PRIVATE_KEY:}
     public-key: ${JWT_PUBLIC_KEY:}

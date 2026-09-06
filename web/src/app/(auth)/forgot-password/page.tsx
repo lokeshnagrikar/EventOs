@@ -160,7 +160,7 @@ export default function ForgotPasswordPage() {
 
       <div className="text-center pt-4 border-t border-zinc-850">
         <Link
-          href="/login"
+          href="/?login=true"
           className="text-xs text-zinc-400 hover:text-white flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded"
         >
           <ArrowLeft size={14} />

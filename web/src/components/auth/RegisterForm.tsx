@@ -900,7 +900,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
               Sign In
             </button>
           ) : (
-            <a href="/login" className="text-purple-400 hover:text-purple-300 hover:underline font-semibold transition-colors">
+            <a href="/?login=true" className="text-purple-400 hover:text-purple-300 hover:underline font-semibold transition-colors">
               Sign In
             </a>
           )}

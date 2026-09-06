@@ -25,8 +25,27 @@ export function proxy(request: NextRequest) {
                             pathname.startsWith("/gallery") ||
                             pathname.startsWith("/reports");
 
+  if (pathname === "/login") {
+    const url = new URL("/", request.url);
+    url.searchParams.set("login", "true");
+    request.nextUrl.searchParams.forEach((val, key) => {
+      url.searchParams.set(key, val);
+    });
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === "/register") {
+    const url = new URL("/", request.url);
+    url.searchParams.set("register", "true");
+    request.nextUrl.searchParams.forEach((val, key) => {
+      url.searchParams.set(key, val);
+    });
+    return NextResponse.redirect(url);
+  }
+
   if (isProtectedRoute && !hasSession) {
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/", request.url);
+    loginUrl.searchParams.set("login", "true");
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }

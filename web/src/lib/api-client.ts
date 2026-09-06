@@ -156,10 +156,10 @@ apiClient.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
         
-        // Clear auth state on refresh failure and redirect
+        // Clear auth state on refresh failure and redirect to landing modal
         useAuthStore.getState().clearAuth();
         if (typeof window !== 'undefined') {
-          window.location.href = '/login?expired=true';
+          window.location.href = '/?login=true&expired=true';
         }
         return Promise.reject(refreshError);
       }

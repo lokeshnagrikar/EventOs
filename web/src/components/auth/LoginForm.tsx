@@ -46,6 +46,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [googleAuthenticating, setGoogleAuthenticating] = useState(false);
   const [shouldShake, setShouldShake] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const triggerShake = () => {
     setShouldShake(true);
@@ -98,18 +103,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   const [otpSuccess, setOtpSuccess] = useState(false);
   const [resendTimer, setResendTimer] = useState(120);
 
-  // Auth Mode: "password" | "magic-link" | "whatsapp"
-  const [authMode, setAuthMode] = useState<"password" | "magic-link" | "whatsapp">("password");
+  // Auth Mode: "password" | "magic-link"
+  const [authMode, setAuthMode] = useState<"password" | "magic-link">("password");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [magicLinkTimer, setMagicLinkTimer] = useState(60);
-
-  // WhatsApp OTP States
-  const [whatsappPhone, setWhatsappPhone] = useState("+91 ");
-  const [whatsappSent, setWhatsappSent] = useState(false);
-  const [whatsappLoading, setWhatsappLoading] = useState(false);
-  const [whatsappOtpValues, setWhatsappOtpValues] = useState<string[]>(Array(6).fill(""));
-  const [whatsappTimer, setWhatsappTimer] = useState(60);
 
   // Email Auto-Suggestion & Business Nudge State
   const [domainSuggestion, setDomainSuggestion] = useState<string | null>(null);
@@ -137,61 +135,6 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     if (!emailStr || !emailStr.includes("@")) return false;
     const domain = emailStr.split("@")[1]?.toLowerCase();
     return PERSONAL_DOMAINS.includes(domain);
-  };
-
-  const handleSendWhatsAppOtp = async () => {
-    const rawDigits = whatsappPhone.replace(/\D/g, "");
-    if (rawDigits.length < 10) {
-      setError("Please enter a valid 10-digit mobile number for WhatsApp verification.");
-      triggerShake();
-      return;
-    }
-
-    setError(null);
-    setWhatsappLoading(true);
-    try {
-      await apiClient.post("/auth/send-whatsapp-otp", { phone: whatsappPhone });
-      setWhatsappSent(true);
-      setWhatsappTimer(60);
-      addToast("WhatsApp 6-digit OTP code sent!", "success");
-    } catch (err: any) {
-      setWhatsappSent(true);
-      setWhatsappTimer(60);
-      addToast(`WhatsApp OTP sent to ${whatsappPhone}! Code: 123456`, "success");
-    } finally {
-      setWhatsappLoading(false);
-    }
-  };
-
-  const verifyWhatsAppOtpCode = async (code: string) => {
-    setLoading(true);
-    try {
-      const response = await apiClient.post("/auth/verify-whatsapp-otp", {
-        phone: whatsappPhone,
-        otp: code
-      });
-      const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
-      
-      document.cookie = "hasSession=true; path=/; SameSite=Lax";
-      document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
-      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
-      
-      setAuth(
-        accessToken,
-        { id: userId, email: `${whatsappPhone.replace(/\D/g, "")}@whatsapp.user`, firstName, lastName, role, permissions: permissions || [] },
-        tenantId,
-        memberships
-      );
-      addToast(`Authenticated via WhatsApp OTP! Welcome, ${firstName}.`, "success");
-      if (isModal) closeModal();
-      router.push("/workspace-select");
-    } catch (err: any) {
-      addToast("WhatsApp OTP Verified!", "success");
-      if (isModal) closeModal();
-      router.push("/workspace-select");
-    } finally {
-      setLoading(false);
-    }
   };
 
   // 1-Click Returning User Profile state
@@ -269,14 +212,15 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       const magicUrl = res.data?.magicLinkUrl || res.data?.data?.magicLinkUrl;
       setMagicLinkSent(true);
       setMagicLinkTimer(60);
-      addToast(`Magic Link sent to ${emailVal}! Check inbox or click 1-click link.`, "success");
+      addToast(`Magic Link sent to ${emailVal}! Check your inbox.`, "success");
       if (magicUrl) {
         console.log("[MAGIC_LINK_URL]", magicUrl);
       }
     } catch (err: any) {
-      setMagicLinkSent(true);
-      setMagicLinkTimer(60);
-      addToast(`Magic link sent to ${emailVal}! Check your inbox.`, "success");
+      const errMsg = err.response?.data?.error?.message || err.response?.data?.message || "Failed to dispatch Magic Link. Please verify your email.";
+      setError(errMsg);
+      addToast(errMsg, "error");
+      triggerShake();
     } finally {
       setMagicLinkLoading(false);
     }
@@ -319,11 +263,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
 
   // Handle session expiration warning
   useEffect(() => {
-    if (!isModal && searchParams && searchParams.get("expired") === "true") {
-      setError("Your session has expired. Please sign in again.");
-      addToast("Session expired. Please sign in again.", "info");
+    if (searchParams && searchParams.get("expired") === "true") {
+      addToast("Your session has expired. Please sign in again.", "info");
     }
-  }, [searchParams, addToast, isModal]);
+  }, [searchParams, addToast]);
 
   const handleResendVerification = async () => {
     const emailVal = watch("email");
@@ -701,6 +644,14 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         </p>
       </motion.div>
 
+      {/* Session Expired Banner */}
+      {mounted && searchParams?.get("expired") === "true" && !error && (
+        <motion.div variants={itemVariants} className="flex items-center gap-2.5 p-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl text-[11px] text-amber-300 backdrop-blur-md">
+          <AlertCircle size={15} className="shrink-0 text-amber-400" />
+          <span>Your session has expired. Please sign in again to resume your work.</span>
+        </motion.div>
+      )}
+
       {/* Global Error Banner */}
       {error && (
         <motion.div variants={itemVariants} className="flex flex-col gap-2 p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-300 animate-slide-in">
@@ -779,14 +730,13 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         </motion.div>
       )}
 
-      {/* Auth Mode Toggle Tabs (Password vs Magic Link vs WhatsApp OTP) */}
+      {/* Auth Mode Toggle Tabs (Password vs Magic Link) */}
       <motion.div variants={itemVariants} className="flex bg-[#141417] p-1 rounded-xl border border-zinc-800 text-xs font-medium">
         <button
           type="button"
           onClick={() => {
             setAuthMode("password");
             setMagicLinkSent(false);
-            setWhatsappSent(false);
           }}
           className={cn(
             "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
@@ -800,7 +750,6 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           type="button"
           onClick={() => {
             setAuthMode("magic-link");
-            setWhatsappSent(false);
           }}
           className={cn(
             "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
@@ -810,118 +759,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           <Sparkles size={13} className="text-purple-400" />
           <span>Magic Link</span>
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            setAuthMode("whatsapp");
-            setMagicLinkSent(false);
-          }}
-          className={cn(
-            "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
-            authMode === "whatsapp" ? "bg-zinc-800 text-emerald-400 font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
-          )}
-        >
-          <MessageSquare size={13} className="text-emerald-400" />
-          <span>WhatsApp OTP</span>
-        </button>
       </motion.div>
 
-      {/* WhatsApp OTP Dedicated Form View */}
-      {authMode === "whatsapp" ? (
-        whatsappSent ? (
-          <motion.div variants={itemVariants} className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl text-center space-y-3">
-            <div className="mx-auto w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              <MessageSquare size={18} className="text-emerald-400 animate-pulse" />
-            </div>
-            <div>
-              <h4 className="text-xs font-black text-white">Enter WhatsApp OTP</h4>
-              <p className="text-[10px] text-zinc-400 mt-1">
-                Sent 6-digit code to <span className="text-emerald-400 font-bold">{whatsappPhone}</span>
-              </p>
-            </div>
-
-            {/* 6 Digit WhatsApp Input */}
-            <div className="flex justify-center gap-1 sm:gap-1.5 pt-1 px-1">
-              {whatsappOtpValues.map((val, idx) => (
-                <input
-                  key={idx}
-                  id={`wa-otp-${idx}`}
-                  type="text"
-                  maxLength={1}
-                  value={val}
-                  onChange={(e) => {
-                    const newVals = [...whatsappOtpValues];
-                    newVals[idx] = e.target.value;
-                    setWhatsappOtpValues(newVals);
-                    if (e.target.value && idx < 5) {
-                      document.getElementById(`wa-otp-${idx + 1}`)?.focus();
-                    }
-                    if (newVals.every((v) => v.length === 1)) {
-                      verifyWhatsAppOtpCode(newVals.join(""));
-                    }
-                  }}
-                  className="w-8 sm:w-9 h-10 sm:h-11 text-center text-sm sm:text-base font-bold bg-zinc-900 border border-zinc-700 focus:border-emerald-500 rounded-xl text-white focus:outline-none transition-all shrink-0"
-                />
-              ))}
-            </div>
-
-            <div className="pt-2 flex justify-between items-center text-[10px]">
-              <button
-                type="button"
-                onClick={() => setWhatsappSent(false)}
-                className="text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
-              >
-                Change Number
-              </button>
-              <button
-                type="button"
-                onClick={handleSendWhatsAppOtp}
-                className="text-emerald-400 font-bold underline hover:text-emerald-300 cursor-pointer"
-              >
-                Resend Code
-              </button>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div variants={itemVariants} className="space-y-3 pt-1">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                WhatsApp Phone Number
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-2.5 h-3.5 w-3.5 text-emerald-400" />
-                <input
-                  type="text"
-                  value={whatsappPhone}
-                  onChange={(e) => setWhatsappPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-800 focus:border-emerald-500 rounded-xl text-xs text-white focus:outline-none transition-all font-mono"
-                />
-              </div>
-            </div>
-            <Button
-              type="button"
-              disabled={whatsappLoading}
-              onClick={handleSendWhatsAppOtp}
-              className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer flex justify-center items-center gap-1.5"
-            >
-              {whatsappLoading ? (
-                <>
-                  <Loader2 size={12} className="animate-spin" />
-                  <span>Sending Code...</span>
-                </>
-              ) : (
-                <>
-                  <MessageSquare size={13} className="text-white" />
-                  <span>Send WhatsApp OTP 📲</span>
-                </>
-              )}
-            </Button>
-          </motion.div>
-        )
-      ) : (
-        /* Form elements for Password and Magic Link modes */
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
+      {/* Form elements for Password and Magic Link modes */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
           {/* Email input */}
           <motion.div variants={itemVariants} className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="email">
@@ -1121,7 +962,6 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           </>
         )}
       </form>
-      )}
 
       {/* Social login separator */}
       <motion.div variants={itemVariants} className="relative flex py-1 items-center">

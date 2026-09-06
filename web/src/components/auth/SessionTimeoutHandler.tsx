@@ -15,8 +15,8 @@ export const SessionTimeoutHandler: React.FC = () => {
   const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const warningCountdownRef = useRef<NodeJS.Timeout | null>(null);
   
-  const INACTIVITY_LIMIT = 13 * 60 * 1000; // 13 minutes
-  const WARNING_DURATION = 60; // 60 seconds
+  const INACTIVITY_LIMIT = 60 * 60 * 1000; // 1 hour (60 minutes)
+  const WARNING_DURATION = 120; // 120 seconds (2 minutes warning)
 
   const resetActivityTimer = () => {
     if (!isAuthenticated) return;
@@ -88,7 +88,7 @@ export const SessionTimeoutHandler: React.FC = () => {
   const handleLogout = () => {
     clearAuth();
     setShowWarning(false);
-    router.push('/login?expired=true');
+    router.push('/?login=true&expired=true');
   };
 
   const handleExtend = async () => {
