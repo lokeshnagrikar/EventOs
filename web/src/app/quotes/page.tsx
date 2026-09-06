@@ -156,19 +156,17 @@ export default function QuotesPage() {
                         <span className="text-[10px] font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-bold">
                           {q.quoteNumber}
                         </span>
-                        {q.pdfUrl && (
-                          <a
-                            href={q.pdfUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="px-1.5 py-0.5 rounded bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all flex items-center gap-1 text-[9px] font-bold border border-zinc-700/30"
-                            title="Download PDF"
-                          >
-                            <FileText size={10} />
-                            PDF
-                          </a>
-                        )}
+                        <a
+                          href={q.pdfUrl && !q.pdfUrl.includes("dummy.pdf") ? q.pdfUrl : `/api/v1/crm/quotes/${q.id}/pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-1.5 py-0.5 rounded bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all flex items-center gap-1 text-[9px] font-bold border border-zinc-700/30"
+                          title="Download PDF"
+                        >
+                          <FileText size={10} />
+                          PDF
+                        </a>
                       </div>
                       <span className={`px-2 py-0.5 border rounded-full text-[9px] font-bold ${statusStyle}`}>
                         {q.status}

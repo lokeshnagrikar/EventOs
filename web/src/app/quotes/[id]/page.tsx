@@ -253,15 +253,10 @@ export default function QuoteDetailPage() {
   };
 
   const handleDownloadPdf = () => {
-    if (quote?.pdfUrl) {
+    if (quote?.pdfUrl && !quote.pdfUrl.includes("dummy.pdf")) {
       window.open(quote.pdfUrl, "_blank");
     } else {
-      const originalTitle = document.title;
-      document.title = `EventOS_Quote_${quote?.quoteNumber || "Proposal"}_${lead?.name ? lead.name.replace(/\s+/g, "_") : "Client"}`;
-      window.print();
-      setTimeout(() => {
-        document.title = originalTitle;
-      }, 1000);
+      window.open(`/api/v1/crm/quotes/${id}/pdf`, "_blank");
     }
   };
 

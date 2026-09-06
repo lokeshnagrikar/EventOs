@@ -94,9 +94,12 @@ export default function AlbumDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  const { user, memberships, activeTenantId } = useAuthStore();
   const addToast = useToastStore((state) => state.addToast);
   
+  const activeMembership = memberships.find((m) => m.tenantId === activeTenantId);
+  const defaultAgencyName = activeMembership?.companyName || (user?.firstName ? `${user.firstName}'s Studio` : "EventOS Preview");
+
   const isStaff = useMemo(() => {
     const role = user?.role || (typeof window !== 'undefined' ? localStorage.getItem("user_role") : null);
     console.log("DEBUG [AlbumDetailPage]: Resolved User Role:", role);
@@ -122,6 +125,7 @@ export default function AlbumDetailPage() {
 
   // Share form states
   const [shareWatermark, setShareWatermark] = useState(false);
+  const [shareWatermarkText, setShareWatermarkText] = useState("");
   const [sharePasscode, setSharePasscode] = useState("");
   const [shareExpiryHours, setShareExpiryHours] = useState("168");
   const [shareDownloadAllowed, setShareDownloadAllowed] = useState(true);
@@ -282,7 +286,7 @@ export default function AlbumDetailPage() {
   });
 
   const createShareLinkMutation = useMutation({
-    mutationFn: async (payload: { albumId: string; expiresInHours?: number; password?: string; allowDownload?: boolean }) => {
+    mutationFn: async (payload: { albumId: string; expiresInHours?: number; password?: string; allowDownload?: boolean; watermark?: boolean; watermarkText?: string }) => {
       const response = await api.post("/gallery/share", payload);
       return response.data;
     },
@@ -329,7 +333,9 @@ export default function AlbumDetailPage() {
       albumId: id as string,
       expiresInHours: parseFloat(shareExpiryHours) || undefined,
       password: sharePasscode.trim() ? sharePasscode : undefined,
-      allowDownload: shareDownloadAllowed
+      allowDownload: shareDownloadAllowed,
+      watermark: shareWatermark,
+      watermarkText: shareWatermark ? (shareWatermarkText.trim() || defaultAgencyName) : undefined
     });
     setSharePasscode("");
   };
@@ -702,11 +708,50 @@ export default function AlbumDetailPage() {
                     <div className="flex items-center gap-2 py-1">
                       <input
                         type="checkbox"
-                        id="watermark-check"
-                        checked={shareWatermark}
-                        onChange={(e) => setShareWatermark(e.target.checked)}
+                        id="allow-download-check"
+                        checked={shareDownloadAllowed}
+                        onChange={(e) => setShareDownloadAllowed(e.target.checked)}
+                        className="accent-purple-600 rounded"
                       />
-                      <label htmlFor="watermark-check" className="font-bold text-zinc-400">Overlay Studio Watermark</label>
+                      <label htmlFor="allow-download-check" className="font-bold text-zinc-400 text-[10px] cursor-pointer">
+                        Allow High-Res Downloads
+                      </label>
+                    </div>
+
+                    <div className="space-y-2 py-1">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="watermark-check"
+                          checked={shareWatermark}
+                          onChange={(e) => {
+                            setShareWatermark(e.target.checked);
+                            if (e.target.checked && !shareWatermarkText) {
+                              setShareWatermarkText(defaultAgencyName);
+                            }
+                          }}
+                          className="accent-purple-600 rounded"
+                        />
+                        <label htmlFor="watermark-check" className="font-bold text-zinc-400 text-[10px] cursor-pointer">
+                          Overlay Studio Watermark
+                        </label>
+                      </div>
+
+                      {shareWatermark && (
+                        <div className="space-y-1 pl-5">
+                          <label className="text-[8px] text-zinc-500 uppercase font-black tracking-wider">
+                            Watermark Text (Agency Name)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={defaultAgencyName}
+                            value={shareWatermarkText}
+                            onChange={(e) => setShareWatermarkText(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-[#121214] border border-zinc-800 rounded-lg text-white font-mono text-xs focus:border-purple-500 outline-none"
+                          />
+                          <p className="text-[8px] text-zinc-500">Diagonal overlay applied to preview media until payment is cleared.</p>
+                        </div>
+                      )}
                     </div>
 
                     <button type="submit" className="w-full py-1.5 bg-purple-650 hover:bg-purple-700 text-white font-bold rounded-lg transition-colors shadow">

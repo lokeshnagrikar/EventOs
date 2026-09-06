@@ -16,6 +16,9 @@ public class MessagingConfig {
     public static final String CLEANUP_ROUTING_KEY = "gallery.media.deleted";
     public static final String CLEANUP_DLQ_ROUTING_KEY = "gallery.media.deleted.dlq";
 
+    public static final String PAYMENT_RECORDED_QUEUE = "gallery.payment.recorded.queue";
+    public static final String PAYMENT_RECORDED_ROUTING_KEY = "*.payment.recorded";
+
     @Bean
     public TopicExchange eventosExchange() {
         return new TopicExchange(EXCHANGE);
@@ -42,6 +45,16 @@ public class MessagingConfig {
     @Bean
     public Binding cleanupDlqBinding(Queue cleanupDlq, TopicExchange eventosExchange) {
         return BindingBuilder.bind(cleanupDlq).to(eventosExchange).with(CLEANUP_DLQ_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue paymentRecordedQueue() {
+        return QueueBuilder.durable(PAYMENT_RECORDED_QUEUE).build();
+    }
+
+    @Bean
+    public Binding paymentRecordedBinding(Queue paymentRecordedQueue, TopicExchange eventosExchange) {
+        return BindingBuilder.bind(paymentRecordedQueue).to(eventosExchange).with(PAYMENT_RECORDED_ROUTING_KEY);
     }
 
     @Bean

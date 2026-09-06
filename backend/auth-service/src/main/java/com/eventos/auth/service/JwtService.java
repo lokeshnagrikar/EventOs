@@ -82,6 +82,12 @@ public class JwtService {
                     this.privateKey = parsePrivateKey(privatePem);
                     this.publicKey = parsePublicKey(publicPem);
                 } else if (jwtSecret != null && !jwtSecret.trim().isEmpty() && jwtSecret.length() >= 32) {
+                    if ("9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d".equals(jwtSecret.trim())) {
+                        String profile = System.getenv("SPRING_PROFILES_ACTIVE");
+                        if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
+                            throw new IllegalStateException("CRITICAL SECURITY VIOLATION: Default development JWT secret detected in production environment! Configure a unique, rotated JWT_SECRET_KEY in production.");
+                        }
+                    }
                     byte[] secretBytes = jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
                     this.symmetricKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretBytes);
                     this.useSymmetric = true;

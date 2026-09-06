@@ -229,6 +229,44 @@ public class CloudinaryService {
                 .generate(publicId);
     }
 
+    public String getWatermarkedUrl(String publicId, String originalUrl, String watermarkText, boolean isVideo) {
+        String text = (watermarkText != null && !watermarkText.trim().isEmpty())
+                ? watermarkText.trim()
+                : "EventOS Preview";
+
+        if (isMockMode || publicId == null || publicId.startsWith("mock_")) {
+            if (originalUrl != null && !originalUrl.isEmpty()) {
+                String separator = originalUrl.contains("?") ? "&" : "?";
+                try {
+                    return originalUrl + separator + "watermark=" + java.net.URLEncoder.encode(text, java.nio.charset.StandardCharsets.UTF_8.name());
+                } catch (Exception e) {
+                    return originalUrl + separator + "watermark=preview";
+                }
+            }
+            return "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1200&q=80";
+        }
+
+        String resourceType = isVideo ? "video" : "image";
+        try {
+            String encodedText = java.net.URLEncoder.encode(text, java.nio.charset.StandardCharsets.UTF_8.name())
+                    .replace("+", "%20");
+            return cloudinary.url()
+                    .resourceType(resourceType)
+                    .transformation(new com.cloudinary.Transformation()
+                            .overlay("text:Arial_60_bold:" + encodedText)
+                            .opacity(35)
+                            .angle(315)
+                            .gravity("center")
+                            .flags("layer_apply")
+                            .quality("auto")
+                            .fetchFormat("auto"))
+                    .generate(publicId);
+        } catch (Exception e) {
+            log.warn("Failed to generate Cloudinary watermark transformation: {}. Fallback to original URL.", e.getMessage());
+            return originalUrl;
+        }
+    }
+
     public Map<String, Object> generateUploadSignature(UUID tenantId, UUID albumId, UUID eventId, String filename) {
         long timestamp = System.currentTimeMillis() / 1000L;
         // Generate a clean public_id (avoid invalid characters in folder/filenames)

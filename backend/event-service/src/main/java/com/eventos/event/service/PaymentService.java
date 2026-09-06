@@ -256,6 +256,16 @@ public class PaymentService {
             }
         }
 
+        // Idempotency: prevent double payment submission on identical transaction references
+        if (dto.getTransactionReference() != null && !dto.getTransactionReference().trim().isEmpty()) {
+            boolean exists = paymentRepository.existsByTenantIdAndTransactionReference(
+                    tenantId, dto.getTransactionReference().trim());
+            if (exists) {
+                throw new IllegalStateException("Duplicate payment detected: A payment with transaction reference '" 
+                        + dto.getTransactionReference().trim() + "' is already recorded.");
+            }
+        }
+
         // Validate and normalize payment method
         String method = dto.getPaymentMethod();
         if (method == null || method.trim().isEmpty()) {

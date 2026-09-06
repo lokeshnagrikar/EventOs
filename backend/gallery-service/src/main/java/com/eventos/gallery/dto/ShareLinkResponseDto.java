@@ -21,4 +21,6 @@ public class ShareLinkResponseDto {
     private LocalDateTime createdAt;
     private boolean expired;
     private boolean allowDownload;
+    private boolean watermark;
+    private String watermarkText;
 }

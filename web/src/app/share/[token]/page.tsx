@@ -36,6 +36,9 @@ interface SharedAlbum {
   description?: string;
   eventId?: string;
   coverImage?: string;
+  allowDownload?: boolean;
+  watermark?: boolean;
+  watermarkText?: string;
   items: SharedItem[];
 }
 
@@ -186,21 +189,11 @@ export default function PublicSharePage() {
     );
   };
 
-  // Trigger simulated ZIP bulk download
+  // Trigger backend streaming ZIP bulk download
   const handleBulkDownload = () => {
-    if (!album) return;
-    setDownloadQueue(["Initializing archive...", "Packaging photos...", "Building ZIP folder...", "Completed"]);
-    const interval = setTimeout(() => {
-      album.items.slice(0, 3).forEach((item) => {
-        const link = document.createElement("a");
-        link.href = item.url;
-        link.download = item.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      });
-      setDownloadQueue([]);
-    }, 2500);
+    if (!album || album.allowDownload === false) return;
+    const query = passcode.trim() ? `?passcode=${encodeURIComponent(passcode.trim())}` : "";
+    window.location.href = `/api/v1/gallery/share/public/download/${token}${query}`;
   };
 
   // Render loading state
@@ -305,9 +298,16 @@ export default function PublicSharePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/30 to-black/40" />
 
         <div className="relative z-10 p-6 md:p-12 max-w-7xl mx-auto w-full space-y-4">
-          <span className="text-[10px] px-3 py-1 bg-purple-650/10 border border-purple-550/20 text-purple-400 font-black uppercase tracking-wider rounded-lg inline-block">
-            EventOS Shared Memories
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] px-3 py-1 bg-purple-650/10 border border-purple-550/20 text-purple-400 font-black uppercase tracking-wider rounded-lg inline-block">
+              EventOS Shared Memories
+            </span>
+            {album.watermark && (
+              <span className="text-[10px] px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold uppercase tracking-wider rounded-lg inline-flex items-center gap-1">
+                <Lock size={10} /> Preview Watermark
+              </span>
+            )}
+          </div>
           <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white font-serif max-w-4xl leading-tight">
             {album.name}
           </h1>
@@ -322,12 +322,21 @@ export default function PublicSharePage() {
             >
               <Play size={13} fill="currentColor" /> Play Slideshow
             </button>
-            <button
-              onClick={handleBulkDownload}
-              className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900/60 backdrop-blur border border-zinc-800 text-zinc-350 hover:text-white rounded-xl text-xs font-bold cursor-pointer transition-all active:scale-[0.98]"
-            >
-              <Download size={13} /> Download Album
-            </button>
+            {album.allowDownload !== false ? (
+              <button
+                onClick={handleBulkDownload}
+                className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900/60 backdrop-blur border border-zinc-800 text-zinc-350 hover:text-white rounded-xl text-xs font-bold cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <Download size={13} /> Download Album
+              </button>
+            ) : (
+              <div
+                className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900/30 border border-zinc-800/50 text-zinc-500 rounded-xl text-xs font-medium cursor-not-allowed select-none"
+                title="Downloads are disabled for preview gallery"
+              >
+                <Lock size={12} /> Downloads Disabled
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -347,7 +356,9 @@ export default function PublicSharePage() {
       <main className="flex-1 p-6 md:p-12 space-y-8 max-w-7xl mx-auto w-full">
         <div className="flex justify-between items-center border-b border-zinc-850 pb-4 select-none">
           <h2 className="text-xs font-black uppercase text-zinc-450 tracking-wider">Gallery Media Grid ({items.length} items)</h2>
-          <span className="text-[9.5px] text-zinc-550 font-medium">Studio: Dream Weddings Studio</span>
+          <span className="text-[9.5px] text-zinc-400 font-medium">
+            Studio: <span className="text-zinc-200 font-bold">{album.watermarkText || "Dream Weddings Studio"}</span>
+          </span>
         </div>
 
         {/* Pinterest-style masonry grid */}
@@ -394,15 +405,17 @@ export default function PublicSharePage() {
                   </div>
                   <div className="flex justify-between items-center gap-2">
                     <p className="text-[10px] text-zinc-150 font-semibold truncate flex-1">{item.name}</p>
-                    <a
-                      href={item.url}
-                      download={item.name}
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-6 w-6 rounded bg-black/60 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
-                      title="Download"
-                    >
-                      <Download size={11} />
-                    </a>
+                    {album.allowDownload !== false && (
+                      <a
+                        href={item.url}
+                        download={item.name}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-6 w-6 rounded bg-black/60 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+                        title="Download"
+                      >
+                        <Download size={11} />
+                      </a>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -452,14 +465,16 @@ export default function PublicSharePage() {
                 >
                   {isSlideshowPlaying ? <Pause size={14} className="animate-pulse" /> : <Play size={14} />}
                 </button>
-                <a
-                  href={items[lightboxIndex].url}
-                  download={items[lightboxIndex].name}
-                  className="h-9 w-9 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white transition-all shadow"
-                  title="Download File"
-                >
-                  <Download size={14} />
-                </a>
+                {album.allowDownload !== false && (
+                  <a
+                    href={items[lightboxIndex].url}
+                    download={items[lightboxIndex].name}
+                    className="h-9 w-9 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white transition-all shadow"
+                    title="Download File"
+                  >
+                    <Download size={14} />
+                  </a>
+                )}
                 <button
                   onClick={closeLightbox}
                   className="h-9 w-9 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white transition-all shadow"

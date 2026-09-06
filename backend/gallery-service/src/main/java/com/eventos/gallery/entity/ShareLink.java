@@ -42,6 +42,13 @@ public class ShareLink {
     @Builder.Default
     private boolean allowDownload = true;
 
+    @Column(name = "watermark", nullable = false)
+    @Builder.Default
+    private boolean watermark = false;
+
+    @Column(name = "watermark_text")
+    private String watermarkText;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

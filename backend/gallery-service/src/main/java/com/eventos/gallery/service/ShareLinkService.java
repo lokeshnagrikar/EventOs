@@ -30,6 +30,7 @@ public class ShareLinkService {
     private final AlbumRepository albumRepository;
     private final GalleryItemRepository galleryItemRepository;
     private final GalleryItemService galleryItemService;
+    private final CloudinaryService cloudinaryService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final ShareLinkAccessLogRepository shareLinkAccessLogRepository;
 
@@ -37,11 +38,13 @@ public class ShareLinkService {
                             AlbumRepository albumRepository,
                             GalleryItemRepository galleryItemRepository,
                             GalleryItemService galleryItemService,
+                            CloudinaryService cloudinaryService,
                             ShareLinkAccessLogRepository shareLinkAccessLogRepository) {
         this.shareLinkRepository = shareLinkRepository;
         this.albumRepository = albumRepository;
         this.galleryItemRepository = galleryItemRepository;
         this.galleryItemService = galleryItemService;
+        this.cloudinaryService = cloudinaryService;
         this.shareLinkAccessLogRepository = shareLinkAccessLogRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
@@ -66,6 +69,8 @@ public class ShareLinkService {
         }
 
         boolean allowDownload = dto.getAllowDownload() == null || dto.getAllowDownload();
+        boolean watermark = dto.getWatermark() != null && dto.getWatermark();
+        String watermarkText = dto.getWatermarkText();
 
         ShareLink shareLink = ShareLink.builder()
                 .tenantId(tenantId)
@@ -74,6 +79,8 @@ public class ShareLinkService {
                 .expiresAt(expiresAt)
                 .password(hashedPassword)
                 .allowDownload(allowDownload)
+                .watermark(watermark)
+                .watermarkText(watermarkText)
                 .build();
 
         ShareLink saved = shareLinkRepository.save(shareLink);
@@ -123,8 +130,19 @@ public class ShareLinkService {
             }
             List<GalleryItem> items = galleryItemRepository.findAllByTenantIdAndAlbumId(shareLink.getTenantId(), album.getId());
             
+            boolean applyWatermark = shareLink.isWatermark();
+            String watermarkText = shareLink.getWatermarkText();
+
             List<GalleryItemResponseDto> itemDtos = items.stream()
-                    .map(galleryItemService::mapToResponseDto)
+                    .map(item -> {
+                        GalleryItemResponseDto dto = galleryItemService.mapToResponseDto(item);
+                        if (applyWatermark) {
+                            boolean isVideo = item.getResourceType() != null && item.getResourceType().startsWith("video");
+                            String watermarkedUrl = cloudinaryService.getWatermarkedUrl(item.getPublicId(), item.getUrl(), watermarkText, isVideo);
+                            dto.setUrl(watermarkedUrl);
+                        }
+                        return dto;
+                    })
                     .collect(Collectors.toList());
 
             // Log success access attempt
@@ -136,6 +154,8 @@ public class ShareLinkService {
                     .description(album.getDescription())
                     .eventId(album.getEventId())
                     .allowDownload(shareLink.isAllowDownload())
+                    .watermark(shareLink.isWatermark())
+                    .watermarkText(shareLink.getWatermarkText())
                     .items(itemDtos)
                     .build();
 
@@ -199,6 +219,8 @@ public class ShareLinkService {
                 .createdAt(shareLink.getCreatedAt())
                 .expired(shareLink.isExpired())
                 .allowDownload(shareLink.isAllowDownload())
+                .watermark(shareLink.isWatermark())
+                .watermarkText(shareLink.getWatermarkText())
                 .build();
     }
 

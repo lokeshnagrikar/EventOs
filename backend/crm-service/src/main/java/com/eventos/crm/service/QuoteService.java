@@ -626,4 +626,130 @@ public class QuoteService {
         }
         return quotes;
     }
+
+    // ─── Public Quote Portal Methods (Direct Client Access) ────────────────────
+
+    public com.eventos.crm.dto.PublicQuoteResponseDto getPublicQuote(String token) {
+        Quote quote = findQuoteByTokenOrId(token);
+        UUID tenantId = quote.getTenantId();
+
+        // Mark as viewed if currently sent
+        if (quote.getStatus() == QuoteStatus.SENT) {
+            quote.setStatus(QuoteStatus.VIEWED);
+            quote = quoteRepository.save(quote);
+        }
+
+        Lead lead = leadRepository.findByIdAndTenantIdAndIsDeletedFalse(quote.getLeadId(), tenantId).orElse(null);
+        return mapToPublicDto(quote, lead);
+    }
+
+    public com.eventos.crm.dto.PublicQuoteResponseDto approvePublicQuote(String token, String signerName, String signerTitle) {
+        Quote quote = findQuoteByTokenOrId(token);
+        UUID tenantId = quote.getTenantId();
+
+        if (quote.getStatus() != QuoteStatus.ACCEPTED) {
+            quote.setStatus(QuoteStatus.ACCEPTED);
+            quote.setApprovedAt(LocalDateTime.now());
+            quote = quoteRepository.save(quote);
+
+            // Promote Lead Status in CRM to WON
+            try {
+                leadService.updateLeadStatus(quote.getLeadId(), LeadStatus.WON, tenantId, null);
+                leadService.addActivity(quote.getLeadId(), "PROPOSAL_ACCEPTED", 
+                        "Proposal digitally approved & signed by " + signerName + (signerTitle != null ? " (" + signerTitle + ")" : ""),
+                        tenantId, null);
+            } catch (Exception e) {
+                log.warn("Could not update lead status for quote approval: {}", e.getMessage());
+            }
+
+            // Trigger booking creation in event-service via RabbitMQ
+            triggerBookingCreation(quote.getId(), tenantId);
+        }
+
+        Lead lead = leadRepository.findByIdAndTenantIdAndIsDeletedFalse(quote.getLeadId(), tenantId).orElse(null);
+        return mapToPublicDto(quote, lead);
+    }
+
+    public com.eventos.crm.dto.PublicQuoteResponseDto rejectPublicQuote(String token, String rejectionNotes) {
+        Quote quote = findQuoteByTokenOrId(token);
+        UUID tenantId = quote.getTenantId();
+
+        quote.setStatus(QuoteStatus.REJECTED);
+        quote = quoteRepository.save(quote);
+
+        try {
+            leadService.addActivity(quote.getLeadId(), "PROPOSAL_REJECTED", 
+                    "Proposal rejected by client. Notes: " + (rejectionNotes != null ? rejectionNotes : "None"),
+                    tenantId, null);
+        } catch (Exception e) {
+            log.warn("Could not log rejection activity: {}", e.getMessage());
+        }
+
+        Lead lead = leadRepository.findByIdAndTenantIdAndIsDeletedFalse(quote.getLeadId(), tenantId).orElse(null);
+        return mapToPublicDto(quote, lead);
+    }
+
+    public byte[] generatePdfBytes(UUID quoteId, UUID tenantId) {
+        Quote quote = getQuoteById(quoteId, tenantId);
+        Lead lead = leadRepository.findByIdAndTenantIdAndIsDeletedFalse(quote.getLeadId(), tenantId).orElse(null);
+        return pdfGenerationService.generateQuotePdf(quote, lead);
+    }
+
+    private Quote findQuoteByTokenOrId(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalArgumentException("Quote identifier cannot be empty");
+        }
+        try {
+            UUID id = UUID.fromString(token.trim());
+            return quoteRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Quote not found with ID: " + token));
+        } catch (IllegalArgumentException ex) {
+            return quoteRepository.findByQuoteNumber(token.trim())
+                    .orElseThrow(() -> new IllegalArgumentException("Quote not found with number: " + token));
+        }
+    }
+
+    private com.eventos.crm.dto.PublicQuoteResponseDto mapToPublicDto(Quote quote, Lead lead) {
+        List<com.eventos.crm.dto.PublicQuoteResponseDto.PublicQuoteItemDto> itemDtos = new ArrayList<>();
+        if (quote.getItems() != null) {
+            for (QuoteItem item : quote.getItems()) {
+                itemDtos.add(com.eventos.crm.dto.PublicQuoteResponseDto.PublicQuoteItemDto.builder()
+                        .id(item.getId())
+                        .itemName(item.getItemName())
+                        .description(item.getDescription())
+                        .unitPrice(item.getUnitPrice())
+                        .quantity(item.getQuantity())
+                        .total(item.getTotal())
+                        .build());
+            }
+        }
+
+        String contactEmail = null;
+        String contactPhone = null;
+        if (lead != null && lead.getContact() != null) {
+            contactEmail = lead.getContact().getEmail();
+            contactPhone = lead.getContact().getPhone();
+        }
+
+        return com.eventos.crm.dto.PublicQuoteResponseDto.builder()
+                .id(quote.getId())
+                .quoteNumber(quote.getQuoteNumber())
+                .status(quote.getStatus() != null ? quote.getStatus().name() : "DRAFT")
+                .templateName(quote.getTemplateName())
+                .subtotal(quote.getSubtotal())
+                .discount(quote.getDiscount())
+                .tax(quote.getTax())
+                .total(quote.getTotal())
+                .clientName(lead != null ? lead.getName() : null)
+                .clientEmail(contactEmail)
+                .clientPhone(contactPhone)
+                .eventName(lead != null ? lead.getName() : null)
+                .eventDate(lead != null && lead.getEventDate() != null ? lead.getEventDate().toString() : null)
+                .venueName(null)
+                .clientNotes(quote.getClientNotes())
+                .termsConditions(quote.getTermsConditions())
+                .createdAt(quote.getCreatedAt())
+                .items(itemDtos)
+                .build();
+    }
 }

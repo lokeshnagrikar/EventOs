@@ -79,8 +79,7 @@ import PageShell from "@/components/ui/PageShell";
 import ErrorState from "@/components/ui/ErrorState";
 import { DashboardSkeleton } from "@/components/ui/skeletons";
 import { useToastStore } from "@/lib/toastStore";
-import { SpotlightCard } from "@/components/ui/spotlight-card";
-import { AuroraText } from "@/components/ui/aurora-text";
+
 
 // ─── TYPES & INTERFACES ──────────────────────────────────────────────────────────
 interface DashboardData {
@@ -220,12 +219,12 @@ function Sparkline({ data, isPositive }: { data: number[]; isPositive: boolean }
 }
 
 export default function DashboardPage() {
-  const { user } = useAuthStore();
+  const { user, memberships, activeTenantId } = useAuthStore();
+  const currentCompanyName = memberships?.find((m) => m.tenantId === activeTenantId)?.companyName || "Dream Weddings Studio";
   const router = useRouter();
   const addToast = useToastStore((state) => state.addToast);
 
   // Control Center States
-  const [audioFx, setAudioFx] = useState(true);
   const [liveUpdates, setLiveUpdates] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
 
@@ -236,65 +235,10 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Tactile click audio fx using Web Audio API
-  const playTickSound = useCallback(() => {
-    if (!audioFx || typeof window === "undefined") return;
-    try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
 
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(800, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.05);
-
-      gain.gain.setValueAtTime(0.012, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.05);
-    } catch (e) {
-      // AudioContext fails gracefully if browser blocks auto-play
-    }
-  }, [audioFx]);
-
-  // Success chime audio fx using Web Audio API
-  const playSuccessSound = useCallback(() => {
-    if (!audioFx || typeof window === "undefined") return;
-    try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
-
-      const playTone = (freq: number, delay: number, dur: number) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
-
-        gain.gain.setValueAtTime(0.015, ctx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + delay);
-        osc.stop(ctx.currentTime + delay + dur);
-      };
-
-      playTone(523.25, 0, 0.12);
-      playTone(659.25, 0.08, 0.18);
-    } catch (e) {
-      // Ignore audio errors
-    }
-  }, [audioFx]);
 
   // 1. Fetch CRM & Event metrics dynamically from backend
-  const { data: dashboardResponse } = useQuery<{ data: DashboardData }>({
+  const { data: dashboardResponse, refetch: refetchDashboard } = useQuery<{ data: DashboardData }>({
     queryKey: ["ownerDashboardMetrics"],
     queryFn: async () => {
       const res = await api.get("/crm/dashboard/metrics");
@@ -377,9 +321,7 @@ export default function DashboardPage() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  // Confetti Simulation state
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [confettiParticles, setConfettiParticles] = useState<Array<{ id: number; x: number; y: number; color: string; size: number; speedY: number; speedX: number }>>([]);
+
 
   // simulated WebSockets status
   const [latency, setLatency] = useState(14);
@@ -426,11 +368,7 @@ export default function DashboardPage() {
   }, [overallHealthScore]);
 
   // Alert Banner Drawer states
-  const [activeAlerts, setActiveAlerts] = useState([
-    { id: "alert-1", type: "CRITICAL", text: "Storage usage has reached 94.2% of your enterprise workspace limit (94.2 GB of 100 GB used).", action: "Upgrade Storage" },
-    { id: "alert-2", type: "WARNING", text: "Subscription invoice renewal failed after 2 attempts via Stripe Gateway.", action: "Resolve Payment" },
-    { id: "alert-3", type: "SECURITY", text: "Unusual login vector registered from unauthorized client session. Audit log audit completed.", action: "Review Access" },
-  ]);
+  const [activeAlerts, setActiveAlerts] = useState<Array<{ id: string; type: string; text: string; action: string }>>([]);
 
   // Today's Priority checklist (Sorted by priority rank weight)
   const [priorityTasks, setPriorityTasks] = useState([
@@ -711,101 +649,8 @@ export default function DashboardPage() {
     saveLayoutOrder([...pinned, ...unpinned]);
   };
 
-  // Real-time simulated updates via WebSockets
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWsPulse((prev) => !prev);
-      setLatency(Math.floor(Math.random() * 8) + 10); // 10ms - 18ms latency
 
-      // Trigger counter / metrics random update simulation
-      setLiveCounterTrigger((prev) => prev + 1);
 
-      // Random event trigger (1 in 4 chance)
-      const roll = Math.floor(Math.random() * 4);
-      if (roll === 0) {
-        const events = [
-          { msg: "Incoming Stripe Webhook: Client payment authorization cleared (₹45,000)", tag: "FINANCE" },
-          { msg: "CRM Lead qualified: Taj Mahal Palace Wedding Ceremony (Proposal stage)", tag: "CRM" },
-          { msg: "Gallery Activity: Storage compressed. 1.2 GB reclaimed.", tag: "MEDIA" },
-          { msg: "AI Advisor recommendation dispatch: Florist price escalation alert updated.", tag: "AI_AGENCY" },
-          { msg: "Integrations: Webhook trigger dispatch completed to Google Sheets API", tag: "INTEGRATION" },
-        ];
-        const randomEvt = events[Math.floor(Math.random() * events.length)];
-
-        setTimelineActivity((prev) => [
-          { id: `ws-${Date.now()}`, message: randomEvt.msg, time: "Just Now", tag: randomEvt.tag },
-          ...prev.slice(0, 4),
-        ]);
-
-        // Bump KPI metrics optimistically
-        if (randomEvt.tag === "FINANCE") {
-          setKpiMetrics((prev) => ({
-            ...prev,
-            revenue: prev.revenue + 45000,
-            profit: prev.profit + 32000,
-          }));
-        } else if (randomEvt.tag === "CRM") {
-          setKpiMetrics((prev) => ({
-            ...prev,
-            leads: prev.leads + 1,
-          }));
-          setSalesFunnel((prev) => ({
-            ...prev,
-            leads: prev.leads + 1,
-            proposal: prev.proposal + 1,
-          }));
-        }
-
-        addToast(`WebSocket Gateway push: ${randomEvt.msg}`, "info");
-      }
-    }, 12000);
-
-    return () => clearInterval(interval);
-  }, [addToast]);
-
-  // Confetti particles generator
-  const triggerConfettiAnimation = () => {
-    setShowConfetti(true);
-    playSuccessSound();
-    const colors = ["#8b5cf6", "#ec4899", "#38bdf8", "#10b981", "#fbbf24"];
-    const particles = Array.from({ length: 120 }).map((_, i) => ({
-      id: i,
-      x: window.innerWidth / 2,
-      y: window.innerHeight + 20,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      size: Math.random() * 8 + 4,
-      speedY: -(Math.random() * 15 + 10),
-      speedX: Math.random() * 16 - 8,
-    }));
-    setConfettiParticles(particles);
-
-    // Confetti physics animation loop
-    let animationId: number;
-    let currentParticles = [...particles];
-
-    const updatePhysics = () => {
-      currentParticles = currentParticles
-        .map((p) => ({
-          ...p,
-          x: p.x + p.x * 0.005 + p.speedX,
-          y: p.y + p.speedY,
-          speedY: p.speedY + 0.35, // gravity
-        }))
-        .filter((p) => p.y < window.innerHeight + 50 && p.x > -50 && p.x < window.innerWidth + 50);
-
-      setConfettiParticles(currentParticles);
-
-      if (currentParticles.length > 0) {
-        animationId = requestAnimationFrame(updatePhysics);
-      } else {
-        setShowConfetti(false);
-      }
-    };
-
-    animationId = requestAnimationFrame(updatePhysics);
-    addToast("Goal Milestones Achieved! Confetti trigger fired. 🎉", "success");
-    return () => cancelAnimationFrame(animationId);
-  };
 
   // Quick Action Submissions
   const handleQuickActionSubmit = (type: string, data: any) => {
@@ -871,25 +716,7 @@ export default function DashboardPage() {
       title="Executive Workspace"
       subtitle={`Intelligent Operating Dashboard & SaaS Command Center. Welcome back, ${userName}.`}
     >
-      {/* ─── CONFETTI CANVAS SIMULATOR ───────────────────────────────────────────── */}
-      {showConfetti && (
-        <div className="fixed inset-0 pointer-events-none z-[999] overflow-hidden">
-          {confettiParticles.map((p) => (
-            <div
-              key={p.id}
-              className="absolute rounded-full"
-              style={{
-                left: `${p.x}px`,
-                top: `${p.y}px`,
-                backgroundColor: p.color,
-                width: `${p.size}px`,
-                height: `${p.size}px`,
-                opacity: 0.85,
-              }}
-            />
-          ))}
-        </div>
-      )}
+
 
       {/* ─── LIVE ALERTS CENTER (Top Banner Drawer) ─────────────────────────────────── */}
       <AnimatePresence>
@@ -963,11 +790,7 @@ export default function DashboardPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              {greeting}, <AuroraText>{user?.firstName || "Lokesh"}</AuroraText>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-              </span>
+              {greeting}, <span className="text-purple-400">{user?.firstName || "Lokesh"}</span>
             </h1>
             <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full border border-purple-500/20 bg-purple-500/10 text-purple-400 font-mono">
               Enterprise Suite
@@ -984,12 +807,7 @@ export default function DashboardPage() {
               </>
             )}
             <span className="text-zinc-650">•</span>
-            <span className="text-purple-400/90 font-extrabold">Dream Weddings Studio</span>
-            <span className="text-zinc-650">•</span>
-            <span className="flex items-center gap-1.5 text-zinc-350">
-              <span className={cn("h-1.5 w-1.5 rounded-full animate-ping", wsPulse ? "bg-emerald-500" : "bg-emerald-450")} />
-              <span>Real-Time Gateway ({latency}ms) • {liveCounterTrigger} updates</span>
-            </span>
+            <span className="text-purple-400/90 font-extrabold">{currentCompanyName}</span>
           </p>
         </div>
 
@@ -1180,7 +998,7 @@ export default function DashboardPage() {
 
                 {/* 0. CONTROL CENTER WIDGET */}
                 {widget.id === "control" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[340px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[340px] flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
                         <div>
@@ -1196,7 +1014,7 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-2 gap-2.5 mt-5">
                         {/* Toggle 1: Dark Mode */}
                         <button
-                          onClick={() => { toggleTheme(); playTickSound(); }}
+                          onClick={() => { toggleTheme(); }}
                           className={cn(
                             "p-3 rounded-xl border flex flex-col items-start gap-1.5 text-left transition-all duration-200 cursor-pointer select-none",
                             darkMode
@@ -1216,31 +1034,11 @@ export default function DashboardPage() {
                           </div>
                         </button>
 
-                        {/* Toggle 2: Audio FX */}
-                        <button
-                          onClick={() => { setAudioFx(!audioFx); playTickSound(); }}
-                          className={cn(
-                            "p-3 rounded-xl border flex flex-col items-start gap-1.5 text-left transition-all duration-200 cursor-pointer select-none",
-                            audioFx
-                              ? "bg-purple-950/20 border-purple-500/20 text-purple-400"
-                              : "bg-zinc-950/40 border-zinc-900 text-zinc-400 hover:text-zinc-300"
-                          )}
-                        >
-                          <div className="flex justify-between items-center w-full">
-                            <span className="text-sm">🔊</span>
-                            <div className={cn("h-3 w-6 rounded-full p-0.5 transition-colors duration-200", audioFx ? "bg-purple-500" : "bg-zinc-800")}>
-                              <div className={cn("h-2 w-2 rounded-full bg-white transition-transform duration-200", audioFx ? "translate-x-3" : "translate-x-0")} />
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-[10px] font-extrabold block">Tactile Audio</span>
-                            <span className="text-[8px] text-zinc-500 font-medium">{audioFx ? "Feedback On" : "Muted"}</span>
-                          </div>
-                        </button>
 
-                        {/* Toggle 3: Live updates */}
+
+                        {/* Toggle 2: Live updates */}
                         <button
-                          onClick={() => { setLiveUpdates(!liveUpdates); playTickSound(); }}
+                          onClick={() => { setLiveUpdates(!liveUpdates); }}
                           className={cn(
                             "p-3 rounded-xl border flex flex-col items-start gap-1.5 text-left transition-all duration-200 cursor-pointer select-none",
                             liveUpdates
@@ -1260,9 +1058,9 @@ export default function DashboardPage() {
                           </div>
                         </button>
 
-                        {/* Toggle 4: Customize Grid */}
+                        {/* Toggle 3: Customize Grid */}
                         <button
-                          onClick={() => { setIsCustomizeMode(!isCustomizeMode); playTickSound(); }}
+                          onClick={() => { setIsCustomizeMode(!isCustomizeMode); }}
                           className={cn(
                             "p-3 rounded-xl border flex flex-col items-start gap-1.5 text-left transition-all duration-200 cursor-pointer select-none",
                             isCustomizeMode
@@ -1278,7 +1076,25 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <span className="text-[10px] font-extrabold block">Grid Design</span>
-                            <span className="text-[8px] text-zinc-550 font-medium">{isCustomizeMode ? "Customizing" : "Locked"}</span>
+                            <span className="text-[8px] text-zinc-500 font-medium">{isCustomizeMode ? "Customizing" : "Locked"}</span>
+                          </div>
+                        </button>
+
+                        {/* Action 4: Sync Data */}
+                        <button
+                          onClick={async () => {
+                            await refetchDashboard();
+                            addToast("Dashboard synced with server", "success");
+                          }}
+                          className="p-3 rounded-xl border flex flex-col items-start gap-1.5 text-left transition-all duration-200 cursor-pointer select-none bg-zinc-950/40 border-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-800"
+                        >
+                          <div className="flex justify-between items-center w-full">
+                            <span className="text-sm">🔄</span>
+                            <RefreshCw size={11} className="text-zinc-500" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-extrabold block">Sync Data</span>
+                            <span className="text-[8px] text-zinc-500 font-medium">Pull Latest</span>
                           </div>
                         </button>
                       </div>
@@ -1312,12 +1128,12 @@ export default function DashboardPage() {
                         <span className="absolute font-mono text-[8px] font-black text-white">94%</span>
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 1. HEALTH SCORE WIDGET */}
                 {widget.id === "health" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[340px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[340px] flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
                         <div>
@@ -1378,12 +1194,12 @@ export default function DashboardPage() {
                         Adjust Variables & View Details
                       </button>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 2. TODAY'S FOCUS PRIORITY CHECKS */}
                 {widget.id === "priority" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[340px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[340px] flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1441,12 +1257,12 @@ export default function DashboardPage() {
                         )}
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 3. AI BUSINESS ADVISOR */}
                 {widget.id === "advisor" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[340px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[340px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1486,7 +1302,7 @@ export default function DashboardPage() {
                         ))}
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 4. KPI CARDS (FULL WIDTH GRID INCLUDED IN A SINGLE WIDGET) */}
@@ -1510,7 +1326,7 @@ export default function DashboardPage() {
                       const trendIsPositive = kpi.isPos;
 
                       return (
-                        <SpotlightCard
+                        <div
                           key={kpi.title}
                           className="group relative p-5 rounded-2xl border border-zinc-850 bg-[#121214]/30 hover:border-zinc-700 min-h-[145px] hover:shadow-[0_0_30px_rgba(139,92,246,0.02)] transition-all duration-300 select-none cursor-pointer overflow-hidden"
                         >
@@ -1538,7 +1354,7 @@ export default function DashboardPage() {
                             </div>
                             <Sparkline data={kpi.points} isPositive={trendIsPositive} />
                           </div>
-                        </SpotlightCard>
+                        </div>
                       );
                     })}
                   </div>
@@ -1546,7 +1362,7 @@ export default function DashboardPage() {
 
                 {/* 5. SALES ANALYTICS FUNNEL */}
                 {widget.id === "sales" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">CRM Leads Funnel</span>
@@ -1592,12 +1408,12 @@ export default function DashboardPage() {
                         <span className="text-zinc-200 font-mono">76.8%</span>
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 6. FINANCE DASHBOARD FLOW */}
                 {widget.id === "finance" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
@@ -1675,12 +1491,12 @@ export default function DashboardPage() {
                       <span>Operating Cost Index: <strong className="text-zinc-200">₹3,84,000</strong></span>
                       <span>Total Unbilled Assets: <strong className="text-purple-400">₹94,000</strong></span>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 7. EVENT & PACKAGE TRACKER */}
                 {widget.id === "events" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Operational Metrics</span>
@@ -1723,12 +1539,12 @@ export default function DashboardPage() {
                         <span className="text-red-400">-8.5% (Alert)</span>
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 8. TEAM PERFORMANCE & BURNOUT */}
                 {widget.id === "team" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-3">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Resource roster metrics</span>
@@ -1779,12 +1595,12 @@ export default function DashboardPage() {
                         })}
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 9. CLIENT INSIGHTS & NPS */}
                 {widget.id === "clients" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Client Satisfaction Index</span>
@@ -1830,12 +1646,12 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 10. MEDIA STORAGE ANALYTICS */}
                 {widget.id === "media" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Photo Album Resources</span>
@@ -1886,12 +1702,12 @@ export default function DashboardPage() {
                     >
                       Manage Media & Clear Cache
                     </button>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 11. WORKSPACE TIMELINE LOGS */}
                 {widget.id === "activity" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Audit Security Logs</span>
@@ -1911,12 +1727,12 @@ export default function DashboardPage() {
                         ))}
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 12. CORPORATE GOALS PROGRESS */}
                 {widget.id === "goals" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1957,12 +1773,12 @@ export default function DashboardPage() {
                         })}
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
 
                 {/* 13. PREDICTIVE BUSINESS GROWTH */}
                 {widget.id === "forecasting" && (
-                  <SpotlightCard className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl saturate-150 shadow-[0_4px_30px_rgba(0,0,0,0.2)] min-h-[380px] flex flex-col justify-between">
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">AI Business Forecasting</span>
@@ -2015,7 +1831,7 @@ export default function DashboardPage() {
                       <span>Staff Shortage Warning: <strong className="text-red-400">Nov/Dec Wedding Season</strong></span>
                       <span>Storage Full Projection: <strong className="text-amber-500">24 Days</strong></span>
                     </div>
-                  </SpotlightCard>
+                  </div>
                 )}
               </motion.div>
             );

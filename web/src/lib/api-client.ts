@@ -84,12 +84,17 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
     // Check if error is 401 and request hasn't been retried yet, skipping auth endpoints
-    const isAuthRequest = originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register');
+    const isAuthRequest = originalRequest.url?.includes('/auth/login') 
+      || originalRequest.url?.includes('/auth/register')
+      || originalRequest.url?.includes('/auth/refresh')
+      || originalRequest.url?.includes('/auth/logout');
+
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({
             resolve: (token: string) => {
+              originalRequest._retry = true;
               if (originalRequest.headers) {
                 originalRequest.headers.Authorization = `Bearer ${token}`;
               }

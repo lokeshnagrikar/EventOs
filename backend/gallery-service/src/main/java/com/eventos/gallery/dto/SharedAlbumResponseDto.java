@@ -18,5 +18,7 @@ public class SharedAlbumResponseDto {
     private String description;
     private UUID eventId;
     private boolean allowDownload;
+    private boolean watermark;
+    private String watermarkText;
     private List<GalleryItemResponseDto> items;
 }

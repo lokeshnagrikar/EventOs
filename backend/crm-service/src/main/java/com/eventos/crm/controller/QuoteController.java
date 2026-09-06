@@ -314,4 +314,76 @@ public class QuoteController {
 
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "Download quote PDF directly", description = "Generates and streams the quote proposal PDF directly.")
+    @GetMapping("/{id}/pdf")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF','CLIENT')")
+    public ResponseEntity<byte[]> getQuotePdf(@PathVariable UUID id) {
+        UUID tenantId = getTenantId();
+        Quote quote = quoteService.getQuoteById(id, tenantId);
+        byte[] pdfBytes = quoteService.generatePdfBytes(id, tenantId);
+        String filename = "quote-" + quote.getQuoteNumber() + ".pdf";
+
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
+    // ─── Public Endpoints (Client Proposal Portal — Whitelisted in API Gateway) ───
+
+    @Operation(summary = "Public — Get quote details", description = "Allows clients to view a proposal via public share token or ID without logging in.")
+    @GetMapping("/public/{token}")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<?> getPublicQuote(@PathVariable String token) {
+        try {
+            com.eventos.crm.dto.PublicQuoteResponseDto dto = quoteService.getPublicQuote(token);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", dto);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "error", Map.of("code", "NOT_FOUND", "message", e.getMessage())));
+        }
+    }
+
+    @Operation(summary = "Public — Approve quote", description = "Allows clients to digitally approve and sign a proposal without logging in. Promotes lead to WON and triggers booking creation.")
+    @PostMapping("/public/{token}/approve")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<?> approvePublicQuote(
+            @PathVariable String token,
+            @RequestBody(required = false) Map<String, String> body) {
+        try {
+            String signerName = body != null && body.containsKey("signerName") ? body.get("signerName") : "Client";
+            String signerTitle = body != null && body.containsKey("signerTitle") ? body.get("signerTitle") : "Sponsor";
+            com.eventos.crm.dto.PublicQuoteResponseDto dto = quoteService.approvePublicQuote(token, signerName, signerTitle);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", dto);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "error", Map.of("code", "NOT_FOUND", "message", e.getMessage())));
+        }
+    }
+
+    @Operation(summary = "Public — Reject quote", description = "Allows clients to reject a proposal with feedback notes without logging in.")
+    @PostMapping("/public/{token}/reject")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<?> rejectPublicQuote(
+            @PathVariable String token,
+            @RequestBody(required = false) Map<String, String> body) {
+        try {
+            String rejectionNotes = body != null && body.containsKey("rejectionNotes") ? body.get("rejectionNotes") : "";
+            com.eventos.crm.dto.PublicQuoteResponseDto dto = quoteService.rejectPublicQuote(token, rejectionNotes);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", dto);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "error", Map.of("code", "NOT_FOUND", "message", e.getMessage())));
+        }
+    }
 }

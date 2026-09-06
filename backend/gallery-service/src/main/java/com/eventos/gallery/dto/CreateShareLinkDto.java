@@ -18,4 +18,8 @@ public class CreateShareLinkDto {
     private String password; // Optional passcode protecting the link
 
     private Boolean allowDownload; // Whether downloading is allowed (defaults to true)
+
+    private Boolean watermark; // Whether watermark is applied to photos
+
+    private String watermarkText; // Custom watermark text (agency name / EventOS Preview)
 }

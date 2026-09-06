@@ -432,32 +432,40 @@ html:not(.dark) .theme-dynamic {
   }
 }
 
-/* ─── Premium Glassmorphic Thin Scrollbar ─── */
+/* ─── Clean Neutral Scrollbar ─── */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(11, 15, 25, 0.5);
-  backdrop-filter: blur(8px);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(139, 92, 246, 0.4), rgba(6, 182, 212, 0.4));
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
-  border: 2px solid rgba(11, 15, 25, 0.8);
-  transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(139, 92, 246, 0.7), rgba(6, 182, 212, 0.7));
+  background: rgba(148, 163, 184, 0.55);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
 }
 
 /* Firefox scrollbar compatibility */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.4) rgba(11, 15, 25, 0.5);
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+.dark * {
+  scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
 }
 
 /* ─── Glass Testimonials Stack custom styling ─── */

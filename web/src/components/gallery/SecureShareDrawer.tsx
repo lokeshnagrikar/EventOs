@@ -7,16 +7,18 @@ import { cn } from "@/lib/utils";
 
 interface SecureShareDrawerProps {
   albumId: string;
-  onGenerateLink: (settings: { expiresInHours: number; password?: string; viewOnly: boolean; downloadAllowed: boolean; watermark: boolean }) => void;
+  onGenerateLink: (settings: { expiresInHours: number; password?: string; viewOnly: boolean; downloadAllowed: boolean; watermark: boolean; watermarkText?: string }) => void;
   activeLinks: { id: string; token: string; expiresAt: string | null; passwordProtected: boolean }[];
   onRevokeLink: (linkId: string) => void;
+  defaultAgencyName?: string;
 }
 
 export default function SecureShareDrawer({
   albumId,
   onGenerateLink,
   activeLinks,
-  onRevokeLink
+  onRevokeLink,
+  defaultAgencyName = "EventOS Preview"
 }: SecureShareDrawerProps) {
   const [requirePasscode, setRequirePasscode] = useState(false);
   const [passcode, setPasscode] = useState("");
@@ -24,6 +26,7 @@ export default function SecureShareDrawer({
   const [viewOnly, setViewOnly] = useState(false);
   const [downloadAllowed, setDownloadAllowed] = useState(true);
   const [watermark, setWatermark] = useState(false);
+  const [watermarkText, setWatermarkText] = useState(defaultAgencyName);
   
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
 
@@ -34,7 +37,8 @@ export default function SecureShareDrawer({
       password: requirePasscode && passcode.trim() ? passcode : undefined,
       viewOnly,
       downloadAllowed,
-      watermark
+      watermark,
+      watermarkText: watermark ? (watermarkText.trim() || defaultAgencyName) : undefined
     });
     setPasscode("");
   };
@@ -80,13 +84,32 @@ export default function SecureShareDrawer({
                 type="checkbox"
                 id="watermark-chk"
                 checked={watermark}
-                onChange={(e) => setWatermark(e.target.checked)}
-                className="mr-2"
+                onChange={(e) => {
+                  setWatermark(e.target.checked);
+                  if (e.target.checked && !watermarkText) {
+                    setWatermarkText(defaultAgencyName);
+                  }
+                }}
+                className="mr-2 accent-purple-600 rounded"
               />
-              <label htmlFor="watermark-chk" className="font-bold text-zinc-400">Apply Overlays</label>
+              <label htmlFor="watermark-chk" className="font-bold text-zinc-400 cursor-pointer">Agency Watermark</label>
             </div>
           </div>
         </div>
+
+        {watermark && (
+          <div className="space-y-1.5 p-3 bg-zinc-950/40 border border-zinc-800 rounded-xl">
+            <label className="text-[9px] text-zinc-400 uppercase font-black">Watermark Text (Agency Name)</label>
+            <input
+              type="text"
+              value={watermarkText}
+              onChange={(e) => setWatermarkText(e.target.value)}
+              placeholder={defaultAgencyName}
+              className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white font-mono text-xs focus:border-purple-500 outline-none"
+            />
+            <p className="text-[8px] text-zinc-500">Rendered diagonally across preview media until invoice payment is recorded.</p>
+          </div>
+        )}
 
         {/* Security parameters */}
         <div className="space-y-3 p-3 bg-zinc-950/20 border border-zinc-900 rounded-xl">

@@ -16,8 +16,11 @@ import java.util.UUID;
 @RequestMapping("/billing")
 public class BillingController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BillingController.class);
+
     private final BillingService billingService;
     private final com.eventos.auth.repository.AuditLogRepository auditLogRepository;
+    private final org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
 
     @org.springframework.beans.factory.annotation.Value("${app.stripe.api-key:}")
     private String stripeApiKey;
@@ -29,9 +32,11 @@ public class BillingController {
     private String frontendUrl;
 
     public BillingController(BillingService billingService,
-                             com.eventos.auth.repository.AuditLogRepository auditLogRepository) {
+            com.eventos.auth.repository.AuditLogRepository auditLogRepository,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate) {
         this.billingService = billingService;
         this.auditLogRepository = auditLogRepository;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     @GetMapping("/plans")
@@ -56,7 +61,7 @@ public class BillingController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping({"/subscription/upgrade", "/subscription/checkout"})
+    @PostMapping({ "/subscription/upgrade", "/subscription/checkout" })
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> upgradeSubscription(
             @RequestBody Map<String, String> body,
@@ -386,11 +391,14 @@ public class BillingController {
 
             String priceId;
             if ("agency".equalsIgnoreCase(planCode) || "enterprise".equalsIgnoreCase(planCode)) {
-                priceId = System.getenv().getOrDefault("STRIPE_PRICE_AGENCY", System.getenv().getOrDefault("STRIPE_PRICE_ENTERPRISE", "price_agency_monthly"));
+                priceId = System.getenv().getOrDefault("STRIPE_PRICE_AGENCY",
+                        System.getenv().getOrDefault("STRIPE_PRICE_ENTERPRISE", "price_agency_monthly"));
             } else if ("professional".equalsIgnoreCase(planCode) || "growth".equalsIgnoreCase(planCode)) {
-                priceId = System.getenv().getOrDefault("STRIPE_PRICE_PROFESSIONAL", System.getenv().getOrDefault("STRIPE_PRICE_GROWTH", "price_professional_monthly"));
+                priceId = System.getenv().getOrDefault("STRIPE_PRICE_PROFESSIONAL",
+                        System.getenv().getOrDefault("STRIPE_PRICE_GROWTH", "price_professional_monthly"));
             } else {
-                priceId = System.getenv().getOrDefault("STRIPE_PRICE_STARTER", System.getenv().getOrDefault("STRIPE_PRICE_STANDARD", "price_starter_monthly"));
+                priceId = System.getenv().getOrDefault("STRIPE_PRICE_STARTER",
+                        System.getenv().getOrDefault("STRIPE_PRICE_STANDARD", "price_starter_monthly"));
             }
 
             com.stripe.param.checkout.SessionCreateParams params = com.stripe.param.checkout.SessionCreateParams
@@ -427,6 +435,18 @@ public class BillingController {
             com.stripe.model.Event event = com.stripe.net.Webhook.constructEvent(
                     payload, sigHeader, stripeWebhookSecret);
 
+            // Stripe Webhook Idempotency Check
+            String eventId = event.getId();
+            if (eventId != null && stringRedisTemplate != null) {
+                String idempotencyKey = "webhook:stripe:" + eventId;
+                Boolean isNew = stringRedisTemplate.opsForValue().setIfAbsent(idempotencyKey, "processed",
+                        java.time.Duration.ofDays(7));
+                if (Boolean.FALSE.equals(isNew)) {
+                    log.info("[STRIPE WEBHOOK] Duplicate event ignored (already processed): {}", eventId);
+                    return ResponseEntity.ok("Webhook already processed");
+                }
+            }
+
             if ("checkout.session.completed".equals(event.getType())) {
                 com.stripe.model.checkout.Session session = (com.stripe.model.checkout.Session) event
                         .getDataObjectDeserializer()
@@ -439,15 +459,16 @@ public class BillingController {
                 if (tenantIdStr != null && planCode != null) {
                     UUID tenantId = UUID.fromString(tenantIdStr);
                     billingService.upgradeSubscription(tenantId, planCode);
-                    System.out.println(
-                            "[STRIPE WEBHOOK] Successfully upgraded Tenant " + tenantIdStr + " to plan " + planCode);
+                    log.info("[STRIPE WEBHOOK] Successfully upgraded Tenant {} to plan {}", tenantIdStr, planCode);
                 }
             }
 
             return ResponseEntity.ok("Webhook Handled Successfully");
         } catch (com.stripe.exception.SignatureVerificationException e) {
+            log.error("[STRIPE WEBHOOK] Signature Verification Failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Signature Verification Failed");
         } catch (Exception e) {
+            log.error("[STRIPE WEBHOOK] Error processing webhook: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Webhook Error: " + e.getMessage());
         }
     }
@@ -458,7 +479,7 @@ public class BillingController {
     public ResponseEntity<?> getSuperAdminLogs() {
         List<AuditLog> logs = auditLogRepository.findAll();
         logs.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("data", logs);

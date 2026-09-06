@@ -76,9 +76,7 @@ export default function PageShell({
 
   return (
     <div className="min-h-screen flex bg-background text-foreground font-sans relative overflow-hidden transition-all duration-200 theme-dynamic">
-      {/* Ambient background glow */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/[0.04] to-pink-500/[0.03] blur-[130px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-0 left-64 w-[500px] h-[500px] bg-cyan-500/[0.025] blur-[110px] rounded-full pointer-events-none z-0" />
+      {/* Clean workspace background — no decorative blurs */}
 
       {/* Command Palette */}
       <CommandPalette isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />

@@ -187,7 +187,11 @@ export default function PublicQuoteSharePage() {
   };
 
   const handlePrint = () => {
-    window.print();
+    if (quote?.id) {
+      window.open(`/api/v1/crm/quotes/${quote.id}/pdf`, "_blank");
+    } else {
+      window.print();
+    }
   };
 
   const handleApproveQuote = async (e: React.FormEvent) => {
@@ -195,18 +199,20 @@ export default function PublicQuoteSharePage() {
     if (!signerName.trim()) return;
 
     try {
-      await axios.post(`/api/v1/crm/quotes/public/${token}/approve`, {
+      const response = await axios.post(`/api/v1/crm/quotes/public/${token}/approve`, {
         signerName,
         signerTitle,
         timestamp: new Date().toISOString(),
       });
+      if (response.data?.data) {
+        setQuote(response.data.data);
+      } else if (quote) {
+        setQuote({ ...quote, status: "ACCEPTED" });
+      }
     } catch (e) {
-      // Dev mode fallback
+      if (quote) setQuote({ ...quote, status: "ACCEPTED" });
     }
 
-    if (quote) {
-      setQuote({ ...quote, status: "ACCEPTED" });
-    }
     setShowSignModal(false);
     setActionSuccess("Proposal approved & digitally signed successfully!");
   };
@@ -215,16 +221,18 @@ export default function PublicQuoteSharePage() {
     e.preventDefault();
 
     try {
-      await axios.post(`/api/v1/crm/quotes/public/${token}/reject`, {
+      const response = await axios.post(`/api/v1/crm/quotes/public/${token}/reject`, {
         rejectionNotes,
       });
+      if (response.data?.data) {
+        setQuote(response.data.data);
+      } else if (quote) {
+        setQuote({ ...quote, status: "REJECTED" });
+      }
     } catch (e) {
-      // Dev mode fallback
+      if (quote) setQuote({ ...quote, status: "REJECTED" });
     }
 
-    if (quote) {
-      setQuote({ ...quote, status: "REJECTED" });
-    }
     setShowRejectModal(false);
     setActionSuccess("Feedback sent to event coordinator.");
   };

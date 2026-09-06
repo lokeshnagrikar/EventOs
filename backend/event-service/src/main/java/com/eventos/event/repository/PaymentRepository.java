@@ -24,6 +24,7 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     List<Payment> findAllByInvoiceIdAndStatusIn(UUID invoiceId, List<String> statuses);
     List<Payment> findAllByBookingIdInAndTenantIdOrderByPaymentDateDesc(List<UUID> bookingIds, UUID tenantId);
     Page<Payment> findAllByBookingIdInAndTenantIdOrderByPaymentDateDesc(List<UUID> bookingIds, UUID tenantId, Pageable pageable);
+    boolean existsByTenantIdAndTransactionReference(UUID tenantId, String transactionReference);
 
     @Query("SELECT p FROM Payment p WHERE p.tenantId = :tenantId AND p.invoiceId IN (SELECT i.id FROM Invoice i WHERE LOWER(i.clientEmail) = LOWER(:clientEmail))")
     List<Payment> findAllByClientEmailAndTenantId(@Param("clientEmail") String clientEmail, @Param("tenantId") UUID tenantId);
