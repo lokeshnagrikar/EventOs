@@ -12,9 +12,18 @@ const STATIC_ASSETS = [
 // Install Event - Pre-cache critical App Shell
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(CACHE_NAME).then(async (cache) => {
       console.log("[PWA ServiceWorker] Pre-caching static App Shell");
-      return cache.addAll(STATIC_ASSETS);
+      for (const asset of STATIC_ASSETS) {
+        try {
+          const res = await fetch(asset, { cache: "no-cache" });
+          if (res.ok) {
+            await cache.put(asset, res);
+          }
+        } catch (e) {
+          console.warn("[PWA ServiceWorker] Asset pre-cache skipped:", asset);
+        }
+      }
     }).then(() => self.skipWaiting())
   );
 });

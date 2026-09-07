@@ -81,30 +81,44 @@ export const offlineStore = {
   },
 
   /** Auto-flush all pending offline actions over API */
-  async flush(apiClient?: any): Promise<{ syncedCount: number; failedCount: number }> {
+  async flush(customClient?: any): Promise<{ syncedCount: number; failedCount: number }> {
     const queue = this.getQueue();
     if (queue.length === 0) return { syncedCount: 0, failedCount: 0 };
+
+    let client = customClient;
+    if (!client && typeof window !== "undefined") {
+      try {
+        client = require("@/lib/api-client").apiClient;
+      } catch (e) {}
+    }
+
+    if (!client) {
+      console.warn("[Offline Sync] API Client unavailable. Sync deferred until client is ready.");
+      return { syncedCount: 0, failedCount: queue.length };
+    }
 
     let syncedCount = 0;
     let failedCount = 0;
 
     for (const action of queue) {
       try {
-        if (apiClient) {
-          if (action.type === "CHECKIN_GUEST") {
-            await apiClient.post(`/events/checkin`, action.payload);
-          } else if (action.type === "UPDATE_SCHEDULE") {
-            await apiClient.post(`/events/schedule/update`, action.payload);
-          } else if (action.type === "ADD_GUEST") {
-            await apiClient.post(`/events/guests`, action.payload);
-          } else {
-            await apiClient.post(`/events/offline-sync`, action.payload);
-          }
+        if (action.type === "CHECKIN_GUEST") {
+          await client.post(`/events/checkin`, action.payload);
+        } else if (action.type === "UPDATE_SCHEDULE") {
+          await client.post(`/events/schedule/update`, action.payload);
+        } else if (action.type === "ADD_GUEST") {
+          await client.post(`/events/guests`, action.payload);
+        } else {
+          await client.post(`/events/offline-sync`, action.payload);
         }
         this.dequeue(action.id);
         syncedCount++;
-      } catch (err) {
+      } catch (err: any) {
         console.warn(`[Offline Sync] Failed to sync action ${action.id}:`, err);
+        // If it was already processed or client error 400-409, dequeue to prevent queue obstruction
+        if (err.response && err.response.status >= 400 && err.response.status < 500) {
+          this.dequeue(action.id);
+        }
         failedCount++;
       }
     }
