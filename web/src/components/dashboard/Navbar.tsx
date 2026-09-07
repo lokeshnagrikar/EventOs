@@ -192,10 +192,10 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuToggle}
-          className="p-2 border border-border rounded-xl bg-card hover:bg-muted md:hidden text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+          className="h-9 w-9 border border-border rounded-xl bg-card/80 hover:bg-muted md:hidden flex items-center justify-center text-foreground hover:text-purple-400 active:scale-95 transition-all cursor-pointer shadow-sm shrink-0"
           aria-label="Toggle navigation menu"
         >
-          <Menu size={16} />
+          <Menu size={18} />
         </button>
 
         <nav className="hidden sm:flex items-center gap-1.5 text-xs font-semibold">

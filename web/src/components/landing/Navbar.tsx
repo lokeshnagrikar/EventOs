@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Menu, X, Sparkles, Layers, CreditCard, BookOpen, Star, LogIn, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceSelectorPill } from "./WorkspaceSelectorPill";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,21 @@ export function Navbar({ activeSection }: NavbarProps) {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [pathname, isOpen]);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   const solutions = [
     {
@@ -197,6 +212,9 @@ export function Navbar({ activeSection }: NavbarProps) {
     setIsOpen(false);
     setActiveDropdown(null);
 
+    // Immediately release body scroll lock so scrolling is not blocked on mobile
+    document.body.style.overflow = "";
+
     let targetHash = "";
     if (href.startsWith("/#")) {
       targetHash = href.substring(2);
@@ -205,7 +223,7 @@ export function Navbar({ activeSection }: NavbarProps) {
     }
 
     if (targetHash) {
-      if (pathname === "/") {
+      const performScroll = () => {
         const elem = document.getElementById(targetHash);
         if (elem) {
           const lenis = (window as any).lenis;
@@ -223,8 +241,13 @@ export function Navbar({ activeSection }: NavbarProps) {
               behavior: "smooth",
             });
           }
-          return;
         }
+      };
+
+      if (pathname === "/") {
+        // Small timeout allows mobile browser to unlock scroll before animating
+        setTimeout(performScroll, 60);
+        return;
       }
       router.push(`/#${targetHash}`);
       return;
@@ -248,12 +271,14 @@ export function Navbar({ activeSection }: NavbarProps) {
   };
 
   return (
-    <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 w-full pt-3 px-4 transition-all duration-700 ease-smooth transform pointer-events-none",
-        (visible || isOpen) ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
-      )}
-    >
+    <>
+      <header
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 w-full pt-3 px-4 transition-all duration-700 ease-smooth transform pointer-events-none",
+          (visible || isOpen) ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+        )}
+      >
+      <div className="w-full max-w-5xl mx-auto flex flex-col gap-2 pointer-events-none">
       {/* Always-on Apple-style Floating Glass Capsule */}
       <div
         ref={capsuleRef}
@@ -264,10 +289,10 @@ export function Navbar({ activeSection }: NavbarProps) {
           setMousePos({ x: -999, y: -999 });
         }}
         className={cn(
-          "pointer-events-auto mx-auto flex items-center justify-between rounded-full border backdrop-blur-2xl backdrop-saturate-[1.8] transition-all duration-700 ease-smooth relative group/navbar",
+          "pointer-events-auto w-full flex items-center justify-between rounded-full border backdrop-blur-2xl backdrop-saturate-[1.8] transition-all duration-700 ease-smooth relative group/navbar",
           scrolled || isOpen
-            ? "max-w-5xl bg-slate-950/85 border-purple-500/30 px-5 py-2.5 shadow-[0_16px_40px_rgba(0,0,0,0.3),0_2px_10px_rgba(124,58,237,0.15),inset_0_1px_1.5px_rgba(255,255,255,0.2)]"
-            : "max-w-6xl bg-slate-900/80 border-purple-500/25 px-6 py-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.2),0_2px_8px_rgba(124,58,237,0.12),inset_0_1px_1.5px_rgba(255,255,255,0.15)]"
+            ? "bg-slate-950/85 border-purple-500/30 px-5 py-2.5 shadow-[0_16px_40px_rgba(0,0,0,0.3),0_2px_10px_rgba(124,58,237,0.15),inset_0_1px_1.5px_rgba(255,255,255,0.2)]"
+            : "bg-slate-900/80 border-purple-500/25 px-6 py-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.2),0_2px_8px_rgba(124,58,237,0.12),inset_0_1px_1.5px_rgba(255,255,255,0.15)]"
         )}
       >
         {/* Top specular glass sheen reflection line */}
@@ -588,78 +613,96 @@ export function Navbar({ activeSection }: NavbarProps) {
         {/* Mobile menu toggle */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden h-9 w-9 border border-white/20 bg-white/10 backdrop-blur-[20px] hover:bg-white/20 rounded-full flex items-center justify-center text-white focus:outline-none transition-all shrink-0"
+          className={cn(
+            "md:hidden h-10 w-10 border backdrop-blur-[20px] active:scale-95 rounded-full flex items-center justify-center text-white focus:outline-none transition-all shrink-0 cursor-pointer shadow-md",
+            isOpen
+              ? "border-purple-500/50 bg-purple-500/25 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.35)]"
+              : "border-white/20 bg-white/10 hover:bg-white/20 text-white"
+          )}
           aria-expanded={isOpen}
           aria-label="Toggle navigation menu"
         >
-          <Icon icon={isOpen ? "solar:close-square-bold" : "solar:menu-hamburger-bold"} className="text-xl" />
+          {isOpen ? <X size={20} className="text-purple-300" /> : <Menu size={20} />}
         </button>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Dropdown Menu attached right below Navbar capsule (100% identical width!) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="md:hidden border-t border-zinc-800 bg-[#0d0d14] backdrop-blur-2xl w-full absolute left-0 right-0 max-h-[85vh] overflow-y-auto shadow-2xl z-50 pointer-events-auto"
+            initial={{ opacity: 0, y: -10, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.99 }}
+            transition={{ type: "spring", damping: 26, stiffness: 320 }}
+            className="w-full md:hidden pointer-events-auto overflow-hidden rounded-[26px] border border-purple-500/30 bg-[#090a16]/95 backdrop-blur-2xl backdrop-saturate-[1.8] shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(168,85,247,0.2),inset_0_1px_1.5px_rgba(255,255,255,0.2)] max-h-[calc(85vh-80px)] flex flex-col relative"
           >
-            <div className="px-6 py-6 flex flex-col gap-5">
-              <nav className="flex flex-col gap-3" aria-label="Mobile Navigation">
+            {/* Top & bottom specular sheen lines */}
+            <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-purple-400/60 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-12 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent pointer-events-none" />
+
+            {/* Ambient Radial Glows */}
+            <div className="absolute -top-12 right-0 w-60 h-60 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 left-0 w-60 h-60 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Content Body (Navbar capsule stays on top with Logo & Close button) */}
+            <div className="overflow-y-auto p-4 space-y-3 relative z-10">
+              {/* Workspace Selector Pill */}
+              <div className="pb-0.5">
+                <WorkspaceSelectorPill />
+              </div>
+
+              {/* Navigation Items */}
+              <nav className="flex flex-col gap-1.5" aria-label="Mobile Navigation">
                 {/* Features Link */}
                 <a
                   href="#features"
                   onClick={(e) => handleNavClick(e, "#features")}
                   className={cn(
-                    "text-sm font-bold uppercase tracking-wider py-2 text-white/80 hover:text-white flex items-center justify-between group",
-                    activeSection === "features" && "text-white font-extrabold"
+                    "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all group",
+                    activeSection === "features"
+                      ? "bg-purple-500/20 text-purple-200 border border-purple-500/35"
+                      : "bg-white/[0.03] hover:bg-white/[0.08] text-slate-200 hover:text-white border border-white/[0.06]"
                   )}
                 >
-                  <span>Features</span>
-                  <div className="h-6 w-6 rounded-md bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/60 group-hover:text-white group-hover:bg-white/10 transition-all">
-                    <ChevronRight className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3">
+                    <div className="h-7 w-7 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-purple-300">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </div>
+                    <span>Features</span>
                   </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
                 </a>
 
-                {/* Solutions Expandable Mobile Accordion Dropdown */}
-                <div className="flex flex-col border-y border-white/10 py-2.5">
+                {/* Solutions Expandable Dropdown */}
+                <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] overflow-hidden transition-all">
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setMobileSolutionsOpen((prev) => !prev);
-                    }}
-                    className="text-sm font-bold uppercase tracking-wider py-1 text-white/80 hover:text-white flex items-center justify-between w-full text-left cursor-pointer group"
+                    onClick={() => setMobileSolutionsOpen(!mobileSolutionsOpen)}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-200 hover:text-white transition-all group cursor-pointer"
                   >
-                    <span>Solutions</span>
-                    <div className="h-6 w-6 rounded-md bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-300 group-hover:text-white transition-all">
-                      <ChevronDown
-                        className={cn(
-                          "w-3.5 h-3.5 transition-transform duration-300",
-                          mobileSolutionsOpen && "rotate-180 text-purple-400"
-                        )}
-                      />
+                    <div className="flex items-center gap-3">
+                      <div className="h-7 w-7 rounded-lg bg-pink-500/15 border border-pink-500/25 flex items-center justify-center text-pink-300">
+                        <Layers className="w-3.5 h-3.5" />
+                      </div>
+                      <span>Solutions</span>
                     </div>
+                    <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-200", mobileSolutionsOpen && "rotate-180 text-pink-400")} />
                   </button>
-
                   {mobileSolutionsOpen && (
-                    <div className="pt-3 pl-1 space-y-2">
+                    <div className="px-2 pb-2.5 pt-0.5 space-y-1">
                       {solutions.map((item) => (
                         <a
                           key={item.title}
                           href={item.href}
                           onClick={(e) => handleNavClick(e, item.href)}
-                          className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-purple-500/40 transition-all"
+                          className="flex items-center gap-2.5 p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.04] transition-all group/item"
                         >
-                          <div className={cn("h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0", item.iconColor)}>
-                            <Icon icon={item.icon} className="text-sm" />
+                          <div className={cn("h-6 w-6 rounded-md bg-white/5 flex items-center justify-center text-xs shrink-0", item.iconColor)}>
+                            <Icon icon={item.icon} />
                           </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-white">{item.title}</h4>
-                            <p className="text-[10px] text-zinc-400 leading-none mt-0.5">{item.desc}</p>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-slate-200 group-hover/item:text-white truncate">{item.title}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{item.desc}</p>
                           </div>
                         </a>
                       ))}
@@ -672,53 +715,53 @@ export function Navbar({ activeSection }: NavbarProps) {
                   href="#pricing"
                   onClick={(e) => handleNavClick(e, "#pricing")}
                   className={cn(
-                    "text-sm font-bold uppercase tracking-wider py-2 text-white/80 hover:text-white flex items-center justify-between group",
-                    activeSection === "pricing" && "text-white font-extrabold"
+                    "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all group",
+                    activeSection === "pricing"
+                      ? "bg-purple-500/20 text-purple-200 border border-purple-500/35"
+                      : "bg-white/[0.03] hover:bg-white/[0.08] text-slate-200 hover:text-white border border-white/[0.06]"
                   )}
                 >
-                  <span>Pricing</span>
-                  <div className="h-6 w-6 rounded-md bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/60 group-hover:text-white group-hover:bg-white/10 transition-all">
-                    <ChevronRight className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-300">
+                      <CreditCard className="w-3.5 h-3.5" />
+                    </div>
+                    <span>Pricing</span>
                   </div>
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Flexible
+                  </span>
                 </a>
 
-                {/* Resources Expandable Mobile Accordion Dropdown */}
-                <div className="flex flex-col border-y border-white/10 py-2.5">
+                {/* Resources Expandable Dropdown */}
+                <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] overflow-hidden transition-all">
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setMobileResourcesOpen((prev) => !prev);
-                    }}
-                    className="text-sm font-bold uppercase tracking-wider py-1 text-white/80 hover:text-white flex items-center justify-between w-full text-left cursor-pointer group"
+                    onClick={() => setMobileResourcesOpen(!mobileResourcesOpen)}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-200 hover:text-white transition-all group cursor-pointer"
                   >
-                    <span>Resources</span>
-                    <div className="h-6 w-6 rounded-md bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-300 group-hover:text-white transition-all">
-                      <ChevronDown
-                        className={cn(
-                          "w-3.5 h-3.5 transition-transform duration-300",
-                          mobileResourcesOpen && "rotate-180 text-cyan-400"
-                        )}
-                      />
+                    <div className="flex items-center gap-3">
+                      <div className="h-7 w-7 rounded-lg bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-cyan-300">
+                        <BookOpen className="w-3.5 h-3.5" />
+                      </div>
+                      <span>Resources</span>
                     </div>
+                    <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-200", mobileResourcesOpen && "rotate-180 text-cyan-400")} />
                   </button>
-
                   {mobileResourcesOpen && (
-                    <div className="pt-3 pl-1 space-y-2">
+                    <div className="px-2 pb-2.5 pt-0.5 space-y-1">
                       {resources.map((item) => (
                         <a
                           key={item.title}
                           href={item.href}
                           onClick={(e) => handleNavClick(e, item.href)}
-                          className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-cyan-500/40 transition-all"
+                          className="flex items-center gap-2.5 p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.04] transition-all group/item"
                         >
-                          <div className={cn("h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0", item.iconColor)}>
-                            <Icon icon={item.icon} className="text-sm" />
+                          <div className="h-6 w-6 rounded-md bg-white/5 flex items-center justify-center text-cyan-300 text-xs shrink-0">
+                            <Icon icon={item.icon} />
                           </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-white">{item.title}</h4>
-                            <p className="text-[10px] text-zinc-400 leading-none mt-0.5">{item.desc}</p>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-slate-200 group-hover/item:text-white truncate">{item.title}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{item.desc}</p>
                           </div>
                         </a>
                       ))}
@@ -727,46 +770,68 @@ export function Navbar({ activeSection }: NavbarProps) {
                 </div>
               </nav>
 
-              <div className="h-px bg-white/[0.08] my-1" />
+              {/* Action Buttons */}
+              <div className="pt-2 border-t border-white/[0.08] flex flex-col gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push("/demo");
+                    }}
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.98] border border-white/10 text-xs font-semibold text-slate-200 hover:text-white transition-all shadow-sm cursor-pointer"
+                  >
+                    <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
+                    <span>Live Demo</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      handleSignIn();
+                    }}
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.98] border border-white/10 text-xs font-semibold text-slate-200 hover:text-white transition-all shadow-sm cursor-pointer"
+                  >
+                    <LogIn className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Login</span>
+                  </button>
+                </div>
 
-              <div className="flex flex-col gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/demo");
-                  }}
-                  className="w-full border-white/[0.08] bg-white/[0.02] text-white/80 hover:bg-white/[0.05] hover:text-white py-5 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
-                >
-                  <Icon icon="solar:star-bold-duotone" className="text-xs text-white/50" />
-                  Live Demo
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsOpen(false);
-                    handleSignIn();
-                  }}
-                  className="w-full border-white/[0.08] bg-white/[0.02] text-white/80 hover:bg-white/[0.05] hover:text-white py-5 font-semibold text-xs uppercase tracking-wider"
-                >
-                  Login
-                </Button>
-                <LiquidButton
-                  variant="brandNavbar"
+                <button
+                  type="button"
                   onClick={() => {
                     setIsOpen(false);
                     handleStartTrial();
                   }}
-                  className="w-full rounded-full font-bold text-xs uppercase tracking-wider"
-                  size="lg"
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 active:scale-[0.98] text-white font-bold text-xs uppercase tracking-wider shadow-[0_4px_22px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  Join Private Beta
-                </LiquidButton>
+                  <span>Join Private Beta</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
+
+              {/* Handle Pill */}
+              <div className="mx-auto w-12 h-1 rounded-full bg-white/20 mt-1" />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </header>
+
+    {/* Deep Translucent Backdrop */}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden pointer-events-auto"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </AnimatePresence>
+    </>
   );
 }

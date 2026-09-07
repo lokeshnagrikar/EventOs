@@ -31,6 +31,7 @@ import {
   Database,
   Shield,
   User,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,7 @@ interface SidebarProps {
   onLogout: () => void;
   userName: string;
   className?: string;
+  onClose?: () => void;
 }
 
 const MENU_SECTIONS = [
@@ -89,7 +91,7 @@ const MENU_SECTIONS = [
   },
 ];
 
-export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userName, className }: SidebarProps) {
+export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userName, className, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
@@ -134,7 +136,11 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
         {/* Brand Header */}
         <div className="h-[60px] border-b border-slate-200/60 dark:border-white/[0.04] px-4 flex items-center justify-between shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
+          <Link 
+            href="/dashboard" 
+            onClick={() => { if (onClose) onClose(); }}
+            className="flex items-center gap-3 min-w-0"
+          >
             {/* Logo mark */}
             <div className="h-9 w-9 rounded-xl bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-sm">
               <EventOsLogo size={30} animated={false} />
@@ -156,22 +162,32 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
             </AnimatePresence>
           </Link>
 
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.button
-                key="collapse-btn"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.15 }}
-                onClick={() => setIsCollapsed(true)}
-                className="h-6 w-6 rounded-lg bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.07] border border-slate-200/80 dark:border-white/[0.05] text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shrink-0"
-                aria-label="Collapse sidebar"
-              >
-                <ChevronLeft size={12} />
-              </motion.button>
-            )}
-          </AnimatePresence>
+          {onClose ? (
+            <button
+              onClick={onClose}
+              className="h-7 w-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] border border-slate-200/80 dark:border-white/[0.08] text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+              aria-label="Close navigation drawer"
+            >
+              <X size={14} />
+            </button>
+          ) : (
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.button
+                  key="collapse-btn"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={() => setIsCollapsed(true)}
+                  className="h-6 w-6 rounded-lg bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.07] border border-slate-200/80 dark:border-white/[0.05] text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                  aria-label="Collapse sidebar"
+                >
+                  <ChevronLeft size={12} />
+                </motion.button>
+              )}
+            </AnimatePresence>
+          )}
         </div>
 
         {/* Navigation Items with sections */}
@@ -216,6 +232,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
                       <Link
                         key={item.href}
                         href={item.href}
+                        onClick={() => {
+                          if (onClose) onClose();
+                        }}
                         className={cn(
                           "relative flex items-center gap-2.5 px-3 py-[6.5px] rounded-[10px] text-[11.5px] font-semibold transition-all duration-150 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500",
                           isCollapsed && "justify-center px-0 h-9 w-full",
@@ -325,6 +344,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
         <div className={cn("flex gap-1.5", isCollapsed ? "flex-col items-center" : "")}>
           <Link
             href="/settings"
+            onClick={() => {
+              if (onClose) onClose();
+            }}
             className={cn(
               "flex items-center justify-center h-8 rounded-[10px] bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/80 text-slate-600 hover:text-slate-900 dark:bg-white/[0.01] dark:hover:bg-white/[0.04] dark:border-white/[0.04] dark:text-zinc-400 dark:hover:text-zinc-200 transition-all cursor-pointer",
               isCollapsed ? "w-8" : "flex-1 text-[11px] gap-1.5 font-bold"
@@ -336,7 +358,10 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
           </Link>
 
           <button
-            onClick={onLogout}
+            onClick={() => {
+              if (onClose) onClose();
+              onLogout();
+            }}
             className={cn(
               "flex items-center justify-center h-8 rounded-[10px] bg-slate-100/80 hover:bg-red-50 hover:border-red-200 text-slate-600 hover:text-red-600 border border-slate-200/80 dark:bg-white/[0.01] dark:hover:bg-red-500/[0.08] dark:hover:border-red-500/20 dark:border-white/[0.04] dark:text-zinc-400 dark:hover:text-red-400 transition-all cursor-pointer",
               isCollapsed ? "w-8" : "flex-1 text-[11px] gap-1.5 font-bold"

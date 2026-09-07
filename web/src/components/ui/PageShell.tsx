@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { api } from "@/lib/api";
@@ -9,7 +9,7 @@ import Sidebar from "@/components/dashboard/Sidebar";
 import Navbar from "@/components/dashboard/Navbar";
 import CommandPalette from "@/components/CommandPalette";
 import { LucideIcon, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -40,11 +40,16 @@ export default function PageShell({
 }: PageShellProps) {
   const { user, clearAuth } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [userName, setUserName] = useState("Admin Workspace");
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -91,24 +96,36 @@ export default function PageShell({
       />
 
       {/* Mobile Drawer */}
-      {isMobileMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <div className="fixed inset-y-0 left-0 z-50 w-64 bg-background flex flex-col justify-between border-r border-zinc-800">
-
-            <Sidebar
-              isCollapsed={false}
-              setIsCollapsed={() => {}}
-              onLogout={handleLogout}
-              userName={userName}
-              className="flex w-full h-full border-r-0 bg-transparent"
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/65 backdrop-blur-sm md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
             />
-          </div>
-        </>
-      )}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 350 }}
+              className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-[#09090b] flex flex-col justify-between border-r border-slate-200/80 dark:border-white/[0.06] shadow-2xl md:hidden overflow-hidden"
+            >
+              <Sidebar
+                isCollapsed={false}
+                setIsCollapsed={() => {}}
+                onLogout={handleLogout}
+                userName={userName}
+                onClose={() => setIsMobileMenuOpen(false)}
+                className="flex w-full h-full border-r-0 bg-transparent"
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative z-10">

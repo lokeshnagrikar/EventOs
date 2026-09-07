@@ -106,6 +106,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     }
   }, [router]);
 
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   // Scroll to bottom of chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -230,23 +234,154 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     <div className={cn("h-screen overflow-hidden flex flex-col md:flex-row bg-background text-foreground font-sans transition-colors duration-200 theme-dynamic", darkMode ? "dark" : "")}>
       
       {/* Mobile Header Top Navigation */}
-      <div className="md:hidden h-16 border-b border-border bg-card/90 backdrop-blur px-4 flex items-center justify-between z-30 sticky top-0">
-
+      <div className="md:hidden h-16 border-b border-border bg-card/90 backdrop-blur px-4 flex items-center justify-between z-30 sticky top-0 shrink-0">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-extrabold text-sm shadow-md">
             E
           </div>
           <span className="font-extrabold text-xs tracking-tight text-zinc-200">EventOS Client</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button onClick={() => setShowSearchModal(true)} className="h-8 w-8 rounded-lg border border-zinc-800 flex items-center justify-center text-zinc-400">
-            <Search size={14} />
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowSearchModal(true)} 
+            className="h-9 w-9 rounded-xl border border-zinc-800 bg-zinc-900/60 flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-95 cursor-pointer"
+            aria-label="Search portal"
+          >
+            <Search size={15} />
           </button>
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="h-8 w-8 rounded-lg border border-zinc-800 flex items-center justify-center text-zinc-400">
-            {isMobileMenuOpen ? <X size={14} /> : <Menu size={14} />}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+            className="h-9 w-9 rounded-xl border border-zinc-800 bg-zinc-900/60 flex items-center justify-center text-zinc-300 hover:text-white transition-all active:scale-95 cursor-pointer"
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 md:hidden select-none">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            {/* Slide-in Menu Panel */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="relative w-72 max-w-[85vw] h-full bg-[#0e0e13] border-r border-white/[0.08] p-5 flex flex-col justify-between z-10 shadow-2xl overflow-y-auto"
+            >
+              <div className="space-y-5">
+                {/* Header with Logo & Close */}
+                <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-indigo-500 flex items-center justify-center text-white font-extrabold text-sm shadow-md">
+                      E
+                    </div>
+                    <div>
+                      <h2 className="font-extrabold text-xs text-white">EventOS</h2>
+                      <span className="text-[9px] text-purple-400 font-bold uppercase tracking-wider block">Client Portal</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="h-7 w-7 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center text-zinc-400 hover:text-white"
+                    aria-label="Close menu"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+
+                {/* Search in Drawer */}
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setShowSearchModal(true);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-xl text-zinc-400 text-xs font-semibold cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    <Search size={13} /> Search portal...
+                  </span>
+                  <span className="text-[9px] bg-zinc-900 px-1.5 py-0.5 rounded border border-white/[0.05]">Search</span>
+                </button>
+
+                {/* Nav Links */}
+                <nav className="space-y-1">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.path;
+                    return (
+                      <button
+                        key={item.path}
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          router.push(item.path);
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all border text-left cursor-pointer",
+                          isActive
+                            ? "bg-purple-600/20 text-white border-purple-500/30 shadow-md font-bold"
+                            : "text-zinc-400 hover:text-white hover:bg-white/[0.04] border-transparent"
+                        )}
+                      >
+                        <Icon size={15} className={isActive ? "text-purple-400" : "text-zinc-500"} />
+                        {item.name}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* User info & logout */}
+              <div className="pt-4 border-t border-white/[0.06] space-y-3">
+                <div className="flex items-center gap-2.5 px-1">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs">
+                    {userName ? userName.charAt(0).toUpperCase() : "C"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white truncate">{userName}</p>
+                    <p className="text-[9px] text-zinc-500 truncate">Verified Guest</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setDarkMode(!darkMode);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex-1 py-2 border border-white/[0.08] bg-white/[0.03] text-zinc-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {darkMode ? <Sun size={13} /> : <Moon size={13} />}
+                    {darkMode ? "Light" : "Dark"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex-1 py-2 border border-red-500/20 bg-red-500/10 text-red-400 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <LogOut size={13} />
+                    Exit
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Desktop Sidebar Navigation */}
       <aside className="hidden md:flex w-64 border-r border-white/[0.04] bg-[#09090b]/40 backdrop-blur-xl p-6 flex-col justify-between shrink-0 z-10 h-full select-none">
