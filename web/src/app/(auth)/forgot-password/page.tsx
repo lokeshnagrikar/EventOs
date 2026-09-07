@@ -24,6 +24,8 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(null);
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const {
@@ -45,9 +47,15 @@ export default function ForgotPasswordPage() {
         email: data.email,
       });
 
-      const token = response.data.debugResetToken || "TOKEN_GENERATED";
-      setResetToken(token);
-      addToast("Reset token issued successfully!", "success");
+      setSubmittedEmail(data.email);
+
+      if (response.data?.debugResetToken) {
+        setResetToken(response.data.debugResetToken);
+        addToast("Security reset token generated!", "success");
+      } else {
+        setEmailSent(true);
+        addToast("Password reset email sent!", "success");
+      }
     } catch (err: any) {
       const errMsg = err.response?.data?.error?.message || "Email address not found.";
       setError(errMsg);
@@ -100,6 +108,42 @@ export default function ForgotPasswordPage() {
         >
           Proceed to Reset Password
         </Button>
+      </div>
+    );
+  }
+
+  if (emailSent) {
+    return (
+      <div className="space-y-6 animate-slide-in text-center">
+        <div className="mx-auto h-12 w-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+          <Mail size={22} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
+            Check Your Inbox
+          </h2>
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            We have dispatched a password reset link to <span className="text-white font-semibold">{submittedEmail}</span>. Please check your inbox and spam folder.
+          </p>
+          <p className="text-[11px] text-zinc-500">
+            The security recovery link will expire in <span className="text-purple-400 font-medium">15 minutes</span>.
+          </p>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <Link
+            href="/?login=true"
+            className="w-full py-3 inline-flex items-center justify-center bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-purple-500/10"
+          >
+            Return to Sign In
+          </Link>
+          <button
+            onClick={() => setEmailSent(false)}
+            className="text-xs text-zinc-400 hover:text-white transition-colors"
+          >
+            Didn&apos;t receive it? Try another email
+          </button>
+        </div>
       </div>
     );
   }

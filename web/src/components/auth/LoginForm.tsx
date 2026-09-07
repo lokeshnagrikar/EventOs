@@ -9,7 +9,7 @@ import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
-import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles, CheckCircle2, ArrowRight, X, Wand2, MessageSquare, Phone, Briefcase } from "lucide-react";
+import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, X, Wand2, MessageSquare, Phone, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -103,11 +103,18 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   const [otpSuccess, setOtpSuccess] = useState(false);
   const [resendTimer, setResendTimer] = useState(120);
 
-  // Auth Mode: "password" | "magic-link"
-  const [authMode, setAuthMode] = useState<"password" | "magic-link">("password");
+  // Auth Mode: "password" | "magic-link" | "forgot-password"
+  const [authMode, setAuthMode] = useState<"password" | "magic-link" | "forgot-password">("password");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [magicLinkTimer, setMagicLinkTimer] = useState(60);
+  const [magicLinkUrl, setMagicLinkUrl] = useState<string | null>(null);
+
+  // Inline Forgot Password State
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState<string | null>(null);
+  const [forgotPasswordError, setForgotPasswordError] = useState<string | null>(null);
+  const [forgotPasswordToken, setForgotPasswordToken] = useState<string | null>(null);
 
   // Email Auto-Suggestion & Business Nudge State
   const [domainSuggestion, setDomainSuggestion] = useState<string | null>(null);
@@ -178,6 +185,8 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
       document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
       document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      localStorage.setItem("user_name", firstName);
+      localStorage.setItem("user_role", role);
       
       setAuth(
         accessToken,
@@ -187,7 +196,17 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       );
       addToast(`Welcome back, ${firstName}! Verified via Magic Link.`, "success");
       if (isModal) closeModal();
-      router.push("/workspace-select");
+
+      const redirectUrl = searchParams.get("redirect");
+      if (redirectUrl && (!redirectUrl.startsWith("/superadmin") || role === "SUPER_ADMIN")) {
+        router.push(redirectUrl);
+      } else if (role === "CLIENT") {
+        router.push("/portal");
+      } else if (role === "SUPER_ADMIN") {
+        router.push("/superadmin");
+      } else {
+        router.push("/workspace-select");
+      }
     } catch (err: any) {
       const errMsg = err.response?.data?.error?.message || "Invalid or expired Magic Link.";
       setError(errMsg);
@@ -210,6 +229,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     try {
       const res = await apiClient.post("/auth/magic-link", { email: emailVal });
       const magicUrl = res.data?.magicLinkUrl || res.data?.data?.magicLinkUrl;
+      setMagicLinkUrl(magicUrl || null);
       setMagicLinkSent(true);
       setMagicLinkTimer(60);
       addToast(`Magic Link sent to ${emailVal}! Check your inbox.`, "success");
@@ -249,6 +269,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     handleSubmit,
     setValue,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<LoginInputs>({
     resolver: zodResolver(loginSchema),
@@ -260,6 +281,42 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   });
 
   const rememberMeValue = watch("rememberMe");
+
+  const handleInlineForgotPassword = async () => {
+    const emailVal = getValues("email") || watch("email");
+    if (!emailVal || !emailVal.includes("@")) {
+      setForgotPasswordError("Please enter a valid email address first.");
+      addToast("Please enter a valid email address first", "error");
+      triggerShake();
+      return;
+    }
+
+    setForgotPasswordLoading(true);
+    setForgotPasswordError(null);
+    setForgotPasswordSuccess(null);
+    setForgotPasswordToken(null);
+
+    try {
+      const response = await apiClient.post("/auth/forgot-password", {
+        email: emailVal,
+      });
+
+      if (response.data?.debugResetToken) {
+        setForgotPasswordToken(response.data.debugResetToken);
+        setForgotPasswordSuccess("Recovery token generated! Click below to reset.");
+        addToast("Security token generated!", "success");
+      } else {
+        setForgotPasswordSuccess(`Password reset link sent to ${emailVal}! Please check your inbox.`);
+        addToast("Password reset link sent to your email!", "success");
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.message || "Failed to request password reset.";
+      setForgotPasswordError(msg);
+      addToast(msg, "error");
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
 
   // Handle session expiration warning
   useEffect(() => {
@@ -732,36 +789,57 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         </motion.div>
       )}
 
-      {/* Auth Mode Toggle Tabs (Password vs Magic Link) */}
-      <motion.div variants={itemVariants} className="flex bg-[#141417] p-1 rounded-xl border border-zinc-800 text-xs font-medium">
-        <button
-          type="button"
-          onClick={() => {
-            setAuthMode("password");
-            setMagicLinkSent(false);
-          }}
-          className={cn(
-            "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
-            authMode === "password" ? "bg-zinc-800 text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
-          )}
-        >
-          <KeyRound size={13} />
-          <span>Password</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setAuthMode("magic-link");
-          }}
-          className={cn(
-            "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
-            authMode === "magic-link" ? "bg-zinc-800 text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
-          )}
-        >
-          <Sparkles size={13} className="text-purple-400" />
-          <span>Magic Link</span>
-        </button>
-      </motion.div>
+      {/* Auth Mode Toggle Tabs (Password vs Magic Link vs Forgot Password) */}
+      {authMode === "forgot-password" ? (
+        <motion.div variants={itemVariants} className="flex items-center justify-between bg-purple-950/20 px-3 py-2 rounded-xl border border-purple-500/20 text-xs">
+          <div className="flex items-center gap-1.5 text-purple-300 font-bold">
+            <KeyRound size={13} className="text-purple-400" />
+            <span>Password Recovery</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode("password");
+              setForgotPasswordError(null);
+              setForgotPasswordSuccess(null);
+            }}
+            className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 cursor-pointer transition-colors font-medium"
+          >
+            <ArrowLeft size={11} />
+            <span>Back to Login</span>
+          </button>
+        </motion.div>
+      ) : (
+        <motion.div variants={itemVariants} className="flex bg-[#141417] p-1 rounded-xl border border-zinc-800 text-xs font-medium">
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode("password");
+              setMagicLinkSent(false);
+            }}
+            className={cn(
+              "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
+              authMode === "password" ? "bg-zinc-800 text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
+            )}
+          >
+            <KeyRound size={13} />
+            <span>Password</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode("magic-link");
+            }}
+            className={cn(
+              "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
+              authMode === "magic-link" ? "bg-zinc-800 text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
+            )}
+          >
+            <Sparkles size={13} className="text-purple-400" />
+            <span>Magic Link</span>
+          </button>
+        </motion.div>
+      )}
 
       {/* Form elements for Password and Magic Link modes */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
@@ -822,8 +900,88 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             )}
           </motion.div>
 
-        {/* Magic Link Mode Confirmation or Email Action */}
-        {authMode === "magic-link" ? (
+        {/* Forgot Password Mode */}
+        {authMode === "forgot-password" ? (
+          <motion.div variants={itemVariants} className="space-y-3 pt-1">
+            <div className="p-3 bg-purple-950/20 border border-purple-500/20 rounded-xl text-left space-y-1">
+              <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                <KeyRound size={13} className="text-purple-400" />
+                <span>Reset Your Password</span>
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                We will dispatch a secure recovery token to the email address entered above.
+              </p>
+            </div>
+
+            {forgotPasswordError && (
+              <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-300 flex items-start gap-2 text-left">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <span>{forgotPasswordError}</span>
+              </div>
+            )}
+
+            {forgotPasswordSuccess && (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300 text-left space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <Check size={14} className="text-emerald-400 shrink-0" />
+                  <span className="font-semibold">{forgotPasswordSuccess}</span>
+                </div>
+                {forgotPasswordToken ? (
+                  <Button
+                    type="button"
+                    onClick={() => router.push(`/reset-password?token=${forgotPasswordToken}`)}
+                    className="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Proceed to Reset Password</span>
+                    <ArrowRight size={12} />
+                  </Button>
+                ) : (
+                  <p className="text-[10px] text-zinc-400">
+                    The reset link expires in 15 minutes. Please check your inbox and spam folder.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!forgotPasswordSuccess && (
+              <Button
+                type="button"
+                disabled={forgotPasswordLoading}
+                onClick={handleInlineForgotPassword}
+                className="w-full py-2.5 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-2 cursor-pointer"
+              >
+                {forgotPasswordLoading ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Dispatching Reset Link...</span>
+                  </>
+                ) : (
+                  <>
+                    <Mail size={13} />
+                    <span>Send Password Recovery Link</span>
+                  </>
+                )}
+              </Button>
+            )}
+
+            <div className="flex items-center justify-between text-[10px] pt-1">
+              <button
+                type="button"
+                onClick={() => setAuthMode("password")}
+                className="text-zinc-400 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <ArrowLeft size={11} />
+                <span>Return to password login</span>
+              </button>
+              <Link
+                href="/forgot-password"
+                className="text-purple-400 hover:text-purple-300 hover:underline"
+              >
+                Open full page ↗
+              </Link>
+            </div>
+          </motion.div>
+        ) : authMode === "magic-link" ? (
           magicLinkSent ? (
             <motion.div variants={itemVariants} className="p-4 bg-purple-950/30 border border-purple-500/30 rounded-2xl text-center space-y-3">
               <div className="mx-auto w-10 h-10 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
@@ -835,6 +993,22 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                   We sent a 1-click login link to <span className="text-purple-300 font-bold">{watch("email")}</span>. Click the link in your email to sign in instantly.
                 </p>
               </div>
+
+              {magicLinkUrl && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.location.href = magicLinkUrl;
+                    }}
+                    className="w-full py-2.5 px-3 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:opacity-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-purple-900/40 active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Sparkles size={13} className="text-white" />
+                    <span>Sign In with Magic Link Now 🪄</span>
+                  </button>
+                </div>
+              )}
+
               <div className="pt-2 flex justify-between items-center text-[10px]">
                 <button
                   type="button"
@@ -886,9 +1060,18 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="password">
                   Password
                 </label>
-                <Link href="/forgot-password" className="text-[10px] text-purple-400 hover:text-purple-305 hover:underline font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500 rounded">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("forgot-password");
+                    setForgotPasswordError(null);
+                    setForgotPasswordSuccess(null);
+                    setForgotPasswordToken(null);
+                  }}
+                  className="text-[10px] text-purple-400 hover:text-purple-300 hover:underline font-semibold focus-visible:outline-none cursor-pointer"
+                >
                   Forgot password?
-                </Link>
+                </button>
               </div>
               <div className="relative">
                 <KeyRound className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${

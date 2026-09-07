@@ -72,8 +72,8 @@ spring:
   mail:
     host: ${SMTP_HOST:smtp.gmail.com}
     port: ${SMTP_PORT:587}
-    username: ${SMTP_USERNAME:}
-    password: ${SMTP_PASSWORD:}
+    username: ${SMTP_USERNAME:devloperonly@gmail.com}
+    password: ${SMTP_PASSWORD:omwdnucaccsengrg}
     properties:
       mail:
         smtp:
@@ -96,7 +96,7 @@ app:
   gateway:
     secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
   security:
-    log-tokens: ${LOG_SENSITIVE_TOKENS:false}
+    log-tokens: ${LOG_SENSITIVE_TOKENS:true}
     cookie:
       secure: ${COOKIE_SECURE:}
       samesite: ${COOKIE_SAMESITE:}
@@ -104,7 +104,7 @@ app:
     enabled: ${RECAPTCHA_ENABLED:false}
     secret-key: ${RECAPTCHA_SECRET_KEY:}
   google:
-    client-id: ${GOOGLE_CLIENT_ID:1234567890-example.apps.googleusercontent.com}
+    client-id: ${GOOGLE_CLIENT_ID:171503360314-e51mor0dee5v5f5jqi3gincelrhuva4l.apps.googleusercontent.com}
   stripe:
     api-key: ${STRIPE_API_KEY:}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}

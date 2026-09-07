@@ -56,7 +56,7 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
 
   useEffect(() => {
     if (searchParams) {
-      if (searchParams.get("login") === "true") {
+      if (searchParams.get("login") === "true" || searchParams.get("magicToken") || searchParams.get("token")) {
         openModal("login");
       } else if (searchParams.get("register") === "true") {
         openModal("register");

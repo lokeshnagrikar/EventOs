@@ -16,7 +16,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @org.springframework.beans.factory.annotation.Value("${spring.mail.username}")
+    @org.springframework.beans.factory.annotation.Value("${spring.mail.username:devloperonly@gmail.com}")
     private String fromAddress;
 
     @org.springframework.beans.factory.annotation.Value("${app.frontend-url:http://localhost:3000}")
@@ -144,8 +144,8 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            String sender = (fromAddress != null && !fromAddress.trim().isEmpty()) ? fromAddress : "no-reply@eventos.co";
-            helper.setFrom(sender);
+            String sender = (fromAddress != null && !fromAddress.trim().isEmpty()) ? fromAddress : "devloperonly@gmail.com";
+            helper.setFrom(sender, "EventOS Security");
             helper.setTo(toEmail);
             helper.setSubject("🛡️ Reset Your EventOS Password");
 

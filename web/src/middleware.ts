@@ -7,9 +7,7 @@ export function middleware(request: NextRequest) {
   const userRole = request.cookies.get("user_role")?.value;
 
   const isAuthRoute = pathname.startsWith("/login") || 
-                      pathname.startsWith("/register") || 
-                      pathname.startsWith("/forgot-password") || 
-                      pathname.startsWith("/reset-password");
+                      pathname.startsWith("/register");
 
   const isSuperAdminRoute = pathname.startsWith("/superadmin") && pathname !== "/superadmin/login";
                       

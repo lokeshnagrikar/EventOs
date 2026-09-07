@@ -67,6 +67,9 @@ public class AuthService {
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
     public AuthService(UserRepository userRepository, RoleRepository roleRepository,
             TenantRepository tenantRepository, CompanyRepository companyRepository,
             RefreshTokenRepository refreshTokenRepository, MembershipRepository membershipRepository,
@@ -554,6 +557,7 @@ public class AuthService {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("message", "Reset token generated successfully. Check system logs.");
+        response.put("debugResetToken", resetToken);
         return response;
     }
 
@@ -570,6 +574,7 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalStateException("User associated with token not found"));
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setEmailVerified(true);
         userRepository.save(user);
         stringRedisTemplate.delete(redisKey);
 
@@ -1516,6 +1521,11 @@ public class AuthService {
         User user = userRepository.findByEmail(targetEmail)
                 .orElseThrow(() -> new IllegalArgumentException("No registered account found for email: " + targetEmail));
 
+        if (!user.isEmailVerified()) {
+            user.setEmailVerified(true);
+            userRepository.save(user);
+        }
+
         // Single-use token: invalidate token immediately after successful retrieval
         try {
             if (stringRedisTemplate != null) {
@@ -1525,22 +1535,52 @@ public class AuthService {
             log.warn("[MAGIC_LINK] Failed to invalidate used token {}: {}", token, e.getMessage());
         }
 
-        Membership selectedMembership = membershipRepository.findAllByUserId(user.getId())
-                .stream().findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("User has no active workspace membership"));
+        List<Membership> allMemberships = membershipRepository.findAllByUserId(user.getId());
+        if (allMemberships.isEmpty()) {
+            throw new IllegalArgumentException("User has no active workspace membership");
+        }
+        Membership selectedMembership = allMemberships.get(0);
 
         String rawToken = UUID.randomUUID().toString();
+        String tokenHash = sha256(rawToken);
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .user(user)
+                .token(tokenHash)
+                .tenantId(selectedMembership.getTenantId())
+                .expiryDate(LocalDateTime.now().plusNanos(refreshExpirationMs * 1_000_000))
+                .build();
+        refreshTokenRepository.save(refreshToken);
+
         List<String> permissions = extractPermissionsFromRole(selectedMembership.getRole());
+        String primaryCompanyName = companyRepository.findById(selectedMembership.getCompanyId())
+                .map(Company::getName)
+                .orElse("Unknown Company");
 
         String accessToken = jwtService.generateToken(
                 user,
                 selectedMembership.getTenantId(),
                 selectedMembership.getRole().getName(),
                 permissions,
-                "",
+                primaryCompanyName,
                 selectedMembership.getTenantId(),
                 "",
                 "");
+
+        List<Map<String, Object>> membershipList = new ArrayList<>();
+        for (Membership m : allMemberships) {
+            Map<String, Object> mInfo = new HashMap<>();
+            mInfo.put("tenantId", m.getTenantId().toString());
+            mInfo.put("companyId", m.getCompanyId().toString());
+            mInfo.put("role", m.getRole().getName());
+            mInfo.put("status", m.getStatus());
+
+            String companyName = companyRepository.findById(m.getCompanyId())
+                    .map(Company::getName)
+                    .orElse("Unknown Company");
+            mInfo.put("companyName", companyName);
+            membershipList.add(mInfo);
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", accessToken);
@@ -1551,6 +1591,7 @@ public class AuthService {
         response.put("role", selectedMembership.getRole().getName());
         response.put("firstName", user.getFirstName());
         response.put("lastName", user.getLastName());
+        response.put("memberships", membershipList);
         response.put("permissions", permissions);
 
         return response;
