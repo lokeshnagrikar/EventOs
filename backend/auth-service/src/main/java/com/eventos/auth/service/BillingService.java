@@ -674,4 +674,67 @@ public class BillingService {
         blacklistedIpStorage.removeIf(item -> ip.equalsIgnoreCase(String.valueOf(item.get("ip"))));
         auditLogService.logEvent(null, null, "SECURITY_WAF_UNBLACK_IP", "127.0.0.1", "SuperAdmin", "Unblacklisted IP: " + ip);
     }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @Transactional
+    public Map<String, Object> updateTenantStatus(UUID tenantId, String status) {
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found: " + tenantId));
+
+        Optional<Subscription> subOpt = subscriptionRepository.findByTenantId(tenantId);
+        if (subOpt.isPresent()) {
+            Subscription sub = subOpt.get();
+            sub.setStatus(status);
+            subscriptionRepository.save(sub);
+        }
+
+        auditLogService.logEvent(tenantId, null, "TENANT_STATUS_MODIFIED", "127.0.0.1", "SuperAdmin",
+                "Tenant status modified to " + status + " for workspace: " + tenant.getName());
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("id", tenant.getId().toString());
+        res.put("status", status);
+        return res;
+    }
+
+    @Transactional
+    public Map<String, Object> updateUserStatus(UUID userId, String status) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.setStatus(status);
+        userRepository.save(user);
+
+        auditLogService.logEvent(null, user.getId(), "USER_STATUS_MODIFIED", "127.0.0.1", "SuperAdmin",
+                "User status updated to " + status + " for user: " + user.getEmail());
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("id", user.getId().toString());
+        res.put("status", status);
+        return res;
+    }
+
+    @Transactional
+    public Map<String, Object> resetUserPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
+
+        if (passwordEncoder != null) {
+            user.setPasswordHash(passwordEncoder.encode("admin123"));
+        } else {
+            user.setPasswordHash("$2a$12$K5PbXeTkRuCkmLqtlXmZQegsXWQIghasY/iNKXY4kyEsEe3dpdr5O");
+        }
+        user.setPasswordUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        auditLogService.logEvent(null, user.getId(), "USER_PASSWORD_RESET", "127.0.0.1", "SuperAdmin",
+                "SuperAdmin reset password to default credential for user: " + email);
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("email", email);
+        res.put("message", "Password reset to default credential (admin123)");
+        return res;
+    }
 }

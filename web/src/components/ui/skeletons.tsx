@@ -9,51 +9,62 @@ import { EventOsLogo } from "@/components/ui/EventOsLogo";
 const shimmer =
   "before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent";
 
-export function LoadingScreen({ message = "Loading workspace..." }: { message?: string }) {
+export function LoadingScreen({ message = "Synchronizing EventOS workspace..." }: { message?: string }) {
   return (
-    <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#09090b]">
-      {/* Decorative Radial Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1c1917_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
-      
-      {/* Animated Gradient Glow Aura */}
-      <motion.div
-        animate={{ scale: [1, 1.25, 1], opacity: [0.3, 0.6, 0.3] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute w-[380px] h-[380px] bg-gradient-to-tr from-purple-600/25 via-pink-500/20 to-cyan-500/10 blur-[130px] rounded-full pointer-events-none"
-      />
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#080A11] select-none overflow-hidden">
+      {/* Subtle Ambient Radial Light */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,rgba(99,102,241,0.12),transparent_75%)] pointer-events-none" />
+
+      {/* Micro Specular Accent Dots */}
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.85, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative flex flex-col items-center space-y-5"
+        initial={{ opacity: 0, scale: 0.94 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 flex flex-col items-center justify-center max-w-sm w-full px-6 text-center space-y-6"
       >
-        {/* Glowing Official EventOS Monogram Preloader Logo (Transparent Float) */}
+        {/* Floating Brand Mark with Refined Indigo Glow */}
         <motion.div
-          animate={{ 
-            y: [0, -8, 0],
+          animate={{
+            y: [0, -4, 0],
             filter: [
-              "drop-shadow(0 0 25px rgba(168,85,247,0.45)) drop-shadow(0 0 45px rgba(236,72,153,0.3))",
-              "drop-shadow(0 0 40px rgba(236,72,153,0.7)) drop-shadow(0 0 70px rgba(168,85,247,0.45))",
-              "drop-shadow(0 0 25px rgba(168,85,247,0.45)) drop-shadow(0 0 45px rgba(236,72,153,0.3))"
+              "drop-shadow(0 0 24px rgba(99,102,241,0.3))",
+              "drop-shadow(0 0 36px rgba(124,58,237,0.45))",
+              "drop-shadow(0 0 24px rgba(99,102,241,0.3))"
             ]
           }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
           className="relative flex items-center justify-center py-2"
         >
-          <EventOsLogo size={96} animated={true} />
+          <EventOsLogo size={92} animated={true} />
         </motion.div>
 
-        <div className="text-center space-y-1">
-          <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-1.5 justify-center">
-            Event<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500">OS</span>
-          </h2>
-          <p className="text-[10.5px] text-zinc-400 font-bold tracking-widest uppercase">{message}</p>
+        {/* Clean, Solid Authoritative Typography */}
+        <div className="space-y-1.5">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white font-sans">
+            EventOS
+          </h1>
+          <p className="text-[10px] text-slate-400 uppercase tracking-[0.25em] font-medium font-mono pl-[0.25em]">
+            {message}
+          </p>
         </div>
 
-        {/* Shimmering Dynamic Progress Bar */}
-        <div className="w-56 bg-white/[0.04] border border-white/[0.08] h-1.5 rounded-full relative overflow-hidden mt-1 shadow-inner">
-          <div className="absolute top-0 left-0 h-full w-2/3 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 rounded-full animate-[shimmer_1.5s_infinite]" />
+        {/* Ultra-Sleek Hairline Progress Beam */}
+        <div className="space-y-2.5 pt-2 flex flex-col items-center">
+          <div className="w-36 h-[2px] bg-white/[0.08] rounded-full overflow-hidden relative shadow-[0_0_12px_rgba(99,102,241,0.3)]">
+            <motion.div
+              className="absolute top-0 left-0 h-full w-2/3 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 rounded-full"
+              animate={{
+                x: ["-100%", "200%"]
+              }}
+              transition={{
+                duration: 1.4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          </div>
         </div>
       </motion.div>
     </div>

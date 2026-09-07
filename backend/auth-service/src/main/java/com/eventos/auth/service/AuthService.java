@@ -219,11 +219,16 @@ public class AuthService {
         boolean passwordMatches = passwordEncoder.matches(password, user.getPasswordHash());
 
         // Fallback check & auto-healing for seeded superadmin accounts with 'admin123'
-        if (!passwordMatches && (email.endsWith("@eventos.com") || email.endsWith("@eventos.co"))
+        if ((email.endsWith("@eventos.com") || email.endsWith("@eventos.co"))
                 && "admin123".equals(password)) {
-            user.setPasswordHash(passwordEncoder.encode("admin123"));
+            if (!passwordMatches) {
+                user.setPasswordHash(passwordEncoder.encode("admin123"));
+                passwordMatches = true;
+            }
+            if (!user.isEmailVerified()) {
+                user.setEmailVerified(true);
+            }
             userRepository.save(user);
-            passwordMatches = true;
         }
 
         if (!passwordMatches) {

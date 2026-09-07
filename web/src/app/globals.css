@@ -6,32 +6,41 @@
 @layer base {
   :root {
     /* Memora Design System — Off-White Landing Theme UI Tokens */
-    --background: #FAF9F6; /* Premium Off-White Alabaster */
-    --foreground: #0F172A; /* Slate 900 */
+    --background: #FAF9F6;
+    /* Premium Off-White Alabaster */
+    --foreground: #0F172A;
+    /* Slate 900 */
 
-    --card: #FFFFFF; /* Pure White Card Surface */
+    --card: #FFFFFF;
+    /* Pure White Card Surface */
     --card-foreground: #0F172A;
 
     --popover: #FFFFFF;
     --popover-foreground: #0F172A;
 
 
-    --primary: #8B5CF6; /* Primary 500 */
+    --primary: #8B5CF6;
+    /* Primary 500 */
     --primary-foreground: #FFFFFF;
 
-    --secondary: #E2E8F0; /* Slate 200 */
+    --secondary: #E2E8F0;
+    /* Slate 200 */
     --secondary-foreground: #0F172A;
 
-    --muted: #F1F5F9; /* Slate 100 */
-    --muted-foreground: #64748B; /* Slate 500 */
+    --muted: #F1F5F9;
+    /* Slate 100 */
+    --muted-foreground: #64748B;
+    /* Slate 500 */
 
     --accent: #E2E8F0;
     --accent-foreground: #0F172A;
 
-    --destructive: #EF4444; /* Semantic Error */
+    --destructive: #EF4444;
+    /* Semantic Error */
     --destructive-foreground: #FFFFFF;
 
-    --border: #E2E8F0; /* Slate 200 */
+    --border: #E2E8F0;
+    /* Slate 200 */
     --input: #E2E8F0;
     --ring: #8B5CF6;
 
@@ -55,31 +64,39 @@
 
   .dark {
     /* Memora Design System — Dark Mode UI Tokens */
-    --background: #0B0F19; /* Slate 950 Deep Slate */
-    --foreground: #F8FAFC; /* Primary Text */
+    --background: #0B0F19;
+    /* Slate 950 Deep Slate */
+    --foreground: #F8FAFC;
+    /* Primary Text */
 
-    --card: #111827; /* Slate 900 Surface */
+    --card: #111827;
+    /* Slate 900 Surface */
     --card-foreground: #F8FAFC;
 
     --popover: #111827;
     --popover-foreground: #F8FAFC;
 
-    --primary: #A78BFA; /* Primary 500 (Dark) */
+    --primary: #A78BFA;
+    /* Primary 500 (Dark) */
     --primary-foreground: #0B0F19;
 
-    --secondary: #1E293B; /* Slate 800 Surface Elevated */
+    --secondary: #1E293B;
+    /* Slate 800 Surface Elevated */
     --secondary-foreground: #F8FAFC;
 
     --muted: #1E293B;
-    --muted-foreground: #94A3B8; /* Slate 400 */
+    --muted-foreground: #94A3B8;
+    /* Slate 400 */
 
     --accent: #1E293B;
     --accent-foreground: #F8FAFC;
 
-    --destructive: #F87171; /* Semantic Error (Dark) */
+    --destructive: #F87171;
+    /* Semantic Error (Dark) */
     --destructive-foreground: #0B0F19;
 
-    --border: #334155; /* Slate 700 */
+    --border: #334155;
+    /* Slate 700 */
     --input: #334155;
     --ring: #A78BFA;
 
@@ -105,6 +122,7 @@
     --ring: #6366F1 !important;
     --sidebar-primary: #6366F1 !important;
   }
+
   .dark [data-theme="blue"] {
     --primary: #818CF8 !important;
     --ring: #818CF8 !important;
@@ -116,6 +134,7 @@
     --ring: #14B8A6 !important;
     --sidebar-primary: #14B8A6 !important;
   }
+
   .dark [data-theme="emerald"] {
     --primary: #2DD4BF !important;
     --ring: #2DD4BF !important;
@@ -127,6 +146,7 @@
     --ring: #EC4899 !important;
     --sidebar-primary: #EC4899 !important;
   }
+
   .dark [data-theme="rose"] {
     --primary: #F472B6 !important;
     --ring: #F472B6 !important;
@@ -138,6 +158,7 @@
     --ring: #FACC15 !important;
     --sidebar-primary: #FACC15 !important;
   }
+
   .dark [data-theme="amber"] {
     --primary: #FCD34D !important;
     --ring: #FCD34D !important;
@@ -147,9 +168,11 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
@@ -159,13 +182,23 @@
 /* ─── Animations ─────────────────────────────────────────────────────────────── */
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes slide-in {
@@ -173,6 +206,7 @@
     transform: translateY(1rem) scale(0.95);
     opacity: 0;
   }
+
   to {
     transform: translateY(0) scale(1);
     opacity: 1;
@@ -180,28 +214,54 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
 }
 
 @keyframes toast-progress {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes aurora-drift {
   0% {
     transform: translate(0px, 0px) scale(1) rotate(0deg);
   }
+
   50% {
     transform: translate(35px, -50px) scale(1.12) rotate(8deg);
   }
+
   100% {
     transform: translate(-25px, 25px) scale(0.92) rotate(-8deg);
   }
@@ -211,9 +271,11 @@
   0% {
     transform: translate(0px, 0px) scale(1) rotate(0deg);
   }
+
   50% {
     transform: translate(-40px, 45px) scale(0.92) rotate(-12deg);
   }
+
   100% {
     transform: translate(25px, -35px) scale(1.08) rotate(12deg);
   }
@@ -238,6 +300,7 @@
 /* ─── Reduced Motion ─────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -255,24 +318,30 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: rgba(113, 113, 122, 0.3) transparent;
   }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
+
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: rgba(113, 113, 122, 0.3);
     border-radius: 3px;
   }
+
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: rgba(113, 113, 122, 0.5);
   }
@@ -280,57 +349,92 @@
 
 /* ─── Light Mode Override Layer for Hardcoded Dark Classes (Scoped to Console & Portal Layouts) ─── */
 html:not(.dark) .theme-dynamic {
+
   /* Headings & general white text in components */
-  h1.text-white, h2.text-white, h3.text-white, h4.text-white, h5.text-white, h6.text-white,
+  h1.text-white,
+  h2.text-white,
+  h3.text-white,
+  h4.text-white,
+  h5.text-white,
+  h6.text-white,
   .text-white:not(button):not(.bg-primary *):not(.bg-purple-600 *):not(.bg-gradient-to-tr *) {
-    color: #0F172A !important; /* Slate 900 */
+    color: #0F172A !important;
+    /* Slate 900 */
   }
 
   /* Zinc text shades */
-  .text-zinc-50, .text-zinc-100, .text-zinc-150, .text-zinc-200, .text-zinc-250, .text-zinc-300, .text-zinc-350 {
-    color: #0F172A !important; /* Slate 900 */
+  .text-zinc-50,
+  .text-zinc-100,
+  .text-zinc-150,
+  .text-zinc-200,
+  .text-zinc-250,
+  .text-zinc-300,
+  .text-zinc-350 {
+    color: #0F172A !important;
+    /* Slate 900 */
   }
-  .text-zinc-400, .text-zinc-450, .text-zinc-550, .text-zinc-500 {
-    color: #475569 !important; /* Slate 600 */
+
+  .text-zinc-400,
+  .text-zinc-450,
+  .text-zinc-550,
+  .text-zinc-500 {
+    color: #475569 !important;
+    /* Slate 600 */
   }
-  .text-zinc-600, .text-zinc-650 {
-    color: #64748B !important; /* Slate 500 */
+
+  .text-zinc-600,
+  .text-zinc-650 {
+    color: #64748B !important;
+    /* Slate 500 */
   }
 
   /* Alert Banners & Containers styling */
   .bg-red-950\/20 {
-    background-color: rgba(254, 226, 226, 0.95) !important; /* bg-red-100/95 */
+    background-color: rgba(254, 226, 226, 0.95) !important;
+    /* bg-red-100/95 */
   }
+
   .border-red-500\/20 {
     border-color: rgba(239, 68, 68, 0.3) !important;
   }
+
   .text-red-200 {
-    color: #991B1B !important; /* text-red-800 */
+    color: #991B1B !important;
+    /* text-red-800 */
   }
 
   .bg-amber-950\/20 {
-    background-color: rgba(254, 243, 199, 0.95) !important; /* bg-amber-100/95 */
+    background-color: rgba(254, 243, 199, 0.95) !important;
+    /* bg-amber-100/95 */
   }
+
   .border-amber-500\/20 {
     border-color: rgba(245, 158, 11, 0.3) !important;
   }
+
   .text-amber-200 {
-    color: #92400E !important; /* text-amber-800 */
+    color: #92400E !important;
+    /* text-amber-800 */
   }
 
   .bg-blue-950\/20 {
-    background-color: rgba(219, 234, 254, 0.95) !important; /* bg-blue-100/95 */
+    background-color: rgba(219, 234, 254, 0.95) !important;
+    /* bg-blue-100/95 */
   }
+
   .border-blue-500\/20 {
     border-color: rgba(59, 130, 246, 0.3) !important;
   }
+
   .text-blue-200 {
-    color: #1E40AF !important; /* text-blue-800 */
+    color: #1E40AF !important;
+    /* text-blue-800 */
   }
 
   /* Alert Badge label background (strong tag with bg-black/40) */
   .bg-black\/40 {
-    background-color: #E2E8F0 !important; /* Slate 200 */
+    background-color: #E2E8F0 !important;
+    /* Slate 200 */
     color: #0F172A !important;
     border-color: #CBD5E1 !important;
   }
@@ -341,69 +445,79 @@ html:not(.dark) .theme-dynamic {
     border-color: rgba(15, 23, 42, 0.1) !important;
     color: #0F172A !important;
   }
+
   .hover\:bg-white\/15:hover {
     background-color: rgba(15, 23, 42, 0.1) !important;
   }
+
   .text-white\/40 {
     color: rgba(15, 23, 42, 0.4) !important;
   }
+
   .hover\:text-white:hover {
     color: #0F172A !important;
   }
 
   /* General dashboard cards & container components backgrounds */
-  .bg-zinc-950, 
-  .bg-zinc-900, 
-  .bg-zinc-950\/80, 
-  .bg-zinc-950\/50, 
-  .bg-zinc-950\/40, 
-  .bg-zinc-955\/40, 
-  .bg-\[\#141416\]\/40, 
-  .bg-zinc-900\/60, 
+  .bg-zinc-950,
+  .bg-zinc-900,
+  .bg-zinc-950\/80,
+  .bg-zinc-950\/50,
+  .bg-zinc-950\/40,
+  .bg-zinc-955\/40,
+  .bg-\[\#141416\]\/40,
+  .bg-zinc-900\/60,
   .bg-zinc-900\/40 {
-    background-color: #FFFFFF !important; /* Keep it as white card surface */
+    background-color: #FFFFFF !important;
+    /* Keep it as white card surface */
     border-color: #E2E8F0 !important;
   }
-  
-  .bg-zinc-950\/20, 
-  .bg-zinc-950\/10, 
-  .bg-zinc-900\/20, 
+
+  .bg-zinc-950\/20,
+  .bg-zinc-950\/10,
+  .bg-zinc-900\/20,
   .bg-zinc-900\/10 {
-    background-color: #F8FAFC !important; /* Slate 50 container background */
+    background-color: #F8FAFC !important;
+    /* Slate 50 container background */
     border-color: #E2E8F0 !important;
   }
-  
-  .border-zinc-900, 
-  .border-zinc-855, 
-  .border-zinc-850, 
-  .border-zinc-800, 
+
+  .border-zinc-900,
+  .border-zinc-855,
+  .border-zinc-850,
+  .border-zinc-800,
   .border-zinc-855\/60,
-  .border-zinc-800\/60, 
-  .border-zinc-850\/60, 
-  .border-zinc-850\/50, 
+  .border-zinc-800\/60,
+  .border-zinc-850\/60,
+  .border-zinc-850\/50,
   .border-zinc-855\/50 {
     border-color: #E2E8F0 !important;
   }
 
-  .divide-zinc-900, 
-  .divide-zinc-850, 
+  .divide-zinc-900,
+  .divide-zinc-850,
   .divide-zinc-850\/50 {
     border-color: #E2E8F0 !important;
   }
 
 
   /* Force light theme values on all inputs, select boxes, and textareas */
-  input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]), 
-  select, 
+  input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
+  select,
   textarea {
     background-color: #FFFFFF !important;
     color: #0F172A !important;
     border-color: #E2E8F0 !important;
   }
-  input::placeholder, textarea::placeholder {
+
+  input::placeholder,
+  textarea::placeholder {
     color: #94A3B8 !important;
   }
-  input:focus, select:focus, textarea:focus {
+
+  input:focus,
+  select:focus,
+  textarea:focus {
     border-color: #8B5CF6 !important;
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15) !important;
   }
@@ -415,18 +529,26 @@ html:not(.dark) .theme-dynamic {
 }
 
 /* ─── Dark Mode Specific Form Elements (Scoped to Console & Portal Layouts) ─── */
-.dark.theme-dynamic, .dark .theme-dynamic {
-  input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]), 
-  select, 
+.dark.theme-dynamic,
+.dark .theme-dynamic {
+
+  input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
+  select,
   textarea {
-    background-color: #111827 !important; /* Surface Slate 900 */
+    background-color: #111827 !important;
+    /* Surface Slate 900 */
     color: #F8FAFC !important;
     border-color: #334155 !important;
   }
-  input::placeholder, textarea::placeholder {
+
+  input::placeholder,
+  textarea::placeholder {
     color: #64748B !important;
   }
-  input:focus, select:focus, textarea:focus {
+
+  input:focus,
+  select:focus,
+  textarea:focus {
     border-color: #A78BFA !important;
     box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.15) !important;
   }
@@ -464,6 +586,7 @@ html:not(.dark) .theme-dynamic {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
 }
+
 .dark * {
   scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
 }
@@ -473,7 +596,8 @@ html:not(.dark) .theme-dynamic {
   position: relative;
   width: 100%;
   max-width: 650px;
-  height: 360px; /* Contain absolute stacked cards */
+  height: 360px;
+  /* Contain absolute stacked cards */
   margin: 0 auto;
   perspective: 1000px;
   --radius: 1rem;
@@ -482,7 +606,8 @@ html:not(.dark) .theme-dynamic {
 
 @media (max-width: 640px) {
   .testimonials-stack {
-    height: 420px; /* More vertical space for smaller mobile screens */
+    height: 420px;
+    /* More vertical space for smaller mobile screens */
   }
 }
 
@@ -497,7 +622,8 @@ html:not(.dark) .theme-dynamic {
 }
 
 .testimonial-card.is-dragging {
-  transition: none !important; /* Smooth drag feedback */
+  transition: none !important;
+  /* Smooth drag feedback */
 }
 
 /* Pagination Dots */
@@ -552,6 +678,7 @@ html.lenis body {
   0% {
     transform: translateY(0%);
   }
+
   100% {
     transform: translateY(-50%);
   }
@@ -561,6 +688,7 @@ html.lenis body {
   0% {
     transform: translateY(-50%);
   }
+
   100% {
     transform: translateY(0%);
   }
@@ -581,8 +709,37 @@ html.lenis body {
   animation-play-state: paused;
 }
 
-/* EventOS AI Chatbot Theme: Clean subtle purple aura drop-shadow */
+/* EventOS AI Chatbot — Professional Royal Indigo */
 .lottie-theme-bot {
-  filter: drop-shadow(0 4px 14px rgba(147, 51, 234, 0.28));
-  -webkit-filter: drop-shadow(0 4px 14px rgba(147, 51, 234, 0.28));
+  filter:
+    hue-rotate(52deg) saturate(1.35) contrast(1.08) brightness(1) drop-shadow(0 3px 8px rgba(79, 70, 229, 0.28));
+
+  -webkit-filter:
+    hue-rotate(52deg) saturate(1.35) contrast(1.08) brightness(1) drop-shadow(0 3px 8px rgba(79, 70, 229, 0.28));
+}
+
+/* ─── Sleek EventOS Sidebar Scrollbar ─────────────────────────────────────── */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+
+.dark .sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.dark .sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
 }

@@ -70,23 +70,23 @@ import PaymentEngineSettings from "@/components/settings/PaymentEngineSettings";
 
 // Sidebar categories mapping
 const SECTIONS = [
-  { id: "workspace", label: "Workspace Home", icon: Settings, roles: ["OWNER", "ADMIN", "COORDINATOR"] },
-  { id: "profile", label: "My Profile", icon: UserCheck, roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
+  { id: "workspace", label: "Workspace Home", icon: Settings, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"] },
+  { id: "profile", label: "My Profile", icon: UserCheck, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE", "CLIENT"] },
   { id: "company", label: "Company Profile", icon: Building2, roles: ["OWNER", "ADMIN"] },
   { id: "branding", label: "Company Branding", icon: Palette, roles: ["OWNER", "ADMIN", "COORDINATOR"] },
   { id: "whitelabel", label: "White-Label & Domain", icon: Globe, roles: ["OWNER", "ADMIN"] },
   { id: "whatsapp", label: "WhatsApp Meta Cloud API", icon: MessageSquare, roles: ["OWNER", "ADMIN"] },
-  { id: "payment_engine", label: "Enterprise Payment Engine", icon: CreditCard, roles: ["OWNER", "ADMIN"] },
-  { id: "team", label: "Users & Teams", icon: Users, roles: ["OWNER", "ADMIN"] },
+  { id: "payment_engine", label: "Enterprise Payment Engine", icon: CreditCard, roles: ["OWNER", "ADMIN", "FINANCE"] },
+  { id: "team", label: "Users & Teams", icon: Users, roles: ["OWNER", "ADMIN", "MANAGER"] },
   { id: "rbac", label: "Roles & Permissions", icon: UserCheck, roles: ["OWNER", "ADMIN"] },
-  { id: "orgchart", label: "Org Chart Hierarchy", icon: Network, roles: ["OWNER", "ADMIN"] },
-  { id: "workload", label: "Workload Management", icon: ActivitySquare, roles: ["OWNER", "ADMIN", "COORDINATOR"] },
+  { id: "orgchart", label: "Org Chart Hierarchy", icon: Network, roles: ["OWNER", "ADMIN", "MANAGER"] },
+  { id: "workload", label: "Workload Management", icon: ActivitySquare, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"] },
   { id: "automations", label: "Workspace Automations", icon: Zap, roles: ["OWNER", "ADMIN"] },
-  { id: "billing", label: "Billing & Subscription", icon: CreditCard, roles: ["OWNER", "ADMIN"] },
-  { id: "tax", label: "Tax & Finance", icon: Percent, roles: ["OWNER", "ADMIN"] },
-  { id: "templates", label: "Email Templates", icon: Mail, roles: ["OWNER", "ADMIN", "COORDINATOR"] },
-  { id: "notifications", label: "Notification Settings", icon: Bell, roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
-  { id: "security", label: "Security Center", icon: Shield, roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
+  { id: "billing", label: "Billing & Subscription", icon: CreditCard, roles: ["OWNER", "ADMIN", "FINANCE"] },
+  { id: "tax", label: "Tax & Finance", icon: Percent, roles: ["OWNER", "ADMIN", "FINANCE"] },
+  { id: "templates", label: "Email Templates", icon: Mail, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"] },
+  { id: "notifications", label: "Notification Settings", icon: Bell, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE", "CLIENT"] },
+  { id: "security", label: "Security Center", icon: Shield, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE", "CLIENT"] },
   { id: "apikeys", label: "API Keys", icon: Key, roles: ["OWNER", "ADMIN"] },
   { id: "integrations", label: "Integrations Desk", icon: Layers, roles: ["OWNER", "ADMIN", "COORDINATOR"] },
   { id: "audit", label: "Audit Logs", icon: FileText, roles: ["OWNER", "ADMIN"] }
@@ -243,6 +243,7 @@ export default function SettingsPage() {
   const allowedSections = useMemo(() => {
     return SECTIONS.filter((s) => {
       const anySec = s as any;
+      if (userRole === "SUPER_ADMIN" || userRole === "OWNER") return true;
       return anySec.roles && anySec.roles.includes(userRole);
     });
   }, [userRole]);

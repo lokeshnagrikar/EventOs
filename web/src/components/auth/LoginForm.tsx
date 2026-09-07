@@ -441,7 +441,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
 
       // Redirect based on role or explicit redirect parameter
       const redirectUrl = searchParams.get("redirect");
-      if (redirectUrl) {
+      if (redirectUrl && (!redirectUrl.startsWith("/superadmin") || role === "SUPER_ADMIN")) {
         router.push(redirectUrl);
       } else if (role === "CLIENT") {
         router.push("/portal");
@@ -517,10 +517,12 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
 
       // Redirect
       const redirectUrl = searchParams.get("redirect");
-      if (redirectUrl) {
+      if (redirectUrl && (!redirectUrl.startsWith("/superadmin") || role === "SUPER_ADMIN")) {
         router.push(redirectUrl);
       } else if (role === "CLIENT") {
         router.push("/portal");
+      } else if (role === "SUPER_ADMIN") {
+        router.push("/superadmin");
       } else {
         router.push("/workspace-select");
       }

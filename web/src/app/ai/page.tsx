@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { getAIConfig, saveAIConfig, getAIHistory, logAIActivity, AIProviderName, AIConfig, AIHistoryLog } from "@/lib/aiProvider";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { useToastStore } from "@/lib/toastStore";
 
 // Default Prompt Library Preset
 const DEFAULT_PROMPTS = [
@@ -39,6 +40,7 @@ const DEFAULT_PROMPTS = [
 
 export default function AICenterPage() {
   const router = useRouter();
+  const { addToast } = useToastStore();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<"dashboard" | "prompts" | "history" | "settings">("dashboard");
   const { completeStep } = useOnboardingStore();
@@ -82,12 +84,7 @@ export default function AICenterPage() {
       maxTokens,
       systemPrompt
     });
-    addToastLocal("AI configurations updated successfully!", "success");
-  };
-
-  const addToastLocal = (msg: string, type: "success" | "info") => {
-    // Basic browser notifier helper
-    alert(msg);
+    addToast("AI configurations updated successfully!", "success");
   };
 
   const handleAddPrompt = (e: React.FormEvent) => {

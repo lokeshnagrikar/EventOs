@@ -6,20 +6,15 @@ import {
   Sparkles,
   Send,
   X,
-  Bot,
   User,
   ArrowRight,
-  Loader2,
-  Copy,
-  Check,
-  Zap,
   Command,
   ChevronRight,
-  ExternalLink
+  LogIn
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { generateAIResponse, getAIConfig } from "@/lib/aiProvider";
+import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 
 const CHATBOT_LOTTIE_URL = "https://lottie.host/81c78ae8-59f5-4e19-bc6c-b7c5ba867ffd/Id8PQ7Y2HD.lottie";
@@ -38,12 +33,59 @@ const DotLottieReact = dynamic(
   }
 );
 
+// Routes where AI Assistant must be completely hidden (onboarding / internal setup)
+const HIDDEN_ROUTES = [
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+  "/accept-invite",
+  "/onboarding",
+  "/workspace-select",
+  "/superadmin/login"
+];
+
+// Public landing & marketing routes
+const PUBLIC_MARKETING_ROUTES = [
+  "/",
+  "/about",
+  "/pricing",
+  "/features",
+  "/solutions",
+  "/book-demo",
+  "/contact",
+  "/terms",
+  "/privacy",
+  "/refund",
+  "/sla",
+  "/cookies",
+  "/founder-story",
+  "/customers",
+  "/demo",
+  "/blog"
+];
+
+function isHiddenRoute(pathname: string): boolean {
+  if (!pathname) return false;
+  const path = pathname.toLowerCase();
+  return HIDDEN_ROUTES.some((route) => path === route || path.startsWith(route + "/"));
+}
+
+function isMarketingRoute(pathname: string): boolean {
+  if (!pathname) return true;
+  const path = pathname.toLowerCase();
+  if (path === "/") return true;
+  return PUBLIC_MARKETING_ROUTES.some((route) => route !== "/" && (path === route || path.startsWith(route + "/")));
+}
+
 function parseBoldText(text: string) {
   const parts = text.split(/(\*\*.*?\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
-        <strong key={i} className="font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded-md border border-purple-200/80 dark:border-purple-800/40 font-sans">
+        <strong
+          key={i}
+          className="font-bold text-blue-300 drop-shadow-[0_0_8px_rgba(96,165,250,0.3)]"
+        >
           {part.slice(2, -2)}
         </strong>
       );
@@ -67,9 +109,11 @@ function renderFormattedText(text: string) {
             return (
               <div key={lIdx} className={isBullet ? "flex items-start gap-2.5 pl-1" : ""}>
                 {isBullet && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-purple-500 mt-2 shrink-0 shadow-[0_0_6px_rgba(168,85,247,0.5)]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-purple-400 mt-2 shrink-0 shadow-[0_0_8px_rgba(192,132,252,0.8)]" />
                 )}
-                <span className="leading-relaxed text-slate-800 dark:text-slate-100 text-[13px]">{parseBoldText(content)}</span>
+                <span className="leading-relaxed text-slate-100 text-[13px]">
+                  {parseBoldText(content)}
+                </span>
               </div>
             );
           })}
@@ -77,7 +121,7 @@ function renderFormattedText(text: string) {
       );
     }
     return (
-      <p key={pIdx} className="mb-2 last:mb-0 leading-relaxed text-slate-800 dark:text-slate-100 text-[13px]">
+      <p key={pIdx} className="mb-2 last:mb-0 leading-relaxed text-slate-100 text-[13px]">
         {parseBoldText(para)}
       </p>
     );
@@ -90,81 +134,149 @@ interface Message {
   text: string;
   timestamp: Date;
   suggestions?: { label: string; action: () => void }[];
-  type?: "text" | "timeline" | "checklist" | "quote" | "email" | "search-result";
-  data?: any;
+  actionBtn?: { label: string; href: string; icon?: any };
 }
 
 export default function AiAssistant() {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
+  const { isAuthenticated, user } = useAuthStore();
 
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Determine mode: Public Concierge vs Authenticated Workspace Co-pilot
+  const isPublicMode = useMemo(() => {
+    return !isAuthenticated || isMarketingRoute(pathname);
+  }, [isAuthenticated, pathname]);
+
+  const isAuthRoute = useMemo(() => {
+    const path = pathname.toLowerCase();
+    return path === "/login" || path === "/register";
+  }, [pathname]);
 
   // Derive Context based on Current Pathname
   const pageContext = useMemo(() => {
-    if (!pathname) return { name: "Dashboard", module: "Overview" };
     const path = pathname.toLowerCase();
-    if (path.startsWith("/crm")) return { name: "CRM / Leads", module: "CRM AI" };
-    if (path.startsWith("/events") || path.startsWith("/bookings")) return { name: "Events Planning", module: "Event AI" };
-    if (path.startsWith("/quotes")) return { name: "Quotes & Proposals", module: "Quote AI" };
-    if (path.startsWith("/gallery")) return { name: "Media Galleries", module: "Gallery AI" };
-    if (path.startsWith("/finance") || path.startsWith("/invoices") || path.startsWith("/payments")) return { name: "Finance Hub", module: "Finance AI" };
-    if (path.startsWith("/portal")) return { name: "Client Portal", module: "Client AI" };
-    return { name: "Workspace", module: "Overview" };
-  }, [pathname]);
+    if (path === "/login") {
+      return { name: "Account Login", module: "Auth AI", role: "Access Specialist" };
+    }
+    if (path === "/register") {
+      return { name: "Agency Registration", module: "Auth AI", role: "Onboarding Specialist" };
+    }
+    if (isPublicMode) {
+      return { name: "EventOS Concierge", module: "Public AI", role: "Product Specialist" };
+    }
+    if (path.startsWith("/crm")) return { name: "CRM / Leads", module: "CRM AI", role: "Sales Co-pilot" };
+    if (path.startsWith("/events") || path.startsWith("/bookings")) return { name: "Events Planning", module: "Event AI", role: "Operations Co-pilot" };
+    if (path.startsWith("/quotes")) return { name: "Quotes & Proposals", module: "Quote AI", role: "Pricing Co-pilot" };
+    if (path.startsWith("/gallery")) return { name: "Media Galleries", module: "Gallery AI", role: "Media Co-pilot" };
+    if (path.startsWith("/finance") || path.startsWith("/invoices") || path.startsWith("/payments") || path.startsWith("/calculator")) {
+      return { name: "Finance & Billing", module: "Finance AI", role: "Finance Co-pilot" };
+    }
+    if (path.startsWith("/settings")) return { name: "Settings & System", module: "Settings AI", role: "Admin Co-pilot" };
+    if (path.startsWith("/reports")) return { name: "Reports & Analytics", module: "Analytics AI", role: "BI Co-pilot" };
+    if (path.startsWith("/chat")) return { name: "Workspace Chat", module: "Collab AI", role: "Team Co-pilot" };
+    return { name: "Dashboard", module: "Overview", role: "Executive Co-pilot" };
+  }, [pathname, isPublicMode]);
 
-  const aiConfig = useMemo(() => getAIConfig(), []);
-
-  // Welcome message when context changes
-  useEffect(() => {
-    setMessages([
-      {
-        id: "welcome",
-        sender: "ai",
-        text: `Hello! I am your EventOS AI Co-pilot, powered by **${aiConfig.provider}**.\n\nI see you are in **${pageContext.name}**. How can I assist you with your operations today?`,
-        timestamp: new Date(),
-        suggestions: getContextSuggestions()
-      }
-    ]);
-  }, [pageContext, isOpen]);
-
+  // Generate context-aware suggestions
   const getContextSuggestions = (): { label: string; action: () => void }[] => {
-    if (pageContext.module === "CRM AI") {
+    const path = pathname.toLowerCase();
+    if (path === "/login") {
       return [
-        { label: "Analyze lead quality score", action: () => handleSendText("Analyze lead quality score") },
-        { label: "Draft follow-up email", action: () => handleSendText("Draft a lead follow-up email") }
+        { label: "How to sign in with Google SSO?", action: () => handleSendText("How do I sign in with Google SSO?") },
+        { label: "Forgot password / recovery", action: () => handleSendText("How do I reset my password?") },
+        { label: "Create new agency account", action: () => handleSendText("How do I create a new agency account?") },
+        { label: "Explore features & pricing", action: () => handleSendText("What are the pricing plans and features?") }
       ];
     }
-    if (pageContext.module === "Event AI") {
+    if (path === "/register") {
       return [
-        { label: "Generate day-of schedule", action: () => handleSendText("Generate wedding timeline checklist") },
-        { label: "Check weather risk", action: () => handleSendText("Predict event risk & weather suggestions") }
+        { label: "What is in the 14-Day Free Trial?", action: () => handleSendText("What is included in the 14-day free trial?") },
+        { label: "Can I sign up with Google SSO?", action: () => handleSendText("How do I sign up with Google SSO?") },
+        { label: "I already have an account", action: () => handleSendText("I already have an account, take me to login") },
+        { label: "Which plan should I choose?", action: () => handleSendText("Which plan is best for my agency?") }
+      ];
+    }
+    if (isPublicMode) {
+      return [
+        { label: "What are the core features?", action: () => handleSendText("What are the core features of EventOS?") },
+        { label: "Explore pricing & plans", action: () => handleSendText("What are your pricing plans?") },
+        { label: "How does White-Labeling work?", action: () => handleSendText("Can I use my custom domain and brand colors?") },
+        { label: "Book a 1-on-1 demo", action: () => handleSendText("How do I book a demo?") }
+      ];
+    }
+
+    if (pageContext.module === "CRM AI") {
+      return [
+        { label: "How to qualify & score leads?", action: () => handleSendText("How does lead scoring work in EventOS?") },
+        { label: "Tips for converting leads into quotes", action: () => handleSendText("How do I convert an active lead into a proposal quote?") }
       ];
     }
     if (pageContext.module === "Quote AI") {
       return [
-        { label: "Suggest upselling package", action: () => handleSendText("Suggest upselling package for corporate quotes") }
+        { label: "Proposal best practices", action: () => handleSendText("How do I create a high-converting wedding proposal?") },
+        { label: "Configuring GST & milestones", action: () => handleSendText("How do payment milestones and GST work in quotes?") }
+      ];
+    }
+    if (pageContext.module === "Event AI") {
+      return [
+        { label: "Create a visual timeline", action: () => handleSendText("How to build a multi-day event timeline?") },
+        { label: "Manage event ingress & vendors", action: () => handleSendText("How to assign tasks and vendor ingress?") }
       ];
     }
     if (pageContext.module === "Finance AI") {
       return [
-        { label: "Forecast cash flow", action: () => handleSendText("Forecast revenue and payment delay risk") }
+        { label: "Generate dynamic UPI QR Code", action: () => handleSendText("How to generate instant UPI QR code for client?") },
+        { label: "Review outstanding receivables", action: () => handleSendText("Where can I track pending client payments?") }
+      ];
+    }
+    if (pageContext.module === "Gallery AI") {
+      return [
+        { label: "Client proofing link guide", action: () => handleSendText("How to share password-protected client proofing galleries?") },
+        { label: "Organize album sub-folders", action: () => handleSendText("How to organize ceremony albums like Sangeet and Haldi?") }
       ];
     }
     return [
-      { label: "Search unpaid invoices", action: () => handleSendText("Show unpaid overdue invoices") },
-      { label: "Show weddings next month", action: () => handleSendText("Show me weddings next month") }
+      { label: "Core feature testing walkthrough", action: () => handleSendText("Guide me through the 5 core steps of EventOS") },
+      { label: "How to invite team members", action: () => handleSendText("How do I invite team members and set roles?") }
     ];
   };
 
-  // Keyboard toggle (Ctrl + Space / Cmd + Space)
+  // Welcome message when context or drawer opens
+  useEffect(() => {
+    let welcomeText = "";
+    const path = pathname.toLowerCase();
+    if (path === "/login") {
+      welcomeText = "Welcome to **EventOS**! 🔐\n\nI am your **Access Specialist**. I can help you sign in, guide you with **Google SSO**, or help you reset a forgotten password.\n\nHow can I help you access your account?";
+    } else if (path === "/register") {
+      welcomeText = "Welcome to **EventOS**! ✨\n\nReady to elevate your event agency? Get started with our **14-day free trial** — zero credit card required.\n\nNeed help choosing a plan or signing up with Google SSO?";
+    } else if (isPublicMode) {
+      welcomeText = "Welcome to **EventOS**! ✨\n\nI am your **Product Specialist**. I can help you explore our operating system for event planners, answer questions about features & pricing, or help you book a live demo.\n\nWhat would you like to know about EventOS?";
+    } else {
+      const name = user?.firstName || "Partner";
+      welcomeText = `Hello, **${name}**! 👋\n\nI am your **EventOS Co-pilot** for **${pageContext.name}**.\n\nHow can I assist you with your operations and workflows today?`;
+    }
+
+    setMessages([
+      {
+        id: "welcome",
+        sender: "ai",
+        text: welcomeText,
+        timestamp: new Date(),
+        suggestions: getContextSuggestions()
+      }
+    ]);
+  }, [pageContext, isPublicMode, isOpen, pathname]);
+
+  // Keyboard shortcut toggle (Ctrl + Space / Cmd + Space)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.code === "Space") {
@@ -176,21 +288,21 @@ export default function AiAssistant() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Scroll to bottom
+  // Robust Auto-Scroll: scroll smoothly to bottom when messages or typing changes
   useEffect(() => {
     if (!isOpen) return;
     const timer = setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+      }
       if (chatContainerRef.current) {
-        chatContainerRef.current.scrollTo({
-          top: chatContainerRef.current.scrollHeight,
-          behavior: "smooth"
-        });
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
       }
     }, 60);
     return () => clearTimeout(timer);
   }, [messages, isTyping, isOpen]);
 
-  // Click outside to close
+  // Click outside to close drawer
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -206,12 +318,12 @@ export default function AiAssistant() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
+  // 1. Hide on login, register, forgot-password, onboarding, etc.
+  if (isHiddenRoute(pathname)) {
+    return null;
+  }
 
+  // Handle send user query
   const handleSendText = async (text: string) => {
     if (!text.trim()) return;
 
@@ -228,51 +340,174 @@ export default function AiAssistant() {
     setIsTyping(true);
 
     try {
-      const query = text.toLowerCase();
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      const q = text.toLowerCase();
       let aiResponse = "";
-      let type: Message["type"] = "text";
-      let data: any = null;
-      let suggestions: { label: string; action: () => void }[] = [
-        { label: "Show unpaid invoices", action: () => { handleSendText("Show unpaid overdue invoices"); } },
-        { label: "Generate timeline checklist", action: () => { handleSendText("Generate wedding checklist"); } }
-      ];
+      let actionBtn: Message["actionBtn"] = undefined;
+      let nextSuggestions: { label: string; action: () => void }[] = [];
 
-      if (query.includes("help") || query.includes("how to") || query.includes("docs") || query.includes("support")) {
-        aiResponse = "Here is what you can do directly from the EventOS portal:\n\n" +
-                     "• **Invoices & Payments**: Set up Stripe in Settings, create milestones, and dispatch invoices.\n" +
-                     "• **Invite Members**: Navigate to Settings -> Workspace and invite teammates.\n" +
-                     "• **Proofing Galleries**: Enable password and download locks via Galleries.\n\n" +
-                     "Need human assistance? You can submit a ticket to our support team.";
-        suggestions = [
-          { label: "Open Help Center", action: () => { router.push("/help"); setIsOpen(false); } },
-          { label: "Submit Support Ticket", action: () => { router.push("/help/support"); setIsOpen(false); } }
-        ];
-      } else {
-        aiResponse = await generateAIResponse(pageContext.module, text);
+      // ==========================================
+      // A. PUBLIC CONCIERGE & AUTH ACCESS RESPONSES
+      // ==========================================
+      if (isPublicMode) {
+        if (q.includes("google") || q.includes("sso") || q.includes("oauth")) {
+          aiResponse =
+            "**Sign In with Google SSO:**\n\n" +
+            "• Click the **'Continue with Google'** button directly on the page.\n" +
+            "• It securely logs you into your agency workspace via enterprise OAuth2 in 1 click.\n" +
+            "• If you are new, it automatically registers your agency and starts your **14-day free trial**.";
+          actionBtn = { label: "Continue with Google", href: "/login", icon: LogIn };
+          nextSuggestions = [
+            { label: "Forgot password / recovery", action: () => handleSendText("How do I reset my password?") },
+            { label: "Create new agency account", action: () => handleSendText("How do I create a new agency account?") }
+          ];
+        } else if (q.includes("password") || q.includes("forgot") || q.includes("reset") || q.includes("recover")) {
+          aiResponse =
+            "**Password Recovery Assistance:**\n\n" +
+            "• Click on **'Forgot password?'** on the sign-in screen or click the button below.\n" +
+            "• Enter your registered agency email address, and we will dispatch a secure reset link to your inbox immediately.";
+          actionBtn = { label: "Reset Password", href: "/forgot-password" };
+          nextSuggestions = [
+            { label: "Sign in with Google SSO", action: () => handleSendText("How do I sign in with Google SSO?") },
+            { label: "Back to Sign In", action: () => handleSendText("Take me to the login page") }
+          ];
+        } else if (q.includes("register") || q.includes("sign up") || q.includes("create account") || q.includes("trial")) {
+          aiResponse =
+            "**EventOS 14-Day Free Trial:**\n\n" +
+            "• Includes full unrestricted access to CRM, Interactive Proposal Builder, Day-of Timelines, and Photo Galleries.\n" +
+            "• **Zero credit card required** to begin.\n" +
+            "• Get your entire event agency onboarded in under 60 seconds!";
+          actionBtn = { label: "Start Free 14-Day Trial", href: "/register" };
+          nextSuggestions = [
+            { label: "Explore pricing plans", action: () => handleSendText("What are the pricing plans?") },
+            { label: "Sign in with existing account", action: () => handleSendText("I want to sign in") }
+          ];
+        } else if (q.includes("sign in") || q.includes("login") || q.includes("log in")) {
+          aiResponse =
+            "**Sign In to Your Workspace:**\n\n" +
+            "• Enter your work email and password or use **Continue with Google** to access your dashboard, active events, and team communications.";
+          actionBtn = { label: "Go to Sign In", href: "/login", icon: LogIn };
+        } else if (q.includes("pricing") || q.includes("cost") || q.includes("plan") || q.includes("tier")) {
+          aiResponse =
+            "**EventOS Transparent Pricing Plans:**\n\n" +
+            "• **Starter (₹1,999/mo)**: For solo planners & boutique studios. Up to 5 active events, 2 team seats, 20 GB storage, AI Quote Generator, and digital proposals.\n" +
+            "• **Professional (₹5,999/mo)**: Most popular choice! For growing agencies. Up to 20 active events/mo, 5 team seats, 100 GB storage, AI Timeline Generator, vendor tracking, and WhatsApp/SMS alerts.\n" +
+            "• **Agency (₹11,999/mo)**: For high-volume productions. Unlimited active events, unlimited seats, 500+ GB storage, full White-Label Client Portal, and custom domain.\n\n" +
+            "💡 *Annual billing saves ~20% across all plans!*";
+          actionBtn = { label: "View Detailed Pricing Table", href: "/pricing" };
+          nextSuggestions = [
+            { label: "Book a 1-on-1 demo", action: () => handleSendText("How do I book a demo?") },
+            { label: "How does White-Label work?", action: () => handleSendText("Tell me about custom domain white-label") }
+          ];
+        } else if (q.includes("feature") || q.includes("what can") || q.includes("do for me") || q.includes("overview")) {
+          aiResponse =
+            "**EventOS Core Capabilities:**\n\n" +
+            "1. **CRM & Lead Pipeline**: Capture inquiries, run quality scoring, and track inquiry status.\n" +
+            "2. **Interactive Proposal Builder**: Multi-tier itemized packages, automated 18% GST calculation, and digital e-signatures.\n" +
+            "3. **Event Operations & Timeline**: Multi-day ceremony timelines (Sangeet, Haldi, Reception) with vendor ingress checklists.\n" +
+            "4. **Smart Finance & UPI Desk**: Instant dynamic UPI QR codes (GPay, PhonePe, Paytm) and automated invoice tracking.\n" +
+            "5. **Client Proofing Galleries**: High-speed photo delivery with client favorites selection and PIN locks.";
+          actionBtn = { label: "Explore Solutions", href: "/solutions" };
+          nextSuggestions = [
+            { label: "Book a live demo", action: () => handleSendText("I want to book a live demo") },
+            { label: "Compare pricing plans", action: () => handleSendText("What are the pricing plans?") }
+          ];
+        } else if (q.includes("white-label") || q.includes("domain") || q.includes("branding") || q.includes("logo")) {
+          aiResponse =
+            "**Enterprise White-Labeling in EventOS:**\n\n" +
+            "• **Custom CNAME Domain**: Serve the entire client portal under your brand (e.g. `clients.youragency.com`).\n" +
+            "• **Brand Identity**: Upload custom logos, set primary luxury brand colors, and customize invoice templates.\n" +
+            "• **Zero Watermark**: Remove all EventOS badges from proposal PDFs, emails, and client-facing galleries.";
+          actionBtn = { label: "Learn About Enterprise", href: "/pricing" };
+        } else if (q.includes("demo") || q.includes("call") || q.includes("sales")) {
+          aiResponse =
+            "We would love to show you a live interactive walkthrough of EventOS tailored to your agency's wedding & corporate workflow!\n\n" +
+            "Click below to reserve your 20-minute 1-on-1 session with our product specialist:";
+          actionBtn = { label: "Schedule Live Demo", href: "/book-demo" };
+        } else if (q.includes("invoice") || q.includes("lead") || q.includes("wedding") || q.includes("client") || q.includes("payment")) {
+          // Prevent any leak or mock data queries on the public landing page!
+          aiResponse =
+            "**Security Notice:**\n\n" +
+            "All client information, invoices, and event records are strictly encrypted and protected within individual agency workspaces.\n\n" +
+            "If you already have an agency account, please **Sign In** to view and manage your workspace.";
+          actionBtn = { label: "Sign In to EventOS", href: "/login", icon: LogIn };
+        } else {
+          aiResponse =
+            "**EventOS** is India's premier Operating System built specifically for wedding planners, event coordinators, and creative agencies.\n\n" +
+            "We automate everything from initial lead intake to signed quotes, day-of timelines, and high-speed photo delivery.";
+          actionBtn = { label: "Book a Demo", href: "/book-demo" };
+          nextSuggestions = [
+            { label: "View Pricing", action: () => handleSendText("What are the pricing tiers?") },
+            { label: "Explore Features", action: () => handleSendText("What features are included?") }
+          ];
+        }
+      }
 
-        if (query.includes("email") || query.includes("draft")) {
-          type = "email";
-          data = {
-            subject: "Clearance reminder: outstanding balance",
-            body: aiResponse
-          };
-        } else if (query.includes("timeline") || query.includes("schedule")) {
-          type = "timeline";
-          data = {
-            items: [
-              { time: "09:00 AM", event: "Vendor Setup Ingress", note: "Backdrop setup" },
-              { time: "04:30 PM", event: "Welcome Mocktails", note: "Guests reception" },
-              { time: "07:00 PM", event: "Ballroom Banquet dinner", note: "Curfew checklist" }
-            ]
-          };
-        } else if (query.includes("unpaid") || query.includes("weddings next month")) {
-          type = "search-result";
-          data = {
-            results: [
-              { id: "1", title: "Meera & Rohan Wedding Gala", date: "July 12, 2026", budget: "₹12,50,000", status: "CONFIRMED", link: "/events" },
-              { id: "2", title: "Siddharth & Ananya Destination Wedding", date: "July 22, 2026", budget: "₹28,00,000", status: "CONFIRMED", link: "/events" }
-            ]
-          };
+      // ==========================================
+      // B. AUTHENTICATED WORKSPACE CO-PILOT RESPONSES (Real guidance, zero mock hallucination)
+      // ==========================================
+      else {
+        if (q.includes("lead") || q.includes("crm")) {
+          aiResponse =
+            "**CRM Pipeline Guidance:**\n\n" +
+            "• To log a new client inquiry, click **'+ New Lead'** in your CRM desk.\n" +
+            "• You can filter leads by stage (*New, Qualified, Proposal Sent, Won, Lost*).\n" +
+            "• When a client approves your pitch, convert the lead directly into a formal Proposal Quote with 1 click.";
+          actionBtn = { label: "Open CRM / Leads Desk", href: "/crm" };
+          nextSuggestions = [
+            { label: "How to create a quote?", action: () => handleSendText("How do I generate a quote from a lead?") }
+          ];
+        } else if (q.includes("quote") || q.includes("proposal")) {
+          aiResponse =
+            "**Quote & Proposal Engine:**\n\n" +
+            "• Build itemized packages with Catering, Decor, AV Lighting, and Stage Effects.\n" +
+            "• Automatic 18% GST and custom discounts are computed in real-time.\n" +
+            "• You can share a secure client approval link for digital sign-off and milestone clearing.";
+          actionBtn = { label: "Open Quotes Desk", href: "/quotes" };
+          nextSuggestions = [
+            { label: "Setup Payment Engine", action: () => handleSendText("How do I setup payments?") }
+          ];
+        } else if (q.includes("event") || q.includes("timeline") || q.includes("schedule") || q.includes("wedding")) {
+          aiResponse =
+            "**Event & Operations Desk:**\n\n" +
+            "• Manage your confirmed bookings, venue ingress times, and ceremony milestones.\n" +
+            "• Set up multi-day itineraries for Sangeet, Haldi, Vows, and Reception.\n" +
+            "• To view all your real confirmed calendar bookings, click below:";
+          actionBtn = { label: "Open Events & Calendar", href: "/events" };
+        } else if (q.includes("invoice") || q.includes("payment") || q.includes("upi") || q.includes("unpaid")) {
+          aiResponse =
+            "**Finance & Collections:**\n\n" +
+            "• To inspect real outstanding balances, check your **Invoices Desk**.\n" +
+            "• You can generate instant **Dynamic UPI QR Codes** directly on the Payments page for client payments (GPay/PhonePe/Paytm).\n" +
+            "• Review settlements and tax liabilities under the unified Finance Hub.";
+          actionBtn = { label: "Open Finance Hub", href: "/finance" };
+          nextSuggestions = [
+            { label: "Open Invoices", action: () => { router.push("/invoices"); setIsOpen(false); } },
+            { label: "Open Payments Desk", action: () => { router.push("/payments"); setIsOpen(false); } }
+          ];
+        } else if (q.includes("gallery") || q.includes("photo")) {
+          aiResponse =
+            "**Media Gallery & Proofing:**\n\n" +
+            "• Upload and deliver high-resolution wedding albums organized by ceremony.\n" +
+            "• Enable client selection proofing with download PIN locks and custom watermarking.";
+          actionBtn = { label: "Open Media Gallery", href: "/gallery" };
+        } else if (q.includes("team") || q.includes("member") || q.includes("user")) {
+          aiResponse =
+            "**Team & Governance:**\n\n" +
+            "• You can invite team members and coordinators under **Settings -> Users & Teams**.\n" +
+            "• Configure granular role-based access control (RBAC) to ensure assistants only see assigned events.";
+          actionBtn = { label: "Open Team Settings", href: "/settings?tab=team" };
+        } else if (q.includes("setting") || q.includes("whatsapp") || q.includes("domain") || q.includes("gateway")) {
+          aiResponse =
+            "**Enterprise Configuration:**\n\n" +
+            "Manage all 20 agency configuration settings including Meta WhatsApp API, Razorpay/Stripe gateways, Custom CNAME domain, and GST rules in the Settings center.";
+          actionBtn = { label: "Open Settings Center", href: "/settings" };
+        } else {
+          aiResponse =
+            `**${pageContext.role} Insight:**\n\n` +
+            `I am actively synchronized with your workspace. You can ask me how to manage any workflow, generate quotes, track payments, or navigate to any feature.\n\n` +
+            `What operational task would you like guidance on?`;
+          nextSuggestions = getContextSuggestions();
         }
       }
 
@@ -281,14 +516,13 @@ export default function AiAssistant() {
         sender: "ai",
         text: aiResponse,
         timestamp: new Date(),
-        type,
-        data,
-        suggestions
+        actionBtn,
+        suggestions: nextSuggestions
       };
 
       setMessages((prev) => [...prev, aiMsg]);
     } catch (e) {
-      console.error(e);
+      console.error("AI Assistant Error:", e);
     } finally {
       setIsTyping(false);
     }
@@ -296,16 +530,17 @@ export default function AiAssistant() {
 
   return (
     <>
-      {/* Floating Animated Lottie AI Mascot (Without Circle Border) */}
+      {/* ── 1. FLOATING ANIMATED ROBOT MASCOT TRIGGER (Vibrant Electric Sapphire & Azure Shift) ────────────────── */}
       <motion.button
-        whileHover={{ scale: 1.14, y: -4 }}
+        whileHover={{ scale: 1.12, y: -4 }}
         whileTap={{ scale: 0.94 }}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="ai-trigger-btn fixed bottom-20 sm:bottom-6 right-4 sm:right-6 w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center z-[9999] group cursor-pointer focus:outline-none select-none drop-shadow-[0_12px_28px_rgba(147,51,234,0.35)]"
+        className="ai-trigger-btn fixed bottom-6 right-6 w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center z-[9999] group cursor-pointer focus:outline-none select-none drop-shadow-[0_10px_24px_rgba(37,99,235,0.35)]"
         title="EventOS AI Assistant (Cmd + Space)"
+        aria-label="Open EventOS AI Assistant"
       >
-        {/* Subtle organic purple ambient pulse beneath the mascot */}
-        <div className="absolute inset-2 bg-gradient-to-tr from-purple-600/35 via-indigo-500/25 to-pink-500/25 rounded-full blur-xl opacity-60 group-hover:opacity-100 transition-opacity -z-10" />
+        {/* Subtle organic ambient pulse beneath the mascot - neat, crisp, and no fuzzy washed-out halo */}
+        <div className="absolute inset-2 bg-gradient-to-tr from-blue-600/30 via-indigo-600/25 to-cyan-500/20 rounded-full blur-md opacity-40 group-hover:opacity-75 transition-opacity -z-10" />
 
         <div className="w-full h-full flex items-center justify-center p-0.5 lottie-theme-bot">
           <DotLottieReact
@@ -317,7 +552,7 @@ export default function AiAssistant() {
         </div>
       </motion.button>
 
-      {/* Ultra Glassmorphic Drawer Panel */}
+      {/* ── 2. ULTRA GLASSMORHPIC DRAWER PANEL ─────────────────────────────────── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -326,17 +561,17 @@ export default function AiAssistant() {
             exit={{ opacity: 0, scale: 0.94, y: 16 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             ref={containerRef}
-            className="fixed bottom-36 sm:bottom-24 right-4 sm:right-6 w-[calc(100vw-32px)] sm:w-[430px] h-[540px] sm:h-[600px] max-h-[calc(100vh-160px)] bg-white/95 dark:bg-[#0B0F19]/95 border border-slate-200/90 dark:border-slate-800/80 rounded-[28px] shadow-[0_25px_70px_rgba(15,23,42,0.18),0_0_0_1px_rgba(255,255,255,0.8)] backdrop-blur-[40px] backdrop-saturate-[2.0] flex flex-col overflow-hidden z-[9999] font-sans antialiased"
+            className="fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-32px)] sm:w-[430px] h-[540px] sm:h-[590px] max-h-[calc(100vh-140px)] bg-[#090d1f]/90 dark:bg-[#060813]/95 border border-blue-500/25 dark:border-white/[0.12] rounded-[28px] shadow-[0_30px_90px_rgba(0,0,0,0.7),0_0_50px_rgba(37,99,235,0.22),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-[36px] backdrop-saturate-[1.9] flex flex-col overflow-hidden z-[9999] font-sans antialiased"
           >
-            {/* Top Accent Gradient Line */}
-            <div className="h-1 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 w-full shrink-0" />
+            {/* Top Accent Gradient Line with Glow */}
+            <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 w-full shrink-0 shadow-[0_0_12px_rgba(59,130,246,0.6)]" />
 
             {/* Ambient Inner Glass Light Blobs */}
-            <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-purple-500/10 blur-3xl -z-10" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 w-56 h-56 rounded-full bg-indigo-500/10 blur-3xl -z-10" />
+            <div className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-blue-600/20 blur-[70px] -z-10" />
+            <div className="pointer-events-none absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-indigo-600/20 blur-[70px] -z-10" />
 
             {/* Glassmorphic Header Bar */}
-            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-md flex items-center justify-between z-10">
+            <div className="px-5 py-3.5 border-b border-white/[0.08] dark:border-blue-500/20 bg-white/[0.04] dark:bg-black/30 backdrop-blur-xl flex items-center justify-between z-10 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 flex items-center justify-center shrink-0 lottie-theme-bot">
                   <DotLottieReact
@@ -348,33 +583,41 @@ export default function AiAssistant() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-xs text-slate-900 dark:text-white tracking-tight">EventOS Copilot</h3>
-                    <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/60 text-[9px] font-bold text-purple-700 dark:text-purple-300 font-mono">
-                      {aiConfig.provider}
+                    <h3 className="font-black text-xs text-white tracking-tight drop-shadow-sm">
+                      {isPublicMode ? (isAuthRoute ? pageContext.name : "EventOS Concierge") : "EventOS Co-pilot"}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/40 text-[9px] font-black text-blue-300 font-mono tracking-wider uppercase shadow-[0_0_10px_rgba(59,130,246,0.25)]">
+                      {isPublicMode ? pageContext.role : pageContext.role}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-                    {pageContext.name}
+                  <p className="text-[10px] text-blue-200/70 font-medium flex items-center gap-1.5 mt-0.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+                    {isPublicMode ? (isAuthRoute ? "Authentication & Workspace Access" : "Product Specialist & Onboarding") : pageContext.name}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="hidden sm:inline-flex items-center gap-1 text-[9.5px] text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md font-mono">
+                <span className="hidden sm:inline-flex items-center gap-1 text-[9.5px] text-blue-200/60 bg-white/[0.06] border border-white/[0.1] px-2 py-0.5 rounded-md font-mono select-none">
                   <Command size={9} /> Space
                 </span>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="h-7 w-7 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition cursor-pointer"
+                  className="h-7 w-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-blue-200 hover:text-white flex items-center justify-center transition cursor-pointer"
+                  aria-label="Close Assistant"
                 >
                   <X size={14} />
                 </button>
               </div>
             </div>
 
-            {/* Chat Body */}
-            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 text-xs z-10 scrollbar-thin">
+            {/* ── Chat Messages Body (Fixed Scroll with data-lenis-prevent & custom scrollbar) ── */}
+            <div
+              ref={chatContainerRef}
+              data-lenis-prevent
+              className="flex-1 overflow-y-auto p-4 space-y-4 text-xs z-10 sidebar-scrollbar overscroll-contain"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -383,12 +626,12 @@ export default function AiAssistant() {
                     msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
                   )}
                 >
-                  {/* Avatar Icon */}
+                  {/* Sender Avatar */}
                   <div
                     className={cn(
                       "h-7 w-7 flex items-center justify-center shrink-0 mt-0.5",
                       msg.sender === "user"
-                        ? "rounded-full bg-white/15 border border-white/25 text-white"
+                        ? "rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30"
                         : "lottie-theme-bot"
                     )}
                   >
@@ -410,62 +653,39 @@ export default function AiAssistant() {
                       className={cn(
                         "p-4 text-[13px] leading-relaxed relative overflow-hidden font-sans transition-all",
                         msg.sender === "user"
-                          ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white rounded-[20px] rounded-tr-sm shadow-md shadow-purple-500/20"
-                          : "bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 rounded-[20px] rounded-tl-sm shadow-xs"
+                          ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white rounded-[22px] rounded-tr-sm shadow-[0_6px_20px_rgba(37,99,235,0.35)] border border-blue-400/30"
+                          : "bg-white/[0.06] dark:bg-white/[0.05] border border-white/[0.12] dark:border-blue-500/25 text-white rounded-[22px] rounded-tl-sm shadow-[0_6px_25px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-2xl relative overflow-hidden"
                       )}
                     >
-                      {renderFormattedText(msg.text)}
-
-                      {/* Search Results Widget */}
-                      {msg.type === "search-result" && msg.data?.results && (
-                        <div className="mt-3 space-y-2">
-                          {msg.data.results.map((res: any) => (
-                            <div
-                              key={res.id}
-                              onClick={() => {
-                                router.push(res.link);
-                                setIsOpen(false);
-                              }}
-                              className="p-3 border border-slate-200 hover:border-purple-300 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-900/60 cursor-pointer flex items-center justify-between transition-all shadow-xs"
-                            >
-                              <div>
-                                <span className="font-semibold text-slate-900 dark:text-white block text-[12px]">{res.title}</span>
-                                <span className="text-[10px] text-slate-500 block mt-0.5">{res.date}</span>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 block">{res.budget}</span>
-                                <span className="text-[9px] font-medium uppercase px-2 py-0.5 rounded-full border bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300 mt-1 inline-block">
-                                  {res.status}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                      {/* Subtle Glass Card Highlight Reflection */}
+                      {msg.sender !== "user" && (
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-transparent pointer-events-none" />
                       )}
 
-                      {/* Timeline Widget */}
-                      {msg.type === "timeline" && msg.data?.items && (
-                        <div className="mt-3 space-y-2.5 border-l-2 border-purple-300 dark:border-purple-800 pl-4 py-1 text-[11.5px]">
-                          {msg.data.items.map((item: any, idx: number) => (
-                            <div key={idx} className="relative">
-                              <span className="absolute -left-[22px] top-1.5 h-2 w-2 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.8)]" />
-                              <span className="font-semibold text-purple-700 dark:text-purple-300 block">{item.time}</span>
-                              <span className="font-medium text-slate-800 dark:text-white block mt-0.5">{item.event}</span>
-                              <span className="text-[10px] text-slate-500 block">{item.note}</span>
-                            </div>
-                          ))}
+                      {renderFormattedText(msg.text)}
+
+                      {/* Direct Navigation Action Button (Zero fake data) */}
+                      {msg.actionBtn && (
+                        <div className="mt-3 pt-2.5 border-t border-white/[0.1] dark:border-blue-500/20">
                           <button
-                            onClick={() => copyToClipboard(msg.data.items.map((i: any) => `[${i.time}] ${i.event} - ${i.note}`).join("\n"), msg.id)}
-                            className="mt-2.5 flex items-center gap-1.5 text-[10px] font-medium text-purple-600 dark:text-purple-300 hover:text-purple-800 bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 px-3 py-1.5 rounded-full border border-purple-200 dark:border-purple-800/50 cursor-pointer transition"
+                            onClick={() => {
+                              router.push(msg.actionBtn!.href);
+                              setIsOpen(false);
+                            }}
+                            className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-xs shadow-[0_4px_16px_rgba(37,99,235,0.4)] border border-blue-400/30 transition-all cursor-pointer"
                           >
-                            {copiedId === msg.id ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
-                            {copiedId === msg.id ? "Copied Timeline" : "Copy Timeline"}
+                            {msg.actionBtn.icon ? (
+                              <msg.actionBtn.icon size={13} />
+                            ) : (
+                              <ArrowRight size={13} />
+                            )}
+                            <span>{msg.actionBtn.label}</span>
                           </button>
                         </div>
                       )}
                     </div>
 
-                    <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium block pl-1">
+                    <span className="text-[9.5px] text-blue-200/50 font-medium block pl-1">
                       {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
 
@@ -476,11 +696,11 @@ export default function AiAssistant() {
                           <button
                             key={i}
                             onClick={sug.action}
-                            className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800/90 hover:bg-purple-50 dark:hover:bg-purple-950/40 border border-slate-200/90 dark:border-slate-700 hover:border-purple-300 text-slate-700 dark:text-slate-200 hover:text-purple-700 dark:hover:text-purple-300 transition-all cursor-pointer text-[11px] font-semibold flex items-center gap-2 shadow-xs group"
+                            className="px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-blue-500/20 border border-blue-500/25 hover:border-blue-400/60 text-blue-100 hover:text-white transition-all cursor-pointer text-[11px] font-bold flex items-center gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_4px_20px_rgba(37,99,235,0.3)] backdrop-blur-md group"
                           >
-                            <Sparkles size={11} className="text-purple-500 group-hover:scale-110 transition-transform" />
-                            {sug.label}
-                            <ChevronRight size={11} className="text-slate-400 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all ml-auto" />
+                            <Sparkles size={11} className="text-blue-400 group-hover:scale-110 group-hover:text-cyan-300 transition-all" />
+                            <span>{sug.label}</span>
+                            <ChevronRight size={11} className="text-blue-300/50 group-hover:text-blue-300 group-hover:translate-x-0.5 transition-all ml-auto" />
                           </button>
                         ))}
                       </div>
@@ -489,6 +709,7 @@ export default function AiAssistant() {
                 </div>
               ))}
 
+              {/* Typing animation */}
               {isTyping && (
                 <div className="flex gap-3 max-w-[80%] mr-auto">
                   <div className="h-7 w-7 flex items-center justify-center shrink-0 lottie-theme-bot">
@@ -499,18 +720,21 @@ export default function AiAssistant() {
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <div className="px-4 py-3 bg-white/[0.05] border border-white/10 rounded-[20px] rounded-tl-sm flex items-center gap-1.5 backdrop-blur-xl">
-                    <span className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <span className="h-1.5 w-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <span className="h-1.5 w-1.5 bg-pink-400 rounded-full animate-bounce" />
+                  <div className="px-4 py-3 bg-white/[0.06] border border-blue-500/20 rounded-[20px] rounded-tl-sm flex items-center gap-1.5 backdrop-blur-xl shadow-md">
+                    <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 bg-indigo-400 rounded-full animate-bounce" />
                   </div>
                 </div>
               )}
+
+              {/* Anchor for Auto-Scroll */}
+              <div ref={messagesEndRef} className="h-1 w-full shrink-0" />
             </div>
 
-            {/* Glassmorphic Input Pill Bar */}
-            <div className="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 backdrop-blur-md z-10">
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-400/20 rounded-full px-4 py-2 transition-all shadow-sm">
+            {/* Glassmorphic Input Bar */}
+            <div className="p-3.5 border-t border-white/[0.08] dark:border-blue-500/20 bg-white/[0.02] dark:bg-black/40 backdrop-blur-xl z-10 shrink-0">
+              <div className="flex items-center gap-2 bg-white/[0.06] dark:bg-black/50 border border-blue-500/30 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/30 focus-within:shadow-[0_0_25px_rgba(59,130,246,0.35)] rounded-full px-4 py-2 transition-all shadow-inner backdrop-blur-xl">
                 <input
                   type="text"
                   value={input}
@@ -518,12 +742,17 @@ export default function AiAssistant() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleSendText(input);
                   }}
-                  placeholder={`Ask ${pageContext.name} AI...`}
-                  className="flex-1 bg-transparent py-1 text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none font-medium"
+                  placeholder={
+                    isPublicMode
+                      ? (isAuthRoute ? "Ask about login, Google SSO, or accounts..." : "Ask about features, pricing, or demo...")
+                      : `Ask ${pageContext.name} Co-pilot...`
+                  }
+                  className="flex-1 bg-transparent py-1 text-xs text-white placeholder-blue-200/50 outline-none font-medium"
                 />
                 <button
                   onClick={() => handleSendText(input)}
-                  className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-105 active:scale-95 text-white flex items-center justify-center shrink-0 transition cursor-pointer shadow-md shadow-purple-500/25"
+                  className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:scale-105 active:scale-95 text-white flex items-center justify-center shrink-0 transition cursor-pointer shadow-[0_4px_14px_rgba(37,99,235,0.4)] border border-blue-400/30"
+                  aria-label="Send message"
                 >
                   <Send size={13} />
                 </button>

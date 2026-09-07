@@ -16,26 +16,9 @@ import {
   Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import dynamic from "next/dynamic";
 import PageShell from "@/components/ui/PageShell";
 import { ARTICLES, FAQS, Article } from "@/lib/helpData";
 import { generateAIResponse } from "@/lib/aiProvider";
-
-const CHATBOT_LOTTIE_URL = "https://lottie.host/81c78ae8-59f5-4e19-bc6c-b7c5ba867ffd/Id8PQ7Y2HD.lottie";
-
-const DotLottieReact = dynamic(
-  () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
-  {
-    ssr: false,
-    loading: () => (
-      <img
-        src="/chatbot-animated.gif"
-        alt="EventOS AI"
-        className="w-full h-full object-contain pointer-events-none lottie-theme-bot"
-      />
-    ),
-  }
-);
 
 interface ChatMessage {
   id: string;
@@ -197,16 +180,13 @@ export default function AiAssistantPage() {
                 >
                   {/* Avatar */}
                   <div className={cn(
-                    "h-8 w-8 flex items-center justify-center shrink-0",
-                    isAi ? "lottie-theme-bot" : "rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                    "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
+                    isAi 
+                      ? "bg-gradient-to-tr from-violet-600 via-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25" 
+                      : "bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
                   )}>
                     {isAi ? (
-                      <DotLottieReact
-                        src={CHATBOT_LOTTIE_URL}
-                        loop
-                        autoplay
-                        className="w-full h-full object-contain"
-                      />
+                      <Bot size={15} className="text-white" />
                     ) : (
                       <User size={14} />
                     )}

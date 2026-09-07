@@ -25,11 +25,7 @@ export const useSocket = () => {
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { accessToken, user, isAuthenticated } = useAuthStore();
   const [status, setStatus] = useState<ConnectionStatus>("CONNECTED");
-  const [activeUsers, setActiveUsers] = useState<{ name: string; page: string; status: "Online" | "Away" }[]>([
-    { name: "Rahul (Sales)", page: "/crm", status: "Online" },
-    { name: "Sneha (Coordinator)", page: "/events", status: "Online" },
-    { name: "Amit (Photo Lead)", page: "/gallery", status: "Away" }
-  ]);
+  const [activeUsers, setActiveUsers] = useState<{ name: string; page: string; status: "Online" | "Away" }[]>([]);
   const [typingUser, setTypingUser] = useState<{ name: string; page: string } | null>(null);
 
   const socketRef = useRef<WebSocket | null>(null);
@@ -39,20 +35,26 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const reconnectAttemptsRef = useRef(0);
   const isFallbackModeRef = useRef(false);
 
+  // Sync real current user presence
+  useEffect(() => {
+    if (user) {
+      setActiveUsers([
+        {
+          name: `${user.firstName || "You"} (You)`,
+          page: typeof window !== "undefined" ? window.location.pathname : "/dashboard",
+          status: "Online"
+        }
+      ]);
+    } else {
+      setActiveUsers([]);
+    }
+  }, [user]);
+
   useEffect(() => {
     // Attempt real WebSocket connection
     connect();
 
-    // Subtle presence telemetry simulation to keep dashboard vibrant
-    const userPulse = setInterval(() => {
-      setActiveUsers(prev => prev.map(u => ({
-        ...u,
-        status: Math.random() > 0.85 ? (u.status === "Online" ? "Away" : "Online") : u.status
-      })));
-    }, 20000);
-
     return () => {
-      clearInterval(userPulse);
       disconnect();
     };
   }, [accessToken, isAuthenticated]);

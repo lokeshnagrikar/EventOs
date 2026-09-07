@@ -292,7 +292,7 @@ export default function Home() {
     <>
       <div 
         className={cn(
-          "fixed inset-0 z-[9999] bg-[#09090B] transition-opacity duration-300 pointer-events-none",
+          "fixed inset-0 z-[9999] bg-[#080A11] transition-opacity duration-300 pointer-events-none",
           mounted ? "opacity-0" : "opacity-100"
         )} 
       />
@@ -302,7 +302,7 @@ export default function Home() {
           setPreloaderActive(false);
         }} />
       )}
-      <Suspense fallback={<div className="min-h-screen bg-[#09090B] flex items-center justify-center text-xs text-zinc-555">Loading EventOS...</div>}>
+      <Suspense fallback={<div className="min-h-screen bg-[#080A11] flex items-center justify-center text-xs text-zinc-500 font-mono">Loading EventOS...</div>}>
         <HomeContent preloaderActive={preloaderActive} />
       </Suspense>
     </>

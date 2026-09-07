@@ -1,81 +1,51 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { AnimatedBackground } from "./AnimatedBackground";
-import { ParticleField } from "./ParticleField";
-import { GlassOrb } from "./GlassOrb";
-import { ProgressRing } from "./ProgressRing";
-import { useLoadingProgress } from "./useLoadingProgress";
-import { EASE_PREMIUM } from "./animations";
-
+import { motion, AnimatePresence } from "framer-motion";
 import { EventOsLogo } from "@/components/ui/EventOsLogo";
+import { useLoadingProgress } from "./useLoadingProgress";
 
 interface PreloaderProps {
   onComplete: () => void;
 }
 
 export function Preloader({ onComplete }: PreloaderProps) {
-  const { progress, isComplete } = useLoadingProgress(2800); // 2.8s target loading time
+  // Fast, snappy, professional progress curve: 1100ms total
+  const { progress, isComplete } = useLoadingProgress(1100);
   const [isExiting, setIsExiting] = useState(false);
 
-  // Mouse Parallax coordinates (Framer Motion values for 60fps)
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  // Parallax transform limited to 8px
-  const parallaxX = useTransform(mouseX, [-400, 400], [-8, 8]);
-  const parallaxY = useTransform(mouseY, [-400, 400], [-8, 8]);
-
   useEffect(() => {
-    // Lock scrolling and force top on mount
+    // Lock scrolling on mount
     document.body.style.overflow = "hidden";
     window.scrollTo(0, 0);
 
-    const isMouseDevice = window.matchMedia("(pointer: fine)").matches;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      mouseX.set(e.clientX - centerX);
-      mouseY.set(e.clientY - centerY);
-    };
-
-    if (isMouseDevice) {
-      window.addEventListener("mousemove", handleMouseMove);
-    }
-
     return () => {
-      if (isMouseDevice) {
-        window.removeEventListener("mousemove", handleMouseMove);
-      }
+      document.body.style.overflow = "";
     };
-  }, [mouseX, mouseY]);
+  }, []);
 
-  // Handle post-loading delay and exit trigger
+  // When loading completes, brief pause then graceful exit
   useEffect(() => {
     if (isComplete) {
       const delay = setTimeout(() => {
         setIsExiting(true);
-      }, 700); // Allow complete state to be seen for 700ms
+      }, 180);
 
       return () => clearTimeout(delay);
     }
   }, [isComplete]);
 
-  // Cleanup body scroll on exit complete
+  // Trigger onComplete when exit transition ends
   useEffect(() => {
     if (isExiting) {
       const cleanup = setTimeout(() => {
         document.body.style.overflow = "";
         onComplete();
-      }, 850); // Wait for transition out to finish
+      }, 420);
 
       return () => clearTimeout(cleanup);
     }
   }, [isExiting, onComplete]);
-
-
 
   return (
     <AnimatePresence mode="wait">
@@ -84,76 +54,64 @@ export function Preloader({ onComplete }: PreloaderProps) {
           initial={{ opacity: 1 }}
           exit={{
             opacity: 0,
-            transition: { duration: 0.95, ease: [0.7, 0, 0.2, 1] }
+            scale: 0.98,
+            transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] }
           }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#09090B] select-none overflow-hidden"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#080A11] select-none overflow-hidden"
         >
-          {/* Cinematic Animated Background Mesh */}
-          <AnimatedBackground />
+          {/* Subtle Ambient Radial Light (Pure Luxury Royal Indigo Glow) */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,rgba(99,102,241,0.12),transparent_75%)] pointer-events-none" />
 
-          {/* Drifting Particle Field */}
-          <ParticleField />
+          {/* Micro Specular Accent Dots (Subtle Star Dust, zero spiderweb lines) */}
+          <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
 
-          {/* Parallax Container holding the UI layout */}
-          <motion.div
-            style={{ x: parallaxX, y: parallaxY }}
-            exit={{
-              scale: 4.5,
-              opacity: 0,
-              filter: "blur(14px)",
-              transition: { duration: 0.9, ease: [0.7, 0, 0.2, 1] }
-            }}
-            className="flex flex-col items-center justify-center z-10 max-w-sm w-full px-6 text-center space-y-7"
-          >
-            {/* 1. Large Brand Mark Silhouette with Shimmer Effect */}
-            <div className="relative flex flex-col items-center gap-4">
-              
-              {/* Transparent Floating EventOS Monogram Logo */}
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-sm w-full px-6 text-center space-y-6">
+            {/* 1. Official EventOS Logo with Crisp Breathing Illumination */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex items-center justify-center py-2"
+            >
               <motion.div
-                animate={{ 
-                  y: [0, -8, 0],
+                animate={{
+                  y: [0, -4, 0],
                   filter: [
-                    "drop-shadow(0 0 20px rgba(168,85,247,0.4)) drop-shadow(0 0 40px rgba(236,72,153,0.25))",
-                    "drop-shadow(0 0 35px rgba(236,72,153,0.65)) drop-shadow(0 0 60px rgba(168,85,247,0.4))",
-                    "drop-shadow(0 0 20px rgba(168,85,247,0.4)) drop-shadow(0 0 40px rgba(236,72,153,0.25))"
+                    "drop-shadow(0 0 24px rgba(99,102,241,0.3))",
+                    "drop-shadow(0 0 36px rgba(124,58,237,0.45))",
+                    "drop-shadow(0 0 24px rgba(99,102,241,0.3))"
                   ]
                 }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-                className="relative flex items-center justify-center py-2"
+                transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
               >
-                <EventOsLogo size={105} animated={true} />
+                <EventOsLogo size={92} animated={true} />
               </motion.div>
+            </motion.div>
 
-              {/* Shimmering Text Logo */}
-              <div className="space-y-1">
-                <h1 
-                  className="text-4xl font-black tracking-tighter bg-clip-text text-transparent select-none bg-gradient-to-r from-[#18181b] via-purple-300 via-pink-300 via-cyan-300 to-[#18181b] bg-[length:200%_auto] transition-all"
-                  style={{
-                    backgroundPositionX: `${100 - progress}%`
-                  }}
-                >
-                  EventOS
-                </h1>
-                <p className="text-[8px] text-zinc-500 uppercase tracking-[0.25em] font-black pl-[0.25em]">
-                  The Operating System for Event Businesses
-                </p>
-              </div>
+            {/* 2. Authoritative, Clean Brand Typography */}
+            <div className="space-y-1.5">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white font-sans">
+                EventOS
+              </h1>
+              <p className="text-[10px] text-slate-400 uppercase tracking-[0.25em] font-medium font-mono pl-[0.25em]">
+                The Operating System for Event Businesses
+              </p>
             </div>
 
-            {/* 2. Minimalist Monospace Progress Value */}
-            <div className="space-y-2 pt-1 flex flex-col items-center">
-              <span className="font-mono text-[9px] text-zinc-500 font-bold select-none tracking-wider">
-                {Math.round(progress)}%
-              </span>
-              
-              <div className="w-24 h-[1px] bg-white/[0.04] rounded-full overflow-hidden relative">
-                <div 
-                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 transition-all duration-300"
+            {/* 3. High-Precision Hairline Progress Indicator */}
+            <div className="space-y-2.5 pt-2 flex flex-col items-center">
+              <div className="w-36 h-[2px] bg-white/[0.08] rounded-full overflow-hidden relative shadow-[0_0_12px_rgba(99,102,241,0.3)]">
+                <div
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 transition-all duration-150 ease-out rounded-full"
                   style={{ width: `${progress}%` }}
                 />
               </div>
+
+              <span className="font-mono text-[9.5px] text-slate-500 font-bold select-none tracking-widest">
+                {Math.round(progress)}%
+              </span>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

@@ -14,8 +14,6 @@ import {
   MessageSquare,
   Sun,
   Moon,
-  Palette,
-  Check,
   Zap,
   Users
 } from "lucide-react";
@@ -47,8 +45,6 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<"dark" | "light">("dark");
-  const [colorTheme, setColorTheme] = useState<string>("violet");
-  const [colorsOpen, setColorsOpen] = useState(false);
 
   // Dynamic notification items list
   const [notifications, setNotifications] = useState<NotificationItem[]>([
@@ -70,13 +66,6 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
     } else {
       document.documentElement.classList.add("light");
       document.documentElement.classList.remove("dark");
-    }
-
-    // Load Accent Color Theme
-    const savedColor = localStorage.getItem("colorTheme") || "violet";
-    setColorTheme(savedColor);
-    if (savedColor !== "violet") {
-      document.documentElement.setAttribute("data-theme", savedColor);
     }
   }, []);
 
@@ -158,21 +147,6 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
 
     // Trigger feedback toast
     addToast(`Switched to ${nextTheme.toUpperCase()} mode`, "info", { duration: 2500 });
-  };
-
-  // 4. Dynamic Color Accent Switcher
-  const handleColorChange = (color: string) => {
-    setColorTheme(color);
-    localStorage.setItem("colorTheme", color);
-    if (color === "violet") {
-      document.documentElement.removeAttribute("data-theme");
-    } else {
-      document.documentElement.setAttribute("data-theme", color);
-    }
-    setColorsOpen(false);
-
-    // Trigger Toast
-    addToast(`Accent Theme set to ${color.toUpperCase()}`, "success", { duration: 2500 });
   };
 
   const markAllRead = () => {
@@ -282,76 +256,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
           </motion.div>
         </button>
 
-        {/* 3. DYNAMIC COLOR ACCENT PICKER */}
-        <div className="relative">
-          <button
-            onClick={() => setColorsOpen(!colorsOpen)}
-            className={cn(
-              "p-2 border border-border rounded-xl bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer flex items-center justify-center relative",
-              colorsOpen && "bg-muted border-foreground/20"
-            )}
-            title="Change Accent Color Theme"
-          >
-            <Palette size={14} className={cn(
-              colorTheme === "blue" && "text-blue-500",
-              colorTheme === "emerald" && "text-emerald-500",
-              colorTheme === "rose" && "text-rose-500",
-              colorTheme === "amber" && "text-amber-500",
-              colorTheme === "violet" && "text-purple-500"
-            )} />
-            <span 
-              className={cn(
-                "absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-background",
-                colorTheme === "blue" && "bg-blue-500",
-                colorTheme === "emerald" && "bg-emerald-500",
-                colorTheme === "rose" && "bg-rose-500",
-                colorTheme === "amber" && "bg-amber-500",
-                colorTheme === "violet" && "bg-purple-500"
-              )}
-            />
-          </button>
-          
-          <AnimatePresence>
-            {colorsOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="absolute right-0 mt-2.5 w-40 bg-card border border-border backdrop-blur-xl rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1 text-xs text-foreground"
-              >
-                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block px-2 py-1 select-none">
-                  Accent Color Themes
-                </span>
-
-                {[
-                  { id: "violet", name: "Violet", bg: "bg-purple-500" },
-                  { id: "blue", name: "Royal Blue", bg: "bg-blue-500" },
-                  { id: "emerald", name: "Emerald Green", bg: "bg-emerald-500" },
-                  { id: "rose", name: "Rose Pink", bg: "bg-rose-500" },
-                  { id: "amber", name: "Amber Gold", bg: "bg-amber-500" },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleColorChange(item.id)}
-                    className={cn(
-                      "flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all w-full text-left cursor-pointer",
-                      colorTheme === item.id ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className={`w-3 h-3 rounded-full ${item.bg} block shrink-0 shadow-sm`} />
-                      <span>{item.name}</span>
-                    </div>
-                    {colorTheme === item.id && <Check size={12} className="text-foreground" />}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* 4. DYNAMIC NOTIFICATION BELL ICON & DROPDOWN */}
+        {/* 3. DYNAMIC NOTIFICATION BELL ICON & DROPDOWN */}
         <div
           className="relative"
           onKeyDown={(e) => {

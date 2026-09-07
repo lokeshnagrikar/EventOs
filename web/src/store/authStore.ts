@@ -98,8 +98,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
     if (typeof window !== 'undefined') {
       sessionStorage.clear();
-      // Revoke middleware session cookies
-      document.cookie = "hasSession=; Path=/; Max-Age=0; SameSite=Lax";
+      // Revoke middleware session cookies and stored profiles
+      document.cookie = "hasSession=; Path=/; Max-Age=0; SameSite=Lax; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "user_role=; Path=/; Max-Age=0; SameSite=Lax; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "user_name=; Path=/; Max-Age=0; SameSite=Lax; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "accessToken=; Path=/; Max-Age=0; SameSite=Lax; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      localStorage.removeItem("user_name");
+      localStorage.removeItem("user_role");
+      localStorage.removeItem("eventos_last_user");
     }
   },
 }));

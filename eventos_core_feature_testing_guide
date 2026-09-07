@@ -1,0 +1,455 @@
+# 🎪 EventOS — Master Core Lifecycle & Testing Guide (Steps 1 to 5)
+
+> **Kya yahi EventOS ke Core Features hain?**
+> **HAAN, 100%!** EventOS ka poora business model isi 5-step lifecycle par tiki hai. Ek event planner ya agency shuru se aakhri tak jo kaam karti hai — **Inquiry aane se lekar client ko aakhri photo gallery deliver karne tak** — wo sab in 5 steps me complete hota hai.
+
+---
+
+## 🔄 The Complete Business Lifecycle Diagram
+
+```mermaid
+graph TD
+    S1["1. Lead Inquiry<br/>(CRM Kanban Board)"] -->|Client interested| S2["2. Quote & Proposal<br/>(Line items, 18% GST, PDF)"]
+    S2 -->|Client Approves| S3["3. Auto Booking<br/>(Contract & Financial Lock)"]
+    S3 -->|Event Day Planning| S4["4. Live Timeline<br/>(Run-of-Show & Conflict Check)"]
+    S4 -->|Post Event| S5["5. Media Proofing<br/>(Passcode Protected Gallery)"]
+```
+
+---
+
+## 📋 STEP-BY-STEP DETAILED TESTING GUIDE
+
+---
+
+### 🔹 STEP 1: CRM & Lead Inquiry Management (Inquiry Capture)
+* **Real-World Use Case:** Client Instagram ya phone par wedding/concert ke liye contact karta hai. Planner uski details record karta hai aur inquiry status track karta hai.
+* **Navigation:** Left Sidebar ➔ **CRM & Leads** (`/crm`)
+
+#### Step-by-Step Actions:
+1. Top-right me **"+ Add New Lead"** button click karein.
+2. Form me details fill karein:
+   - **Client Name**: `Raj & Simran Wedding`
+   - **Email**: `raj.simran@example.com`
+   - **Phone**: `+91 9876543210`
+   - **Event Type**: Dropdown se `Wedding` choose karein.
+   - **Estimated Budget**: `15,00,000`
+   - **Event Date**: Aage ki koi date choose karein (e.g. *15 Dec 2026*).
+   - **Initial Stage**: `New Inquiry`
+3. **"Save Lead"** par click karein.
+
+#### Expected Verification:
+* Kanban Board ke pehle column (**New Inquiry**) me card add ho jayega.
+* Us card ko pakad kar (drag & drop) **"Contacted"** ya **"Proposal Sent"** column me shift karein. Status real-time update hoga.
+
+---
+
+### 🔹 STEP 2: Quotation, GST Calculation & PDF Generation
+* **Real-World Use Case:** Client ko formal budget quotation bhejna jisme line items, standard decor/sound cost aur GST breakdown clearly dikhe.
+* **Navigation:** Lead card par click karein ya Sidebar ➔ **Quotes** (`/quotes`)
+
+#### Step-by-Step Actions:
+1. Lead detail modal me **"Create Quote"** click karein (ya `/quotes` me **"+ Create Quote"**).
+2. Quote Title dalein: `Grand Royal Wedding Proposal`.
+3. **Line Items** add karein:
+   - Item 1: `Mandap Decor & Floral Setup` — Quantity: `1`, Rate: `3,50,000`
+   - Item 2: `Sound System & LED Screen` — Quantity: `1`, Rate: `1,50,000`
+   - Item 3: `Catering (500 Guests)` — Quantity: `500`, Rate: `1,500` (Total: `7,50,000`)
+4. **Taxes & Discount:**
+   - GST toggle check karein: **18% GST** automatically subtotal par add hona chahiye.
+5. **"Save & Generate Quote"** click karein.
+
+#### Expected Verification:
+* Subtotal = `₹12,50,000`
+* GST (18%) = `₹2,25,000`
+* Grand Total = `₹14,75,000`
+* Quote Detail page par **"Download PDF"** click karein — professional branded PDF download hona chahiye.
+* **"Share on WhatsApp"** button click karein — pre-filled summary message trigger hoga.
+
+---
+
+### 🔹 STEP 3: Quote Acceptance & Automatic Booking Creation
+* **Real-World Use Case:** Jab client quote accept karta hai, to agency ko dubara sari details baith kar type na karni pade — system automatic contract aur booking generate kar deta hai.
+* **Navigation:** Quote Detail Page (`/quotes/[id]`)
+
+#### Step-by-Step Actions:
+1. Quote status dropdown me jakar status ko **"Accepted"** (ya **"Approved"**) mark karein.
+2. System backend par ek event publish karta hai (`QuoteAcceptedEvent`).
+3. Left Sidebar se **Bookings** (`/bookings`) page par jayein.
+
+#### Expected Verification:
+* Bookings list me `Raj & Simran Wedding` naam se ek **Active Booking** automatically create hui dikhegi.
+* Total amount (`₹14,75,000`) aur client details quote se automatically sync ho chuki hongi.
+
+---
+
+### 🔹 STEP 4: Live Event Timeline (Run-of-Show) & AI Conflict Detection
+* **Real-World Use Case:** Event ke din kounsi cheez kitne baje hogi (e.g. sound check, baraat, dinner). Agar do cheezein ek hi time par clash ho rahi hain, to system warning deta hai.
+* **Navigation:** Left Sidebar ➔ **Events** (`/events`)
+
+#### Step-by-Step Actions:
+1. Apne created event par click karein aur **Timeline** tab open karein.
+2. Pehla item add karein:
+   - **Title**: `Sound Check & DJ Setup`
+   - **Start Time**: `10:00 AM`
+   - **End Time**: `11:30 AM`
+3. Ab jaan-bhoojh kar **clash** hone wala doosra item add karein:
+   - **Title**: `Baraat Arrival & Welcome`
+   - **Start Time**: `10:30 AM` (Yeh pehle item ke beech me overlap ho raha hai!)
+   - **End Time**: `12:00 PM`
+4. Save karein.
+
+#### Expected Verification:
+* Timeline par yellow/red **Conflict Alert** banner aayega: *"Warning: Sound Check overlaps with Baraat Arrival"*.
+* Planner ko schedule re-adjust karne ka prompt milta hai taaki event ke din stage par confusion na ho.
+
+---
+
+### 🔹 STEP 5: Media Gallery Delivery & Client Photo Proofing
+* **Real-World Use Case:** Event khatam hone ke baad photographer client ko high-resolution photos link ke zariye deliver karta hai jise client passcode daal kar private view kar sake.
+* **Navigation:** Left Sidebar ➔ **Gallery** (`/gallery`)
+
+#### Step-by-Step Actions:
+1. **"+ Create Album"** click karein:
+   - **Album Name**: `Raj & Simran Wedding Highlights`
+   - **Passcode (Optional/Private)**: `2026`
+2. **"Upload Photos"** click karein aur 2-3 sample images upload karein (Cloudinary par store hongi).
+3. Album create hone ke baad **"Share Link"** click karke public URL copy karein.
+4. Apne browser me ek **Incognito Window (Ctrl + Shift + N)** kholein aur wo link paste karein.
+
+#### Expected Verification:
+* Incognito window me client ko direct dashboard nahi dikhega, balki ek sleek **Client Photo Portal** dikhega.
+* Client passcode `2026` enter karega to saari high-res photos display ho jayengi aur client unhe download/favorite kar sakega.
+
+---
+
+## 🎯 Summary
+In 5 steps me ek Event Management Business ka poora 360-degree software flow cover ho jata hai:
+1. **Lead** (Sale shuru hui)
+2. **Quote** (Costing aur Deal lock hui)
+3. **Booking** (Contract confirm hua)
+4. **Execution** (Event manage hua)
+5. **Delivery** (Client ko memories deliver hui)
+
+
+
+```mermaid
+graph LR
+    A["✅ Phase 1<br/>Core Features & Settings<br/>(Testing & Polish)"] --> B["🌐 Phase 2<br/>Cloud Deployment<br/>(Render/VPS)"]
+    B --> C["🌍 Phase 3<br/>Domain & SSL<br/>(eventos.agency)"]
+    C --> D["👥 Phase 4<br/>Beta Outreach<br/>(First 10-15 Clients)"]
+```
+
+---
+
+## ⚙️ PART 2: SETTINGS & ENTERPRISE CONFIGURATION TESTING GUIDE
+
+> **Navigation:** Left Sidebar ➔ **Settings** (`/settings`)  
+> Yahan EventOS ke saare 20 sub-modules hain jo ek agency ko customize, brand, secure aur automate karte hain.
+
+---
+
+### 🏢 Category 1: Identity & Agency Branding
+
+#### 1.1 My Profile (`/settings?tab=profile`)
+* **Use Case**: Planner ka personal profile (Name, avatar, phone).
+* **Test Step**:
+  1. First Name (`Ananya`) aur Last Name (`Sharma`) check karein ya edit karein.
+  2. Phone number dalein: `+91 9876543210`.
+  3. **"Save Profile"** click karein.
+* **Verification**: Top right me success toast aayega aur top navbar me user ka initials/avatar sync ho jayega.
+
+#### 1.2 Company Profile (`/settings?tab=company`)
+* **Use Case**: Agency ka legal business profile jo invoices aur proposals par print hota hai.
+* **Test Step**:
+  1. Company Name dalein: `Grand Celebrations Studio Pvt Ltd`.
+  2. Legal Address dalein: `Plot 42, Bandra West, Mumbai, Maharashtra 400050`.
+  3. Tax GSTIN dalein: `27AABCU9603R1ZM`.
+  4. **"Update Company Details"** click karein.
+* **Verification**: Form save hone ke baad quotes aur invoices ke header me ye naya company address dikhega.
+
+#### 1.3 Company Branding & Colors (`/settings?tab=branding`)
+* **Use Case**: Client portal aur system ka primary color aur logo customize karna.
+* **Test Step**:
+  1. Brand Color picker se naya color select karein (e.g. Purple `#7C3AED` ya Royal Gold `#F59E0B`).
+  2. Light / Dark theme toggle switch karke dekhein.
+  3. **"Save Branding"** click karein.
+* **Verification**: Buttons, active pills aur borders par selected brand color reflect hoga.
+
+#### 1.4 White-Label & Custom Domain (`/settings?tab=whitelabel`)
+* **Use Case**: Client ko EventOS ka naam na dikhe, balki agency ka apna domain dikhe (e.g. `portal.grandcelebrations.in`).
+* **Test Step**:
+  1. Custom CNAME Subdomain field me dalein: `clients.grandcelebrations.in`.
+  2. "Hide EventOS Branding watermark" toggle ko **ON** karein.
+  3. DNS instructions (CNAME pointer to `proxy.eventos.agency`) check karein.
+  4. **"Save White-Label Config"** click karein.
+* **Verification**: "Custom domain configuration saved. Awaiting DNS validation." toast notification display hoga.
+
+---
+
+### 🔌 Category 2: Communication & Payment Gateways
+
+#### 2.1 WhatsApp Meta Cloud API (`/settings?tab=whatsapp`)
+* **Use Case**: Quotes aur booking confirmation automatically WhatsApp par bhejna.
+* **Test Step**:
+  1. Meta Business Phone Number ID dalein: `109283746501928`.
+  2. WhatsApp Business Account ID (WABA) dalein: `982371928374615`.
+  3. System User Permanent Access Token field me token paste karein.
+  4. "Send Test WhatsApp Message" me apna phone number daal kar test trigger karein.
+* **Verification**: Form validations active rahengi aur credentials secure environment me store hongi.
+
+#### 2.2 Enterprise Payment Engine (`/settings?tab=payment_engine`)
+* **Use Case**: Client se direct advance payment lena via Razorpay, Stripe ya UPI QR.
+* **Test Step**:
+  1. Gateway selector me **Razorpay** ya **Stripe** choose karein.
+  2. Test Key ID aur Secret dalein (e.g. `rzp_test_...`).
+  3. "Offline Bank & UPI QR Code" section me bank account details aur UPI ID (`celebrations@upi`) dalein.
+  4. **"Save Payment Gateway"** click karein.
+* **Verification**: Invoice / Quote page par "Pay Now" button client ko selected gateway par redirect karega.
+
+#### 2.3 Integrations Desk (`/settings?tab=integrations`)
+* **Use Case**: Google Calendar sync aur Cloudinary media storage connect karna.
+* **Test Step**:
+  1. **Google Calendar** card par **"Connect"** toggle karein (event timelines calendar me sync karne ke liye).
+  2. **Cloudinary** status check karein — "Connected (Storage Active)" dikhna chahiye.
+* **Verification**: Connected services par green badge *"Active"* show karega.
+
+---
+
+### 👥 Category 3: Team, Roles & Workload
+
+#### 3.1 Users & Teams (`/settings?tab=team`)
+* **Use Case**: Agency ke naye staff members ya coordinators ko invite karna.
+* **Test Step**:
+  1. **"+ Invite Team Member"** click karein.
+  2. Email dalein: `coordinator@grandcelebrations.in`.
+  3. Role choose karein: `COORDINATOR`.
+  4. **"Send Invitation"** click karein.
+* **Verification**: Member list me `Pending Invite` badge ke sath naya row add ho jayega.
+
+#### 3.2 Roles & Permissions RBAC (`/settings?tab=rbac`)
+* **Use Case**: Dekhna ki koun sa employee kya kya kar sakta hai (Security & Privacy).
+* **Test Step**:
+  1. Role list me `COORDINATOR` select karein.
+  2. Permissions matrix check karein:
+     - Can view CRM: ✅
+     - Can create quotes: ✅
+     - Can delete workspace: ❌ (Disabled for security)
+* **Verification**: RBAC rules strictly backend authorization se linked hain.
+
+#### 3.3 Org Chart Hierarchy (`/settings?tab=orgchart`)
+* **Use Case**: Agency ka tree structure dekhna (Founder ➔ Senior Planner ➔ On-ground Coordinator).
+* **Test Step**:
+  1. Tab open karein — visual interactive tree graph dikhega.
+  2. Member nodes par click karke reporting line inspect karein.
+* **Verification**: Interactive tree smooth zoom aur drag ke sath render hota hai.
+
+#### 3.4 Workload Management (`/settings?tab=workload`)
+* **Use Case**: Kis coordinator ke paas kitni weddings assign hain ye dekhna taaki koi over-burden na ho.
+* **Test Step**:
+  1. Workload meter check karein (Active Events vs Capacity).
+* **Verification**: Bar chart har employee ka event count display karta hai.
+
+---
+
+### 💰 Category 4: Finance, Tax & Automations
+
+#### 4.1 Tax & Finance (`/settings?tab=tax`)
+* **Use Case**: Billing currency aur GST tax rules set karna.
+* **Test Step**:
+  1. Default Currency: `INR (₹)`.
+  2. Default GST Tax Rate: `18%`.
+  3. Invoice Number Prefix: `GCS-2026-` (e.g. *GCS-2026-001*).
+  4. Payment Terms: `Net 15 Days`.
+  5. **"Save Tax Rules"** click karein.
+* **Verification**: Quotes aur invoices banate waqt yahi prefix aur tax rate default aayega.
+
+#### 4.2 Billing & Subscription (`/settings?tab=billing`)
+* **Use Case**: Agency ka apna EventOS SaaS subscription plan dekhna aur upgrade karna.
+* **Test Step**:
+  1. Current Plan card check karein: **Pro Tier (Active Trial)**.
+  2. Usage meters check karein: Active Leads count, Storage used, Quotes sent.
+  3. **"Change Plan"** click karke pricing modal preview karein.
+* **Verification**: Real-time usage limit bar dynamically update hota hai.
+
+#### 4.3 Workspace Automations (`/settings?tab=automations`)
+* **Use Case**: Repetitive kaam ko automatically trigger karna.
+* **Test Step**:
+  1. Rule check karein: *"When Lead Stage = Won ➔ Auto Create Event Booking"*.
+  2. Toggle switch ko **ON / Active** karein.
+* **Verification**: Automation rule active ho jayegi aur execution history log dikhayegi.
+
+---
+
+### 🛡️ Category 5: Security, Audit & Communication
+
+#### 5.1 Security Center & Active Sessions (`/settings?tab=security`)
+* **Use Case**: Password change karna aur check karna ki account kahan kahan login hai.
+* **Test Step**:
+  1. Change Password section me:
+     - Current Password dalein
+     - New Password dalein
+     - Confirm Password dalein
+     - **"Update Password"** click karein.
+  2. **Active Sessions List** inspect karein:
+     - Aapka device (*Windows / Chrome Browser*) aur login time dikhega.
+  3. **"Revoke All Other Sessions"** button click karein.
+* **Verification**: Password change hone par toast aayega, aur saare doosre devices se token expire ho jayega.
+
+#### 5.2 Email Templates (`/settings?tab=templates`)
+* **Use Case**: Client ko bheje jaane wale automatic emails ka subject aur body customize karna.
+* **Test Step**:
+  1. Template select karein: `Quote Proposal Sent`.
+  2. Subject line edit karein: `Your Wedding Proposal from {{company_name}} is Ready!`.
+  3. **"Save Template"** click karein.
+* **Verification**: Variable tags (`{{client_name}}`, `{{total_amount}}`) valid highlight honge.
+
+#### 5.3 Notification Settings (`/settings?tab=notifications`)
+* **Use Case**: Mobile push, email aur WhatsApp alerts customize karna.
+* **Test Step**:
+  1. "New Lead Inquiry Alert" -> Email (ON), WhatsApp (ON).
+  2. "Invoice Payment Received" -> Email (ON), SMS (OFF).
+  3. **"Save Preferences"** click karein.
+* **Verification**: Preferences database me save hokar toast notification degi.
+
+#### 5.4 API Keys & Developer Webhooks (`/settings?tab=apikeys`)
+* **Use Case**: Zapier ya external website forms ko EventOS se connect karna.
+* **Test Step**:
+  1. **"+ Generate New API Key"** click karein.
+  2. Key Name dalein: `Website Contact Form Webhook`.
+  3. Generated Secret Key copy karein (`ev_live_...`).
+* **Verification**: Key table me masked format me save ho jayegi.
+
+#### 5.5 Audit Logs (`/settings?tab=audit`)
+* **Use Case**: Security audit trail — kis employee ne kab kya change kiya.
+* **Test Step**:
+  1. Audit table inspect karein.
+  2. Dekhein ki pichhle steps (e.g. Lead creation, Quote generation, Login) ke events list me registered hain:
+     - Action: `LEAD_CREATED`, `QUOTE_GENERATED`, `LOGIN_SUCCESS`
+     - IP Address, Device Name, Timestamp.
+* **Verification**: Real-time immutable security trail verify hogi.
+
+---
+
+# PART 3: Sidebar Dashboard Menu Non-Core Features (Testing Guide)
+
+Ye features core lifecycle ke alawa workspace me collaboration, automation, intelligence aur financial operations provide karte hain:
+
+---
+
+### 🤖 1. AI Center (`/ai`)
+* **Use Case**: Einstein AI Co-pilot se client proposals, payment reminders, aur prompt templates generate karna.
+* **Test Step**:
+  1. Sidebar me **"AI Center"** par click karein.
+  2. **Overview Metrics**: Tokens consumed, Saved hours, aur AI cost savings chart inspect karein.
+  3. **Prompt Library** tab par jayein:
+     - Module dropdown me `CRM` ya `Finance` select karein.
+     - Kisi bhi prompt template par **"Copy"** click karein (Clipboard me copy hoga).
+     - Apna custom prompt add karein: Name: `Grand Wedding Sangeet Pitch`, Module: `CRM`, Text: `Create a 3-day royal itinerary for 300 guests.` ➔ **"+ Add Prompt"** click karein.
+  4. **AI Config Settings** tab par jayein:
+     - Provider choose karein: `OPENAI` / `CLAUDE` / `GEMINI`.
+     - Temperature slider adjust karein (`0.7`).
+     - **"Save Configuration"** click karein.
+* **Verification**: Smooth dark-mode floating toast notification aayegi: *"AI configurations updated successfully!"* (Zero native browser alert popups).
+
+---
+
+### 💬 2. Workspace Chat (`/chat`)
+* **Use Case**: Team members ke sath real-time workspace channels me instant messaging aur coordination.
+* **Test Step**:
+  1. Sidebar se **"Workspace Chat"** open karein.
+  2. Left sidebar me 4 channels check karein:
+     - `#general`
+     - `#sales-leads`
+     - `#operations`
+     - `#photo-galleries`
+  3. **Active Collaborators** list inspect karein — aapka real active logged-in user profile (`Lokesh (You)`) green online indicator ke sath dikhega.
+  4. Channel select karein (e.g. `#operations`), bottom input me message type karein: `Udaipur sangeet setup team is on schedule.` aur **Enter / Send** karein.
+  5. Top search bar me keyword search (e.g. `sangeet`) karke message filter verify karein.
+* **Verification**: Messages real-time stream me append honge aur WebSocket connection active green badge (`CONNECTED`) dikhayega.
+
+---
+
+### 📋 3. Activity Logs & Security Audit (`/activity`)
+* **Use Case**: Agency ka complete tamper-proof audit trail — kaun se user ne kab lead banayi, invoice update kiya ya login kiya.
+* **Test Step**:
+  1. Sidebar se **"Activity Logs"** par click karein.
+  2. **Timeline View**: Filter by Severity (`Critical`, `High`, `Medium`, `Low`) test karein.
+  3. Kisi bhi log item par click karein — **Side-by-Side Diff Viewer** open hoga (Previous Value vs New Value).
+  4. **Security Tab** open karein — active device sessions, IP address aur unauthorized login vector monitoring inspect karein.
+  5. **Insights Tab** open karein — monthly audit distribution chart verify karein.
+  6. Top right me **"Export CSV"** click karke audit ledger download karein.
+* **Verification**: Real-time logging switch se har 15 sec me dynamic activity pulse verify hoti hai.
+
+---
+
+### 🪙 4. Finance Hub (`/finance`)
+* **Use Case**: Master financial pulse — gross revenue, receivables, tax obligations, aur cashflow health.
+* **Test Step**:
+  1. Sidebar me **"Finance Hub"** open karein.
+  2. Top KPI Cards check karein:
+     - Total Gross Revenue
+     - Outstanding Receivables
+     - Collected Advance
+     - GST Liabilities
+  3. Monthly Cashflow AreaChart inspect karein.
+  4. Bottom right me **Quick Actions FAB (+)** click karein:
+     - "Record Offline Payment" ya "Create Quick Transaction" modal open karke verify karein.
+* **Verification**: Data smoothly load hoga aur tab switches (Overview ➔ Invoices ➔ Payments) instantaneous honge.
+
+---
+
+### 💳 5. Payments Desk (`/payments`)
+* **Use Case**: Incoming payments track karna aur clients ke liye dynamic UPI QR Code generate karna.
+* **Test Step**:
+  1. Sidebar se **"Payments"** open karein.
+  2. Payment transactions table me filter check karein: `All`, `Completed`, `Pending`, `Failed`.
+  3. **"Generate UPI QR"** click karein:
+     - Amount enter karein (e.g. `₹50,000`).
+     - Dynamic QR Code instant render hoga jise GPay, PhonePe, ya Paytm se scan kiya ja sakta hai.
+  4. Kisi bhi completed payment ke aage **"Receipt"** icon click karke payment receipt preview karein.
+* **Verification**: Instant QR generation aur status badges accurate color coding ke sath display hote hain.
+
+---
+
+### 🧮 6. Event Budget Calculator (`/calculator`)
+* **Use Case**: Client inquiry aane par 2 minute me multi-category wedding/event estimate calculate karke lead ya quote me convert karna.
+* **Test Step**:
+  1. Sidebar se **"Budget Calculator"** open karein.
+  2. **Step 1 - Category**: `Wedding Ceremony` select karein.
+  3. **Step 2 - Guests & Catering**: Guest slider ko `350 Guests` par set karein, tier `Royal Luxury` choose karein.
+  4. **Step 3 - Venue**: `5-Star Hotel` ya `Open Garden` choose karein.
+  5. **Step 4 - Decor**: `Royal Luxury Theme` choose karein.
+  6. **Step 5 - Stage Effects**: `Cold Pyro Sparklers` aur `Dry Ice Low Fog` toggle ON karein.
+  7. **Step 6 - Summary**: Grand Total Breakdown check karein (Catering + Venue + Decor + Effects + 18% GST).
+  8. **Action**:
+     - **"Save Estimate"** click karein.
+     - **"Convert to Quote"** click karke is calculation se high-fidelity Proposal create karein.
+* **Verification**: Calculations mathematical formula ke hisab se exact live update hoti hain aur quote me auto-transfer ho sakti hain.
+
+---
+
+### 🧠 7. Intelligence & System Tools (Sidebar me Scroll karein)
+
+#### 7.1 Reports & Analytics (`/reports`)
+* Drag-and-drop custom report builder, revenue by venue breakdown, conversion funnel, aur automated email schedule.
+
+#### 7.2 Smart Automation (`/automation`)
+* WhatsApp & SMS trigger rules (Automated RSVP instant confirmation, Overdue payment push alert, Day-of Venue map dispatch).
+
+#### 7.3 Data Migration & Import (`/import`)
+* HoneyBook, WeddingWire, Excel, aur CSV se leads aur events bulk import karne ka wizard.
+
+#### 7.4 Developer Center (`/developer`)
+* Agency API Keys management, Webhooks logs, and interactive API playground.
+
+#### 7.5 Help Center (`/help`)
+* Searchable Knowledge Base, Keyboard shortcuts list (`?` key), guided tours, aur feedback bug reporter.
+
+---
+
+### 🎛️ 8. Sidebar Navigation Controls
+* **Collapse/Expand**: Top-left `<` button dabane par sidebar 72px icon-only mode me compact ho jata hai. Icons par hover karne par sleek floating black tooltip badges aate hain.
+* **Custom Scrollbar**: Sidebar me naya ultra-sleek 4px scrollbar add kiya gaya hai taaki user ko `Intelligence` aur `System` sections easily visible hon.
+* **User Card & Settings**: Bottom me user profile card, direct Settings jump, aur 1-click clean Logout.
+
+

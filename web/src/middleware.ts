@@ -66,11 +66,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Superadmin console role enforcement
+  // 1. Superadmin console role enforcement
   if (isSuperAdminRoute && userRole !== "SUPER_ADMIN") {
     const loginUrl = new URL("/superadmin/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // 2. Client role boundary: CLIENT accounts must only access the client portal
+  if (hasSession && userRole === "CLIENT" && !pathname.startsWith("/portal") && isProtectedRoute) {
+    return NextResponse.redirect(new URL("/portal", request.url));
+  }
+
+  // 3. Agency staff/admin boundary: Non-clients navigating directly to /portal get sent to their workspace
+  if (hasSession && pathname.startsWith("/portal") && userRole && userRole !== "CLIENT") {
+    if (userRole === "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/superadmin", request.url));
+    }
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Redirect authenticated users away from public auth routes

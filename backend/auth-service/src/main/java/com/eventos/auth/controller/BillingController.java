@@ -373,6 +373,51 @@ public class BillingController {
         return ResponseEntity.ok(response);
     }
 
+    // Super Admin Update Tenant Status API
+    @PostMapping("/superadmin/tenants/{id}/status")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> updateTenantStatus(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body) {
+        String status = body.getOrDefault("status", "ACTIVE");
+        Map<String, Object> result = billingService.updateTenantStatus(id, status);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", result);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Update User Status API
+    @PostMapping("/superadmin/users/{id}/status")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> updateUserStatus(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body) {
+        String status = body.getOrDefault("status", "ACTIVE");
+        Map<String, Object> result = billingService.updateUserStatus(id, status);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", result);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Reset User Password API
+    @PostMapping("/superadmin/users/reset-password")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> resetUserPassword(
+            @RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.isEmpty()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Email is required");
+        }
+        Map<String, Object> result = billingService.resetUserPassword(email);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", result);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/subscription/checkout")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> createCheckoutSession(

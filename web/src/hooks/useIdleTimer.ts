@@ -9,13 +9,13 @@ const IDLE_TIMEOUT_MS = 60 * 60 * 1000; // 1 Hour Inactivity Timeout
 
 export function useIdleTimer() {
   const router = useRouter();
-  const logout = useAuthStore((state) => state.logout);
-  const token = useAuthStore((state) => state.token);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const addToast = useToastStore((state) => state.addToast);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     const resetTimer = () => {
       if (timerRef.current) {
@@ -24,12 +24,12 @@ export function useIdleTimer() {
 
       timerRef.current = setTimeout(() => {
         // Clear session cookies & state on idle timeout
-        logout();
+        clearAuth();
         document.cookie = "hasSession=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         document.cookie = "user_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         
-        addToast("Logged out due to 15 minutes of inactivity for your security.", "info");
+        addToast("Logged out due to inactivity for your security.", "info");
         router.push("/?login=true&expired=true");
       }, IDLE_TIMEOUT_MS);
     };
@@ -52,5 +52,5 @@ export function useIdleTimer() {
         window.removeEventListener(event, resetTimer);
       });
     };
-  }, [token, logout, router, addToast]);
+  }, [isAuthenticated, clearAuth, router, addToast]);
 }

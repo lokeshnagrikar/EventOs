@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export function useLoadingProgress(durationMs: number = 2800) {
+export function useLoadingProgress(durationMs: number = 1100) {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 

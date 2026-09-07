@@ -49,32 +49,32 @@ const MENU_SECTIONS = [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/ai", label: "AI Center", icon: Sparkles },
       { href: "/chat", label: "Workspace Chat", icon: MessageSquare },
-      { href: "/activity", label: "Activity Logs", icon: Activity, permission: "VIEW_LOGS", roles: ["OWNER", "ADMIN"] },
+      { href: "/activity", label: "Activity Logs", icon: Activity, permission: "VIEW_LOGS", roles: ["OWNER", "ADMIN", "MANAGER"] },
     ],
   },
   {
     label: "Operations",
     items: [
-      { href: "/crm", label: "CRM / Leads", icon: Users, permission: "VIEW_CRM", roles: ["OWNER", "ADMIN"] },
-      { href: "/events", label: "Events / Calendar", icon: Calendar, permission: "VIEW_EVENTS", roles: ["OWNER", "ADMIN", "COORDINATOR"] },
-      { href: "/bookings", label: "Bookings", icon: Layers, permission: "VIEW_BOOKINGS", roles: ["OWNER", "ADMIN", "COORDINATOR"] },
-      { href: "/gallery", label: "Media Gallery", icon: Image, permission: "VIEW_GALLERY", roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
+      { href: "/crm", label: "CRM / Leads", icon: Users, permission: "VIEW_CRM", roles: ["OWNER", "ADMIN", "MANAGER"] },
+      { href: "/events", label: "Events / Calendar", icon: Calendar, permission: "VIEW_EVENTS", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"] },
+      { href: "/bookings", label: "Bookings", icon: Layers, permission: "VIEW_BOOKINGS", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"] },
+      { href: "/gallery", label: "Media Gallery", icon: Image, permission: "VIEW_GALLERY", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "CLIENT"] },
     ],
   },
   {
     label: "Finance",
     items: [
-      { href: "/quotes", label: "Quotes", icon: FileText, permission: "VIEW_QUOTES", roles: ["OWNER", "ADMIN", "COORDINATOR", "CLIENT"] },
-      { href: "/finance", label: "Finance Hub", icon: Coins, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN"] },
-      { href: "/payments", label: "Payments", icon: DollarSign, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN"] },
-      { href: "/invoices", label: "Invoices", icon: FileSpreadsheet, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN"] },
-      { href: "/calculator", label: "Budget Calculator", icon: Calculator, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "COORDINATOR"] },
+      { href: "/quotes", label: "Quotes", icon: FileText, permission: "VIEW_QUOTES", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE"] },
+      { href: "/finance", label: "Finance Hub", icon: Coins, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "FINANCE"] },
+      { href: "/payments", label: "Payments", icon: DollarSign, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "FINANCE"] },
+      { href: "/invoices", label: "Invoices", icon: FileSpreadsheet, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "FINANCE"] },
+      { href: "/calculator", label: "Budget Calculator", icon: Calculator, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE"] },
     ],
   },
   {
     label: "Intelligence",
     items: [
-      { href: "/reports", label: "Reports & Analytics", icon: TrendingUp, permission: "VIEW_REPORTS", roles: ["OWNER", "ADMIN"] },
+      { href: "/reports", label: "Reports & Analytics", icon: TrendingUp, permission: "VIEW_REPORTS", roles: ["OWNER", "ADMIN", "MANAGER", "FINANCE"] },
       { href: "/automation", label: "Smart Automation", icon: GitBranch, permission: "MANAGE_AUTOMATION", roles: ["OWNER", "ADMIN"] },
       { href: "/import", label: "Import Data", icon: Database, permission: "VIEW_LOGS", roles: ["OWNER", "ADMIN"] },
     ],
@@ -104,6 +104,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
   const activePermissions = mounted ? userPermissions : [];
 
   const isItemVisible = (item: any) => {
+    // SuperAdmin link is exclusive to SUPER_ADMIN role
+    if (item.href === "/superadmin") {
+      return activeRole === "SUPER_ADMIN";
+    }
+    // SuperAdmin and Workspace Owner have unrestricted clearance across workspace tools
+    if (activeRole === "SUPER_ADMIN" || activeRole === "OWNER") return true;
+
     if (!item.permission && !item.roles) return true;
     if (item.roles && item.roles.includes(activeRole)) return true;
     if (item.permission && activePermissions.includes(item.permission)) return true;
@@ -172,14 +179,14 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
           data-lenis-prevent
           role="navigation"
           aria-label="Main navigation"
-          className="flex-1 overflow-y-auto py-3 scrollbar-none"
+          className="flex-1 overflow-y-auto py-2.5 sidebar-scrollbar pr-0.5"
         >
           {MENU_SECTIONS.map((section, sectionIdx) => {
             const visibleItems = section.items.filter(isItemVisible);
             if (visibleItems.length === 0) return null;
 
             return (
-              <div key={section.label} className={cn("px-3", sectionIdx > 0 && "mt-4")}>
+              <div key={section.label} className={cn("px-3", sectionIdx > 0 && "mt-3")}>
                 {/* Section label */}
                 <AnimatePresence>
                   {!isCollapsed && (
@@ -210,7 +217,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          "relative flex items-center gap-2.5 px-3 py-[7.5px] rounded-[10px] text-[11.5px] font-semibold transition-all duration-150 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500",
+                          "relative flex items-center gap-2.5 px-3 py-[6.5px] rounded-[10px] text-[11.5px] font-semibold transition-all duration-150 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500",
                           isCollapsed && "justify-center px-0 h-9 w-full",
                           isActive
                             ? "bg-purple-500/10 text-purple-700 font-bold border border-purple-500/20 shadow-sm dark:bg-white/[0.08] dark:text-white dark:border-white/[0.08] dark:shadow-[0_1px_8px_rgba(0,0,0,0.2)]"
