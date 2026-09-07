@@ -19,6 +19,23 @@ import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
 import { ARTICLES, FAQS, Article } from "@/lib/helpData";
 import { generateAIResponse } from "@/lib/aiProvider";
+import dynamic from "next/dynamic";
+
+const CHATBOT_LOTTIE_URL = "https://lottie.host/81c78ae8-59f5-4e19-bc6c-b7c5ba867ffd/Id8PQ7Y2HD.lottie";
+
+const DotLottieReact = dynamic(
+  () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
+  {
+    ssr: false,
+    loading: () => (
+      <img
+        src="/chatbot.png"
+        alt="AI Assistant"
+        className="w-full h-full object-contain"
+      />
+    ),
+  }
+);
 
 interface ChatMessage {
   id: string;

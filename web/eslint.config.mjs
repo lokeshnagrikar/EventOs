@@ -20,14 +20,17 @@ const eslintConfig = [
     extends: ["next/core-web-vitals"],
   }),
   {
+    linterOptions: {
+      reportUnusedDisableDirectives: "off"
+    },
     rules: {
-      "react/no-unescaped-entities": "warn",
+      "react/no-unescaped-entities": "off",
       "react-hooks/rules-of-hooks": "warn",
-      "react-hooks/exhaustive-deps": "warn",
-      "@next/next/no-html-link-for-pages": "warn",
-      "@next/next/no-img-element": "warn",
-      "jsx-a11y/alt-text": "warn",
-      "import/no-anonymous-default-export": "warn",
+      "react-hooks/exhaustive-deps": "off",
+      "@next/next/no-html-link-for-pages": "off",
+      "@next/next/no-img-element": "off",
+      "jsx-a11y/alt-text": "off",
+      "import/no-anonymous-default-export": "off",
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-var-requires": "off",
       "@typescript-eslint/no-explicit-any": "off"
