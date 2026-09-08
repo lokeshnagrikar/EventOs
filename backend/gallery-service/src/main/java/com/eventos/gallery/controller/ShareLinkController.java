@@ -155,11 +155,13 @@ public class ShareLinkController {
             }
             String userAgent = request.getHeader("User-Agent");
 
-            // Validate and get album details (enforces token validation, expiration, and passcode)
+            // Validate and get album details (enforces token validation, expiration, and
+            // passcode)
             SharedAlbumResponseDto album = shareLinkService.getSharedAlbum(token, activePasscode, ipAddress, userAgent);
 
             if (!album.isAllowDownload()) {
-                throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Downloading is not allowed for this share link");
+                throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Downloading is not allowed for this share link");
             }
 
             // Fetch the gallery items from the shared album

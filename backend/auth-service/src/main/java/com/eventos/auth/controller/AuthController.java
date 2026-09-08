@@ -816,4 +816,27 @@ public class AuthController {
 
         return errorResponse;
     }
+
+    /* -------------------------------------------------------------------------- */
+    /* SMTP DIAGNOSTIC ENDPOINT                                                    */
+    /* -------------------------------------------------------------------------- */
+    @Autowired
+    private com.eventos.auth.service.EmailService emailService;
+
+    @GetMapping("/test-email")
+    public ResponseEntity<?> testEmail(@RequestParam String to) {
+        log.info("[TEST_EMAIL] Sending diagnostic email to: {}", to);
+        Map<String, Object> response = new HashMap<>();
+        try {
+            emailService.sendTestEmail(to);
+            response.put("success", true);
+            response.put("message", "Test email dispatched to " + to + ". Check inbox & spam.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("[TEST_EMAIL] SMTP dispatch failed to {}: {}", to, e.getMessage(), e);
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }

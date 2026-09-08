@@ -359,4 +359,49 @@ public class EmailService {
             log.error("[EMAIL_ERROR] Failed to send subscription receipt email to: {}", toEmail, e);
         }
     }
+
+    /* -------------------------------------------------------------------------- */
+    /* DIAGNOSTIC: Synchronous test email (NOT @Async — throws on failure)        */
+    /* -------------------------------------------------------------------------- */
+    public void sendTestEmail(String toEmail) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            String sender = (fromAddress != null && !fromAddress.trim().isEmpty()) ? fromAddress : "no-reply@eventos.co";
+            helper.setFrom(sender);
+            helper.setTo(toEmail);
+            helper.setSubject("✅ EventOS SMTP Diagnostic — Email is Working!");
+
+            String htmlContent =
+                "<!DOCTYPE html>" +
+                "<html lang=\"en\">" +
+                "<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>" +
+                "<body style=\"margin:0; padding:30px 15px; background-color:#050507; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;\">" +
+                "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\"><tr><td align=\"center\">" +
+                "  <table width=\"520\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#0C0C0F; border:1px solid #27272A; border-radius:28px; overflow:hidden;\">" +
+                "    <tr><td align=\"center\" style=\"padding:40px 30px; background:linear-gradient(135deg,#059669 0%,#10B981 100%);\">" +
+                "      <div style=\"font-size:48px; margin-bottom:12px;\">✅</div>" +
+                "      <div style=\"font-size:11px; font-weight:800; color:#A7F3D0; letter-spacing:2px; text-transform:uppercase;\">SMTP DIAGNOSTIC</div>" +
+                "      <h1 style=\"margin:8px 0 0; font-size:24px; color:#FFFFFF; font-weight:900;\">Email Delivery Working!</h1>" +
+                "    </td></tr>" +
+                "    <tr><td style=\"padding:36px; text-align:center;\">" +
+                "      <p style=\"color:#A1A1AA; font-size:14px; line-height:1.7;\">If you are reading this, your EventOS SMTP configuration is correctly set up and emails are being delivered successfully.</p>" +
+                "      <p style=\"color:#71717A; font-size:12px; margin-top:16px;\">Sent at: " + java.time.Instant.now().toString() + "</p>" +
+                "    </td></tr>" +
+                "    <tr><td align=\"center\" style=\"padding:20px; background:#08080A; border-top:1px solid #27272A; font-size:11px; color:#52525B;\">" +
+                "      EventOS SMTP Diagnostic Test" +
+                "    </td></tr>" +
+                "  </table>" +
+                "</td></tr></table>" +
+                "</body></html>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            log.info("[TEST_EMAIL_SENT] Diagnostic test email successfully sent to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("[TEST_EMAIL_ERROR] SMTP diagnostic failed for: {}", toEmail, e);
+            throw new RuntimeException("SMTP send failed: " + e.getMessage(), e);
+        }
+    }
 }

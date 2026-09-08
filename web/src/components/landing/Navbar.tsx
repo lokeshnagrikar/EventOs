@@ -575,7 +575,7 @@ export function Navbar({ activeSection }: NavbarProps) {
 
         {/* Desktop CTAs */}
         <div
-          className="hidden md:flex items-center gap-3 relative z-10"
+          className="hidden md:flex items-center gap-2 shrink-0 relative z-10"
           onMouseLeave={() => setHoveredIndex(null)}
         >
           {/* Multi-Tenant Workspace Selector Pill */}
@@ -584,7 +584,7 @@ export function Navbar({ activeSection }: NavbarProps) {
             onClick={handleSignIn}
             onMouseEnter={() => setHoveredIndex(4)}
             className={cn(
-              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-4 rounded-full relative z-10 text-slate-300 hover:text-white focus:outline-none"
+              "text-[13px] font-medium tracking-wide transition-colors py-1.5 px-3.5 rounded-full relative z-10 text-slate-300 hover:text-white focus:outline-none whitespace-nowrap shrink-0"
             )}
           >
             Login
@@ -603,10 +603,10 @@ export function Navbar({ activeSection }: NavbarProps) {
           <LiquidButton
             variant="appleGlass"
             onClick={handleStartTrial}
-            className="rounded-full text-xs font-bold uppercase tracking-wider active:scale-[0.98] shadow-md shadow-purple-500/20"
+            className="rounded-full text-xs font-bold uppercase tracking-wider active:scale-[0.98] shadow-md shadow-purple-500/20 whitespace-nowrap shrink-0"
             size="default"
           >
-            Join Private Beta
+            Join Beta
           </LiquidButton>
         </div>
 

@@ -77,6 +77,7 @@ public class SecurityConfig {
                         "/resend-verification",
                         "/accept-invite",
                         "/captcha",
+                        "/test-email",
                         "/ws",
                         "/ws/**",
                         "/billing/webhook",
