@@ -95,8 +95,8 @@ export default function KpiCard({
       <div className="flex justify-between items-start gap-4">
         <div className="space-y-1">
           <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block">{title}</span>
-          <p className="text-2xl font-extrabold tracking-tight text-zinc-100 group-hover:text-white transition-colors">
-            {typeof displayValue === "number" ? displayValue.toLocaleString() : displayValue}
+          <p className="text-2xl font-black tracking-tight text-zinc-100 group-hover:text-white transition-colors font-mono tabular-nums">
+            {typeof displayValue === "number" ? displayValue.toLocaleString("en-IN") : displayValue}
           </p>
         </div>
         

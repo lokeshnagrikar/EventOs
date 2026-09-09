@@ -165,7 +165,33 @@ export default function QuotesPage() {
           }}
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Summary KPI Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Total Proposals</span>
+              <p className="text-xl font-black text-white font-mono tabular-nums">{quotes.length}</p>
+            </div>
+            <div className="p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Pipeline Value</span>
+              <p className="text-xl font-black text-emerald-400 font-mono tabular-nums">
+                ₹{quotes.reduce((acc, q) => acc + (q.total || 0), 0).toLocaleString("en-IN")}
+              </p>
+            </div>
+            <div className="p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Accepted Deals</span>
+              <p className="text-xl font-black text-purple-400 font-mono tabular-nums">
+                {quotes.filter((q) => ["ACCEPTED", "APPROVED", "PAID", "E_SIGNED"].includes(q.status)).length}
+              </p>
+            </div>
+            <div className="p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Awaiting Sign-Off</span>
+              <p className="text-xl font-black text-amber-400 font-mono tabular-nums">
+                {quotes.filter((q) => ["SENT", "VIEWED", "PENDING", "DRAFT"].includes(q.status)).length}
+              </p>
+            </div>
+          </div>
+
           {/* Grid Layout of Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {quotes.map((q) => {
@@ -176,19 +202,19 @@ export default function QuotesPage() {
                 <div
                   key={q.id}
                   onClick={() => router.push(`/quotes/${q.id}`)}
-                  className="p-5 rounded-xl border border-zinc-800 bg-[#161618]/40 hover:border-purple-500/30 transition-all cursor-pointer flex flex-col justify-between h-[210px] hover:shadow-lg hover:shadow-purple-500/5 group"
+                  className="p-5 rounded-2xl border border-zinc-800/80 bg-[#121214]/50 hover:border-purple-500/30 hover:bg-[#121214]/80 transition-all cursor-pointer flex flex-col justify-between h-[215px] hover:shadow-xl hover:shadow-purple-500/5 group"
                 >
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-bold">
+                        <span className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300 px-2 py-0.5 rounded font-bold">
                           {q.quoteNumber}
                         </span>
                         <button
                           type="button"
                           onClick={(e) => handleDownloadPdf(e, q)}
                           disabled={downloadingId === q.id}
-                          className="px-2 py-0.5 rounded bg-zinc-800/80 hover:bg-purple-600/20 text-zinc-400 hover:text-purple-300 transition-all flex items-center gap-1 text-[9px] font-bold border border-zinc-700/30 cursor-pointer disabled:opacity-50"
+                          className="px-2 py-0.5 rounded bg-zinc-900 hover:bg-purple-600/20 text-zinc-400 hover:text-purple-300 transition-all flex items-center gap-1 text-[9px] font-bold border border-zinc-800 cursor-pointer disabled:opacity-50"
                           title="Download PDF Proposal"
                         >
                           {downloadingId === q.id ? (
@@ -199,25 +225,25 @@ export default function QuotesPage() {
                           PDF
                         </button>
                       </div>
-                      <span className={`px-2 py-0.5 border rounded-full text-[9px] font-bold ${statusStyle}`}>
+                      <span className={`px-2.5 py-0.5 border rounded-full text-[9px] font-bold ${statusStyle}`}>
                         {q.status}
                       </span>
                     </div>
-                    <h3 className="font-bold text-base text-zinc-100 group-hover:text-purple-400 transition-colors leading-tight">
+                    <h3 className="font-bold text-base text-zinc-100 group-hover:text-purple-400 transition-colors leading-tight line-clamp-1">
                       {getLeadName(q.leadId)}
                     </h3>
-                    <p className="text-[10px] text-zinc-550 font-semibold">{templateLabel}</p>
+                    <p className="text-[10px] text-zinc-500 font-semibold">{templateLabel}</p>
                   </div>
 
-                  <div className="border-t border-zinc-800/60 pt-3 mt-4 flex items-center justify-between text-xs">
-                    <div className="text-zinc-500 flex items-center gap-1">
+                  <div className="border-t border-zinc-850 pt-3 mt-4 flex items-center justify-between text-xs">
+                    <div className="text-zinc-500 flex items-center gap-1 font-mono text-[11px]">
                       <Calendar size={12} />
                       <span>{new Date(q.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div className="text-right">
                       <span className="text-[9px] text-zinc-500 block uppercase font-semibold">Grand Total</span>
-                      <span className="font-extrabold text-emerald-450 text-sm">
-                        INR {q.total?.toLocaleString()}
+                      <span className="font-extrabold text-emerald-400 text-sm font-mono tabular-nums">
+                        ₹{(q.total || 0).toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>

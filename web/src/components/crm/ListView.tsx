@@ -130,8 +130,8 @@ export default function ListView({
                 </span>
               )}
 
-              <span className="font-mono font-bold text-emerald-450">
-                ₹{lead.budget ? lead.budget.toLocaleString() : "0"}
+              <span className="font-mono tabular-nums font-bold text-emerald-450">
+                ₹{lead.budget ? lead.budget.toLocaleString("en-IN") : "0"}
               </span>
 
               <span className={cn("px-2.5 py-0.5 rounded-full border text-[9px] font-bold", getStatusColor(lead.status))}>

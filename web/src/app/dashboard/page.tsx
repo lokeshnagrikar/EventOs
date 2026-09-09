@@ -56,6 +56,8 @@ import {
   Trash2,
   Settings,
   Flame,
+  MapPin,
+  Building2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -130,15 +132,16 @@ interface WidgetConfig {
 
 // ─── DEFAULT WIDGET CONFIGS ──────────────────────────────────────────────────────
 const DEFAULT_WIDGET_CONFIGS: WidgetConfig[] = [
-  { id: "control", title: "Control Center", category: "operations", colSpan: "col-span-1", isPinned: true, visible: true },
+  { id: "radar", title: "Event Operations Radar", category: "operations", colSpan: "col-span-3", isPinned: true, visible: true },
+  { id: "control", title: "Control Center", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "health", title: "Workspace Health Score", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "priority", title: "Today's Focus", category: "operations", colSpan: "col-span-2", isPinned: false, visible: true },
-  { id: "advisor", title: "AI Business Advisor", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
+  { id: "priority", title: "Action Required & Priority Tasks", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "kpi", title: "Executive KPI Indicators", category: "finance", colSpan: "col-span-3", isPinned: false, visible: true },
+  { id: "advisor", title: "Operational Intelligence Advisor", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "sales", title: "Sales Analytics Funnel", category: "analytics", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "finance", title: "Finance Dashboard Flow", category: "finance", colSpan: "col-span-2", isPinned: false, visible: true },
-  { id: "events", title: "Event & Package Tracker", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "team", title: "Team Performance & Burnout", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
+  { id: "finance", title: "Finance Flow & Ledger Cashflow", category: "finance", colSpan: "col-span-2", isPinned: false, visible: true },
+  { id: "events", title: "Package & Ingress Tracker", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
+  { id: "team", title: "Crew Roster & Bandwidth", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "clients", title: "Client Insights & NPS", category: "analytics", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "media", title: "Media Storage Analytics", category: "analytics", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "activity", title: "Workspace Timeline Logs", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
@@ -178,9 +181,9 @@ function AnimatedNumber({ value, prefix = "", suffix = "", decimals = 0 }: { val
   }, [value]);
 
   return (
-    <span>
+    <span className="font-mono tabular-nums font-bold">
       {prefix}
-      {count.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
+      {count.toLocaleString("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
       {suffix}
     </span>
   );
@@ -228,12 +231,41 @@ export default function DashboardPage() {
   const [liveUpdates, setLiveUpdates] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
 
-  const toggleTheme = useCallback(() => {
-    setDarkMode((prev) => !prev);
-    if (typeof document !== "undefined") {
-      document.documentElement.classList.toggle("dark");
-    }
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storedTheme = localStorage.getItem("theme");
+    const isDark = storedTheme ? storedTheme === "dark" : document.documentElement.classList.contains("dark");
+    setDarkMode(isDark);
+
+    const handleThemeChange = (e: any) => {
+      const activeTheme = e.detail || (document.documentElement.classList.contains("dark") ? "dark" : "light");
+      setDarkMode(activeTheme === "dark");
+    };
+
+    window.addEventListener("theme-changed", handleThemeChange);
+    return () => window.removeEventListener("theme-changed", handleThemeChange);
   }, []);
+
+  const toggleTheme = useCallback(() => {
+    setDarkMode((prev) => {
+      const nextMode = !prev;
+      const themeStr = nextMode ? "dark" : "light";
+      if (typeof document !== "undefined") {
+        if (nextMode) {
+          document.documentElement.classList.add("dark");
+          document.documentElement.classList.remove("light");
+        } else {
+          document.documentElement.classList.add("light");
+          document.documentElement.classList.remove("dark");
+        }
+      }
+      localStorage.setItem("theme", themeStr);
+      document.cookie = `theme=${themeStr}; path=/; SameSite=Lax; max-age=31536000`;
+      window.dispatchEvent(new CustomEvent("theme-changed", { detail: themeStr }));
+      addToast(`Dashboard switched to ${themeStr.toUpperCase()} mode`, "info", { duration: 2500 });
+      return nextMode;
+    });
+  }, [addToast]);
 
   const triggerConfettiAnimation = useCallback(() => {
     addToast("🎉 Milestone celebration achieved! Goals on track.", "success");
@@ -318,6 +350,7 @@ export default function DashboardPage() {
   const [layoutPreset, setLayoutPreset] = useState("Default");
   const [widgetOrder, setWidgetOrder] = useState<WidgetConfig[]>([]);
   const [draggedWidgetId, setDraggedWidgetId] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState<"TODAY" | "WEEK" | "MONTH" | "FY26">("MONTH");
 
   // Modals / Modifiers
   const [isHealthDetailOpen, setIsHealthDetailOpen] = useState(false);
@@ -325,7 +358,67 @@ export default function DashboardPage() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-
+  // Operations Radar Data
+  const upcomingOperationsList = useMemo(() => {
+    const list = Array.isArray(eventsResponse) && eventsResponse.length > 0 ? eventsResponse.map((ev: any, idx: number) => ({
+      id: ev.id || `ev-${idx}`,
+      title: ev.title || ev.name || "Wedding Gala Production",
+      eventType: ev.type || ev.eventType || "Grand Celebration",
+      venue: ev.location || ev.venue || "Taj Palace, New Delhi",
+      headcount: ev.guestCount || ev.headcount || 450,
+      daysAway: idx === 0 ? 2 : idx === 1 ? 4 : 7,
+      date: ev.startDate || "Upcoming",
+      status: idx === 0 ? "INGRESS_READY" : idx === 1 ? "SOUNDCHECK_SCHEDULED" : "LOGISTICS_DISPATCHED",
+      runOfShowProgress: idx === 0 ? 85 : idx === 1 ? 60 : 40,
+      crewAssigned: idx === 0 ? 8 : idx === 1 ? 14 : 6,
+      leadCoordinator: ev.coordinator || "Priya Sharma",
+      budget: ev.budget || 1850000,
+    })) : [
+      {
+        id: "ev-1",
+        title: "Sharma & Kapoor Grand Wedding Gala",
+        eventType: "Wedding Reception",
+        venue: "Taj Palace, New Delhi",
+        headcount: 550,
+        daysAway: 2,
+        date: "Oct 14, 2026",
+        status: "INGRESS_READY",
+        runOfShowProgress: 85,
+        crewAssigned: 8,
+        leadCoordinator: "Priya Sharma",
+        budget: 1850000,
+      },
+      {
+        id: "ev-2",
+        title: "Google AI Developer Summit 2026",
+        eventType: "Corporate Tech Summit",
+        venue: "Grand Hyatt Ballroom, Mumbai",
+        headcount: 800,
+        daysAway: 4,
+        date: "Oct 16, 2026",
+        status: "SOUNDCHECK_SCHEDULED",
+        runOfShowProgress: 60,
+        crewAssigned: 14,
+        leadCoordinator: "Lokesh N.",
+        budget: 1200000,
+      },
+      {
+        id: "ev-3",
+        title: "Verma Royal Sangeet & Cocktail Night",
+        eventType: "Sangeet & Cocktail",
+        venue: "The Oberoi Udaivilas, Udaipur",
+        headcount: 320,
+        daysAway: 7,
+        date: "Oct 19, 2026",
+        status: "LOGISTICS_DISPATCHED",
+        runOfShowProgress: 40,
+        crewAssigned: 6,
+        leadCoordinator: "Ananya Iyer",
+        budget: 950000,
+      },
+    ];
+    return list;
+  }, [eventsResponse]);
 
   // simulated WebSockets status
   const [latency, setLatency] = useState(14);
@@ -431,7 +524,7 @@ export default function DashboardPage() {
   const [timelineActivity, setTimelineActivity] = useState<Array<{ id: string; message: string; time: string; tag: string }>>([]);
 
   // Team roster list
-  const [teamPerformance, setTeamPerformance] = useState<Array<{ name: string; workload: number; completed: number; pending: number; events: number; csat: number; responseTime: number; status: string }>>([]);
+  const [teamPerformance, setTeamPerformance] = useState<Array<{ id?: string; name: string; workload: number; completed: number; pending: number; events: number; csat: number; responseTime: number; status: string }>>([]);
 
   // Initializing Widgets & Layouts from LocalStorage
   useEffect(() => {
@@ -444,10 +537,14 @@ export default function DashboardPage() {
     if (savedOrder) {
       try {
         const parsed = JSON.parse(savedOrder);
-        if (Array.isArray(parsed) && !parsed.some((w: any) => w.id === "control")) {
-          parsed.unshift({ id: "control", title: "Control Center", category: "operations", colSpan: "col-span-1", isPinned: true, visible: true });
+        if (Array.isArray(parsed)) {
+          if (!parsed.some((w: any) => w.id === "radar")) {
+            parsed.unshift({ id: "radar", title: "Event Operations Radar", category: "operations", colSpan: "col-span-3", isPinned: true, visible: true });
+          }
+          setWidgetOrder(parsed);
+        } else {
+          setWidgetOrder(DEFAULT_WIDGET_CONFIGS);
         }
-        setWidgetOrder(parsed);
       } catch {
         setWidgetOrder(DEFAULT_WIDGET_CONFIGS);
       }
@@ -516,7 +613,8 @@ export default function DashboardPage() {
     });
 
     if (teamList.length > 0) {
-      setTeamPerformance(teamList.map((m: any) => ({
+      setTeamPerformance(teamList.map((m: any, idx: number) => ({
+        id: m.id || m.userId || `team-${idx}`,
         name: (m.firstName || m.name || 'Team Member') + (m.lastName ? ' ' + m.lastName : ''),
         workload: 75,
         completed: 12,
@@ -875,6 +973,66 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ─── ACTION REQUIRED & TIMEFRAME COMMAND BAR ─────────────────────────────────── */}
+      <div className="mb-6 p-4 rounded-2xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-md flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+        {/* Urgent Action Pills */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold cursor-pointer hover:bg-red-500/15 transition shadow-sm"
+            onClick={() => router.push("/portal/quotes")}
+          >
+            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            <span>2 Proposals Awaiting Sign-off</span>
+            <ChevronRight size={13} className="opacity-60" />
+          </div>
+
+          <div
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-bold cursor-pointer hover:bg-amber-500/15 transition shadow-sm"
+            onClick={() => router.push("/finance")}
+          >
+            <span className="h-2 w-2 rounded-full bg-amber-400" />
+            <span className="font-mono tabular-nums">₹3,50,000</span>
+            <span>Milestone Advance Due Today</span>
+            <ChevronRight size={13} className="opacity-60" />
+          </div>
+
+          <div
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold cursor-pointer hover:bg-emerald-500/15 transition shadow-sm"
+            onClick={() => router.push("/events")}
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span>Next Event: Sharma Wedding Gala (In 2 days • Taj Palace)</span>
+            <ChevronRight size={13} className="opacity-60" />
+          </div>
+        </div>
+
+        {/* Timeframe selector pills */}
+        <div className="flex items-center gap-1 bg-zinc-950/80 p-1 rounded-xl border border-zinc-800 self-end xl:self-center">
+          {[
+            { id: "TODAY", label: "Today" },
+            { id: "WEEK", label: "This Week" },
+            { id: "MONTH", label: "This Month" },
+            { id: "FY26", label: "FY 2026-27" },
+          ].map((tf) => (
+            <button
+              key={tf.id}
+              onClick={() => {
+                setTimeRange(tf.id as any);
+                addToast(`Filtered dashboard metrics: ${tf.label}`, "info");
+              }}
+              className={cn(
+                "px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                timeRange === tf.id
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "text-zinc-400 hover:text-zinc-200"
+              )}
+            >
+              {tf.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ─── QUICK COMMAND ROW ────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3 mb-6 select-none bg-zinc-950/20 border border-zinc-900 p-2.5 rounded-2xl">
         <span className="text-[9px] font-black uppercase tracking-widest text-zinc-550 pl-2">Quick Action Console:</span>
@@ -999,6 +1157,95 @@ export default function DashboardPage() {
                 )}
 
                 {/* ─── WIDGET CONTENT RENDERING ─── */}
+
+                {/* RADAR: EVENT OPERATIONS RADAR (THIS WEEK) */}
+                {widget.id === "radar" && (
+                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[300px] flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-8 w-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                            <Activity size={16} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-sm font-bold text-white tracking-tight">Event Operations Radar</h3>
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                                THIS WEEK'S PRODUCTIONS
+                              </span>
+                            </div>
+                            <p className="text-xs text-zinc-400">Live venue ingress, Run-of-Show milestones & crew readiness</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => router.push("/events")}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-bold text-zinc-300 hover:text-white transition cursor-pointer self-start sm:self-center"
+                        >
+                          <span>Full Schedule</span>
+                          <ChevronRight size={13} />
+                        </button>
+                      </div>
+
+                      {/* Operations Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                        {upcomingOperationsList.map((op: any) => (
+                          <div
+                            key={op.id}
+                            onClick={() => router.push("/events")}
+                            className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-950/50 hover:border-purple-500/30 hover:bg-zinc-900/40 transition-all duration-200 cursor-pointer space-y-3 group"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-purple-400 block">
+                                  {op.eventType}
+                                </span>
+                                <h4 className="text-xs font-bold text-zinc-100 group-hover:text-purple-300 transition-colors line-clamp-1">
+                                  {op.title || op.name}
+                                </h4>
+                              </div>
+                              <span className={cn(
+                                "text-[10px] font-mono font-bold px-2 py-0.5 rounded border whitespace-nowrap",
+                                op.daysAway <= 2 ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-zinc-800/60 border-zinc-700 text-zinc-300"
+                              )}>
+                                {op.daysAway === 0 ? "Today" : op.daysAway === 1 ? "Tomorrow" : `In ${op.daysAway} days`}
+                              </span>
+                            </div>
+
+                            <div className="space-y-1.5 text-xs text-zinc-400">
+                              <div className="flex items-center gap-1.5">
+                                <MapPin size={12} className="text-zinc-500 shrink-0" />
+                                <span className="truncate">{op.venue || op.location || "Taj Palace, New Delhi"}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-[11px]">
+                                <span className="flex items-center gap-1 text-zinc-400">
+                                  <Users size={12} className="text-zinc-500" />
+                                  <strong className="text-zinc-200 font-mono tabular-nums">{op.headcount || 450}</strong> Guests
+                                </span>
+                                <span className="text-zinc-300 font-mono tabular-nums font-bold">
+                                  ₹{(op.budget || 1500000).toLocaleString("en-IN")}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Run-of-Show Ingress Progress */}
+                            <div className="space-y-1 pt-1 border-t border-zinc-900">
+                              <div className="flex justify-between items-center text-[10px] font-mono">
+                                <span className="text-zinc-400">Run-of-Show Ingress</span>
+                                <span className="text-purple-400 font-bold">{op.runOfShowProgress || 75}%</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+                                  style={{ width: `${op.runOfShowProgress || 75}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* 0. CONTROL CENTER WIDGET */}
                 {widget.id === "control" && (
@@ -1509,8 +1756,8 @@ export default function DashboardPage() {
 
                       {/* Event Package Popularity */}
                       <div className="space-y-3 font-semibold text-xs">
-                        {packageBreakdown.map((pkg) => (
-                          <div key={pkg.name} className="space-y-1">
+                        {packageBreakdown.map((pkg, idx) => (
+                          <div key={`${pkg.name}-${idx}`} className="space-y-1">
                             <div className="flex justify-between items-center">
                               <span className="text-zinc-300">{pkg.name}</span>
                               <span className="font-mono text-zinc-200">{pkg.value}%</span>
@@ -1556,10 +1803,10 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="space-y-2.5">
-                        {teamPerformance.map((member) => {
+                        {teamPerformance.map((member, idx) => {
                           const isOverload = member.workload >= 85;
                           return (
-                            <div key={member.name} className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-2">
+                            <div key={member.id ? `member-${member.id}` : `member-${member.name}-${idx}`} className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-2">
                               <div className="flex items-center justify-between text-xs font-semibold">
                                 <div className="flex items-center gap-2">
                                   <div className="relative">

@@ -5,9 +5,23 @@ import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
-import { SparklesCore } from "@/components/ui/sparkles";
 import { BlurFade } from "@/components/ui/blur-fade";
-import { Building2, LogOut, ArrowRight, AlertCircle, Shield, User, Loader2 } from "lucide-react";
+import { 
+  Building2, 
+  LogOut, 
+  ArrowRight, 
+  AlertCircle, 
+  Shield, 
+  User, 
+  Loader2, 
+  Plus, 
+  Sparkles,
+  CheckCircle2,
+  ChevronRight,
+  Command,
+  CornerDownLeft
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function WorkspaceSelectPage() {
   const router = useRouter();
@@ -20,11 +34,23 @@ export default function WorkspaceSelectPage() {
 
   useEffect(() => {
     setMounted(true);
-    // If no memberships or user, redirect to login
     if (memberships.length === 0 && !user) {
       router.push("/?login=true");
     }
   }, [memberships, user, router]);
+
+  // Keyboard shortcut listener for fast switching (1-9 and Escape)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (loadingTenantId !== null) return;
+      const num = parseInt(e.key);
+      if (!isNaN(num) && num >= 1 && num <= memberships.length) {
+        handleSwitch(memberships[num - 1].tenantId);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [memberships, loadingTenantId]);
 
   if (!mounted) {
     return null;
@@ -38,14 +64,12 @@ export default function WorkspaceSelectPage() {
       
       const { accessToken, userId, role, firstName, lastName, memberships: newMemberships, permissions } = response.data.data;
       
-      // Update session flag cookie for middleware routing guards
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
       document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
       document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
       
-      // Save state in Zustand store
       setAuth(
         accessToken,
         { id: userId, email: user?.email || "", firstName, lastName, role, permissions: permissions || [] },
@@ -53,9 +77,8 @@ export default function WorkspaceSelectPage() {
         newMemberships
       );
 
-      addToast("Switched workspace successfully!", "success");
+      addToast("Workspace connected.", "success");
 
-      // Redirect based on the newly assumed role
       if (role === "CLIENT") {
         router.push("/portal");
       } else if (role === "SUPER_ADMIN") {
@@ -76,7 +99,7 @@ export default function WorkspaceSelectPage() {
     try {
       await apiClient.post("/auth/logout", { email: user?.email || "" });
     } catch (e) {
-      // Ignore logout error and clear local state
+      // Clear local auth even if network fails
     } finally {
       clearAuth();
       addToast("Signed out successfully.", "info");
@@ -85,68 +108,53 @@ export default function WorkspaceSelectPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground p-4 sm:p-6 relative overflow-hidden select-none selection:bg-purple-650 selection:text-white">
+    <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#09090b] text-zinc-100 p-4 sm:p-6 relative select-none">
+      {/* Refined subtle background grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#27272a15_1px,transparent_1px),linear-gradient(to_bottom,#27272a15_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
-      {/* Decorative Radial Grid / Dots */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1c1917_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-20 pointer-events-none z-0" />
-
-      {/* Background radial glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-purple-650/10 to-pink-500/10 blur-[130px] rounded-full pointer-events-none z-0" />
-      <div className="absolute top-12 right-[10%] w-[250px] h-[250px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
-
-      {/* Sparkles particles background */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-20">
-        <SparklesCore
-          id="tsparticlesselect"
-          background="transparent"
-          minSize={0.6}
-          maxSize={1.8}
-          particleDensity={25}
-          particleColor="#EC4899"
-          className="w-full h-full"
-        />
-      </div>
-
-      <div className="w-full max-w-2xl z-10 space-y-6">
-        {/* Header section card */}
+      <div className="w-full max-w-xl z-10 space-y-6">
+        {/* Brand Header */}
         <BlurFade spring delay={0.05} direction="down" offset={10}>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-zinc-800/80">
+          <div className="flex justify-between items-center pb-5 border-b border-zinc-800/80">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-[#8B5CF6] to-[#EC4899] flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-purple-550/20 transform hover:rotate-6 transition-transform select-none">
+              <div className="h-9 w-9 rounded-xl bg-purple-600 flex items-center justify-center text-white font-extrabold text-sm shadow-md shadow-purple-950/40">
                 E
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
-                  EventOS Workspaces
+                <h1 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
+                  Select Workspace
+                  <span className="text-[10px] text-zinc-500 font-mono font-normal">({memberships.length} available)</span>
                 </h1>
-                <p className="text-xs text-zinc-400">Switch between your active organization profiles</p>
+                <p className="text-xs text-zinc-400">Choose an agency workspace or event command center</p>
               </div>
             </div>
+
             <button
               onClick={handleLogout}
               disabled={loadingTenantId !== null}
-              className="flex items-center gap-2 px-4 py-2 bg-zinc-950/40 border border-zinc-800 hover:border-rose-500/30 hover:bg-rose-500/10 text-xs font-semibold text-zinc-400 hover:text-rose-300 rounded-xl transition-all active:scale-[0.98] disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 text-xs font-semibold text-zinc-400 hover:text-zinc-200 rounded-xl transition cursor-pointer disabled:opacity-50"
+              title="Sign out of current account"
             >
               {loadingTenantId === "LOGOUT" ? (
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 size={13} className="animate-spin" />
               ) : (
-                <LogOut size={14} />
+                <LogOut size={13} />
               )}
               <span>Sign Out</span>
             </button>
           </div>
         </BlurFade>
 
-        {/* Global Error Banner */}
+        {/* Global Error Notice */}
         {error && (
-          <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-300 animate-slide-in">
-            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2.5 p-3.5 bg-red-500/10 border border-red-500/20 rounded-2xl text-xs text-red-300">
+            <AlertCircle size={15} className="shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Workspaces Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Workspaces List (High Density Stacked Cards) */}
+        <div className="space-y-3">
           {memberships.map((membership, idx) => {
             const isSwitchingThis = loadingTenantId === membership.tenantId;
             const initials = membership.companyName
@@ -154,83 +162,106 @@ export default function WorkspaceSelectPage() {
               .map((n) => n[0])
               .slice(0, 2)
               .join("")
-              .toUpperCase();
+              .toUpperCase() || "EV";
+
+            const isOwner = membership.role === "OWNER" || membership.role === "SUPER_ADMIN";
 
             return (
-              <BlurFade key={membership.tenantId} spring delay={0.1 + idx * 0.05} direction="up" offset={15}>
+              <BlurFade key={membership.tenantId} spring delay={0.08 + idx * 0.04} direction="up" offset={10}>
                 <button
                   disabled={loadingTenantId !== null}
                   onClick={() => handleSwitch(membership.tenantId)}
-                  className={`group text-left p-5 bg-[#111113]/70 border border-zinc-800/80 hover:border-purple-500/50 rounded-2xl transition-all duration-300 relative flex flex-col justify-between min-h-[160px] shadow-[0_0_30px_rgba(0,0,0,0.2)] hover:shadow-purple-950/10 backdrop-blur-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none w-full`}
+                  className={cn(
+                    "group w-full p-4 bg-[#121214] border border-zinc-800/80 hover:border-purple-500/40 rounded-2xl transition-all duration-200 flex items-center justify-between text-left cursor-pointer shadow-sm hover:shadow-md hover:bg-zinc-900/40 relative disabled:opacity-50",
+                    isSwitchingThis && "border-purple-500 bg-purple-950/10"
+                  )}
                 >
-                  {/* Top card accent line */}
-                  <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] opacity-0 group-hover:opacity-90 rounded-t-2xl transition-opacity duration-300" />
-                  
-                  {/* Top card metadata */}
-                  <div className="flex items-start justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <div className="h-11 w-11 rounded-xl bg-zinc-900 border border-zinc-800/60 group-hover:border-purple-500/30 group-hover:bg-purple-950/40 flex items-center justify-center font-extrabold text-sm text-zinc-300 group-hover:text-purple-400 transition-colors shadow-inner">
-                        {initials || <Building2 size={16} />}
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-sm text-zinc-100 group-hover:text-white transition-colors line-clamp-1">
+                  <div className="flex items-center gap-3.5 min-w-0 pr-3">
+                    {/* Organization Avatar */}
+                    <div className="h-10 w-10 rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-purple-500/30 group-hover:bg-purple-950/30 flex items-center justify-center font-bold text-xs text-zinc-300 group-hover:text-purple-300 transition-colors shrink-0 shadow-inner">
+                      {initials}
+                    </div>
+
+                    {/* Metadata */}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-sm text-zinc-100 group-hover:text-white truncate">
                           {membership.companyName}
                         </h3>
-                        <span className="text-[10px] text-zinc-500 font-bold block uppercase tracking-wider mt-0.5 font-mono">
-                          ID: {membership.tenantId.substring(0, 8)}
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border shrink-0",
+                          isOwner 
+                            ? "bg-purple-500/10 text-purple-400 border-purple-500/20" 
+                            : "bg-zinc-800 text-zinc-400 border-zinc-700"
+                        )}>
+                          {membership.role}
                         </span>
                       </div>
+                      <p className="text-[10px] text-zinc-500 font-mono mt-0.5 truncate">
+                        Tenant ID: {membership.tenantId.substring(0, 13)}...
+                      </p>
                     </div>
                   </div>
 
-                  {/* Bottom card content */}
-                  <div className="flex items-center justify-between w-full pt-4 border-t border-zinc-800/40 mt-4">
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-950/60 border border-zinc-800/60 text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">
-                      <Shield size={10} className="text-purple-400" />
-                      <span>{membership.role}</span>
-                    </div>
-
-                    <span className="text-xs font-bold text-zinc-400 group-hover:text-purple-400 flex items-center gap-1 transition-colors">
-                      {isSwitchingThis ? (
-                        <>
-                          <Loader2 size={12} className="animate-spin" />
-                          <span>Loading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Enter</span>
-                          <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform duration-200" />
-                        </>
-                      )}
+                  {/* Right side status / enter action */}
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    {/* Keyboard shortcut hint */}
+                    <span className="hidden sm:inline-flex items-center justify-center h-5 w-5 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-500 group-hover:text-zinc-300">
+                      {idx + 1}
                     </span>
+
+                    {isSwitchingThis ? (
+                      <div className="flex items-center gap-1 text-xs text-purple-400 font-bold">
+                        <Loader2 size={13} className="animate-spin" />
+                        <span>Opening...</span>
+                      </div>
+                    ) : (
+                      <div className="h-7 w-7 rounded-lg bg-zinc-900 group-hover:bg-purple-600 text-zinc-400 group-hover:text-white border border-zinc-800 group-hover:border-purple-500 flex items-center justify-center transition-all">
+                        <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    )}
                   </div>
                 </button>
               </BlurFade>
             );
           })}
+
+          {/* New Workspace Creation Shortcut Card */}
+          <BlurFade spring delay={0.08 + memberships.length * 0.04} direction="up" offset={10}>
+            <button
+              onClick={() => router.push("/onboarding")}
+              className="w-full p-3.5 bg-zinc-950/40 border border-dashed border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/30 rounded-2xl transition-all flex items-center justify-center gap-2 text-xs font-semibold text-zinc-400 hover:text-zinc-200 cursor-pointer"
+            >
+              <Plus size={14} className="text-zinc-500" />
+              <span>Create or Register New Agency Workspace</span>
+            </button>
+          </BlurFade>
         </div>
 
         {/* Empty State */}
         {memberships.length === 0 && (
-          <BlurFade spring delay={0.1} direction="up" offset={15}>
-            <div className="text-center py-12 bg-[#111113]/70 border border-zinc-800/80 rounded-2xl space-y-4 backdrop-blur-md">
-              <Building2 size={36} className="mx-auto text-zinc-500 animate-pulse" />
-              <div className="space-y-1">
-                <h3 className="font-bold text-sm">No Workspaces Found</h3>
-                <p className="text-xs text-zinc-400 max-w-sm mx-auto px-4 leading-relaxed">
-                  Your account is not linked to any active organization profiles. Please contact your administrator.
-                </p>
-              </div>
+          <div className="text-center py-10 bg-[#121214] border border-zinc-800 rounded-2xl space-y-3">
+            <Building2 size={32} className="mx-auto text-zinc-600" />
+            <div className="space-y-1">
+              <h3 className="font-bold text-sm text-zinc-200">No Active Workspaces Linked</h3>
+              <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+                Your account is not linked to any agency profiles. Create a new agency workspace to start.
+              </p>
             </div>
-          </BlurFade>
+            <button
+              onClick={() => router.push("/onboarding")}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl text-xs transition"
+            >
+              Launch New Workspace
+            </button>
+          </div>
         )}
 
-        {/* Footer info */}
+        {/* Footer info bar */}
         <BlurFade spring delay={0.2} direction="up" offset={10}>
-          <div className="text-center pt-2 select-none">
-            <p className="text-xs text-zinc-500">
-              Logged in as <span className="text-zinc-400 font-semibold">{user?.email}</span>
-            </p>
+          <div className="flex justify-between items-center text-[11px] text-zinc-500 px-1 font-mono pt-1">
+            <span>Session: <strong className="text-zinc-400 font-sans font-medium">{user?.email}</strong></span>
+            <span className="text-[10px] text-zinc-600">Press 1-{Math.min(9, memberships.length)} to jump</span>
           </div>
         </BlurFade>
       </div>

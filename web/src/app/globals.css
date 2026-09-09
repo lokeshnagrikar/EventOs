@@ -718,28 +718,54 @@ html.lenis body {
     hue-rotate(52deg) saturate(1.35) contrast(1.08) brightness(1) drop-shadow(0 3px 8px rgba(79, 70, 229, 0.28));
 }
 
-/* ─── Sleek EventOS Sidebar Scrollbar ─────────────────────────────────────── */
-.sidebar-scrollbar::-webkit-scrollbar {
-  width: 4px;
+/* ─── Sleek Universal & Sidebar Scrollbars ─────────────────────────────────────── */
+.sidebar-scrollbar::-webkit-scrollbar,
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
 
-.sidebar-scrollbar::-webkit-scrollbar-track {
+.sidebar-scrollbar::-webkit-scrollbar-track,
+.scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+.sidebar-scrollbar::-webkit-scrollbar-thumb,
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
   border-radius: 9999px;
 }
 
-.dark .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+.dark .sidebar-scrollbar::-webkit-scrollbar-thumb,
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
 }
 
-.sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
+.sidebar-scrollbar:hover::-webkit-scrollbar-thumb,
+.scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
 }
 
-.dark .sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
+.dark .sidebar-scrollbar:hover::-webkit-scrollbar-thumb,
+.dark .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Firefox custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

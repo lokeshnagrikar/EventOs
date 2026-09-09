@@ -223,8 +223,8 @@ export default function KanbanBoard({
                                 <span className="px-2 py-0.5 bg-zinc-900/60 border border-zinc-850 text-zinc-400 rounded-md">
                                   {lead.eventType}
                                 </span>
-                                <span className="font-mono text-emerald-450">
-                                  ₹{lead.budget ? lead.budget.toLocaleString() : "0"}
+                                <span className="font-mono tabular-nums font-bold text-emerald-450">
+                                  ₹{lead.budget ? lead.budget.toLocaleString("en-IN") : "0"}
                                 </span>
                               </div>
 
@@ -235,7 +235,7 @@ export default function KanbanBoard({
                                     {meta.priority}
                                   </span>
                                   <span className={cn("px-1.5 py-0.5 rounded-full text-[8px] font-mono font-bold flex items-center gap-1", scoreColor)}>
-                                    <Sparkles size={8} />
+                                    <TrendingUp size={8} />
                                     {meta.score}
                                   </span>
                                 </div>
