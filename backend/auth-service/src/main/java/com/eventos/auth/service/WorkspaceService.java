@@ -63,6 +63,18 @@ public class WorkspaceService {
         if (updatedCompany.getDateFormat() != null) company.setDateFormat(updatedCompany.getDateFormat());
         if (updatedCompany.getLanguage() != null) company.setLanguage(updatedCompany.getLanguage());
         if (updatedCompany.getBusinessHours() != null) company.setBusinessHours(updatedCompany.getBusinessHours());
+        if (updatedCompany.getPrimaryColor() != null) company.setPrimaryColor(updatedCompany.getPrimaryColor());
+        if (updatedCompany.getSecondaryColor() != null) company.setSecondaryColor(updatedCompany.getSecondaryColor());
+        if (updatedCompany.getAccentColor() != null) company.setAccentColor(updatedCompany.getAccentColor());
+        if (updatedCompany.getGradientPresets() != null) company.setGradientPresets(updatedCompany.getGradientPresets());
+        if (updatedCompany.getFontSelection() != null) company.setFontSelection(updatedCompany.getFontSelection());
+        if (updatedCompany.getDarkThemeLogo() != null) company.setDarkThemeLogo(updatedCompany.getDarkThemeLogo());
+        if (updatedCompany.getCoverUrl() != null) company.setCoverUrl(updatedCompany.getCoverUrl());
+        if (updatedCompany.getFaviconUrl() != null) company.setFaviconUrl(updatedCompany.getFaviconUrl());
+        if (updatedCompany.getEmailBranding() != null) company.setEmailBranding(updatedCompany.getEmailBranding());
+        if (updatedCompany.getInvoiceBranding() != null) company.setInvoiceBranding(updatedCompany.getInvoiceBranding());
+        if (updatedCompany.getPdfBranding() != null) company.setPdfBranding(updatedCompany.getPdfBranding());
+        if (updatedCompany.getWhatsappConfig() != null) company.setWhatsappConfig(updatedCompany.getWhatsappConfig());
         
         return companyRepository.save(company);
     }

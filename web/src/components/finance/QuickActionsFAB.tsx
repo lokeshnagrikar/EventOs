@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, BookOpen, FileText, Coins, Download, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function QuickActionsFAB() {
+export function QuickActionsFAB() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -114,3 +114,4 @@ export default function QuickActionsFAB() {
     </div>
   );
 }
+export default QuickActionsFAB;

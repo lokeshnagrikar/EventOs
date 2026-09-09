@@ -46,6 +46,42 @@ public class WorkspaceController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/whatsapp")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
+    public ResponseEntity<?> getWhatsAppSettings(
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+        UUID tenantId = getTenantId(tenantIdHeader);
+        Company company = workspaceService.getWorkspaceSettings(tenantId);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", company.getWhatsappConfig());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/whatsapp")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
+    public ResponseEntity<?> updateWhatsAppSettings(
+            @RequestBody Map<String, Object> payload,
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+        UUID tenantId = getTenantId(tenantIdHeader);
+        Company company = workspaceService.getWorkspaceSettings(tenantId);
+        
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String configJson = mapper.writeValueAsString(payload);
+            company.setWhatsappConfig(configJson);
+            workspaceService.updateWorkspaceSettings(tenantId, company);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize WhatsApp configuration", e);
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "WhatsApp configuration saved successfully");
+        return ResponseEntity.ok(response);
+    }
+
     private UUID getTenantId(String header) {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();

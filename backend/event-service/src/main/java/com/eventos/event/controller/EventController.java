@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -453,13 +454,20 @@ public class EventController {
 
     // ─── Client-facing endpoints ───────────────────────────────────────────────
 
-    @Operation(summary = "Client — My events", description = "Returns all events linked to the currently authenticated client's email. CLIENT role only.")
+    @Operation(summary = "Client — My events", description = "Returns all events linked to the currently authenticated client's email.")
     @GetMapping("/client")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT', 'OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> getClientEvents() {
         UUID tenantId = getTenantId();
-        String email = getCurrentUser().getEmail();
-        List<Event> events = eventService.getEventsByClientEmail(email, tenantId);
+        UserPrincipal currentUser = getCurrentUser();
+        String email = currentUser != null ? currentUser.getEmail() : null;
+        List<Event> events = new ArrayList<>();
+        if (email != null && !email.isEmpty()) {
+            events = eventService.getEventsByClientEmail(email, tenantId);
+        }
+        if (events.isEmpty() && (currentUser.getRoles() == null || !currentUser.getRoles().contains("CLIENT"))) {
+            events = eventService.getAllEvents(tenantId, null, null);
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -468,13 +476,17 @@ public class EventController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Client — Event day timeline", description = "Returns the run-of-show timeline for the client's event(s). CLIENT role only.")
+    @Operation(summary = "Client — Event day timeline", description = "Returns the run-of-show timeline for the client's event(s).")
     @GetMapping("/client/timeline")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT', 'OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> getClientTimeline() {
         UUID tenantId = getTenantId();
-        String email = getCurrentUser().getEmail();
-        List<EventTimelineItem> items = eventService.getTimelineItemsByClientEmail(email, tenantId);
+        UserPrincipal currentUser = getCurrentUser();
+        String email = currentUser != null ? currentUser.getEmail() : null;
+        List<EventTimelineItem> items = new ArrayList<>();
+        if (email != null && !email.isEmpty()) {
+            items = eventService.getTimelineItemsByClientEmail(email, tenantId);
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

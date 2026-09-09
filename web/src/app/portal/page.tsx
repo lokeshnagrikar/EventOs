@@ -141,16 +141,35 @@ export default function ClientDashboard() {
     }
   });
 
-  const clientQuotes = useMemo(() => quotesData?.data || [], [quotesData]);
-  const clientInvoices = useMemo(() => invoicesData?.data || [], [invoicesData]);
-  const eventsList = useMemo(() => eventsData?.data || [], [eventsData]);
-  const clientTimeline = useMemo(() => timelineData?.data || [], [timelineData]);
+  const clientQuotes = useMemo<Quote[]>(() => {
+    if (Array.isArray(quotesData?.data)) return quotesData.data;
+    if (Array.isArray(quotesData)) return quotesData as any;
+    return [];
+  }, [quotesData]);
+
+  const clientInvoices = useMemo<Invoice[]>(() => {
+    if (Array.isArray(invoicesData?.data)) return invoicesData.data;
+    if (Array.isArray(invoicesData)) return invoicesData as any;
+    return [];
+  }, [invoicesData]);
+
+  const eventsList = useMemo<EventItem[]>(() => {
+    if (Array.isArray(eventsData?.data)) return eventsData.data;
+    if (Array.isArray(eventsData)) return eventsData as any;
+    return [];
+  }, [eventsData]);
+
+  const clientTimeline = useMemo<TimelineItem[]>(() => {
+    if (Array.isArray(timelineData?.data)) return timelineData.data;
+    if (Array.isArray(timelineData)) return timelineData as any;
+    return [];
+  }, [timelineData]);
 
   const activeEvent = eventsList[0] || null;
 
   // Ticker Countdown math
   const daysRemaining = useMemo(() => {
-    if (!activeEvent) return 0;
+    if (!activeEvent || !activeEvent.startDate) return 0;
     const diff = new Date(activeEvent.startDate).getTime() - new Date().getTime();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }, [activeEvent]);
@@ -159,13 +178,13 @@ export default function ClientDashboard() {
   const totalBalanceDue = useMemo(() => {
     return clientInvoices
       .filter(i => i.status !== "PAID" && i.status !== "CANCELLED")
-      .reduce((sum, i) => sum + i.totalAmount, 0);
+      .reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
   }, [clientInvoices]);
 
   const totalPaid = useMemo(() => {
     return clientInvoices
       .filter(i => i.status === "PAID")
-      .reduce((sum, i) => sum + i.totalAmount, 0);
+      .reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
   }, [clientInvoices]);
 
   const totalInvoiceValue = totalPaid + totalBalanceDue;
@@ -294,7 +313,7 @@ export default function ClientDashboard() {
         <div onClick={() => router.push("/portal/invoices")} className="p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] backdrop-blur-md hover:border-purple-500/20 shadow-md flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
           <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Outstanding balance</span>
           <div>
-            <p className="text-xl font-black text-red-400 font-mono">₹{totalBalanceDue.toLocaleString()}</p>
+            <p className="text-xl font-black text-red-400 font-mono">₹{(Number(totalBalanceDue) || 0).toLocaleString()}</p>
             <p className="text-[9px] text-zinc-500 mt-1">Installments pending</p>
           </div>
         </div>
@@ -303,17 +322,17 @@ export default function ClientDashboard() {
         <div onClick={() => router.push("/portal/invoices")} className="p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] backdrop-blur-md hover:border-purple-500/20 shadow-md flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
           <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Contract Value Cleared</span>
           <div>
-            <p className="text-xl font-black text-emerald-400 font-mono">₹{totalPaid.toLocaleString()}</p>
+            <p className="text-xl font-black text-emerald-400 font-mono">₹{(Number(totalPaid) || 0).toLocaleString()}</p>
             <p className="text-[9px] text-zinc-500 mt-1">Receipts ledger updated</p>
           </div>
         </div>
 
         {/* Photo Gallery Assets */}
         <div onClick={() => router.push("/portal/gallery")} className="p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] backdrop-blur-md hover:border-purple-500/20 shadow-md flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
-          <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Mood board captures</span>
+          <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Gallery & Media</span>
           <div>
-            <p className="text-xl font-black text-purple-400 font-mono">248 items</p>
-            <p className="text-[9px] text-zinc-500 mt-1">Auto-optimized delivery</p>
+            <p className="text-xl font-black text-purple-400 font-mono">Deliverables</p>
+            <p className="text-[9px] text-zinc-500 mt-1">HD event photo assets</p>
           </div>
         </div>
 
@@ -321,7 +340,7 @@ export default function ClientDashboard() {
         <div onClick={() => router.push("/portal/quotes")} className="p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] backdrop-blur-md hover:border-purple-500/20 shadow-md flex flex-col justify-between h-[130px] cursor-pointer transition-all duration-300 relative group">
           <span className="text-[9px] font-black text-zinc-550 uppercase tracking-widest block">Proposals & Agreements</span>
           <div>
-            <p className="text-xl font-black text-zinc-200 font-mono">4 files</p>
+            <p className="text-xl font-black text-zinc-200 font-mono">{clientQuotes.length} {clientQuotes.length === 1 ? "proposal" : "proposals"}</p>
             <p className="text-[9px] text-zinc-500 mt-1">Proposals & sign-off vaults</p>
           </div>
         </div>

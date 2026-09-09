@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Sparkles,
@@ -22,11 +22,13 @@ import {
   ArrowLeft,
   ChevronDown,
   ChevronUp,
-  ExternalLink
+  ExternalLink,
+  Play,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { getAIConfig, saveAIConfig, getAIHistory, logAIActivity, AIProviderName, AIConfig, AIHistoryLog } from "@/lib/aiProvider";
+import { getAIConfig, saveAIConfig, getAIHistory, logAIActivity, generateAIResponse, AIProviderName, AIConfig, AIHistoryLog } from "@/lib/aiProvider";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useToastStore } from "@/lib/toastStore";
@@ -42,7 +44,7 @@ export default function AICenterPage() {
   const router = useRouter();
   const { addToast } = useToastStore();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "prompts" | "history" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "playground" | "prompts" | "history" | "settings">("dashboard");
   const { completeStep } = useOnboardingStore();
 
   // Config State
@@ -61,6 +63,12 @@ export default function AICenterPage() {
   // History state
   const [history, setHistory] = useState<AIHistoryLog[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Playground state
+  const [playgroundModule, setPlaygroundModule] = useState("CRM AI");
+  const [playgroundPrompt, setPlaygroundPrompt] = useState("");
+  const [playgroundOutput, setPlaygroundOutput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -111,14 +119,48 @@ export default function AICenterPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Recharts usage telemetry metrics (Mock)
-  const usageChartData = [
-    { name: "Mon", Tokens: 4200, SavedMinutes: 65 },
-    { name: "Tue", Tokens: 6800, SavedMinutes: 98 },
-    { name: "Wed", Tokens: 8900, SavedMinutes: 120 },
-    { name: "Thu", Tokens: 12500, SavedMinutes: 180 },
-    { name: "Fri", Tokens: 14200, SavedMinutes: 210 }
-  ];
+  const handleRunPlayground = async () => {
+    if (!playgroundPrompt.trim()) return;
+    setIsGenerating(true);
+    try {
+      const res = await generateAIResponse(playgroundModule, playgroundPrompt);
+      setPlaygroundOutput(res);
+      setHistory(getAIHistory());
+      addToast("AI completion generated and logged to history!", "success");
+    } catch (e: any) {
+      addToast("Generation failed: " + (e?.message || "Unknown error"), "error");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Dynamic Telemetry Metrics (Derived purely from real activity logs)
+  const totalTokens = useMemo(() => history.reduce((sum, h) => sum + (h.tokensConsumed || 0), 0), [history]);
+  const totalRuns = useMemo(() => history.length, [history]);
+  const savedHours = useMemo(() => (totalRuns * 0.25).toFixed(1), [totalRuns]);
+  const totalCostSavedInr = useMemo(() => Math.round(totalTokens * 0.75), [totalTokens]);
+
+  // Dynamic Chart Data grouped from real activity logs
+  const usageChartData = useMemo(() => {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const map: Record<string, { name: string; Tokens: number; SavedMinutes: number }> = {};
+    days.forEach((d) => {
+      map[d] = { name: d, Tokens: 0, SavedMinutes: 0 };
+    });
+
+    history.forEach((h) => {
+      try {
+        const d = new Date(h.timestamp);
+        const dayName = days[d.getDay()];
+        if (map[dayName]) {
+          map[dayName].Tokens += h.tokensConsumed || 0;
+          map[dayName].SavedMinutes += 15;
+        }
+      } catch {}
+    });
+
+    return Object.values(map);
+  }, [history]);
 
   if (!mounted) return null;
 
@@ -153,6 +195,7 @@ export default function AICenterPage() {
         <aside className="w-60 border-r border-zinc-850 bg-[#111113]/30 backdrop-blur-md p-3 flex flex-col gap-2 shrink-0">
           {[
             { id: "dashboard", label: "Overview Metrics", icon: Cpu },
+            { id: "playground", label: "AI Playground", icon: Sparkles },
             { id: "prompts", label: "Prompt Library", icon: FolderOpen },
             { id: "history", label: "AI History Logs", icon: History },
             { id: "settings", label: "AI Config Settings", icon: Sliders }
@@ -199,44 +242,151 @@ export default function AICenterPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="p-4 border border-zinc-800 bg-[#111113]/40 rounded-2xl">
                       <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Tokens Consumed</span>
-                      <span className="text-xl font-bold font-mono block mt-1">46,420</span>
+                      <span className="text-xl font-bold font-mono block mt-1">{totalTokens.toLocaleString()}</span>
                     </div>
                     <div className="p-4 border border-zinc-800 bg-[#111113]/40 rounded-2xl">
                       <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Saved Business Hours</span>
                       <span className="text-xl font-bold font-mono block mt-1 flex items-center gap-1">
-                        <Clock size={14} className="text-purple-400" /> 18.5 hrs
+                        <Clock size={14} className="text-purple-400" /> {savedHours} hrs
                       </span>
                     </div>
                     <div className="p-4 border border-zinc-800 bg-[#111113]/40 rounded-2xl">
                       <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Automation Runs</span>
-                      <span className="text-xl font-bold font-mono block mt-1">112 tasks</span>
+                      <span className="text-xl font-bold font-mono block mt-1">{totalRuns} tasks</span>
                     </div>
                     <div className="p-4 border border-zinc-800 bg-[#111113]/40 rounded-2xl">
                       <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">AI Cost Saved</span>
-                      <span className="text-xl font-bold font-mono block mt-1 text-emerald-450">₹32,400</span>
+                      <span className="text-xl font-bold font-mono block mt-1 text-emerald-450">₹{totalCostSavedInr.toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* Token consumption chart */}
                   <div className="p-5 border border-zinc-850 bg-[#111113]/30 rounded-2xl space-y-4">
                     <span className="text-[10px] text-zinc-550 font-black uppercase tracking-wider block">Token Consumption Trends</span>
-                    <div className="h-44 w-full text-xs">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={usageChartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="aiGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#a855f7" stopOpacity={0.15}/>
-                              <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                          <XAxis dataKey="name" stroke="#71717a" />
-                          <YAxis stroke="#71717a" />
-                          <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a" }} />
-                          <Area type="monotone" dataKey="Tokens" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#aiGrad)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
+                    {totalTokens === 0 ? (
+                      <div className="h-44 w-full flex flex-col items-center justify-center border border-dashed border-zinc-850 rounded-xl text-zinc-550 text-xs gap-2">
+                        <Cpu size={24} className="opacity-40 text-purple-400" />
+                        <span>No tokens consumed yet. Run a prompt in the AI Playground to see activity trends!</span>
+                      </div>
+                    ) : (
+                      <div className="h-44 w-full text-xs">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={usageChartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="aiGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#a855f7" stopOpacity={0.15}/>
+                                <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                            <XAxis dataKey="name" stroke="#71717a" />
+                            <YAxis stroke="#71717a" />
+                            <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a" }} />
+                            <Area type="monotone" dataKey="Tokens" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#aiGrad)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: AI PLAYGROUND */}
+              {activeTab === "playground" && (
+                <div className="space-y-6">
+                  <div className="border-b border-zinc-850 pb-4">
+                    <h3 className="text-sm font-extrabold uppercase text-white flex items-center gap-2">
+                      <Sparkles size={16} className="text-purple-500" />
+                      Interactive AI Playground
+                    </h3>
+                    <p className="text-[11px] text-zinc-450 mt-1">Execute prompts live with your configured AI engine ({provider}) and generate real outputs.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-black text-zinc-550 block">Target Module</label>
+                        <select
+                          value={playgroundModule}
+                          onChange={(e) => setPlaygroundModule(e.target.value)}
+                          className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white"
+                        >
+                          <option value="CRM AI">CRM Lead Score</option>
+                          <option value="Quote AI">Quote Recommendations</option>
+                          <option value="Event Timeline">Event Timeline</option>
+                          <option value="Finance Forecast">Finance Forecast</option>
+                          <option value="Gallery Tagging">Gallery Tagging</option>
+                          <option value="General Assistant">General Assistant</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-2 space-y-1">
+                        <label className="text-[9px] uppercase font-black text-zinc-550 block">Quick Preset Insertion</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {prompts.map((p) => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => setPlaygroundPrompt(p.prompt)}
+                              className="px-2 py-1 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-lg text-[10px] text-zinc-350 hover:text-white transition-colors truncate max-w-[200px]"
+                              title={p.prompt}
+                            >
+                              {p.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] uppercase font-black text-zinc-550 block">Enter Prompt Instructions</label>
+                      <textarea
+                        rows={4}
+                        placeholder="Type your prompt instructions or select a preset above..."
+                        value={playgroundPrompt}
+                        onChange={(e) => setPlaygroundPrompt(e.target.value)}
+                        className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-xs text-white leading-relaxed font-mono focus:border-purple-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isGenerating || !playgroundPrompt.trim()}
+                      onClick={handleRunPlayground}
+                      className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-purple-600/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer transition-all"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 size={13} className="animate-spin" />
+                          Generating Output...
+                        </>
+                      ) : (
+                        <>
+                          <Play size={13} fill="currentColor" />
+                          Run AI Generation
+                        </>
+                      )}
+                    </button>
+
+                    {playgroundOutput && (
+                      <div className="p-5 border border-purple-900/30 bg-purple-950/10 rounded-2xl space-y-3">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-purple-400 flex items-center gap-1.5">
+                            <Sparkles size={13} /> Generated Output
+                          </span>
+                          <button
+                            onClick={() => handleCopyText(playgroundOutput, "playground-out")}
+                            className="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1"
+                          >
+                            {copiedId === "playground-out" ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                            Copy
+                          </button>
+                        </div>
+                        <div className="p-4 bg-zinc-950 border border-zinc-850 rounded-xl font-mono text-xs text-zinc-200 whitespace-pre-wrap leading-relaxed">
+                          {playgroundOutput}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

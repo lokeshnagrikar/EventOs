@@ -57,11 +57,11 @@ const DEFAULT_ENGINE_CONFIG: PaymentEngineConfig = {
     cashfree: false,
     phonepe: true,
   },
-  ownerUpiId: "royalweddings@okicici",
-  ownerBankName: "HDFC Bank",
-  ownerAccountHolder: "Royal Weddings & Events Ltd",
-  ownerAccountNumber: "50100293847192",
-  ownerIfsc: "HDFC0001234",
+  ownerUpiId: "",
+  ownerBankName: "",
+  ownerAccountHolder: "",
+  ownerAccountNumber: "",
+  ownerIfsc: "",
 };
 
 export default function PaymentEngineSettings() {
@@ -70,20 +70,40 @@ export default function PaymentEngineSettings() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    let currentConfig = { ...DEFAULT_ENGINE_CONFIG };
     const saved = localStorage.getItem("eventos_payment_engine_config");
     if (saved) {
       try {
-        setConfig(JSON.parse(saved));
+        currentConfig = { ...currentConfig, ...JSON.parse(saved) };
       } catch (err) {
         console.error("Failed to load payment engine config:", err);
       }
     }
+    const directSaved = localStorage.getItem("eventos_direct_payment_destination");
+    if (directSaved) {
+      try {
+        const direct = JSON.parse(directSaved);
+        if (direct.ownerUpiId) currentConfig.ownerUpiId = direct.ownerUpiId;
+        if (direct.ownerBankName) currentConfig.ownerBankName = direct.ownerBankName;
+        if (direct.ownerAccountName) currentConfig.ownerAccountHolder = direct.ownerAccountName;
+        if (direct.ownerAccountNumber) currentConfig.ownerAccountNumber = direct.ownerAccountNumber;
+        if (direct.ownerIfsc) currentConfig.ownerIfsc = direct.ownerIfsc;
+      } catch (err) {}
+    }
+    setConfig(currentConfig);
   }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
       localStorage.setItem("eventos_payment_engine_config", JSON.stringify(config));
+      localStorage.setItem("eventos_direct_payment_destination", JSON.stringify({
+        ownerUpiId: config.ownerUpiId,
+        ownerAccountName: config.ownerAccountHolder,
+        ownerAccountNumber: config.ownerAccountNumber,
+        ownerIfsc: config.ownerIfsc,
+        ownerBankName: config.ownerBankName,
+      }));
       await apiClient.put("/workspace/settings/payment-config", config).catch(() => {});
       addToast("Enterprise Payment Engine configuration saved!", "success");
     } catch (err) {

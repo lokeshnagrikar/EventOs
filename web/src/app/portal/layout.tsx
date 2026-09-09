@@ -56,6 +56,47 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   // Search input
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Dynamic White-Label Branding State
+  const [branding, setBranding] = useState({
+    brandName: "Event Workspace",
+    logoUrl: "",
+    accentColor: "#8B5CF6",
+    tagline: "Client Experience",
+    hidePoweredBy: false,
+  });
+
+  useEffect(() => {
+    // Fetch real agency branding from workspace settings
+    api.get("/auth/settings/workspace")
+      .then((res) => {
+        const d = res.data?.data;
+        if (d) {
+          setBranding({
+            brandName: d.name || "Event Workspace",
+            logoUrl: d.logoUrl || "",
+            accentColor: d.primaryColor || d.accentColor || "#8B5CF6",
+            tagline: d.slug || "Client Experience",
+            hidePoweredBy: true,
+          });
+        }
+      })
+      .catch(() => {
+        const local = localStorage.getItem("eventos_whitelabel_config");
+        if (local) {
+          try {
+            const parsed = JSON.parse(local);
+            setBranding({
+              brandName: parsed.brandName || "Event Workspace",
+              logoUrl: parsed.logoUrl || "",
+              accentColor: parsed.accentColor || "#8B5CF6",
+              tagline: parsed.portalTagline || "Client Experience",
+              hidePoweredBy: parsed.hideEventOsBranding ?? false,
+            });
+          } catch (e) {}
+        }
+      });
+  }, []);
+
   // Notification lists (State)
   const [notifications, setNotifications] = useState([
     { id: "1", type: "PAYMENT", text: "Advance Payment Receipt Generated", time: "1 hour ago", unread: true },
@@ -91,13 +132,14 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     if (typeof window !== "undefined") {
       const storedName = getCookieValue("user_name");
       const storedRole = getCookieValue("user_role");
+      const isAllowed = storedRole === "CLIENT" || storedRole === "OWNER" || storedRole === "ADMIN" || storedRole === "MANAGER";
       
-      if (!storedName || storedRole !== "CLIENT") {
+      if (!storedName && !storedRole) {
         router.push("/?login=true");
         return;
       }
       
-      setUserName(decodeURIComponent(storedName));
+      setUserName(decodeURIComponent(storedName || (storedRole ? `${storedRole} (Preview)` : "Client")));
       setAuthChecked(true);
 
       const cookieTheme = getCookieValue("theme");
@@ -285,12 +327,25 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 {/* Header with Logo & Close */}
                 <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-indigo-500 flex items-center justify-center text-white font-extrabold text-sm shadow-md">
-                      E
-                    </div>
+                    {branding.logoUrl ? (
+                      <img
+                        src={branding.logoUrl}
+                        alt={branding.brandName}
+                        className="h-8 w-8 rounded-xl object-cover border border-white/10 shadow-md"
+                      />
+                    ) : (
+                      <div
+                        style={{ background: `linear-gradient(135deg, ${branding.accentColor}, #EC4899)` }}
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-white font-extrabold text-sm shadow-md"
+                      >
+                        {branding.brandName ? branding.brandName.charAt(0).toUpperCase() : "E"}
+                      </div>
+                    )}
                     <div>
-                      <h2 className="font-extrabold text-xs text-white">EventOS</h2>
-                      <span className="text-[9px] text-purple-400 font-bold uppercase tracking-wider block">Client Portal</span>
+                      <h2 className="font-extrabold text-xs text-white truncate max-w-[140px]">{branding.brandName}</h2>
+                      <span className="text-[9px] text-purple-400 font-bold uppercase tracking-wider block truncate max-w-[140px]">
+                        {branding.tagline || "Client Portal"}
+                      </span>
                     </div>
                   </div>
                   <button
@@ -388,12 +443,27 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <div className="space-y-6">
           {/* Logo Section */}
           <div className="flex items-center gap-2.5 pb-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 via-pink-500 to-indigo-500 flex items-center justify-center text-white font-extrabold text-base shadow-lg shadow-purple-500/10">
-              E
-            </div>
+            {branding.logoUrl ? (
+              <img
+                src={branding.logoUrl}
+                alt={branding.brandName}
+                className="h-9 w-9 rounded-xl object-cover border border-white/10 shadow-md shadow-purple-500/10"
+              />
+            ) : (
+              <div
+                style={{ background: `linear-gradient(135deg, ${branding.accentColor}, #EC4899)` }}
+                className="h-9 w-9 rounded-xl flex items-center justify-center text-white font-extrabold text-base shadow-lg shadow-purple-500/10"
+              >
+                {branding.brandName ? branding.brandName.charAt(0).toUpperCase() : "E"}
+              </div>
+            )}
             <div>
-              <h1 className="font-extrabold text-xs leading-none tracking-wide text-zinc-150">EventOS</h1>
-              <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider mt-1 block">Client Experience</span>
+              <h1 className="font-extrabold text-xs leading-none tracking-wide text-zinc-150 truncate max-w-[150px]">
+                {branding.brandName}
+              </h1>
+              <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider mt-1 block truncate max-w-[150px]">
+                {branding.tagline || "Client Experience"}
+              </span>
             </div>
           </div>
 
@@ -478,6 +548,14 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               </button>
             </div>
           </div>
+
+          {!branding.hidePoweredBy && (
+            <div className="pt-2 text-center border-t border-white/[0.04]">
+              <span className="text-[9px] text-zinc-600 font-mono uppercase tracking-wider">
+                Powered by EventOS
+              </span>
+            </div>
+          )}
         </div>
       </aside>
 

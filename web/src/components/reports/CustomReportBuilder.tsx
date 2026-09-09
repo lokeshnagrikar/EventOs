@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
   Download,
   Filter,
@@ -72,14 +74,75 @@ export default function CustomReportBuilder() {
   const [shareExpiry, setShareExpiry] = useState("7");
   const [generatedShareLink, setGeneratedShareLink] = useState("");
 
+  // Queries for real source data
+  const { data: leadsRes } = useQuery({
+    queryKey: ["reports_builder_leads"],
+    queryFn: async () => {
+      const res = await api.get("/crm/leads");
+      return res.data?.data || [];
+    }
+  });
+
+  const { data: eventsRes } = useQuery({
+    queryKey: ["reports_builder_events"],
+    queryFn: async () => {
+      const res = await api.get("/events");
+      return res.data?.data || [];
+    }
+  });
+
+  const { data: invoicesRes } = useQuery({
+    queryKey: ["reports_builder_invoices"],
+    queryFn: async () => {
+      const res = await api.get("/events/invoices");
+      return res.data?.data || [];
+    }
+  });
+
   // Find active source schema
   const activeSource = useMemo(() => {
     return REPORT_SOURCES.find((s) => s.id === selectedSourceId) || REPORT_SOURCES[0];
   }, [selectedSourceId]);
 
-  // Derived filtered mock data
+  // Derived real data
+  const rawData = useMemo(() => {
+    if (selectedSourceId === "leads") {
+      return (leadsRes || []).map((l: any) => ({
+        name: l.name || `${l.contact?.firstName || ""} ${l.contact?.lastName || ""}`.trim() || "Lead",
+        email: l.email || l.contact?.email || "-",
+        phone: l.phone || l.contact?.phone || "-",
+        eventType: l.eventType || "Event",
+        budget: Number(l.budget) || 0,
+        status: l.status || "NEW",
+        date: l.createdAt ? new Date(l.createdAt).toLocaleDateString() : "-"
+      }));
+    }
+    if (selectedSourceId === "events") {
+      return (eventsRes || []).map((e: any) => ({
+        name: e.name || "Event",
+        eventType: e.eventType || "General",
+        venue: e.venue || "TBD",
+        budget: Number(e.budget) || 0,
+        startDate: e.startDate ? new Date(e.startDate).toLocaleDateString() : "-",
+        status: e.status || "PLANNING"
+      }));
+    }
+    if (selectedSourceId === "invoices") {
+      return (invoicesRes || []).map((inv: any) => ({
+        invoiceNumber: inv.invoiceNumber || `INV-${inv.id?.slice(0, 6)}`,
+        clientName: inv.clientName || "Client",
+        amount: Number(inv.total) || Number(inv.subtotal) || 0,
+        tax: Number(inv.tax) || 0,
+        status: inv.status || "DRAFT",
+        dueDate: inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "-"
+      }));
+    }
+    return [];
+  }, [selectedSourceId, leadsRes, eventsRes, invoicesRes]);
+
+  // Derived filtered data
   const filteredData = useMemo(() => {
-    let items = [...activeSource.mockData];
+    let items = [...rawData];
 
     if (eventTypeFilter !== "ALL") {
       items = items.filter((d) => d.eventType === eventTypeFilter);
@@ -94,7 +157,7 @@ export default function CustomReportBuilder() {
       }
     }
     return items;
-  }, [activeSource, eventTypeFilter, statusFilter, minBudget]);
+  }, [rawData, eventTypeFilter, statusFilter, minBudget]);
 
   // Chart derived dataset
   const chartData = useMemo(() => {
@@ -363,61 +426,67 @@ export default function CustomReportBuilder() {
             <span className="text-[8px] font-black uppercase tracking-wider text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">Recharts Engine</span>
           </div>
 
-          <div className="h-48 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              {chartType === "bar" ? (
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" opacity={0.3} />
-                  <XAxis dataKey="name" stroke="#6b7280" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#6b7280" fontSize={10} tickLine={false} />
-                  <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #374151", borderRadius: "12px" }} />
-                  <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              ) : chartType === "line" ? (
-                <RechartsLine data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" opacity={0.3} />
-                  <XAxis dataKey="name" stroke="#6b7280" fontSize={10} />
-                  <YAxis stroke="#6b7280" fontSize={10} />
-                  <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #374151", borderRadius: "12px" }} />
-                  <Line type="monotone" dataKey="value" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: "#8b5cf6" }} />
-                </RechartsLine>
-              ) : chartType === "area" ? (
-                <RechartsArea data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" opacity={0.3} />
-                  <XAxis dataKey="name" stroke="#6b7280" fontSize={10} />
-                  <YAxis stroke="#6b7280" fontSize={10} />
-                  <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #374151", borderRadius: "12px" }} />
-                  <defs>
-                    <linearGradient id="areaColor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <Area type="monotone" dataKey="value" stroke="#8b5cf6" fillOpacity={1} fill="url(#areaColor)" />
-                </RechartsArea>
-              ) : (
-                <RechartsPie>
-                  <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #374151", borderRadius: "12px" }} />
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={70}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                </RechartsPie>
-              )}
-            </ResponsiveContainer>
+          <div className="h-48 w-full flex items-center justify-center">
+            {chartData.length === 0 ? (
+              <div className="text-center text-zinc-600 text-xs font-semibold py-8">
+                No data available for visualization under selected criteria.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                {chartType === "bar" ? (
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" opacity={0.3} />
+                    <XAxis dataKey="name" stroke="#6b7280" fontSize={10} tickLine={false} />
+                    <YAxis stroke="#6b7280" fontSize={10} tickLine={false} />
+                    <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #374151", borderRadius: "12px" }} />
+                    <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                ) : chartType === "line" ? (
+                  <RechartsLine data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" opacity={0.3} />
+                    <XAxis dataKey="name" stroke="#6b7280" fontSize={10} />
+                    <YAxis stroke="#6b7280" fontSize={10} />
+                    <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #374151", borderRadius: "12px" }} />
+                    <Line type="monotone" dataKey="value" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: "#8b5cf6" }} />
+                  </RechartsLine>
+                ) : chartType === "area" ? (
+                  <RechartsArea data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" opacity={0.3} />
+                    <XAxis dataKey="name" stroke="#6b7280" fontSize={10} />
+                    <YAxis stroke="#6b7280" fontSize={10} />
+                    <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #374151", borderRadius: "12px" }} />
+                    <defs>
+                      <linearGradient id="areaColor" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="value" stroke="#8b5cf6" fillOpacity={1} fill="url(#areaColor)" />
+                  </RechartsArea>
+                ) : (
+                  <RechartsPie>
+                    <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #374151", borderRadius: "12px" }} />
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                  </RechartsPie>
+                )}
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 

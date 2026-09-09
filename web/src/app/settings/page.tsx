@@ -201,23 +201,22 @@ export default function SettingsPage() {
   const [seatChangeMode, setSeatChangeMode] = useState<"add" | "remove" | "">("");
   const [additionalSeatsInput, setAdditionalSeatsInput] = useState(1);
   const [showSeatModal, setShowSeatModal] = useState(false);
-  const [seatHistory, setSeatHistory] = useState([
-    { date: "2026-06-01", description: "Starter Plan Base allocation", change: "+5 seats", user: "Billing Admin" },
-    { date: "2026-06-15", description: "Developer Team Expansion Pack", change: "+3 seats", user: "Billing Admin" }
-  ]);
+  const [seatHistory, setSeatHistory] = useState<{ date: string; description: string; change: string; user: string }[]>([]);
 
-  const [billingStreet, setBillingStreet] = useState("142 Vercel Square");
-  const [billingCity, setBillingCity] = useState("Nagpur");
+  const [billingStreet, setBillingStreet] = useState("");
+  const [billingCity, setBillingCity] = useState("");
   const [billingCountry, setBillingCountry] = useState("India");
   const [billingTaxType, setBillingTaxType] = useState("GST");
-  const [billingTaxId, setBillingTaxId] = useState("27AABCU9281R1Z5");
+  const [billingTaxId, setBillingTaxId] = useState("");
 
   // Real Owner Payment Destination Settings
-  const [ownerUpiId, setOwnerUpiId] = useState("apexevents@okicici");
-  const [ownerAccountName, setOwnerAccountName] = useState("Apex Event Management Pvt Ltd");
-  const [ownerAccountNumber, setOwnerAccountNumber] = useState("9180200492810");
-  const [ownerIfsc, setOwnerIfsc] = useState("HDFC0001092");
-  const [ownerBankName, setOwnerBankName] = useState("HDFC Bank, Ramdaspeth");
+  const [ownerUpiId, setOwnerUpiId] = useState("");
+  const [ownerAccountName, setOwnerAccountName] = useState("");
+  const [ownerAccountNumber, setOwnerAccountNumber] = useState("");
+  const [ownerIfsc, setOwnerIfsc] = useState("");
+  const [ownerBankName, setOwnerBankName] = useState("");
+  const [isSavingPaymentDest, setIsSavingPaymentDest] = useState(false);
+  const [isSavingBillingTax, setIsSavingBillingTax] = useState(false);
 
   const [showCancelConfirmationModal, setShowCancelConfirmationModal] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
@@ -377,10 +376,10 @@ export default function SettingsPage() {
   const [auditCategoryFilter, setAuditCategoryFilter] = useState("ALL");
 
   // Automations states
-  const [automations, setAutomations] = useState([
+  const [automations, setAutomations] = useState<{ id: string; trigger: string; action: string; active: boolean }[]>([
     { id: "1", trigger: "When Lead Created", action: "Assign Salesperson", active: true },
     { id: "2", trigger: "When Booking Confirmed", action: "Assign Coordinator & Send Mail", active: true },
-    { id: "3", trigger: "When Payment Received", action: "Auto Generate Receipt PDF", active: false }
+    { id: "3", trigger: "When Payment Received", action: "Auto Generate Receipt PDF", active: true }
   ]);
 
   // Load saved configurations on mount
@@ -393,6 +392,48 @@ export default function SettingsPage() {
     fetchPaymentMethods();
     fetchInvoices();
     fetchSettings();
+
+    // Hydrate Direct Payment Destination
+    try {
+      const savedPay = localStorage.getItem("eventos_direct_payment_destination");
+      if (savedPay) {
+        const p = JSON.parse(savedPay);
+        if (p.ownerUpiId) setOwnerUpiId(p.ownerUpiId);
+        if (p.ownerAccountName) setOwnerAccountName(p.ownerAccountName);
+        if (p.ownerAccountNumber) setOwnerAccountNumber(p.ownerAccountNumber);
+        if (p.ownerIfsc) setOwnerIfsc(p.ownerIfsc);
+        if (p.ownerBankName) setOwnerBankName(p.ownerBankName);
+      }
+    } catch (e) {}
+
+    // Hydrate Tax Profile & Billing Address
+    try {
+      const savedTax = localStorage.getItem("eventos_billing_tax_profile");
+      if (savedTax) {
+        const t = JSON.parse(savedTax);
+        if (t.billingStreet) setBillingStreet(t.billingStreet);
+        if (t.billingCity) setBillingCity(t.billingCity);
+        if (t.billingCountry) setBillingCountry(t.billingCountry);
+        if (t.billingTaxType) setBillingTaxType(t.billingTaxType);
+        if (t.billingTaxId) setBillingTaxId(t.billingTaxId);
+      }
+    } catch (e) {}
+
+    // Hydrate Automations
+    try {
+      const savedAuto = localStorage.getItem("eventos_workspace_automations");
+      if (savedAuto) {
+        setAutomations(JSON.parse(savedAuto));
+      }
+    } catch (e) {}
+
+    // Hydrate Seat History
+    try {
+      const savedSeats = localStorage.getItem("eventos_seat_history");
+      if (savedSeats) {
+        setSeatHistory(JSON.parse(savedSeats));
+      }
+    } catch (e) {}
   }, []);
 
   // Sync settings when loaded
@@ -869,6 +910,75 @@ export default function SettingsPage() {
     });
   };
 
+  const handleSavePaymentDestination = () => {
+    setIsSavingPaymentDest(true);
+    try {
+      const dest = {
+        ownerUpiId,
+        ownerAccountName,
+        ownerAccountNumber,
+        ownerIfsc,
+        ownerBankName
+      };
+      localStorage.setItem("eventos_direct_payment_destination", JSON.stringify(dest));
+      const peSaved = localStorage.getItem("eventos_payment_engine_config");
+      const currentPE = peSaved ? JSON.parse(peSaved) : {};
+      localStorage.setItem("eventos_payment_engine_config", JSON.stringify({
+        ...currentPE,
+        ownerUpiId,
+        ownerAccountHolder: ownerAccountName,
+        ownerAccountNumber,
+        ownerIfsc,
+        ownerBankName
+      }));
+      addToast("Agency direct payment destination saved successfully!", "success");
+    } catch (err) {
+      addToast("Failed to save payment destination", "error");
+    } finally {
+      setIsSavingPaymentDest(false);
+    }
+  };
+
+  const handleSaveTaxAndBillingAddress = () => {
+    setIsSavingBillingTax(true);
+    try {
+      const taxProfile = {
+        billingTaxType,
+        billingTaxId,
+        billingStreet,
+        billingCity,
+        billingCountry
+      };
+      localStorage.setItem("eventos_billing_tax_profile", JSON.stringify(taxProfile));
+      updateTaxMutation.mutate({
+        gstRate,
+        vatRate,
+        invoiceFormat,
+        paymentTermsDays: paymentTerms,
+        lateFeePercentage: lateFees,
+        automaticCalculation: autoTaxCalculation
+      });
+      if (billingStreet || billingCity) {
+        updateWorkspaceMutation.mutate({
+          address: [billingStreet, billingCity, billingCountry].filter(Boolean).join(", "),
+          gstNumber: billingTaxType === "GST" ? billingTaxId : gstNumber
+        });
+      }
+      addToast("Billing address and registered tax profile saved!", "success");
+    } catch (err) {
+      addToast("Failed to save billing and tax details", "error");
+    } finally {
+      setIsSavingBillingTax(false);
+    }
+  };
+
+  const updateAutomationsList = (newList: { id: string; trigger: string; action: string; active: boolean }[]) => {
+    setAutomations(newList);
+    try {
+      localStorage.setItem("eventos_workspace_automations", JSON.stringify(newList));
+    } catch (e) {}
+  };
+
   const handleInviteSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     addTeamMemberMutation.mutate({
@@ -983,11 +1093,7 @@ export default function SettingsPage() {
     status: string;
   }[]>(() => {
     if (team.length === 0) {
-      return [
-        { name: "Rahul (Sales Head)", events: 4, tasks: 12, utilization: 80, status: "BUSY" },
-        { name: "Sneha (Planning Lead)", events: 8, tasks: 22, utilization: 95, status: "OVERLOADED" },
-        { name: "Amit (Staff)", events: 2, tasks: 5, utilization: 40, status: "AVAILABLE" }
-      ];
+      return [];
     }
     return team.map((m: any) => {
       const charCodeSum = (m.firstName + m.lastName).split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
@@ -1010,13 +1116,29 @@ export default function SettingsPage() {
     });
   }, [team]);
 
-  // Revenue overview timeline data (Mock)
-  const revenueChartData = [
-    { name: "Jan", Sales: 12000, Revenue: 9500 },
-    { name: "Feb", Sales: 18000, Revenue: 14000 },
-    { name: "Mar", Sales: 22000, Revenue: 19000 },
-    { name: "Apr", Sales: 31000, Revenue: 26000 }
-  ];
+  // Revenue overview timeline data (Derived dynamically from invoices)
+  const revenueChartData = useMemo(() => {
+    if (invoices && invoices.length > 0) {
+      const monthMap: Record<string, { name: string; Sales: number; Revenue: number }> = {};
+      invoices.forEach((inv: any) => {
+        const d = new Date(inv.date || inv.billingPeriodStart || inv.dueDate || Date.now());
+        const m = d.toLocaleString("default", { month: "short" });
+        if (!monthMap[m]) {
+          monthMap[m] = { name: m, Sales: 0, Revenue: 0 };
+        }
+        monthMap[m].Sales += Number(inv.amount || 0);
+        if (inv.status === "PAID" || inv.status === "CONFIRMED") {
+          monthMap[m].Revenue += Number(inv.amount || 0);
+        }
+      });
+      const result = Object.values(monthMap);
+      if (result.length > 0) return result;
+    }
+    const currentMonth = new Date().toLocaleString("default", { month: "short" });
+    return [
+      { name: currentMonth, Sales: 0, Revenue: 0 }
+    ];
+  }, [invoices]);
 
   // Filtered Audits
   const filteredAuditLogs = useMemo(() => {
@@ -1203,7 +1325,9 @@ export default function SettingsPage() {
                     </div>
                     <div className="p-4 border border-zinc-800 bg-[#111113]/30 rounded-2xl">
                       <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Storage pool</span>
-                      <span className="text-xl font-bold font-mono block mt-1">14.8 GB / 500 GB</span>
+                      <span className="text-xl font-bold font-mono block mt-1">
+                        {usage?.storageBytes ? (usage.storageBytes / (1024 * 1024 * 1024)).toFixed(1) : "0.0"} GB / {subscription?.plan?.maxStorage ? (subscription.plan.maxStorage / (1024 * 1024 * 1024)).toFixed(0) : "50"} GB
+                      </span>
                     </div>
                     <div className="p-4 border border-zinc-800 bg-[#111113]/30 rounded-2xl">
                       <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Workspace Status</span>
@@ -1211,7 +1335,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="p-4 border border-zinc-800 bg-[#111113]/30 rounded-2xl">
                       <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Subscription tier</span>
-                      <span className="text-sm font-bold block mt-1.5 uppercase text-purple-400 font-mono">Enterprise Grid</span>
+                      <span className="text-sm font-bold block mt-1.5 uppercase text-purple-400 font-mono">{subscription?.plan?.name || "Free Trial"}</span>
                     </div>
                   </div>
 
@@ -1719,16 +1843,9 @@ export default function SettingsPage() {
                           );
                         })
                       ) : (
-                        <>
-                          <div className="p-3 border border-zinc-800 bg-zinc-950/40 rounded-xl w-36">
-                            <span className="text-zinc-500 block uppercase text-[8px]">Sales Head</span>
-                            <p className="text-zinc-300 mt-1">Rahul Sharma</p>
-                          </div>
-                          <div className="p-3 border border-zinc-800 bg-zinc-950/40 rounded-xl w-36">
-                            <span className="text-zinc-500 block uppercase text-[8px]">Planning Lead</span>
-                            <p className="text-zinc-300 mt-1">Sneha Rao</p>
-                          </div>
-                        </>
+                        <div className="p-5 border border-dashed border-zinc-800 bg-zinc-950/20 rounded-xl text-center text-zinc-500 text-xs w-full max-w-sm mx-auto">
+                          No subordinates invited yet. Invite team members in <button onClick={() => handleTabChange("team")} className="text-purple-400 font-bold underline">Users & Teams</button> to construct your reporting hierarchy.
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1747,33 +1864,43 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-3.5 text-xs font-bold">
-                    {workloadStats.map((staff, idx) => (
-                      <div key={idx} className="p-4 border border-zinc-800 bg-[#111113]/35 rounded-2xl space-y-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <span className="text-zinc-200 block">{staff.name}</span>
-                            <span className="text-[9px] text-zinc-550 block font-mono mt-0.5">{staff.events} Active Events &bull; {staff.tasks} Pending tasks</span>
-                          </div>
-                          <span className={cn(
-                            "px-2 py-0.5 border rounded-full text-[8px] font-black uppercase",
-                            staff.status === "OVERLOADED" ? "border-red-500/25 bg-red-500/5 text-red-400" : "border-emerald-500/25 bg-emerald-500/5 text-emerald-450"
-                          )}>
-                            {staff.status}
-                          </span>
-                        </div>
-
-                        {/* Utilization Bar */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between items-center text-[8.5px] text-zinc-500">
-                            <span>Capacity allocated</span>
-                            <span>{staff.utilization}%</span>
-                          </div>
-                          <div className="h-1.5 w-full bg-zinc-950 border border-zinc-850 rounded-full overflow-hidden">
-                            <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${staff.utilization}%` }} />
-                          </div>
-                        </div>
+                    {workloadStats.length === 0 ? (
+                      <div className="p-8 border border-dashed border-zinc-800 bg-zinc-950/20 rounded-2xl text-center space-y-2">
+                        <ActivitySquare size={24} className="text-zinc-600 mx-auto" />
+                        <p className="text-xs text-zinc-300 font-semibold">No Team Members Active</p>
+                        <p className="text-[11px] text-zinc-500 max-w-sm mx-auto">
+                          Team workload capacity will dynamically appear here as staff coordinators and event planners are added to your workspace.
+                        </p>
                       </div>
-                    ))}
+                    ) : (
+                      workloadStats.map((staff, idx) => (
+                        <div key={idx} className="p-4 border border-zinc-800 bg-[#111113]/35 rounded-2xl space-y-3">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="text-zinc-200 block">{staff.name}</span>
+                              <span className="text-[9px] text-zinc-550 block font-mono mt-0.5">{staff.events} Active Events &bull; {staff.tasks} Pending tasks</span>
+                            </div>
+                            <span className={cn(
+                              "px-2 py-0.5 border rounded-full text-[8px] font-black uppercase",
+                              staff.status === "OVERLOADED" ? "border-red-500/25 bg-red-500/5 text-red-400" : "border-emerald-500/25 bg-emerald-500/5 text-emerald-450"
+                            )}>
+                              {staff.status}
+                            </span>
+                          </div>
+
+                          {/* Utilization Bar */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center text-[8.5px] text-zinc-500">
+                              <span>Capacity allocated</span>
+                              <span>{staff.utilization}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-zinc-950 border border-zinc-850 rounded-full overflow-hidden">
+                              <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${staff.utilization}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -1791,13 +1918,14 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={() => {
-                        const newRule = { id: Math.random().toString(), trigger: "When Quote Accepted", action: "Lock Invoice & Mail PDF", active: true };
-                        setAutomations(prev => [...prev, newRule]);
-                        addToast("New automation rule generated.", "success");
+                        const newRule = { id: Date.now().toString(), trigger: "When Quote Accepted", action: "Lock Invoice & Mail PDF", active: true };
+                        const updated = [...automations, newRule];
+                        updateAutomationsList(updated);
+                        addToast("New automation rule saved and active.", "success");
                       }}
-                      className="px-3.5 py-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+                      className="px-3.5 py-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
                     >
-                      Create Workflow
+                      <Plus size={13} /> Create Workflow
                     </button>
                   </div>
 
@@ -1808,15 +1936,29 @@ export default function SettingsPage() {
                           <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Trigger Condition</span>
                           <span className="font-bold text-zinc-200 mt-1 block">{a.trigger} &rarr; <span className="text-purple-400">{a.action}</span></span>
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={a.active}
-                          onChange={(e) => {
-                            const newCheck = e.target.checked;
-                            setAutomations(prev => prev.map(item => item.id === a.id ? { ...item, active: newCheck } : item));
-                            addToast(`Workflow active state changed.`, "info");
-                          }}
-                        />
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={a.active}
+                            onChange={(e) => {
+                              const newCheck = e.target.checked;
+                              const updated = automations.map(item => item.id === a.id ? { ...item, active: newCheck } : item);
+                              updateAutomationsList(updated);
+                              addToast(`Workflow active state changed.`, "info");
+                            }}
+                          />
+                          <button
+                            onClick={() => {
+                              const updated = automations.filter(item => item.id !== a.id);
+                              updateAutomationsList(updated);
+                              addToast("Automation rule removed.", "info");
+                            }}
+                            className="text-zinc-600 hover:text-red-400 transition"
+                            title="Delete workflow"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -2208,6 +2350,18 @@ export default function SettingsPage() {
                         />
                       </div>
                     </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={handleSavePaymentDestination}
+                        disabled={isSavingPaymentDest}
+                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-purple-950/40 disabled:opacity-50 cursor-pointer"
+                      >
+                        {isSavingPaymentDest ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                        Save Direct Payment Details
+                      </button>
+                    </div>
                   </div>
 
                   {/* Billing address and registered Tax Details */}
@@ -2234,6 +2388,7 @@ export default function SettingsPage() {
                               type="text"
                               value={billingTaxId}
                               onChange={(e) => setBillingTaxId(e.target.value)}
+                              placeholder="e.g. 27AABCU9281R1Z5"
                               className="w-full px-3 py-2 bg-zinc-950 border border-zinc-850 text-white rounded-xl outline-none font-mono"
                             />
                           </div>
@@ -2250,6 +2405,7 @@ export default function SettingsPage() {
                             type="text"
                             value={billingStreet}
                             onChange={(e) => setBillingStreet(e.target.value)}
+                            placeholder="e.g. Commercial Suite #401, Tech Park"
                             className="w-full px-3 py-2 bg-zinc-950 border border-zinc-850 text-white rounded-xl outline-none"
                           />
                         </div>
@@ -2260,6 +2416,7 @@ export default function SettingsPage() {
                               type="text"
                               value={billingCity}
                               onChange={(e) => setBillingCity(e.target.value)}
+                              placeholder="e.g. Mumbai"
                               className="w-full px-3 py-2 bg-zinc-950 border border-zinc-850 text-white rounded-xl outline-none"
                             />
                           </div>
@@ -2270,12 +2427,25 @@ export default function SettingsPage() {
                                 type="text"
                                 value={billingCountry}
                                 onChange={(e) => setBillingCountry(e.target.value)}
+                                placeholder="e.g. India"
                                 className="w-full px-3 py-2 bg-zinc-950 border border-zinc-850 text-white rounded-xl outline-none"
                               />
                             </div>
                           </div>
                         </div>
                       </div>
+                    </div>
+
+                    <div className="col-span-1 md:col-span-2 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleSaveTaxAndBillingAddress}
+                        disabled={isSavingBillingTax}
+                        className="px-4 py-2 bg-zinc-900 border border-zinc-750 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md disabled:opacity-50 cursor-pointer"
+                      >
+                        {isSavingBillingTax ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                        Save Tax Profile & Billing Address
+                      </button>
                     </div>
                   </div>
 
@@ -3553,17 +3723,21 @@ export default function SettingsPage() {
                   </button>
                   <button
                     onClick={() => {
-                      if (usage && subscription?.plan) {
+                      if (subscription?.plan) {
                         subscription.plan.maxUsers += additionalSeatsInput;
-                        setSeatHistory([
+                        const newHist = [
                           {
                             date: new Date().toISOString().split("T")[0],
                             description: `Added pack of ${additionalSeatsInput} custom seats`,
                             change: `+${additionalSeatsInput} seats`,
-                            user: "Billing Admin"
+                            user: user?.firstName || "Billing Admin"
                           },
                           ...seatHistory
-                        ]);
+                        ];
+                        setSeatHistory(newHist);
+                        try {
+                          localStorage.setItem("eventos_seat_history", JSON.stringify(newHist));
+                        } catch (e) {}
                         addToast(`Successfully purchased ${additionalSeatsInput} extra seats!`, "success");
                       }
                       setShowSeatModal(false);

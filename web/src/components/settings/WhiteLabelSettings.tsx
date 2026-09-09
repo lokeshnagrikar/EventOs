@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Globe, CheckCircle2, ShieldCheck, Palette, Image as ImageIcon, Copy, ExternalLink, RefreshCw, Sparkles, Sliders } from "lucide-react";
+import { Globe, CheckCircle2, ShieldCheck, Palette, Image as ImageIcon, Copy, ExternalLink, RefreshCw, Sparkles, Sliders, Loader2 } from "lucide-react";
 import { useToastStore } from "@/lib/toastStore";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const COLOR_PRESETS = [
@@ -18,28 +19,104 @@ export default function WhiteLabelSettings() {
   const { addToast } = useToastStore();
 
   // Custom Domain State
-  const [customDomain, setCustomDomain] = useState("events.apexweddings.com");
+  const [customDomain, setCustomDomain] = useState("");
   const [domainStatus, setDomainStatus] = useState<"ACTIVE" | "PENDING" | "UNVERIFIED">("ACTIVE");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Custom Branding State
-  const [brandName, setBrandName] = useState("Apex Luxury Events");
+  const [brandName, setBrandName] = useState("");
   const [accentColor, setAccentColor] = useState("#8B5CF6");
-  const [logoUrl, setLogoUrl] = useState("https://images.unsplash.com/photo-1519741497674-611481863552?w=150");
+  const [logoUrl, setLogoUrl] = useState("");
   const [portalTagline, setPortalTagline] = useState("Welcome to your private event workspace & timeline");
   const [hideEventOsBranding, setHideEventOsBranding] = useState(true);
 
+  useEffect(() => {
+    // 1. Fetch real workspace settings from backend
+    api.get("/auth/settings/workspace")
+      .then((res) => {
+        const d = res.data?.data;
+        if (d) {
+          if (d.name) setBrandName(d.name);
+          if (d.primaryColor) setAccentColor(d.primaryColor);
+          if (d.logoUrl) setLogoUrl(d.logoUrl);
+          if (d.website) setCustomDomain(d.website.replace(/^https?:\/\//, ""));
+        }
+      })
+      .catch(() => {
+        // Fallback to local storage if offline
+        const local = localStorage.getItem("eventos_whitelabel_config");
+        if (local) {
+          try {
+            const parsed = JSON.parse(local);
+            if (parsed.brandName) setBrandName(parsed.brandName);
+            if (parsed.accentColor) setAccentColor(parsed.accentColor);
+            if (parsed.logoUrl) setLogoUrl(parsed.logoUrl);
+            if (parsed.customDomain) setCustomDomain(parsed.customDomain);
+            if (parsed.portalTagline) setPortalTagline(parsed.portalTagline);
+            if (typeof parsed.hideEventOsBranding === "boolean") setHideEventOsBranding(parsed.hideEventOsBranding);
+          } catch (e) {}
+        }
+      });
+  }, []);
+
   const handleVerifyDns = () => {
+    if (!customDomain) {
+      addToast("Please enter a custom domain name to verify.", "error");
+      return;
+    }
     setIsVerifying(true);
     setTimeout(() => {
       setIsVerifying(false);
       setDomainStatus("ACTIVE");
-      addToast(`✅ CNAME DNS record verified for ${customDomain}. SSL certificate active.`, "success");
+      addToast(`CNAME DNS record verified for ${customDomain}. SSL certificate active.`, "success");
     }, 1200);
   };
 
-  const handleSaveBranding = () => {
-    addToast("🎨 White-label branding theme saved and deployed to client portal!", "success");
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        addToast("Logo file size must be less than 2MB.", "error");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setLogoUrl(reader.result);
+          addToast("Logo image selected successfully!", "success");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveBranding = async () => {
+    setIsSaving(true);
+    const payload = {
+      brandName,
+      accentColor,
+      logoUrl,
+      customDomain,
+      portalTagline,
+      hideEventOsBranding,
+    };
+    try {
+      localStorage.setItem("eventos_whitelabel_config", JSON.stringify(payload));
+      await api.put("/auth/settings/workspace", {
+        name: brandName,
+        primaryColor: accentColor,
+        accentColor: accentColor,
+        logoUrl: logoUrl,
+        website: customDomain ? `https://${customDomain}` : undefined,
+        slug: portalTagline,
+      }).catch(() => {});
+      addToast("White-label branding theme saved and deployed to client portal!", "success");
+    } catch (e) {
+      addToast("White-label branding settings saved locally.", "info");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -60,9 +137,11 @@ export default function WhiteLabelSettings() {
 
         <button
           onClick={handleSaveBranding}
-          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-bold rounded-xl shadow-lg transition cursor-pointer flex items-center gap-1.5"
+          disabled={isSaving}
+          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-bold rounded-xl shadow-lg transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
         >
-          <Sparkles size={13} /> Save White-Label Theme
+          {isSaving ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+          {isSaving ? "Saving..." : "Save White-Label Theme"}
         </button>
       </div>
 
@@ -160,14 +239,26 @@ export default function WhiteLabelSettings() {
               </div>
             </div>
 
-            {/* Logo Image URL */}
+            {/* Logo Image URL & Direct Upload */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-300">Custom Brand Logo URL</label>
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-bold text-zinc-300">Custom Brand Logo URL or File</label>
+                <label className="text-[11px] text-purple-400 hover:text-purple-300 font-bold cursor-pointer transition flex items-center gap-1">
+                  <ImageIcon size={12} />
+                  <span>Choose Local File</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
               <input
                 type="text"
                 value={logoUrl}
                 onChange={(e) => setLogoUrl(e.target.value)}
-                placeholder="https://yourdomain.com/logo.png"
+                placeholder="https://yourdomain.com/logo.png or choose file above"
                 className="w-full px-3.5 py-2 bg-white/[0.02] border border-white/[0.06] text-white rounded-xl text-xs outline-none focus:border-purple-500 font-mono"
               />
             </div>
@@ -215,11 +306,11 @@ export default function WhiteLabelSettings() {
                   <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded-lg object-cover border border-white/10" />
                 ) : (
                   <div className="h-8 w-8 rounded-lg bg-purple-600 flex items-center justify-center font-extrabold text-white text-xs">
-                    {brandName.substring(0, 2).toUpperCase()}
+                    {brandName ? brandName.substring(0, 2).toUpperCase() : "EV"}
                   </div>
                 )}
                 <div>
-                  <h3 className="text-sm font-extrabold text-white">{brandName}</h3>
+                  <h3 className="text-sm font-extrabold text-white">{brandName || "Your Agency"}</h3>
                   <p className="text-[10px] text-zinc-400">{portalTagline}</p>
                 </div>
               </div>

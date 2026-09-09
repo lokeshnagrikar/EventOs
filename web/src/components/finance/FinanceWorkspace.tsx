@@ -51,7 +51,7 @@ import {
   Check,
   Ban
 } from "lucide-react";
-import { QuickActionsFAB } from "./QuickActionsFAB";
+import QuickActionsFAB from "./QuickActionsFAB";
 import { EventFinancialAnalytics } from "./EventFinancialAnalytics";
 import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
@@ -62,6 +62,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import {
   ResponsiveContainer,
   AreaChart,
+  
   Area,
   XAxis,
   YAxis,
@@ -80,16 +81,17 @@ import {
 interface Invoice {
   id: string;
   bookingId: string;
-  invoiceNumber: string;
-  subtotal: number;
-  tax: number;
-  discount: number;
-  totalAmount: number;
-  dueDate: string;
+  invoiceNumber?: string;
+  subtotal?: number;
+  tax?: number;
+  discount?: number;
+  totalAmount?: number;
+  paidAmount?: number;
+  dueDate?: string;
   status: string;
-  clientName: string;
+  clientName?: string;
   clientEmail?: string;
-  createdAt: string;
+  createdAt?: string;
   billingAddress?: string;
   notes?: string;
 }
@@ -100,7 +102,7 @@ interface Payment {
   amount: number;
   paymentMethod: string;
   transactionReference?: string;
-  status: "PENDING" | "PENDING_VERIFICATION" | "COMPLETED" | "REFUNDED" | "FAILED";
+  status: "PENDING" | "PENDING_VERIFICATION" | "COMPLETED" | "SUCCESSFUL" | "REFUNDED" | "FAILED" | string;
   paymentDate: string;
   notes?: string;
 }
@@ -108,8 +110,8 @@ interface Payment {
 interface Booking {
   id: string;
   bookingNumber: string;
-  totalAmount: number;
-  paidAmount: number;
+  totalAmount?: number;
+  paidAmount?: number;
   clientName?: string;
 }
 
@@ -139,6 +141,7 @@ const PAYMENT_STATUS_PILLS: Record<string, string> = {
   PENDING: "border-amber-500/20 bg-amber-500/5 text-amber-400",
   PENDING_VERIFICATION: "border-yellow-500/20 bg-yellow-500/5 text-yellow-400",
   COMPLETED: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400",
+  SUCCESSFUL: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400",
   REFUNDED: "border-purple-500/20 bg-purple-500/5 text-purple-400",
   FAILED: "border-red-500/20 bg-red-500/5 text-red-400"
 };
@@ -198,7 +201,12 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       return res.data;
     }
   });
-  const invoices = useMemo(() => invoicesResponse?.data || [], [invoicesResponse]);
+  const invoices = useMemo<Invoice[]>(() => {
+    if (Array.isArray(invoicesResponse?.data)) return invoicesResponse.data;
+    if (Array.isArray((invoicesResponse as any)?.data?.content)) return (invoicesResponse as any).data.content;
+    if (Array.isArray(invoicesResponse)) return invoicesResponse as any;
+    return [];
+  }, [invoicesResponse]);
 
   // 2. Fetch Payments
   const { data: paymentsResponse, isLoading: paymentsLoading } = useQuery<{ data: Payment[] }>({
@@ -208,7 +216,12 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       return res.data;
     }
   });
-  const payments = useMemo(() => paymentsResponse?.data || [], [paymentsResponse]);
+  const payments = useMemo<Payment[]>(() => {
+    if (Array.isArray(paymentsResponse?.data)) return paymentsResponse.data;
+    if (Array.isArray((paymentsResponse as any)?.data?.content)) return (paymentsResponse as any).data.content;
+    if (Array.isArray(paymentsResponse)) return paymentsResponse as any;
+    return [];
+  }, [paymentsResponse]);
 
   // 3. Fetch Bookings
   const { data: bookingsResponse, isLoading: bookingsLoading } = useQuery<{ data: Booking[] }>({
@@ -218,7 +231,12 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       return res.data;
     }
   });
-  const bookings = useMemo(() => bookingsResponse?.data || [], [bookingsResponse]);
+  const bookings = useMemo<Booking[]>(() => {
+    if (Array.isArray(bookingsResponse?.data)) return bookingsResponse.data;
+    if (Array.isArray((bookingsResponse as any)?.data?.content)) return (bookingsResponse as any).data.content;
+    if (Array.isArray(bookingsResponse)) return bookingsResponse as any;
+    return [];
+  }, [bookingsResponse]);
 
   // 4. Fetch Selected Booking Expenses
   const { data: expensesResponse, isLoading: expensesLoading } = useQuery<{ data: Expense[] }>({
@@ -230,7 +248,12 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
     },
     enabled: !!selectedBookingId
   });
-  const expenses = useMemo(() => expensesResponse?.data || [], [expensesResponse]);
+  const expenses = useMemo<Expense[]>(() => {
+    if (Array.isArray(expensesResponse?.data)) return expensesResponse.data;
+    if (Array.isArray((expensesResponse as any)?.data?.content)) return (expensesResponse as any).data.content;
+    if (Array.isArray(expensesResponse)) return expensesResponse as any;
+    return [];
+  }, [expensesResponse]);
 
   // Set initial selected booking once loaded
   useEffect(() => {
@@ -318,7 +341,9 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
     setInvBookingId(id);
     const selected = bookings.find((b) => b.id === id);
     if (selected) {
-      const remaining = Math.max(0, selected.totalAmount - selected.paidAmount);
+      const total = Number(selected.totalAmount) || 0;
+      const paid = Number(selected.paidAmount) || 0;
+      const remaining = Math.max(0, total - paid);
       setInvSubtotal(remaining.toString());
       setInvClientName(selected.clientName || `Client for Booking ${selected.bookingNumber}`);
     }
@@ -329,10 +354,10 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
   // ═══════════════════════════════════════════════
   const kpis = useMemo(() => {
     const activeInvoices = invoices.filter((i) => i.status !== "CANCELLED");
-    const totalInvoiced = activeInvoices.reduce((sum, i) => sum + i.totalAmount, 0);
+    const totalInvoiced = activeInvoices.reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
     const paidInvoicesVolume = invoices
       .filter((i) => i.status === "PAID")
-      .reduce((sum, i) => sum + i.totalAmount, 0);
+      .reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
 
     const outstanding = Math.max(0, totalInvoiced - paidInvoicesVolume);
     const paidInvoicesCount = invoices.filter((i) => i.status === "PAID").length;
@@ -352,30 +377,33 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
     let refundedAmount = 0;
 
     payments.forEach((p) => {
+      const amt = Number(p.amount) || 0;
       if (p.status === "REFUNDED") {
-        refundedAmount += p.amount;
+        refundedAmount += amt;
         return;
       }
-      if (p.status !== "COMPLETED") return;
-      const pDate = new Date(p.paymentDate);
-      if (pDate.toDateString() === todayStr) revenueToday += p.amount;
-      if (pDate >= oneWeekAgo) revenueWeek += p.amount;
-      if (pDate.getMonth() === thisMonth && pDate.getFullYear() === thisYear) revenueMonth += p.amount;
-      if (pDate.getFullYear() === thisYear) revenueYear += p.amount;
+      if (p.status !== "COMPLETED" && p.status !== "SUCCESSFUL") return;
+      const pDate = p.paymentDate ? new Date(p.paymentDate) : null;
+      if (!pDate || isNaN(pDate.getTime())) return;
+
+      if (pDate.toDateString() === todayStr) revenueToday += amt;
+      if (pDate >= oneWeekAgo) revenueWeek += amt;
+      if (pDate.getMonth() === thisMonth && pDate.getFullYear() === thisYear) revenueMonth += amt;
+      if (pDate.getFullYear() === thisYear) revenueYear += amt;
     });
 
-    // Simulated expenses total (from logged expenses or estimated)
-    const estimatedExpenses = 335000;
-    const netProfit = paidInvoicesVolume - estimatedExpenses;
+    // Real expenses total (from logged booking expenses)
+    const totalExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const netProfit = paidInvoicesVolume - totalExpenses;
     const profitMargin = paidInvoicesVolume > 0 ? Math.round((netProfit / paidInvoicesVolume) * 100) : 0;
 
     return {
       revenueToday, revenueWeek, revenueMonth, revenueYear,
       outstanding, paidInvoicesVolume, paidInvoicesCount, overdueCount,
-      collectionRate, refundedAmount, totalInvoiced, estimatedExpenses,
+      collectionRate, refundedAmount, totalInvoiced, estimatedExpenses: totalExpenses,
       netProfit, profitMargin
     };
-  }, [invoices, payments]);
+  }, [invoices, payments, expenses]);
 
   // ═══════════════════════════════════════════════
   // Chart Data
@@ -391,34 +419,36 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
     }
 
     payments.forEach((p) => {
-      if (p.status !== "COMPLETED") return;
-      const pDate = new Date(p.paymentDate);
+      if (p.status !== "COMPLETED" && p.status !== "SUCCESSFUL") return;
+      const pDate = p.paymentDate ? new Date(p.paymentDate) : null;
+      if (!pDate || isNaN(pDate.getTime())) return;
       const key = `${pDate.getFullYear()}-${pDate.getMonth()}`;
-      if (ledger[key]) ledger[key].Revenue += p.amount;
+      if (ledger[key]) ledger[key].Revenue += Number(p.amount) || 0;
     });
 
-    // Simulated expense distribution
+    // Real recorded expense distribution
+    expenses.forEach((e) => {
+      const eDate = e.expenseDate ? new Date(e.expenseDate) : null;
+      if (!eDate || isNaN(eDate.getTime())) return;
+      const key = `${eDate.getFullYear()}-${eDate.getMonth()}`;
+      if (ledger[key]) ledger[key].Expenses += Number(e.amount) || 0;
+    });
+
     Object.values(ledger).forEach((entry) => {
-      entry.Expenses = Math.round(entry.Revenue * 0.35);
       entry.Profit = entry.Revenue - entry.Expenses;
     });
 
     return Object.values(ledger);
-  }, [payments]);
+  }, [payments, expenses]);
 
   const expenseCategoryData = useMemo(() => {
     if (!expenses.length) {
-      return [
-        { name: "Venue", value: 120000, color: "#a855f7" },
-        { name: "Catering", value: 180000, color: "#ec4899" },
-        { name: "Decor", value: 90000, color: "#3b82f6" },
-        { name: "Photography", value: 65000, color: "#10b981" },
-        { name: "Marketing", value: 35000, color: "#f59e0b" }
-      ];
+      return [];
     }
     const categories: Record<string, number> = {};
     expenses.forEach((e) => {
-      categories[e.category] = (categories[e.category] || 0) + e.amount;
+      const cat = e.category || "MISCELLANEOUS";
+      categories[cat] = (categories[cat] || 0) + (Number(e.amount) || 0);
     });
     const colors = ["#a855f7", "#ec4899", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
     return Object.entries(categories).map(([name, value], i) => ({
@@ -430,8 +460,9 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
   const paymentMethodData = useMemo(() => {
     const methods: Record<string, number> = {};
-    payments.filter(p => p.status === "COMPLETED").forEach(p => {
-      methods[p.paymentMethod] = (methods[p.paymentMethod] || 0) + p.amount;
+    payments.filter(p => p.status === "COMPLETED" || p.status === "SUCCESSFUL").forEach(p => {
+      const method = p.paymentMethod || "OTHER";
+      methods[method] = (methods[method] || 0) + (Number(p.amount) || 0);
     });
     const colors = ["#a855f7", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
     return Object.entries(methods).map(([name, value], i) => ({
@@ -444,7 +475,10 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
   // Filters
   const filteredInvoices = useMemo(() => {
     return invoices.filter((i) => {
-      const matchSearch = i.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) || i.clientName.toLowerCase().includes(searchQuery.toLowerCase());
+      const invNum = (i.invoiceNumber || "").toLowerCase();
+      const cName = (i.clientName || "").toLowerCase();
+      const q = (searchQuery || "").toLowerCase();
+      const matchSearch = invNum.includes(q) || cName.includes(q);
       const matchStatus = statusFilter === "ALL" || i.status === statusFilter;
       return matchSearch && matchStatus;
     });
@@ -550,11 +584,11 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           {/* Secondary KPI strip */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: "Revenue Today", value: `₹${kpis.revenueToday.toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
-              { label: "Revenue This Week", value: `₹${kpis.revenueWeek.toLocaleString()}`, icon: Coins, color: "text-purple-400" },
-              { label: "Annual Revenue", value: `₹${kpis.revenueYear.toLocaleString()}`, icon: BarChart3, color: "text-blue-400" },
-              { label: "Collection Rate", value: `${kpis.collectionRate}%`, icon: CheckCircle2, color: "text-cyan-400" },
-              { label: "Refunds Issued", value: `₹${kpis.refundedAmount.toLocaleString()}`, icon: RefreshCw, color: "text-rose-400" },
+              { label: "Revenue Today", value: `₹${(Number(kpis.revenueToday) || 0).toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
+              { label: "Revenue This Week", value: `₹${(Number(kpis.revenueWeek) || 0).toLocaleString()}`, icon: Coins, color: "text-purple-400" },
+              { label: "Annual Revenue", value: `₹${(Number(kpis.revenueYear) || 0).toLocaleString()}`, icon: BarChart3, color: "text-blue-400" },
+              { label: "Collection Rate", value: `${kpis.collectionRate || 0}%`, icon: CheckCircle2, color: "text-cyan-400" },
+              { label: "Refunds Issued", value: `₹${(Number(kpis.refundedAmount) || 0).toLocaleString()}`, icon: RefreshCw, color: "text-rose-400" },
               { label: "Avg Payment Time", value: "4.8 Days", icon: Clock, color: "text-zinc-400" }
             ].map((item) => {
               const Icon = item.icon;
@@ -603,26 +637,35 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
             <div className="lg:col-span-1 p-5 border border-zinc-850 bg-[#121214]/30 backdrop-blur rounded-2xl space-y-4 flex flex-col justify-between">
               <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">Expenses by Category</h3>
-              <div className="h-44 w-full text-xs">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={expenseCategoryData} cx="50%" cy="50%" innerRadius={48} outerRadius={68} paddingAngle={4} dataKey="value">
-                      {expenseCategoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", fontSize: 11 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-[10px]">
-                {expenseCategoryData.slice(0, 5).map((entry) => (
-                  <div key={entry.name} className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-                    <span className="text-zinc-400 truncate">{entry.name} (₹{Math.round(entry.value/1000)}k)</span>
+              {expenseCategoryData.length === 0 ? (
+                <div className="h-44 w-full flex flex-col items-center justify-center border border-dashed border-zinc-850 rounded-xl text-zinc-550 text-xs gap-2">
+                  <PieChartIcon size={24} className="opacity-40 text-purple-400" />
+                  <span>No expenses recorded for this booking.</span>
+                </div>
+              ) : (
+                <>
+                  <div className="h-44 w-full text-xs">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={expenseCategoryData} cx="50%" cy="50%" innerRadius={48} outerRadius={68} paddingAngle={4} dataKey="value">
+                          {expenseCategoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", fontSize: 11 }} />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                ))}
-              </div>
+                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    {expenseCategoryData.slice(0, 5).map((entry) => (
+                      <div key={entry.name} className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                        <span className="text-zinc-400 truncate">{entry.name} (₹{Math.round(entry.value/1000)}k)</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -642,11 +685,11 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                       </div>
                       <div>
                         <p className="text-xs font-bold text-zinc-200">Ref: {p.transactionReference || "N/A"}</p>
-                        <p className="text-[10px] text-zinc-500">{new Date(p.paymentDate).toLocaleDateString()} • {p.paymentMethod}</p>
+                        <p className="text-[10px] text-zinc-500">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "-"} • {(p.paymentMethod || "OTHER").replace("_", " ")}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="font-mono text-xs font-black text-emerald-400 block">₹{p.amount.toLocaleString()}</span>
+                      <span className="font-mono text-xs font-black text-emerald-400 block">₹{(Number(p.amount) || 0).toLocaleString()}</span>
                       <span className={cn("text-[8px] font-bold px-1.5 py-0.5 rounded border inline-block mt-0.5", PAYMENT_STATUS_PILLS[p.status] || "border-zinc-800 text-zinc-500")}>{p.status}</span>
                     </div>
                   </div>
@@ -670,12 +713,12 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                           <FileText size={14} />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-200">{inv.clientName}</p>
-                          <p className="text-[10px] text-zinc-500">Due: {new Date(inv.dueDate).toLocaleDateString()} • {inv.invoiceNumber}</p>
+                          <p className="text-xs font-bold text-zinc-200">{inv.clientName || "Client"}</p>
+                          <p className="text-[10px] text-zinc-550">Due: {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "-"} • {inv.invoiceNumber || "DRAFT"}</p>
                         </div>
                       </div>
                       <div className="text-right space-y-1">
-                        <p className="font-mono text-xs font-black text-zinc-250">₹{inv.totalAmount.toLocaleString()}</p>
+                        <p className="font-mono text-xs font-black text-zinc-250">₹{(Number(inv.totalAmount) || 0).toLocaleString()}</p>
                         <span className={cn("px-2 py-0.5 border rounded-full text-[8px] font-black uppercase inline-block", pillClass)}>{inv.status}</span>
                       </div>
                     </div>
@@ -813,13 +856,36 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                   const bookingNum = bookings.find((b) => b.id === inv.bookingId)?.bookingNumber || "Unassigned";
                   return (
                     <tr key={inv.id} className="hover:bg-zinc-900/10 transition-colors">
-                      <td className="p-4 font-mono font-bold text-zinc-400">{inv.invoiceNumber}</td>
-                      <td className="p-4 font-extrabold text-zinc-200">{inv.clientName}</td>
+                      <td className="p-4 font-mono font-bold text-zinc-400">{inv.invoiceNumber || "DRAFT"}</td>
+                      <td className="p-4 font-extrabold text-zinc-200">{inv.clientName || "Client"}</td>
                       <td className="p-4 font-mono">{bookingNum}</td>
-                      <td className="p-4">{new Date(inv.dueDate).toLocaleDateString()}</td>
+                      <td className="p-4">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "-"}</td>
                       <td className="p-4"><span className={cn("px-2.5 py-0.5 border rounded-full text-[8.5px] font-black uppercase", statusClass)}>{inv.status}</span></td>
-                      <td className="p-4 font-mono font-black text-emerald-450">₹{inv.totalAmount.toLocaleString()}</td>
-                      <td className="p-4 text-right">
+                      <td className="p-4 font-mono font-black text-emerald-450">₹{(Number(inv.totalAmount) || 0).toLocaleString()}</td>
+                      <td className="p-4 text-right space-x-2">
+                        <button
+                          onClick={async () => {
+                            try {
+                              addToast("Generating invoice PDF...", "info");
+                              const res = await api.get(`/events/invoices/${inv.id}/pdf`, { responseType: "blob" });
+                              const blob = new Blob([res.data], { type: "application/pdf" });
+                              const link = document.createElement("a");
+                              link.href = window.URL.createObjectURL(blob);
+                              link.download = `invoice-${inv.invoiceNumber || "receipt"}.pdf`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              window.URL.revokeObjectURL(link.href);
+                              addToast("Invoice PDF downloaded!", "success");
+                            } catch {
+                              addToast("Invoice PDF download failed.", "error");
+                            }
+                          }}
+                          className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors inline-flex items-center gap-1 cursor-pointer text-[11px]"
+                          title="Download PDF"
+                        >
+                          <Download size={13} />
+                        </button>
                         <button onClick={() => router.push(`/invoices/${inv.id}`)} className="text-purple-400 hover:text-purple-300 font-bold inline-flex items-center gap-0.5 hover:underline cursor-pointer">
                           View <ArrowUpRight size={12} />
                         </button>
@@ -874,8 +940,8 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                   )} />
                   <div className="flex justify-between items-center">
                     <div>
-                      <span className="text-xs font-bold text-zinc-200">₹{p.amount.toLocaleString()} via {p.paymentMethod.replace("_", " ")}</span>
-                      <span className="text-[10px] text-zinc-500 block">Ref: {p.transactionReference || "N/A"} • {new Date(p.paymentDate).toLocaleString()}</span>
+                      <span className="text-xs font-bold text-zinc-200">₹{(Number(p.amount) || 0).toLocaleString()} via {(p.paymentMethod || "MANUAL").replace("_", " ")}</span>
+                      <span className="text-[10px] text-zinc-500 block">Ref: {p.transactionReference || "N/A"} • {p.paymentDate ? new Date(p.paymentDate).toLocaleString() : "Date N/A"}</span>
                     </div>
                     <span className={cn("text-[8px] font-bold px-2 py-0.5 rounded border", PAYMENT_STATUS_PILLS[p.status] || "border-zinc-800 text-zinc-500")}>{p.status}</span>
                   </div>
@@ -903,15 +969,15 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                   const bookingNum = bookings.find((b) => b.id === p.bookingId)?.bookingNumber || "Unassigned";
                   return (
                     <tr key={p.id} className="hover:bg-zinc-900/10 transition-colors">
-                      <td className="p-4 font-mono text-zinc-400">{p.id.substring(0, 13)}</td>
+                      <td className="p-4 font-mono text-zinc-400">{(p.id || "").substring(0, 13)}</td>
                       <td className="p-4 font-bold text-zinc-200">Booking {bookingNum}</td>
-                      <td className="p-4 font-bold text-zinc-400">{p.paymentMethod.replace("_", " ")}</td>
+                      <td className="p-4 font-bold text-zinc-400">{(p.paymentMethod || "UPI").replace("_", " ")}</td>
                       <td className="p-4 font-mono text-zinc-300">{p.transactionReference || "N/A"}</td>
-                      <td className="p-4">{new Date(p.paymentDate).toLocaleDateString()}</td>
+                      <td className="p-4">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "-"}</td>
                       <td className="p-4">
                         <span className={cn("px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase", PAYMENT_STATUS_PILLS[p.status] || "border-zinc-800 text-zinc-400")}>{p.status}</span>
                       </td>
-                      <td className="p-4 text-right font-mono font-black text-emerald-450">₹{p.amount.toLocaleString()}</td>
+                      <td className="p-4 text-right font-mono font-black text-emerald-450">₹{(Number(p.amount) || 0).toLocaleString()}</td>
                     </tr>
                   );
                 })}
@@ -937,7 +1003,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               <span className="text-xs font-bold text-zinc-400">Budget Context:</span>
               <select value={selectedBookingId} onChange={(e) => setSelectedBookingId(e.target.value)}
                 className="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg text-xs focus:outline-none font-bold">
-                {bookings.map((b) => <option key={b.id} value={b.id}>{b.bookingNumber} (₹{b.totalAmount.toLocaleString()})</option>)}
+                {bookings.map((b) => <option key={b.id} value={b.id}>{b.bookingNumber} (₹{(Number(b.totalAmount) || 0).toLocaleString()})</option>)}
               </select>
             </div>
             <button onClick={() => { resetExpenseForm(); setIsExpenseModalOpen(true); }}
@@ -971,7 +1037,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                         e.status === "PAID" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" : "border-amber-500/20 bg-amber-500/5 text-amber-500"
                       )}>{e.status}</span>
                     </td>
-                    <td className="p-4 font-mono font-black text-rose-400">₹{e.amount.toLocaleString()}</td>
+                    <td className="p-4 font-mono font-black text-rose-400">₹{(Number(e.amount) || 0).toLocaleString()}</td>
                     <td className="p-4 text-right">
                       <button onClick={() => deleteExpenseMutation.mutate(e.id)}
                         className="p-1 text-zinc-550 hover:text-red-500 rounded bg-zinc-950/20 hover:bg-red-500/10 transition-colors cursor-pointer">
@@ -1031,17 +1097,20 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                   <td className="p-4 text-right font-mono font-black text-zinc-200">₹0</td>
                 </tr>
                 {/* Generate from payments */}
-                {payments.filter(p => p.status === "COMPLETED").slice(0, 10).map((p, idx) => {
-                  const runningBalance = payments.filter(pp => pp.status === "COMPLETED").slice(0, idx + 1).reduce((sum, pp) => sum + pp.amount, 0);
+                {payments.filter(p => p.status === "COMPLETED" || p.status === "SUCCESSFUL").slice(0, 10).map((p, idx) => {
+                  const runningBalance = payments
+                    .filter(pp => pp.status === "COMPLETED" || pp.status === "SUCCESSFUL")
+                    .slice(0, idx + 1)
+                    .reduce((sum, pp) => sum + (Number(pp.amount) || 0), 0);
                   return (
                     <tr key={p.id} className="hover:bg-zinc-900/10 transition-colors">
-                      <td className="p-4 font-mono text-zinc-500">{new Date(p.paymentDate).toLocaleDateString()}</td>
-                      <td className="p-4 font-semibold text-zinc-300">Payment via {p.paymentMethod.replace("_", " ")}</td>
+                      <td className="p-4 font-mono text-zinc-500">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "-"}</td>
+                      <td className="p-4 font-semibold text-zinc-300">Payment via {(p.paymentMethod || "MANUAL").replace("_", " ")}</td>
                       <td className="p-4"><span className="px-2 py-0.5 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 rounded text-[8px] font-bold">INCOME</span></td>
                       <td className="p-4 font-mono text-zinc-500">{p.transactionReference || p.id.substring(0, 8)}</td>
                       <td className="p-4 text-right font-mono">—</td>
-                      <td className="p-4 text-right font-mono text-emerald-400">₹{p.amount.toLocaleString()}</td>
-                      <td className="p-4 text-right font-mono font-black text-zinc-200">₹{runningBalance.toLocaleString()}</td>
+                      <td className="p-4 text-right font-mono text-emerald-400">₹{(Number(p.amount) || 0).toLocaleString()}</td>
+                      <td className="p-4 text-right font-mono font-black text-zinc-200">₹{(Number(runningBalance) || 0).toLocaleString()}</td>
                     </tr>
                   );
                 })}
@@ -1069,33 +1138,31 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350 border-b border-zinc-850 pb-4">Vendor Payout Management</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { vendor: "Royal Florals", category: "Decor", amount: 120000, status: "COMPLETED", method: "BANK_TRANSFER" },
-              { vendor: "Gourmet Catering", category: "Catering", amount: 180000, status: "COMPLETED", method: "UPI" },
-              { vendor: "Starlight Beats", category: "Music", amount: 50000, status: "PENDING", method: "UPI" },
-              { vendor: "Snap Studios", category: "Photography", amount: 85000, status: "SCHEDULED", method: "BANK_TRANSFER" },
-              { vendor: "Royal Transport", category: "Logistics", amount: 35000, status: "COMPLETED", method: "CASH" },
-              { vendor: "MakeupPro Studio", category: "Beauty", amount: 25000, status: "PENDING", method: "UPI" }
-            ].map((vp) => (
-              <div key={vp.vendor} className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-3 hover:border-zinc-700 transition">
+            {expenses.map((vp) => (
+              <div key={vp.id} className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-3 hover:border-zinc-700 transition">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-extrabold text-zinc-200 text-xs block">{vp.vendor}</span>
-                    <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider block mt-0.5">{vp.category}</span>
+                    <span className="font-extrabold text-zinc-200 text-xs block">{vp.description || "Vendor Payout"}</span>
+                    <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider block mt-0.5">{vp.category || "Vendor"}</span>
                   </div>
                   <span className={cn("text-[8px] font-bold px-2 py-0.5 rounded-full border uppercase",
-                    vp.status === "COMPLETED" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" :
+                    vp.status === "PAID" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" :
                     vp.status === "SCHEDULED" ? "border-blue-500/20 bg-blue-500/5 text-blue-400" :
                     "border-amber-500/20 bg-amber-500/5 text-amber-400"
                   )}>{vp.status}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t border-zinc-900/60">
-                  <span className="font-mono text-sm font-black text-zinc-200">₹{vp.amount.toLocaleString()}</span>
-                  <span className="text-[9px] text-zinc-500 font-bold">{vp.method.replace("_", " ")}</span>
+                  <span className="font-mono text-sm font-black text-zinc-200">₹{(Number(vp.amount) || 0).toLocaleString()}</span>
+                  <span className="text-[9px] text-zinc-500 font-bold">{(vp.paymentMethod || "MANUAL").replace("_", " ")}</span>
                 </div>
               </div>
             ))}
           </div>
+          {expenses.length === 0 && (
+            <div className="text-center py-12 border border-dashed border-zinc-850 rounded-2xl text-zinc-500 text-xs">
+              No vendor payouts or disbursements logged yet. Add expenses in the Expenses tab to track vendor transactions dynamically.
+            </div>
+          )}
         </div>
       )}
 
@@ -1107,22 +1174,22 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="p-5 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-1">
               <span className="text-[10px] text-zinc-550 font-black uppercase">CGST (9%)</span>
-              <p className="text-xl font-mono font-black text-zinc-200">₹{taxSummary.cgst.toLocaleString()}</p>
+              <p className="text-xl font-mono font-black text-zinc-200">₹{(Number(taxSummary.cgst) || 0).toLocaleString()}</p>
               <p className="text-[9px] text-zinc-500">Central Goods & Services</p>
             </div>
             <div className="p-5 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-1">
               <span className="text-[10px] text-zinc-550 font-black uppercase">SGST (9%)</span>
-              <p className="text-xl font-mono font-black text-zinc-200">₹{taxSummary.sgst.toLocaleString()}</p>
+              <p className="text-xl font-mono font-black text-zinc-200">₹{(Number(taxSummary.sgst) || 0).toLocaleString()}</p>
               <p className="text-[9px] text-zinc-500">State Goods & Services</p>
             </div>
             <div className="p-5 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-1">
               <span className="text-[10px] text-zinc-550 font-black uppercase">IGST</span>
-              <p className="text-xl font-mono font-black text-zinc-200">₹{taxSummary.igst.toLocaleString()}</p>
+              <p className="text-xl font-mono font-black text-zinc-200">₹{(Number(taxSummary.igst) || 0).toLocaleString()}</p>
               <p className="text-[9px] text-zinc-500">Inter-State (Not Applicable)</p>
             </div>
             <div className="p-5 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-1">
               <span className="text-[10px] text-zinc-550 font-black uppercase">Total GST Liability</span>
-              <p className="text-xl font-mono font-black text-purple-400">₹{taxSummary.totalTax.toLocaleString()}</p>
+              <p className="text-xl font-mono font-black text-purple-400">₹{(Number(taxSummary.totalTax) || 0).toLocaleString()}</p>
               <p className="text-[9px] text-zinc-500">Accumulated tax from settled invoices</p>
             </div>
           </div>
@@ -1149,14 +1216,14 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 </thead>
                 <tbody className="divide-y divide-zinc-850/40 text-zinc-350">
                   {invoices.filter((i) => i.status === "PAID").slice(0, 8).map((inv) => {
-                    const taxable = inv.subtotal;
-                    const cgstAmt = taxable * 0.09;
-                    const sgstAmt = taxable * 0.09;
+                    const taxable = Number(inv.subtotal || inv.totalAmount || 0);
+                    const cgstAmt = Math.round(taxable * 0.09);
+                    const sgstAmt = Math.round(taxable * 0.09);
                     return (
                       <tr key={inv.id}>
-                        <td className="py-3 font-mono font-bold text-zinc-400">{inv.invoiceNumber}</td>
+                        <td className="py-3 font-mono font-bold text-zinc-400">{inv.invoiceNumber || "DRAFT"}</td>
                         <td className="py-3 font-semibold text-zinc-300">Intra-State GST</td>
-                        <td className="py-3">Delhi NCR</td>
+                        <td className="py-3">Domestic</td>
                         <td className="py-3 text-right font-mono">₹{taxable.toLocaleString()}</td>
                         <td className="py-3 text-right font-mono text-zinc-400">₹{cgstAmt.toLocaleString()}</td>
                         <td className="py-3 text-right font-mono text-zinc-400">₹{sgstAmt.toLocaleString()}</td>
@@ -1164,6 +1231,13 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                       </tr>
                     );
                   })}
+                  {invoices.filter((i) => i.status === "PAID").length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-zinc-500 text-xs">
+                        No settled paid invoices found for GST liability calculation yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1202,15 +1276,15 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 </div>
                 <div className="flex justify-between text-zinc-300 pl-4 border-l border-zinc-800">
                   <span>Event Contract Collections</span>
-                  <span className="font-mono">₹{kpis.paidInvoicesVolume.toLocaleString()}</span>
+                  <span className="font-mono">₹{(Number(kpis.paidInvoicesVolume) || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-zinc-300 pl-4 border-l border-zinc-800">
-                  <span>Tax Claims Return</span>
+                  <span>Tax Claims & Retainers</span>
                   <span className="font-mono">₹0</span>
                 </div>
                 <div className="flex justify-between font-bold border-t border-zinc-850/60 pt-2 text-zinc-200">
                   <span>Gross Operating Income</span>
-                  <span className="font-mono">₹{kpis.paidInvoicesVolume.toLocaleString()}</span>
+                  <span className="font-mono">₹{(Number(kpis.paidInvoicesVolume) || 0).toLocaleString()}</span>
                 </div>
               </div>
 
@@ -1219,28 +1293,29 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 <div className="flex justify-between font-black uppercase text-[10px] text-rose-400">
                   <span>Operating Expenses</span><span>INR</span>
                 </div>
-                <div className="flex justify-between text-zinc-300 pl-4 border-l border-zinc-800">
-                  <span>Vendor Payments (Decor & Setup)</span>
-                  <span className="font-mono">₹1,80,000</span>
-                </div>
-                <div className="flex justify-between text-zinc-300 pl-4 border-l border-zinc-800">
-                  <span>Venue Rent Allocations</span>
-                  <span className="font-mono">₹1,20,000</span>
-                </div>
-                <div className="flex justify-between text-zinc-300 pl-4 border-l border-zinc-800">
-                  <span>Marketing & Logistics</span>
-                  <span className="font-mono">₹35,000</span>
-                </div>
+                {expenseCategoryData.length > 0 ? (
+                  expenseCategoryData.slice(0, 4).map((cat) => (
+                    <div key={cat.name} className="flex justify-between text-zinc-300 pl-4 border-l border-zinc-850">
+                      <span>{cat.name}</span>
+                      <span className="font-mono">₹{(Number(cat.value) || 0).toLocaleString()}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-between text-zinc-400 pl-4 border-l border-zinc-850">
+                    <span>Recorded Operating Disbursements</span>
+                    <span className="font-mono">₹{(Number(kpis.estimatedExpenses) || 0).toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-bold border-t border-zinc-850/60 pt-2 text-zinc-200">
                   <span>Total Operating Expenses</span>
-                  <span className="font-mono">₹{kpis.estimatedExpenses.toLocaleString()}</span>
+                  <span className="font-mono">₹{(Number(kpis.estimatedExpenses) || 0).toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Net Summary */}
               <div className="border-t border-zinc-800 pt-4 flex justify-between font-black text-sm text-emerald-450 bg-emerald-950/5 p-4 rounded-xl border border-emerald-900/10">
                 <span>Net Operating Profit</span>
-                <span className="font-mono">₹{Math.max(0, kpis.netProfit).toLocaleString()}</span>
+                <span className="font-mono">₹{(Math.max(0, Number(kpis.netProfit) || 0)).toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -1317,7 +1392,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 <select required value={invBookingId} onChange={(e) => handleInvoiceBookingChange(e.target.value)}
                   className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white">
                   <option value="">-- Choose Booking --</option>
-                  {bookings.map((b) => <option key={b.id} value={b.id}>{b.bookingNumber} (₹{b.totalAmount.toLocaleString()})</option>)}
+                  {bookings.map((b) => <option key={b.id} value={b.id}>{b.bookingNumber} (₹{(Number(b.totalAmount) || 0).toLocaleString()})</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -1349,7 +1424,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 <input type="datetime-local" required value={invDueDate} onChange={(e) => setInvDueDate(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white" />
               </div>
               <div className="flex justify-end gap-3 pt-4 border-t border-zinc-850">
-                <button type="button" onClick={() => setIsInvoiceModalOpen(false)} className="px-4 py-2 border border-zinc-800 bg-zinc-900 rounded-lg text-zinc-300 cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => setIsInvoiceModalOpen(false)} className="px-4 py-2 border border-zinc-850 bg-zinc-900 rounded-lg text-zinc-300 cursor-pointer">Cancel</button>
                 <button type="submit" disabled={createInvoiceMutation.isPending} className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-lg font-bold cursor-pointer">
                   {createInvoiceMutation.isPending ? "Generating..." : "Generate Invoice"}
                 </button>
@@ -1391,7 +1466,12 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 <select required value={payBookingId} onChange={(e) => setPayBookingId(e.target.value)}
                   className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white">
                   <option value="">-- Choose Booking --</option>
-                  {bookings.map((b) => <option key={b.id} value={b.id}>{b.bookingNumber} (Outstanding: ₹{(b.totalAmount - b.paidAmount).toLocaleString()})</option>)}
+                  {bookings.map((b) => {
+                    const total = Number(b.totalAmount) || 0;
+                    const paid = Number(b.paidAmount) || 0;
+                    const diff = Math.max(0, total - paid);
+                    return <option key={b.id} value={b.id}>{b.bookingNumber} (Outstanding: ₹{diff.toLocaleString()})</option>;
+                  })}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -1540,6 +1620,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
         )}
       </AnimatePresence>
 
+      <QuickActionsFAB />
     </PageShell>
   );
 }
@@ -1598,7 +1679,7 @@ function FinanceKpiCard({ title, value, icon: Icon, trend, accent, sparkData, is
         <div className="space-y-1">
           <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block">{title}</span>
           <p className="text-xl font-extrabold tracking-tight text-zinc-200">
-            {isCount ? displayValue : `₹${displayValue.toLocaleString()}`}
+            {isCount ? (displayValue ?? 0) : `₹${(Number(displayValue) || 0).toLocaleString()}`}
           </p>
         </div>
         <div className={cn("h-8 w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40", accent)}>

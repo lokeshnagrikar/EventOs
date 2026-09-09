@@ -187,8 +187,8 @@ export default function PublicQuoteSharePage() {
   };
 
   const handlePrint = () => {
-    if (quote?.id) {
-      window.open(`/api/v1/crm/quotes/${quote.id}/pdf`, "_blank");
+    if (quote?.pdfUrl && !quote.pdfUrl.includes("dummy.pdf")) {
+      window.open(quote.pdfUrl, "_blank");
     } else {
       window.print();
     }

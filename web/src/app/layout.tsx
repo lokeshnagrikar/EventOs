@@ -6,6 +6,7 @@ import Providers from "./providers";
 import ToastContainer from "@/components/ToastContainer";
 import { cn } from "@/lib/utils";
 import { FloatingDock } from "@/components/landing/FloatingDock";
+import { CookieConsentBanner } from "@/components/shared/CookieConsentBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -56,6 +57,15 @@ export const metadata: Metadata = {
     images: ["/og-image.jpg"],
     creator: "@eventos_hq",
   },
+  icons: {
+    icon: [
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+  },
 };
 
 export default async function RootLayout({
@@ -105,6 +115,7 @@ export default async function RootLayout({
           {children}
           <FloatingDock />
           <ToastContainer />
+          <CookieConsentBanner />
         </Providers>
       </body>
     </html>

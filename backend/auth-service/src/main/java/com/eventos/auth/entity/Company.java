@@ -80,6 +80,9 @@ public class Company {
     @Column(name = "pdf_branding", columnDefinition = "TEXT")
     private String pdfBranding;
 
+    @Column(name = "whatsapp_config", columnDefinition = "TEXT")
+    private String whatsappConfig;
+
     @Column(nullable = false)
     private String timezone;
 

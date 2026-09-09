@@ -50,23 +50,23 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
   const storageUsedGB = (storageUsedBytes / (1024 * 1024 * 1024)).toFixed(1);
   const percentUsed = Math.min(100, Math.round((storageUsedBytes / totalStorageCapacityBytes) * 100));
   const sharedAlbumsCount = albums.filter((a) => a.visibility === "PUBLIC").length;
+  const currentUsageNum = Number(storageUsedGB) || 0;
 
-  // Mock Storage Growth Trend Data
+  // Real Storage Trend Data
   const growthData = [
-    { name: "Jan", Usage: 32 },
-    { name: "Feb", Usage: 45 },
-    { name: "Mar", Usage: 58 },
-    { name: "Apr", Usage: 88 },
-    { name: "May", Usage: 122 },
-    { name: "Jun", Usage: Number(storageUsedGB) || 145 }
+    { name: "Baseline", Usage: 0 },
+    { name: "Current", Usage: currentUsageNum }
   ];
 
-  // Mock Activities
-  const recentActivities = [
-    { id: 1, action: "Batch Upload", desc: "Added 24 high-res photos to 'Sneha & Amit Wedding'", time: "2 hours ago", icon: Upload, color: "text-purple-400 bg-purple-950/30" },
-    { id: 2, action: "Link Generated", desc: "Secure passcode link shared for 'Roy Engagement'", time: "4 hours ago", icon: Share2, color: "text-pink-400 bg-pink-950/30" },
-    { id: 3, action: "Batch Download", desc: "Client downloaded 80 assets from 'Kapoor Sangeet'", time: "1 day ago", icon: Download, color: "text-emerald-400 bg-emerald-950/30" }
-  ];
+  // Dynamic Activities from real albums
+  const recentActivities = albums.slice(0, 5).map((a, idx) => ({
+    id: a.id || idx,
+    action: a.mediaCount ? "Media Synced" : "Album Initialized",
+    desc: `Album '${a.name}' contains ${a.mediaCount || 0} assets`,
+    time: a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "Recently",
+    icon: Upload,
+    color: "text-purple-400 bg-purple-950/30"
+  }));
 
   return (
     <div className="space-y-6">
@@ -78,36 +78,36 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
           value={`${storageUsedGB} GB`}
           subtitle="Of 500 GB total pool"
           icon={HardDrive}
-          trend="8.2% growth"
+          trend={storageUsedBytes > 0 ? `${percentUsed}% capacity` : "0% capacity"}
           accent="from-purple-500 to-indigo-500"
-          sparklineData={[30, 45, 55, 75, Number(storageUsedGB) || 120]}
+          sparklineData={[0, currentUsageNum]}
         />
         <KpiDashboardCard
           title="Total Visual Photos"
           value={totalPhotos}
           subtitle="Auto WebP optimized"
           icon={ImageIcon}
-          trend="+124 this week"
+          trend={totalPhotos > 0 ? `${totalPhotos} photo files` : "0 photos"}
           accent="from-emerald-500 to-teal-500"
-          sparklineData={[10, 20, 25, 45, totalPhotos || 50]}
+          sparklineData={[0, totalPhotos]}
         />
         <KpiDashboardCard
           title="High Definition Videos"
           value={totalVideos}
           subtitle="H.265 CDN streaming"
           icon={Video}
-          trend="+8 streams"
+          trend={totalVideos > 0 ? `${totalVideos} video files` : "0 videos"}
           accent="from-cyan-500 to-blue-500"
-          sparklineData={[2, 5, 4, 10, totalVideos || 15]}
+          sparklineData={[0, totalVideos]}
         />
         <KpiDashboardCard
           title="Shared Public Links"
           value={sharedAlbumsCount}
           subtitle="Active token links"
           icon={Share2}
-          trend="Secure passcode active"
+          trend={sharedAlbumsCount > 0 ? `${sharedAlbumsCount} active portals` : "No public links"}
           accent="from-pink-500 to-rose-500"
-          sparklineData={[0, 1, 2, 4, sharedAlbumsCount]}
+          sparklineData={[0, sharedAlbumsCount]}
         />
       </div>
 
@@ -164,23 +164,29 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
             </div>
           ) : (
             <div className="space-y-3.5 py-2">
-              {recentActivities.map((act) => {
-                const Icon = act.icon;
-                return (
-                  <div key={act.id} className="flex items-center justify-between p-3 bg-zinc-900/35 border border-zinc-850 rounded-xl hover:bg-zinc-900/50 transition">
-                    <div className="flex items-center gap-3">
-                      <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", act.color)}>
-                        <Icon size={14} />
+              {recentActivities.length === 0 ? (
+                <div className="py-8 text-center text-zinc-500 text-xs">
+                  No media activities logged yet. Upload photos or videos to start tracking.
+                </div>
+              ) : (
+                recentActivities.map((act) => {
+                  const Icon = act.icon;
+                  return (
+                    <div key={act.id} className="flex items-center justify-between p-3 bg-zinc-900/35 border border-zinc-850 rounded-xl hover:bg-zinc-900/50 transition">
+                      <div className="flex items-center gap-3">
+                        <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", act.color)}>
+                          <Icon size={14} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-zinc-200">{act.action}</p>
+                          <p className="text-[10px] text-zinc-450 mt-0.5">{act.desc}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-zinc-200">{act.action}</p>
-                        <p className="text-[10px] text-zinc-450 mt-0.5">{act.desc}</p>
-                      </div>
+                      <span className="text-[9px] text-zinc-550 font-mono shrink-0">{act.time}</span>
                     </div>
-                    <span className="text-[9px] text-zinc-550 font-mono shrink-0">{act.time}</span>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           )}
         </div>

@@ -39,7 +39,7 @@ public class QuoteService {
 
     static {
         VALID_TRANSITIONS.put(QuoteStatus.DRAFT,       EnumSet.of(QuoteStatus.SENT));
-        VALID_TRANSITIONS.put(QuoteStatus.SENT,        EnumSet.of(QuoteStatus.VIEWED));
+        VALID_TRANSITIONS.put(QuoteStatus.SENT,        EnumSet.of(QuoteStatus.VIEWED, QuoteStatus.ACCEPTED, QuoteStatus.REJECTED));
         VALID_TRANSITIONS.put(QuoteStatus.VIEWED,      EnumSet.of(QuoteStatus.ACCEPTED, QuoteStatus.REJECTED));
         VALID_TRANSITIONS.put(QuoteStatus.ACCEPTED,    Collections.emptySet()); // Terminal state
         VALID_TRANSITIONS.put(QuoteStatus.REJECTED,    Collections.emptySet()); // Terminal state

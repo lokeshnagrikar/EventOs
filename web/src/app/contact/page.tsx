@@ -10,15 +10,40 @@ import { useToastStore } from "@/lib/toastStore";
 export default function ContactPage() {
   const addToast = useToastStore((state) => state.addToast);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formMountedAt] = useState<number>(() => Date.now());
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    // Bot Check 1: Honeypot trap (must be empty)
+    const honeypot = formData.get("hp_website") as string;
+    if (honeypot) {
+      // Silently discard automated bot spam
+      form.reset();
+      return;
+    }
+
+    // Bot Check 2: Submission speed (humans take at least 1.5s to read & fill)
+    if (Date.now() - formMountedAt < 1200) {
+      addToast("Automated submission detected. Please try again.", "error");
+      return;
+    }
+
+    const email = (formData.get("email") as string || "").trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      addToast("Please provide a valid work email address.", "error");
+      return;
+    }
+
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
       addToast("Sales Inbound Request Logged! We will contact you in 2 hours. 📞", "success");
-      (e.target as HTMLFormElement).reset();
-    }, 1500);
+      form.reset();
+    }, 1200);
   };
 
   return (
@@ -88,6 +113,16 @@ export default function ContactPage() {
           {/* Form Side */}
           <div className="lg:col-span-2 p-8 border border-zinc-850 bg-[#121214]/20 backdrop-blur rounded-2xl select-none">
             <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
+              {/* Anti-Spam Honeypot (Invisible to humans, irresistible to bot scrapers) */}
+              <input
+                type="text"
+                name="hp_website"
+                style={{ display: "none", position: "absolute", left: "-9999px" }}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+              />
+
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Full Name</label>
                 <input required name="name" type="text" className="w-full bg-zinc-950 border border-zinc-850 px-3 py-2 rounded-xl text-white focus:outline-none" />

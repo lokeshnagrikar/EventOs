@@ -68,7 +68,11 @@ export default function PortalTimelinePage() {
     }
   });
 
-  const clientTimeline = useMemo(() => timelineResponse?.data || [], [timelineResponse]);
+  const clientTimeline = useMemo<TimelineItem[]>(() => {
+    if (Array.isArray(timelineResponse?.data)) return timelineResponse.data;
+    if (Array.isArray(timelineResponse)) return timelineResponse as any;
+    return [];
+  }, [timelineResponse]);
 
   // Sort timeline chronologically
   const sortedTimeline = useMemo(() => {
@@ -165,7 +169,7 @@ export default function PortalTimelinePage() {
                 <div className="space-y-3.5 max-w-3xl p-5 border border-white/[0.04] bg-white/[0.01] rounded-2xl transition-all hover:border-white/[0.08]">
                   <div className="flex justify-between items-center text-[10px] text-zinc-550 font-bold font-mono">
                     <span>Logged Milestone</span>
-                    <span>{new Date(item.scheduledTime).toLocaleString()}</span>
+                    <span>{item.scheduledTime ? new Date(item.scheduledTime).toLocaleString() : "TBD"}</span>
                   </div>
 
                   <div className="space-y-1">

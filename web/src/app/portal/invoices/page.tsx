@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useToastStore } from "@/lib/toastStore";
 import {
   FileSpreadsheet,
   DollarSign,
@@ -51,6 +52,7 @@ interface Payment {
 }
 
 export default function PortalInvoicesPage() {
+  const { addToast } = useToastStore();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const modalRef = React.useRef<HTMLDivElement>(null);
   
@@ -90,19 +92,32 @@ export default function PortalInvoicesPage() {
     }
   });
 
-  const clientInvoices = invoicesResponse?.data || [];
-  const clientPayments = paymentsResponse?.data || [];
+  const clientInvoices = useMemo<Invoice[]>(() => {
+    if (Array.isArray(invoicesResponse?.data)) return invoicesResponse.data;
+    if (Array.isArray(invoicesResponse)) return invoicesResponse as any;
+    return [];
+  }, [invoicesResponse]);
+
+  const clientPayments = useMemo<Payment[]>(() => {
+    if (Array.isArray(paymentsResponse?.data)) return paymentsResponse.data;
+    if (Array.isArray(paymentsResponse)) return paymentsResponse as any;
+    return [];
+  }, [paymentsResponse]);
 
   const isLoading = loadingInvoices || loadingPayments;
 
   // Totals calculations
-  const totalBalanceDue = clientInvoices
-    .filter(i => i.status !== "PAID" && i.status !== "CANCELLED")
-    .reduce((sum, i) => sum + i.totalAmount, 0);
+  const totalBalanceDue = useMemo(() => {
+    return clientInvoices
+      .filter(i => i.status !== "PAID" && i.status !== "CANCELLED")
+      .reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
+  }, [clientInvoices]);
 
-  const totalPaid = clientInvoices
-    .filter(i => i.status === "PAID")
-    .reduce((sum, i) => sum + i.totalAmount, 0);
+  const totalPaid = useMemo(() => {
+    return clientInvoices
+      .filter(i => i.status === "PAID")
+      .reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
+  }, [clientInvoices]);
 
   const totalInvoiceValue = totalPaid + totalBalanceDue;
   const paidPercent = totalInvoiceValue > 0 ? Math.round((totalPaid / totalInvoiceValue) * 100) : 0;
@@ -111,15 +126,31 @@ export default function PortalInvoicesPage() {
     e.preventDefault();
     if (!txnRef.trim()) return;
     setTxnSuccess(true);
+    addToast("Payment reference logged. Coordinator will verify receipt.", "success");
     setTimeout(() => {
       setTxnSuccess(false);
       setTxnRef("");
     }, 4000);
   };
 
-  const handleDownloadInvoicePDF = (inv: Invoice) => {
-    // Printable / download PDF action
-    window.print();
+  const handleDownloadInvoicePDF = async (inv: Invoice, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      addToast("Downloading official invoice PDF...", "info");
+      const res = await api.get(`/events/invoices/${inv.id}/pdf`, { responseType: "blob" });
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Invoice-${inv.invoiceNumber || "receipt"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      addToast("Invoice PDF downloaded!", "success");
+    } catch {
+      window.print();
+    }
   };
 
   if (isLoading) {
@@ -173,13 +204,22 @@ export default function PortalInvoicesPage() {
                       </span>
                     </div>
                     <p className="text-[10px] text-zinc-500 font-mono mt-1 font-semibold">
-                      Due: {new Date(invoice.dueDate).toLocaleDateString()}
+                      Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "-"}
                     </p>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-black font-mono text-zinc-150">₹{invoice.totalAmount.toLocaleString()}</p>
-                  <span className="text-[9px] text-purple-400 font-black hover:underline">View invoice breakups</span>
+                <div className="flex items-center gap-3 self-end md:self-center">
+                  <button
+                    onClick={(e) => handleDownloadInvoicePDF(invoice, e)}
+                    className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.06] text-zinc-400 hover:text-white transition"
+                    title="Download Official Invoice PDF"
+                  >
+                    <Download size={13} />
+                  </button>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-black font-mono text-zinc-150">₹{(Number(invoice.totalAmount) || 0).toLocaleString()}</p>
+                    <span className="text-[9px] text-purple-400 font-black hover:underline">View invoice breakups</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -213,8 +253,8 @@ export default function PortalInvoicesPage() {
             </div>
             
             <div className="space-y-1.5 text-xs">
-              <h4 className="font-extrabold text-zinc-150">Pending: ₹{totalBalanceDue.toLocaleString()}</h4>
-              <p className="text-[10px] text-zinc-500 font-bold">Paid: ₹{totalPaid.toLocaleString()}</p>
+              <h4 className="font-extrabold text-zinc-150">Pending: ₹{(Number(totalBalanceDue) || 0).toLocaleString()}</h4>
+              <p className="text-[10px] text-zinc-500 font-bold">Paid: ₹{(Number(totalPaid) || 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -314,9 +354,9 @@ export default function PortalInvoicesPage() {
                   className="p-3.5 border border-zinc-800 bg-zinc-900/15 rounded-xl flex items-center justify-between gap-3 text-xs"
                 >
                   <div>
-                    <p className="font-bold text-zinc-200 font-mono">₹{payment.amount.toLocaleString()}</p>
+                    <p className="font-bold text-zinc-200 font-mono">₹{(Number(payment.amount) || 0).toLocaleString()}</p>
                     <p className="text-[9px] text-zinc-550 font-bold mt-0.5">
-                      {payment.paymentMethod} &bull; {new Date(payment.paymentDate).toLocaleDateString()}
+                      {(payment.paymentMethod || "MANUAL").replace("_", " ")} &bull; {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : "-"}
                     </p>
                   </div>
                   <span className={cn(
@@ -368,7 +408,7 @@ export default function PortalInvoicesPage() {
                   </div>
                   <div className="text-right">
                     <span className="text-zinc-500 font-bold uppercase tracking-wider text-[8.5px]">Due Date:</span>
-                    <p className="font-extrabold text-red-400 mt-0.5">{new Date(selectedInvoice.dueDate).toLocaleDateString()}</p>
+                    <p className="font-extrabold text-red-400 mt-0.5">{selectedInvoice.dueDate ? new Date(selectedInvoice.dueDate).toLocaleDateString() : "-"}</p>
                   </div>
                 </div>
 
@@ -377,31 +417,31 @@ export default function PortalInvoicesPage() {
                   <span className="text-zinc-555 font-bold uppercase tracking-wider text-[9px] block mb-2">Item Specifications</span>
                   <div className="space-y-2 border border-zinc-850 bg-zinc-950/30 p-3 rounded-xl">
                     <div className="flex justify-between text-zinc-350 font-bold">
-                      <span>Venue Decoration & Catering services setup</span>
-                      <span>₹{selectedInvoice.subtotal.toLocaleString()}</span>
+                      <span>Event Services & Production fulfillment</span>
+                      <span className="font-mono">₹{(Number(selectedInvoice.subtotal || selectedInvoice.totalAmount) || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Taxes & subtotals */}
                 <div className="space-y-1.5 font-mono pt-3 border-t border-zinc-850/40 text-[10px]">
-                  <div className="flex justify-between text-zinc-500 font-semibold">
+                  <div className="flex justify-between text-zinc-400 font-semibold">
                     <span>Subtotal:</span>
-                    <span>₹{selectedInvoice.subtotal.toLocaleString()}</span>
+                    <span>₹{(Number(selectedInvoice.subtotal) || 0).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-zinc-500 font-semibold">
+                  <div className="flex justify-between text-zinc-400 font-semibold">
                     <span>GST (18%):</span>
-                    <span>₹{selectedInvoice.tax.toLocaleString()}</span>
+                    <span>₹{(Number(selectedInvoice.tax) || 0).toLocaleString()}</span>
                   </div>
-                  {selectedInvoice.discount > 0 && (
-                    <div className="flex justify-between text-emerald-500 font-semibold">
+                  {(Number(selectedInvoice.discount) || 0) > 0 && (
+                    <div className="flex justify-between text-emerald-400 font-semibold">
                       <span>Discount:</span>
-                      <span>- ₹{selectedInvoice.discount.toLocaleString()}</span>
+                      <span>- ₹{(Number(selectedInvoice.discount) || 0).toLocaleString()}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-xs font-black text-zinc-200 pt-2 border-t border-zinc-850/40">
+                  <div className="flex justify-between text-xs font-black text-zinc-100 pt-2 border-t border-zinc-850/40">
                     <span>Grand Total:</span>
-                    <span>₹{selectedInvoice.totalAmount.toLocaleString()}</span>
+                    <span className="text-emerald-450">₹{(Number(selectedInvoice.totalAmount) || 0).toLocaleString()}</span>
                   </div>
                 </div>
 

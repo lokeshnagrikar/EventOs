@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -15,7 +15,9 @@ import {
   CheckCircle,
   Clock,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Download,
+  Loader2
 } from "lucide-react";
 import PageShell from "@/components/ui/PageShell";
 import EmptyState from "@/components/ui/EmptyState";
@@ -88,9 +90,35 @@ export default function QuotesPage() {
 
   const quotes = quotesResponse?.data || [];
   const leads = leadsResponse?.data || [];
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const getLeadName = (leadId: string) => {
     return leads.find((l) => l.id === leadId)?.name || "Unassigned Lead";
+  };
+
+  const handleDownloadPdf = async (e: React.MouseEvent, q: Quote) => {
+    e.stopPropagation();
+    try {
+      setDownloadingId(q.id);
+      const response = await api.get(`/crm/quotes/${q.id}/pdf`, {
+        responseType: "blob"
+      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `quote-${q.quoteNumber || "proposal"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(link.href);
+    } catch (err) {
+      console.error("PDF download failed:", err);
+      if (q.pdfUrl && !q.pdfUrl.includes("dummy.pdf")) {
+        window.open(q.pdfUrl, "_blank");
+      }
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const isLoading = quotesLoading || leadsLoading;
@@ -156,17 +184,20 @@ export default function QuotesPage() {
                         <span className="text-[10px] font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-bold">
                           {q.quoteNumber}
                         </span>
-                        <a
-                          href={q.pdfUrl && !q.pdfUrl.includes("dummy.pdf") ? q.pdfUrl : `/api/v1/crm/quotes/${q.id}/pdf`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-1.5 py-0.5 rounded bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all flex items-center gap-1 text-[9px] font-bold border border-zinc-700/30"
-                          title="Download PDF"
+                        <button
+                          type="button"
+                          onClick={(e) => handleDownloadPdf(e, q)}
+                          disabled={downloadingId === q.id}
+                          className="px-2 py-0.5 rounded bg-zinc-800/80 hover:bg-purple-600/20 text-zinc-400 hover:text-purple-300 transition-all flex items-center gap-1 text-[9px] font-bold border border-zinc-700/30 cursor-pointer disabled:opacity-50"
+                          title="Download PDF Proposal"
                         >
-                          <FileText size={10} />
+                          {downloadingId === q.id ? (
+                            <Loader2 size={10} className="animate-spin" />
+                          ) : (
+                            <Download size={10} />
+                          )}
                           PDF
-                        </a>
+                        </button>
                       </div>
                       <span className={`px-2 py-0.5 border rounded-full text-[9px] font-bold ${statusStyle}`}>
                         {q.status}

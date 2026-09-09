@@ -55,13 +55,7 @@ export const REPORT_SOURCES: ReportSource[] = [
       { key: "status", label: "Pipeline Status", type: "string" },
       { key: "date", label: "Created Date", type: "date" },
     ],
-    mockData: [
-      { name: "Siddharth & Ananya sangeet", email: "siddharth@gmail.com", phone: "555-0143", eventType: "Wedding", budget: 450000, status: "WON", date: "2026-06-15" },
-      { name: "TechCorp Annual Gala", email: "events@techcorp.com", phone: "555-9281", eventType: "Corporate", budget: 1200000, status: "NEGOTIATING", date: "2026-07-01" },
-      { name: "Sophia Jones Engagement", email: "sophia@jones.com", phone: "555-0192", eventType: "Wedding", budget: 250000, status: "QUALIFIED", date: "2026-06-20" },
-      { name: "Marcus Vance Birthday", email: "marcus.vance@yahoo.com", phone: "555-1200", eventType: "Birthday", budget: 150000, status: "CONTACTED", date: "2026-07-03" },
-      { name: "Kunal & Riya reception", email: "kunal@gmail.com", phone: "555-3030", eventType: "Wedding", budget: 850000, status: "WON", date: "2026-06-10" },
-    ],
+    mockData: [],
   },
   {
     id: "invoices",
@@ -74,13 +68,7 @@ export const REPORT_SOURCES: ReportSource[] = [
       { key: "status", label: "Invoice Status", type: "string" },
       { key: "dueDate", label: "Due Date", type: "date" },
     ],
-    mockData: [
-      { invoiceNumber: "INV-2026-001", clientName: "Siddharth & Ananya sangeet", amount: 150000, tax: 27000, status: "PAID", dueDate: "2026-07-15" },
-      { invoiceNumber: "INV-2026-002", clientName: "Sophia Jones Engagement", amount: 100000, tax: 18000, status: "SENT", dueDate: "2026-07-25" },
-      { invoiceNumber: "INV-2026-003", clientName: "Kunal & Riya reception", amount: 200000, tax: 36000, status: "PAID", dueDate: "2026-07-10" },
-      { invoiceNumber: "INV-2026-004", clientName: "TechCorp Annual Gala", amount: 500000, tax: 90000, status: "DRAFT", dueDate: "2026-08-01" },
-      { invoiceNumber: "INV-2026-005", clientName: "Marcus Vance Birthday", amount: 75000, tax: 13500, status: "OVERDUE", dueDate: "2026-07-02" },
-    ],
+    mockData: [],
   },
   {
     id: "events",
@@ -93,13 +81,7 @@ export const REPORT_SOURCES: ReportSource[] = [
       { key: "startDate", label: "Start Date", type: "date" },
       { key: "status", label: "Status", type: "string" },
     ],
-    mockData: [
-      { name: "Siddharth & Ananya sangeet", eventType: "Wedding", venue: "Grand Hyatt", budget: 450000, startDate: "2026-10-12", status: "CONFIRMED" },
-      { name: "Kunal & Riya reception", eventType: "Wedding", venue: "Taj Palace", budget: 850000, startDate: "2026-09-22", status: "IN_PROGRESS" },
-      { name: "TechCorp Annual Gala", eventType: "Corporate", venue: "Expo Center", budget: 1200000, startDate: "2026-11-20", status: "PLANNING" },
-      { name: "Sophia Jones Engagement", eventType: "Wedding", venue: "Leela Hotel", budget: 250000, startDate: "2026-12-05", status: "CONFIRMED" },
-      { name: "Marcus Vance Birthday", eventType: "Birthday", venue: "Urban Club", budget: 150000, startDate: "2026-08-15", status: "PLANNING" },
-    ],
+    mockData: [],
   },
 ];
 

@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -270,13 +271,19 @@ public class QuoteController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Client — My quotes", description = "Returns all quotes addressed to the currently authenticated client (matched by email). CLIENT role only.")
+    @Operation(summary = "Client — My quotes", description = "Returns all quotes addressed to the currently authenticated client (matched by email).")
     @GetMapping("/client")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT', 'OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> getClientQuotes() {
         UUID tenantId = getTenantId();
-        String email = getCurrentUser().getEmail();
-        List<Quote> quotes = quoteService.getQuotesByClientEmail(email, tenantId);
+        UserPrincipal user = getCurrentUser();
+        List<Quote> quotes = new ArrayList<>();
+        if (user != null && user.getEmail() != null) {
+            quotes = quoteService.getQuotesByClientEmail(user.getEmail(), tenantId);
+            if (quotes.isEmpty() && (user.getRoles() == null || !user.getRoles().contains("CLIENT"))) {
+                quotes = quoteService.getAllQuotes(tenantId);
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

@@ -64,33 +64,13 @@ export const getAIHistory = (): AIHistoryLog[] => {
   const saved = localStorage.getItem(HISTORY_KEY);
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Clean legacy mock IDs if present
+      const clean = parsed.filter((h: any) => h.id !== "h1" && h.id !== "h2");
+      return clean;
     } catch (e) {}
   }
-  return [
-    {
-      id: "h1",
-      module: "CRM Lead Score",
-      provider: "OPENAI",
-      prompt: "Analyze lead: Rahul Sharma, budget ₹8L, status INQUIRY.",
-      response: "Lead Quality Score: 85/100. High conversion probability.",
-      tokensConsumed: 320,
-      costEstimate: 0.0064,
-      timestamp: "2026-06-30T10:12:00Z",
-      actor: "Rahul Sharma (Sales)"
-    },
-    {
-      id: "h2",
-      module: "Finance Forecast",
-      provider: "CLAUDE",
-      prompt: "Forecast Q3 revenue from booked weddings.",
-      response: "Revenue Forecast: ₹14,20,000 based on 4 confirmed bookings.",
-      tokensConsumed: 540,
-      costEstimate: 0.0162,
-      timestamp: "2026-06-30T10:45:00Z",
-      actor: "Roy Wedding Admin"
-    }
-  ];
+  return [];
 };
 
 export const logAIActivity = (module: string, prompt: string, response: string, tokens: number) => {

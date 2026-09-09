@@ -26,7 +26,8 @@ import {
   History,
   Lock,
   UserCheck,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -93,6 +94,7 @@ export default function QuoteDetailPage() {
   const [signerName, setSignerName] = useState("");
   const [signerTitle, setSignerTitle] = useState("Client Sponsor");
   const [feedbackText, setFeedbackText] = useState("");
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   // 1. Fetch Quote Details
   const { data: quoteResponse, isLoading: quoteLoading, error: quoteError } = useQuery<{ data: Quote }>({
@@ -252,11 +254,30 @@ export default function QuoteDetailPage() {
     setShowSendModal(false);
   };
 
-  const handleDownloadPdf = () => {
-    if (quote?.pdfUrl && !quote.pdfUrl.includes("dummy.pdf")) {
-      window.open(quote.pdfUrl, "_blank");
-    } else {
-      window.open(`/api/v1/crm/quotes/${quoteId}/pdf`, "_blank");
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloadingPdf(true);
+      setErrorText("");
+      const response = await api.get(`/crm/quotes/${quoteId}/pdf`, {
+        responseType: "blob"
+      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `quote-${quote?.quoteNumber || "proposal"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(link.href);
+    } catch (e: any) {
+      console.error("PDF download failed:", e);
+      if (quote?.pdfUrl && !quote.pdfUrl.includes("dummy.pdf")) {
+        window.open(quote.pdfUrl, "_blank");
+      } else {
+        setErrorText("Failed to generate and download quote proposal PDF.");
+      }
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -373,10 +394,11 @@ export default function QuoteDetailPage() {
 
           <button
             onClick={handleDownloadPdf}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/20 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+            disabled={downloadingPdf}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/20 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
           >
-            <Download size={13} />
-            <span>Download PDF</span>
+            {downloadingPdf ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+            <span>{downloadingPdf ? "Generating PDF..." : "Download PDF"}</span>
           </button>
 
           <button
