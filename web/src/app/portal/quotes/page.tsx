@@ -390,33 +390,42 @@ export default function PortalQuotesPage() {
       {/* ─── DETAIL VIEW MODAL & APPROVAL / SIGNATURE ENGINE ─── */}
       <AnimatePresence>
         {selectedQuote && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 pt-6 sm:pt-10 pb-8 overflow-y-auto">
             <motion.div
               ref={modalRef}
               role="dialog"
               aria-modal="true"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              className="w-full max-w-2xl bg-[#111113] border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] relative"
+              initial={{ opacity: 0, scale: 0.96, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 15 }}
+              className="w-full max-w-3xl bg-[#111113] border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[86vh] relative my-auto shrink-0"
             >
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/20 via-transparent to-transparent pointer-events-none" />
 
-              {/* Header */}
-              <div className="flex justify-between items-center p-5 border-b border-zinc-800 shrink-0 z-10 relative">
-                <div>
-                  <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
-                    <FileText className="text-purple-500" size={16} />
-                    Proposal Details: {selectedQuote.quoteNumber}
+              {/* Header - Always visible sticky top bar */}
+              <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-800 shrink-0 z-30 sticky top-0 bg-[#111113]/95 backdrop-blur-md">
+                <div className="min-w-0 pr-3">
+                  <h2 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2 truncate">
+                    <FileText className="text-purple-400 shrink-0" size={18} />
+                    <span>Proposal: {selectedQuote.quoteNumber}</span>
                   </h2>
-                  <span className="text-[10px] text-zinc-400 font-mono font-bold block mt-0.5">
-                    Issued: {selectedQuote.createdAt ? new Date(selectedQuote.createdAt).toLocaleDateString() : "Active"} &bull; Status: <span className="text-purple-400 uppercase">{selectedQuote.status}</span>
-                  </span>
+                  <div className="flex items-center gap-2 mt-1 text-[10px] text-zinc-400 font-mono font-bold">
+                    <span>Issued: {selectedQuote.createdAt ? new Date(selectedQuote.createdAt).toLocaleDateString() : "Active"}</span>
+                    <span>&bull;</span>
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[9px] uppercase font-black tracking-wider border",
+                      selectedQuote.status === "ACCEPTED" ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/30" :
+                      selectedQuote.status === "REJECTED" ? "bg-red-500/10 text-red-400 border-red-500/30" :
+                      "bg-purple-500/10 text-purple-400 border-purple-500/30"
+                    )}>
+                      {selectedQuote.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={(e) => handleDownloadPdf(selectedQuote.id, selectedQuote.quoteNumber, e)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 text-xs font-bold rounded-xl border border-zinc-700/60 transition cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-bold rounded-xl border border-zinc-750 transition cursor-pointer shadow-sm"
                     title="Download Official Proposal PDF"
                   >
                     <Download size={13} />
@@ -424,9 +433,11 @@ export default function PortalQuotesPage() {
                   </button>
                   <button
                     onClick={() => { setSelectedQuote(null); setShowSignPad(false); }}
-                    className="h-8 w-8 rounded-full bg-zinc-850 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer"
+                    className="h-8 w-8 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition cursor-pointer"
+                    title="Close proposal modal"
+                    aria-label="Close"
                   >
-                    <X size={14} />
+                    <X size={15} />
                   </button>
                 </div>
               </div>

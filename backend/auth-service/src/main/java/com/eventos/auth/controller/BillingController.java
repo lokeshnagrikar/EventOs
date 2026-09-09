@@ -432,27 +432,53 @@ public class BillingController {
         }
 
         try {
-            com.stripe.Stripe.apiKey = stripeApiKey;
+            com.stripe.Stripe.apiKey = (stripeApiKey != null && !stripeApiKey.isBlank()) ? stripeApiKey : System.getenv("STRIPE_API_KEY");
 
-            String priceId;
-            if ("agency".equalsIgnoreCase(planCode) || "enterprise".equalsIgnoreCase(planCode)) {
-                priceId = System.getenv().getOrDefault("STRIPE_PRICE_AGENCY",
-                        System.getenv().getOrDefault("STRIPE_PRICE_ENTERPRISE", "price_agency_monthly"));
-            } else if ("professional".equalsIgnoreCase(planCode) || "growth".equalsIgnoreCase(planCode)) {
-                priceId = System.getenv().getOrDefault("STRIPE_PRICE_PROFESSIONAL",
-                        System.getenv().getOrDefault("STRIPE_PRICE_GROWTH", "price_professional_monthly"));
+            long amountInPaise;
+            String planName;
+            if ("enterprise".equalsIgnoreCase(planCode)) {
+                amountInPaise = 2499900L; // ₹24,999
+                planName = "Enterprise";
+            } else if ("agency".equalsIgnoreCase(planCode)) {
+                amountInPaise = 1499900L; // ₹14,999
+                planName = "Agency";
+            } else if ("business".equalsIgnoreCase(planCode)) {
+                amountInPaise = 999900L; // ₹9,999
+                planName = "Business";
+            } else if ("professional".equalsIgnoreCase(planCode)) {
+                amountInPaise = 499900L; // ₹4,999
+                planName = "Professional";
             } else {
-                priceId = System.getenv().getOrDefault("STRIPE_PRICE_STARTER",
-                        System.getenv().getOrDefault("STRIPE_PRICE_STANDARD", "price_starter_monthly"));
+                amountInPaise = 199900L; // ₹1,999
+                planName = "Starter";
             }
+
+            String targetFrontend = (frontendUrl != null && !frontendUrl.isBlank()) ? frontendUrl : "http://localhost:3000";
+
+            com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData priceData = 
+                com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.builder()
+                    .setCurrency("inr")
+                    .setUnitAmount(amountInPaise)
+                    .setRecurring(
+                        com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.Recurring.builder()
+                            .setInterval(com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.Recurring.Interval.MONTH)
+                            .build()
+                    )
+                    .setProductData(
+                        com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                            .setName("EventOS " + planName + " Subscription")
+                            .setDescription("Monthly workspace subscription (" + planName + ")")
+                            .build()
+                    )
+                    .build();
 
             com.stripe.param.checkout.SessionCreateParams params = com.stripe.param.checkout.SessionCreateParams
                     .builder()
                     .setMode(com.stripe.param.checkout.SessionCreateParams.Mode.SUBSCRIPTION)
-                    .setSuccessUrl(frontendUrl + "/settings/billing?status=success&session_id={CHECKOUT_SESSION_ID}")
-                    .setCancelUrl(frontendUrl + "/settings/billing?status=cancel")
+                    .setSuccessUrl(targetFrontend + "/settings?tab=billing&status=success&session_id={CHECKOUT_SESSION_ID}")
+                    .setCancelUrl(targetFrontend + "/settings?tab=billing&status=cancel")
                     .addLineItem(com.stripe.param.checkout.SessionCreateParams.LineItem.builder()
-                            .setPrice(priceId)
+                            .setPriceData(priceData)
                             .setQuantity(1L)
                             .build())
                     .putMetadata("tenantId", tenantId.toString())
@@ -466,6 +492,7 @@ public class BillingController {
             response.put("data", Map.of("url", session.getUrl()));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            log.error("[STRIPE CHECKOUT] Failed to create session for plan {}", planCode, e);
             throw new org.springframework.web.server.ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "Stripe Checkout initialization failed: " + e.getMessage(), e);
         }

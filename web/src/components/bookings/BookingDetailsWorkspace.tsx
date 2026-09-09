@@ -222,6 +222,8 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
     }
   });
 
+  const [milestoneError, setMilestoneError] = useState("");
+
   const toggleMilestoneMutation = useMutation({
     mutationFn: async (milestoneId: string) => {
       const response = await api.patch(`/bookings/${bookingId}/timeline/${milestoneId}/toggle`);
@@ -242,11 +244,12 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
       setNewMilestoneTitle("");
       setNewMilestoneDesc("");
       setNewMilestoneDate("");
+      setMilestoneError("");
       queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
       queryClient.invalidateQueries({ queryKey: ["bookingAudit", bookingId] });
     },
     onError: (err: any) => {
-      setFormError(err.response?.data?.error?.message || "Failed to save milestone.");
+      setMilestoneError(err.response?.data?.error?.message || err.response?.data?.message || "Failed to save milestone. Please check date and time.");
     }
   });
 
@@ -286,12 +289,18 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
 
   const handleMilestoneSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError("");
+    setMilestoneError("");
     if (!newMilestoneTitle.trim() || !newMilestoneDate) return;
+
+    let cleanDate = newMilestoneDate;
+    if (newMilestoneDate.includes("T") && newMilestoneDate.length === 16) {
+      cleanDate = `${newMilestoneDate}:00`;
+    }
+
     addMilestoneMutation.mutate({
-      title: newMilestoneTitle,
-      description: newMilestoneDesc,
-      eventDate: new Date(newMilestoneDate).toISOString(),
+      title: newMilestoneTitle.trim(),
+      description: newMilestoneDesc || "Event operational milestone",
+      eventDate: cleanDate,
       status: "PENDING"
     });
   };
@@ -495,46 +504,76 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                 className="p-5 border border-zinc-800 bg-[#141416]/40 rounded-2xl space-y-6"
               >
                 <div className="flex justify-between items-center border-b border-zinc-850 pb-3">
-                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-300">Contract Lifecycle timeline</h3>
+                  <div>
+                    <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-200">Event Operations & Lifecycle Milestones</h3>
+                    <p className="text-[10px] text-zinc-500 mt-0.5">Click any milestone to toggle between Pending and Completed.</p>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 rounded-full">
+                    {booking.timelineEvents?.filter((e) => e.status === "COMPLETED").length || 0} / {booking.timelineEvents?.length || 0} Done
+                  </span>
                 </div>
 
-                <div className="relative border-l border-zinc-800 pl-6 ml-2 space-y-5 py-1">
+                <div className="relative border-l border-zinc-800 pl-6 ml-2 space-y-4 py-1">
                   {booking.timelineEvents?.map((m) => (
                     <div
                       key={m.id}
                       onClick={() => toggleMilestoneMutation.mutate(m.id)}
                       className={cn(
-                        "relative p-3 border rounded-xl bg-zinc-950/20 cursor-pointer flex justify-between items-center transition-colors",
-                        m.status === "COMPLETED" ? "border-zinc-850 text-zinc-550" : "border-zinc-800 text-zinc-200 hover:border-zinc-700"
+                        "relative p-3.5 border rounded-xl bg-zinc-950/20 cursor-pointer flex justify-between items-center transition-all hover:bg-zinc-950/40",
+                        m.status === "COMPLETED" ? "border-zinc-850 text-zinc-550 opacity-80" : "border-zinc-800 text-zinc-200 hover:border-zinc-700"
                       )}
                     >
                       <div className="absolute -left-[32px] top-4 h-3 w-3 rounded-full border-2 bg-[#09090b]"
                         style={{ borderColor: m.status === "COMPLETED" ? "#a855f7" : "#3f3f46" }}
                       />
-                      <div className="flex items-center gap-2">
-                        {m.status === "COMPLETED" ? <CheckCircle2 size={14} className="text-emerald-500" /> : <div className="h-3.5 w-3.5 rounded-full border border-zinc-700" />}
-                        <span className="font-bold text-xs">{m.title}</span>
+                      <div className="flex items-center gap-2.5 min-w-0 pr-3">
+                        {m.status === "COMPLETED" ? <CheckCircle2 size={15} className="text-emerald-400 shrink-0" /> : <div className="h-4 w-4 rounded-full border border-zinc-700 shrink-0" />}
+                        <div className="truncate">
+                          <span className={cn("font-bold text-xs block truncate", m.status === "COMPLETED" && "line-through text-zinc-500")}>{m.title}</span>
+                          {m.description && <span className="text-[10px] text-zinc-500 block truncate">{m.description}</span>}
+                        </div>
                       </div>
-                      <span className="text-[9px] text-zinc-550 font-bold">{new Date(m.eventDate).toLocaleDateString()}</span>
+                      <span className="text-[10px] text-zinc-400 font-mono font-bold shrink-0">
+                        {new Date(m.eventDate).toLocaleDateString()} {new Date(m.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
                   ))}
                   {(!booking.timelineEvents || booking.timelineEvents.length === 0) && (
-                    <p className="text-xs text-zinc-550 italic">No milestones defined.</p>
+                    <p className="text-xs text-zinc-550 italic py-3 text-center">No timeline milestones defined yet. Log your first event milestone below.</p>
                   )}
                 </div>
 
                 {/* Add Milestone Form */}
                 <form onSubmit={handleMilestoneSubmit} className="border-t border-zinc-850 pt-5 space-y-3">
-                  <h4 className="text-[9px] uppercase font-black text-zinc-400">Add Timeline Milestone</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <input type="text" required placeholder="Milestone Title (e.g. Contract signed)" value={newMilestoneTitle} onChange={(e) => setNewMilestoneTitle(e.target.value)}
-                      className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-xs" />
-                    <input type="datetime-local" required value={newMilestoneDate} onChange={(e) => setNewMilestoneDate(e.target.value)}
-                      className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-xs" />
+                  <h4 className="text-[10px] uppercase font-black text-zinc-400">Add Timeline Milestone</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder="Milestone Title (e.g. Sound & Acoustic Ingress)" 
+                      value={newMilestoneTitle} 
+                      onChange={(e) => { setNewMilestoneTitle(e.target.value); setMilestoneError(""); }}
+                      className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500" 
+                    />
+                    <input 
+                      type="datetime-local" 
+                      required 
+                      value={newMilestoneDate} 
+                      onChange={(e) => { setNewMilestoneDate(e.target.value); setMilestoneError(""); }}
+                      className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500" 
+                    />
                   </div>
+                  {milestoneError && (
+                    <p className="text-[10px] text-red-400 font-bold bg-red-500/10 border border-red-500/20 p-2 rounded-lg">{milestoneError}</p>
+                  )}
                   <div className="flex justify-end">
-                    <button type="submit" className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-all shadow-md">
-                      Log Milestone
+                    <button 
+                      type="submit" 
+                      disabled={addMilestoneMutation.isPending} 
+                      className="px-4 py-2 bg-purple-650 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                    >
+                      {addMilestoneMutation.isPending && <Loader2 size={12} className="animate-spin" />}
+                      <span>{addMilestoneMutation.isPending ? "Saving..." : "Log Milestone"}</span>
                     </button>
                   </div>
                 </form>

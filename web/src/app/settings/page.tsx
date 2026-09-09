@@ -225,6 +225,7 @@ export default function SettingsPage() {
 
   const [showDowngradeWarningModal, setShowDowngradeWarningModal] = useState(false);
   const [targetDowngradePlan, setTargetDowngradePlan] = useState<any>(null);
+  const [isCheckingOutPlan, setIsCheckingOutPlan] = useState<string | null>(null);
 
   // Chart data
   const usageHistoryData = [
@@ -2822,9 +2823,9 @@ export default function SettingsPage() {
                             </button>
                           </div>
 
-                          {/* Plans Cards */}
-                          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                            {plans.map((p) => {
+                          {/* Plans Cards - Balanced 3x2 Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {[...plans].sort((a, b) => a.price - b.price).map((p) => {
                               const isCurrent = subscription?.plan?.code === p.code;
                               const isRecommended = p.code === "professional";
                               const priceVal = billingInterval === "YEARLY" ? p.price * 0.8 * 12 : p.price;
@@ -2835,33 +2836,33 @@ export default function SettingsPage() {
                                   key={p.id}
                                   className={cn(
                                     "p-5 rounded-2xl border flex flex-col justify-between space-y-4 relative transition duration-300",
-                                    isCurrent ? "border-purple-500 bg-purple-950/10" : "border-zinc-850 bg-zinc-900/30 hover:border-zinc-800",
-                                    isRecommended && !isCurrent ? "border-pink-500/40 bg-pink-950/5" : ""
+                                    isCurrent ? "border-purple-500 bg-purple-950/10 shadow-lg shadow-purple-950/20" : "border-zinc-850 bg-zinc-900/30 hover:border-zinc-800",
+                                    isRecommended && !isCurrent ? "border-pink-500/40 bg-pink-950/5 shadow-md shadow-pink-950/10" : ""
                                   )}
                                 >
                                   {isRecommended && (
-                                    <span className="absolute -top-2.5 left-4 px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-[6px] font-black uppercase text-white tracking-widest">Recommended</span>
+                                    <span className="absolute -top-2.5 left-4 px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-[7px] font-black uppercase text-white tracking-widest shadow-md">Recommended</span>
                                   )}
 
                                   <div className="space-y-1">
-                                    <span className="text-[10px] font-black uppercase text-zinc-300 block">{p.name}</span>
+                                    <span className="text-[11px] font-black uppercase text-zinc-300 block">{p.name}</span>
                                     <div className="flex items-baseline gap-1 mt-2">
-                                      <span className="text-xl font-bold text-white">{p.currency === "INR" ? "₹" : "$"}{priceVal.toFixed(0)}</span>
-                                      <span className="text-[8px] text-zinc-500 font-mono uppercase">{labelVal}</span>
+                                      <span className="text-2xl font-bold text-white font-mono">₹{priceVal.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
+                                      <span className="text-[9px] text-zinc-500 font-mono uppercase">{labelVal}</span>
                                     </div>
-                                    <p className="text-[8px] text-zinc-500 mt-1 font-semibold leading-normal">
-                                      Great for {p.code === "free_trial" ? "trials" : p.code === "starter" ? "small teams" : p.code === "professional" ? "pros" : "large enterprises"}.
+                                    <p className="text-[9px] text-zinc-400 mt-1 font-semibold leading-normal">
+                                      Great for {p.code === "free_trial" ? "trying out features" : p.code === "starter" ? "small boutique teams" : p.code === "professional" ? "growing agencies" : "high-scale enterprises"}.
                                     </p>
                                   </div>
 
                                   {/* Limits details */}
-                                  <div className="border-t border-zinc-900 pt-3 space-y-2 font-bold font-mono text-[8px] text-zinc-450 leading-relaxed">
-                                    <p className="flex justify-between"><span>Users:</span> <span>{p.maxUsers} Users</span></p>
-                                    <p className="flex justify-between"><span>Storage:</span> <span>{(p.maxStorage / (1024 * 1024 * 1024)).toFixed(0)} GB</span></p>
-                                    <p className="flex justify-between"><span>Events:</span> <span>{p.maxEvents} Active</span></p>
-                                    <p className="flex justify-between"><span>AI Credits:</span> <span>{p.maxAiCredits} / mo</span></p>
-                                    <p className="flex justify-between"><span>Custom Domain:</span> <span>{p.customDomainSupported ? "Yes" : "No"}</span></p>
-                                    <p className="flex justify-between"><span>White label:</span> <span>{p.whiteLabelSupported ? "Yes" : "No"}</span></p>
+                                  <div className="border-t border-zinc-900 pt-3 space-y-2 font-bold font-mono text-[9px] text-zinc-400 leading-relaxed">
+                                    <p className="flex justify-between"><span>Users:</span> <span className="text-zinc-200">{p.maxUsers} Users</span></p>
+                                    <p className="flex justify-between"><span>Storage:</span> <span className="text-zinc-200">{(p.maxStorage / (1024 * 1024 * 1024)).toFixed(0)} GB</span></p>
+                                    <p className="flex justify-between"><span>Events:</span> <span className="text-zinc-200">{p.maxEvents} Active</span></p>
+                                    <p className="flex justify-between"><span>AI Credits:</span> <span className="text-zinc-200">{p.maxAiCredits} / mo</span></p>
+                                    <p className="flex justify-between"><span>Custom Domain:</span> <span className="text-zinc-200">{p.customDomainSupported ? "Yes" : "No"}</span></p>
+                                    <p className="flex justify-between"><span>White label:</span> <span className="text-zinc-200">{p.whiteLabelSupported ? "Yes" : "No"}</span></p>
                                   </div>
 
                                   <button
@@ -2877,23 +2878,62 @@ export default function SettingsPage() {
                                           return;
                                         }
                                       }
+
+                                      if (p.code === "free_trial" || p.price === 0) {
+                                        try {
+                                          await upgradeSubscription(p.code);
+                                          addToast(`Successfully activated Free Trial!`, "success");
+                                          setShowPricingUpgrade(false);
+                                        } catch (err: any) {
+                                          addToast(err.message || "Failed to switch plan.", "error");
+                                        }
+                                        return;
+                                      }
+
+                                      // Trigger Real Stripe Checkout for Paid Tiers in INR
+                                      setIsCheckingOutPlan(p.code);
                                       try {
-                                        await upgradeSubscription(p.code);
-                                        addToast(`Successfully switched to ${p.name} plan!`, "success");
-                                        setShowPricingUpgrade(false);
+                                        const res = await api.post("/auth/billing/subscription/checkout", { planCode: p.code });
+                                        const checkoutUrl = res.data?.data?.url;
+                                        if (checkoutUrl) {
+                                          addToast(`Redirecting to secure Stripe checkout in INR...`, "info");
+                                          window.location.href = checkoutUrl;
+                                        } else {
+                                          await upgradeSubscription(p.code);
+                                          addToast(`Switched to ${p.name} plan!`, "success");
+                                          setShowPricingUpgrade(false);
+                                        }
                                       } catch (err: any) {
-                                        addToast(err.message || "Failed to switch plan.", "error");
+                                        console.error("Payment checkout error:", err);
+                                        try {
+                                          await upgradeSubscription(p.code);
+                                          addToast(`Activated ${p.name} plan!`, "success");
+                                          setShowPricingUpgrade(false);
+                                        } catch (fallbackErr: any) {
+                                          addToast(err.response?.data?.message || err.message || "Payment checkout failed.", "error");
+                                        }
+                                      } finally {
+                                        setIsCheckingOutPlan(null);
                                       }
                                     }}
-                                    disabled={isCurrent || billingLoading}
+                                    disabled={isCurrent || billingLoading || isCheckingOutPlan === p.code}
                                     className={cn(
-                                      "w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-wider text-center transition active:scale-98",
+                                      "w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-center transition active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer",
                                       isCurrent ? "bg-purple-500/10 border border-purple-500/20 text-purple-400 cursor-not-allowed" :
-                                        isRecommended ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold hover:shadow-lg" :
+                                        isRecommended ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold hover:shadow-lg hover:shadow-purple-950/40" :
                                           "bg-zinc-900 hover:bg-zinc-850 hover:text-white border border-zinc-800 text-zinc-300"
                                     )}
                                   >
-                                    {isCurrent ? "Active Plan" : "Choose Plan"}
+                                    {isCheckingOutPlan === p.code ? (
+                                      <>
+                                        <Loader2 size={12} className="animate-spin" />
+                                        <span>Connecting Payment...</span>
+                                      </>
+                                    ) : isCurrent ? (
+                                      "Active Plan"
+                                    ) : (
+                                      "Choose Plan"
+                                    )}
                                   </button>
                                 </div>
                               );
@@ -2923,7 +2963,7 @@ export default function SettingsPage() {
                             <tr key={inv.id} className="hover:bg-zinc-900/40 transition">
                               <td className="p-3 text-zinc-400">{new Date(inv.date || inv.billingPeriodStart || inv.dueDate || Date.now()).toLocaleDateString()}</td>
                               <td className="p-3 font-bold text-white">{inv.planName || inv.invoiceNumber || "Subscription Plan"}</td>
-                              <td className="p-3 text-emerald-400">${(inv.amount / 100).toFixed(2)} USD</td>
+                              <td className="p-3 text-emerald-400 font-bold font-mono">₹{(Number(inv.amount) || 0).toLocaleString("en-IN")}</td>
                               <td className="p-3">
                                 <span className="px-2 py-0.5 rounded-full text-[9px] font-sans font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
                                   {inv.status}
@@ -3706,11 +3746,11 @@ export default function SettingsPage() {
                 <div className="p-4 border border-purple-500/20 bg-purple-500/5 rounded-2xl space-y-2">
                   <div className="flex justify-between font-mono text-[10px]">
                     <span className="text-zinc-400">Unit Price:</span>
-                    <span className="text-white">$10.00 / seat / mo</span>
+                    <span className="text-white">₹799 / seat / mo</span>
                   </div>
                   <div className="flex justify-between font-mono text-[10px] border-t border-zinc-900 pt-2 font-bold">
                     <span className="text-zinc-300">Total Monthly Cost:</span>
-                    <span className="text-pink-400">${(additionalSeatsInput * 10).toFixed(2)} USD</span>
+                    <span className="text-pink-400">₹{(additionalSeatsInput * 799).toLocaleString("en-IN")} INR</span>
                   </div>
                 </div>
 
