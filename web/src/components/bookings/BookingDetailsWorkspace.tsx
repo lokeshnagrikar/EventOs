@@ -19,7 +19,8 @@ import {
   Briefcase,
   AlertCircle,
   HelpCircle,
-  QrCode
+  QrCode,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
