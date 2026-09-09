@@ -244,10 +244,10 @@ export default function SuperAdminLoginPage() {
                 )}
               </label>
 
-              {realRecaptchaEnabled ? (
+              {realRecaptchaEnabled && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? (
                 <div className="flex justify-center my-2">
                   <ReCAPTCHA
-                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
+                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
                     onChange={(val) => setCaptchaToken(val)}
                     theme="dark"
                   />
