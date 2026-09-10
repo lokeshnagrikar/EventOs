@@ -70,6 +70,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
@@ -98,6 +99,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
@@ -125,6 +127,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
@@ -152,6 +155,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
@@ -181,6 +185,8 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379
+      - CORS_ALLOWED_ORIGINS=https://eventosapp.in,https://www.eventosapp.in,https://event-os-woad.vercel.app,http://localhost:3000
     depends_on:
       - auth-service
       - crm-service
