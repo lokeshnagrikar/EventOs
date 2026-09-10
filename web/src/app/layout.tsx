@@ -86,8 +86,8 @@ export default async function RootLayout({
     "description": "Multi-tenant Event Management SaaS operating system featuring client portals, invoicing, task workflows, and photo galleries.",
     "offers": {
       "@type": "Offer",
-      "price": "49.00",
-      "priceCurrency": "USD"
+      "price": "1999.00",
+      "priceCurrency": "INR"
     }
   };
 

@@ -61,7 +61,7 @@ public class BillingController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping({ "/subscription/upgrade", "/subscription/checkout" })
+    @PostMapping("/subscription/upgrade")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> upgradeSubscription(
             @RequestBody Map<String, String> body,
@@ -432,42 +432,53 @@ public class BillingController {
         }
 
         try {
-            com.stripe.Stripe.apiKey = (stripeApiKey != null && !stripeApiKey.isBlank()) ? stripeApiKey : System.getenv("STRIPE_API_KEY");
+            String activeKey = (stripeApiKey != null && !stripeApiKey.isBlank()) ? stripeApiKey : System.getenv("STRIPE_API_KEY");
+            if (activeKey == null || activeKey.isBlank()) {
+                activeKey = "mock_stripe_key_placeholder";
+            }
+            com.stripe.Stripe.apiKey = activeKey;
 
-            long amountInPaise;
+            String interval = body.getOrDefault("interval", "MONTHLY");
+            boolean isYearly = "YEARLY".equalsIgnoreCase(interval);
+
+            long baseMonthlyPaise;
             String planName;
             if ("enterprise".equalsIgnoreCase(planCode)) {
-                amountInPaise = 2499900L; // ₹24,999
+                baseMonthlyPaise = 1299900L; // ₹12,999
                 planName = "Enterprise";
             } else if ("agency".equalsIgnoreCase(planCode)) {
-                amountInPaise = 1499900L; // ₹14,999
+                baseMonthlyPaise = 1099900L; // ₹10,999
                 planName = "Agency";
             } else if ("business".equalsIgnoreCase(planCode)) {
-                amountInPaise = 999900L; // ₹9,999
+                baseMonthlyPaise = 899900L; // ₹8,999
                 planName = "Business";
             } else if ("professional".equalsIgnoreCase(planCode)) {
-                amountInPaise = 499900L; // ₹4,999
+                baseMonthlyPaise = 499900L; // ₹4,999
                 planName = "Professional";
             } else {
-                amountInPaise = 199900L; // ₹1,999
+                baseMonthlyPaise = 199900L; // ₹1,999
                 planName = "Starter";
             }
+
+            long chargedPaise = isYearly ? (long) (baseMonthlyPaise * 12 * 0.8) : baseMonthlyPaise;
 
             String targetFrontend = (frontendUrl != null && !frontendUrl.isBlank()) ? frontendUrl : "http://localhost:3000";
 
             com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData priceData = 
                 com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.builder()
                     .setCurrency("inr")
-                    .setUnitAmount(amountInPaise)
+                    .setUnitAmount(chargedPaise)
                     .setRecurring(
                         com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.Recurring.builder()
-                            .setInterval(com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.Recurring.Interval.MONTH)
+                            .setInterval(isYearly 
+                                ? com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.Recurring.Interval.YEAR 
+                                : com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.Recurring.Interval.MONTH)
                             .build()
                     )
                     .setProductData(
                         com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                            .setName("EventOS " + planName + " Subscription")
-                            .setDescription("Monthly workspace subscription (" + planName + ")")
+                            .setName("EventOS " + planName + " Subscription (" + (isYearly ? "Annual" : "Monthly") + ")")
+                            .setDescription(isYearly ? "Annual workspace subscription (2 months free included)" : "Monthly workspace subscription (" + planName + ")")
                             .build()
                     )
                     .build();
@@ -483,6 +494,7 @@ public class BillingController {
                             .build())
                     .putMetadata("tenantId", tenantId.toString())
                     .putMetadata("planCode", planCode)
+                    .putMetadata("interval", interval)
                     .build();
 
             com.stripe.model.checkout.Session session = com.stripe.model.checkout.Session.create(params);

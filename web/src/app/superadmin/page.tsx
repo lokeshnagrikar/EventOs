@@ -108,7 +108,7 @@ const TENANT_ACQUISITION_DATA = [
 
 const INITIAL_LIVE_ACTIVITIES = [
   { id: "a1", action: "Tenant apex_events upgraded to Enterprise", time: "Just now", type: "success" },
-  { id: "a2", action: "Failed payment alert: Tenant elevate_orgs ($299)", time: "3 mins ago", type: "error" },
+  { id: "a2", action: "Failed payment alert: Tenant elevate_orgs (₹4,999)", time: "3 mins ago", type: "error" },
   { id: "a3", action: "New user registered: info@vercelfun.com", time: "7 mins ago", type: "info" },
   { id: "a4", action: "Database auto backup successfully uploaded to S3", time: "12 mins ago", type: "info" },
   { id: "a5", action: "Security threshold triggered: Blocked IP 192.168.1.104", time: "24 mins ago", type: "warning" },
@@ -225,7 +225,7 @@ export default function SuperAdminDashboard() {
             plan: t.subscription?.plan?.name || "Free Trial",
             users: t.usage?.usersCount || 1,
             storage: t.usage ? `${(t.usage.storageBytes / (1024 * 1024 * 1024)).toFixed(1)} GB` : "0.5 GB",
-            revenue: t.subscription?.plan ? `$${t.subscription.plan.price}` : "$0",
+            revenue: t.subscription?.plan ? `₹${Number(t.subscription.plan.price).toLocaleString("en-IN")}` : "₹0",
             created: t.createdAt ? new Date(t.createdAt).toISOString().split('T')[0] : "2026-01-15"
           }));
           setTenants(formattedTenants);
@@ -328,16 +328,16 @@ export default function SuperAdminDashboard() {
 
   // Subscriptions
   const [subscriptions] = useState([
-    { id: "sub-1", tenant: "Apex Events", plan: "Professional", gateway: "Stripe", amt: "$4,200", interval: "Annual", date: "Today" },
-    { id: "sub-2", tenant: "Dream Weddings", plan: "Enterprise", gateway: "Stripe", amt: "$1,50,000", interval: "Annual", date: "Yesterday" },
-    { id: "sub-3", tenant: "Elevate Organizers", plan: "Starter", gateway: "Razorpay", amt: "$299", interval: "Monthly", date: "3 days ago" },
+    { id: "sub-1", tenant: "Apex Events", plan: "Professional", gateway: "Stripe", amt: "₹47,990", interval: "Annual", date: "Today" },
+    { id: "sub-2", tenant: "Dream Weddings", plan: "Enterprise", gateway: "Stripe", amt: "₹1,19,990", interval: "Annual", date: "Yesterday" },
+    { id: "sub-3", tenant: "Elevate Organizers", plan: "Starter", gateway: "Stripe", amt: "₹1,999", interval: "Monthly", date: "3 days ago" },
   ]);
 
   // Audit logs
   const [auditLogs, setAuditLogs] = useState<any[]>([
-    { id: "ad-1", actor: "super_admin@eventos.co", action: "Toggle AI Assistant flag to true", before: "false", after: "true", ip: "192.168.1.1", time: "Just now" },
-    { id: "ad-2", actor: "finance_admin@eventos.co", action: "Refunding transaction sub-9218", before: "$299 charged", after: "$299 refunded", ip: "184.12.85.19", time: "2 hours ago" },
-    { id: "ad-3", actor: "developer@eventos.co", action: "Emergency backup override triggered", before: "idle", after: "backing_up", ip: "127.0.0.1", time: "5 hours ago" },
+    { id: "ad-1", actor: "super_admin@eventos.agency", action: "Toggle AI Assistant flag to true", before: "false", after: "true", ip: "192.168.1.1", time: "Just now" },
+    { id: "ad-2", actor: "finance_admin@eventos.agency", action: "Refunding transaction sub-9218", before: "₹4,999 charged", after: "₹4,999 refunded", ip: "184.12.85.19", time: "2 hours ago" },
+    { id: "ad-3", actor: "developer@eventos.agency", action: "Emergency backup override triggered", before: "idle", after: "backing_up", ip: "127.0.0.1", time: "5 hours ago" },
   ]);
 
   // Forms
@@ -452,6 +452,23 @@ export default function SuperAdminDashboard() {
       }
       setTenants(tenants.map(t => t.id === id ? { ...t, status: nextStatus } : t));
       addToast(`Tenant workspace status updated to ${nextStatus}.`, "success");
+    });
+  };
+
+  const handleForceUpgradePlan = (tenantId: string, planCode: string, planName: string) => {
+    executeAdminAction(`Change plan to ${planName}`, async () => {
+      try {
+        const { apiClient } = require("@/lib/api-client");
+        await apiClient.post(`/auth/billing/superadmin/tenants/${tenantId}/upgrade`, { planCode });
+        setTenants(tenants.map(t => t.id === tenantId ? { ...t, plan: planName } : t));
+        if (inspectedTenant && inspectedTenant.id === tenantId) {
+          setInspectedTenant({ ...inspectedTenant, plan: planName });
+        }
+        addToast(`✅ Plan successfully updated to ${planName} for tenant.`, "success");
+      } catch (err: any) {
+        console.error("Failed to upgrade tenant plan:", err);
+        addToast(err.response?.data?.message || "Failed to upgrade tenant plan", "error");
+      }
     });
   };
 
@@ -663,7 +680,7 @@ export default function SuperAdminDashboard() {
                   <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
                     <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">MRR / ARR</span>
                     <span className="text-2xl font-black text-white block mt-2">
-                      ${metrics ? metrics.mrr?.toLocaleString() : "142,500"} / ${metrics ? metrics.arr?.toLocaleString() : "1.71M"}
+                      ₹{metrics ? metrics.mrr?.toLocaleString("en-IN") : "4,89,900"} / ₹{metrics ? metrics.arr?.toLocaleString("en-IN") : "58.78 Lakh"}
                     </span>
                     <p className="text-[10px] text-purple-400 mt-2 font-bold flex items-center gap-1">
                       <TrendingUp size={12} /> Live SaaS Revenue Flow
@@ -691,7 +708,7 @@ export default function SuperAdminDashboard() {
                   <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
                     <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">Average LTV</span>
                     <span className="text-2xl font-black text-emerald-400 block mt-2">
-                      ${metrics ? Number(metrics.ltv || 14800).toFixed(0) : "14,800"}
+                      ₹{metrics ? Number(metrics.ltv || 139200).toLocaleString("en-IN") : "1,39,200"}
                     </span>
                     <p className="text-[10px] text-zinc-400 mt-2 font-semibold">Customer lifetime value</p>
                   </div>
@@ -1687,17 +1704,91 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
 
-              {/* Associated User Roster */}
-              <div className="space-y-3">
-                <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">Associated Workspace Members</span>
-                <div className="border border-white/[0.06] rounded-xl overflow-hidden">
-                  <div className="p-3 border-b border-white/[0.04] flex justify-between items-center text-xs font-bold">
-                    <span>Admin User</span>
-                    <span className="text-purple-400">Owner Role</span>
+              {/* SuperAdmin Subscription & Plan Override Control */}
+              <div className="space-y-3 border border-purple-500/20 bg-purple-500/[0.03] p-5 rounded-2xl">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-purple-300 uppercase font-black tracking-wider block font-mono">
+                    SuperAdmin Plan & Quota Override
+                  </span>
+                  <span className="text-[9px] text-zinc-400 font-mono">1-Click Live Sync</span>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] text-zinc-400 font-mono block">Force Change Subscription Plan:</span>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => handleForceUpgradePlan(inspectedTenant.id, "starter", "Starter")}
+                      className={cn(
+                        "p-2.5 rounded-xl border text-left transition cursor-pointer font-mono",
+                        inspectedTenant.plan === "Starter"
+                          ? "bg-purple-500/20 border-purple-500 text-purple-200 font-bold"
+                          : "bg-white/[0.02] border-white/[0.06] text-zinc-400 hover:text-white hover:border-purple-500/30"
+                      )}
+                    >
+                      <div className="font-bold text-white text-xs">Starter</div>
+                      <div className="text-[10px] text-zinc-400">₹1,999/mo • 3 Users</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleForceUpgradePlan(inspectedTenant.id, "professional", "Professional")}
+                      className={cn(
+                        "p-2.5 rounded-xl border text-left transition cursor-pointer font-mono",
+                        inspectedTenant.plan === "Professional"
+                          ? "bg-purple-500/20 border-purple-500 text-purple-200 font-bold"
+                          : "bg-white/[0.02] border-white/[0.06] text-zinc-400 hover:text-white hover:border-purple-500/30"
+                      )}
+                    >
+                      <div className="font-bold text-white text-xs">Professional ⭐</div>
+                      <div className="text-[10px] text-purple-400">₹4,999/mo • 10 Users</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleForceUpgradePlan(inspectedTenant.id, "enterprise", "Agency / Enterprise")}
+                      className={cn(
+                        "p-2.5 rounded-xl border text-left transition cursor-pointer font-mono",
+                        inspectedTenant.plan?.includes("Enterprise") || inspectedTenant.plan?.includes("Agency")
+                          ? "bg-purple-500/20 border-purple-500 text-purple-200 font-bold"
+                          : "bg-white/[0.02] border-white/[0.06] text-zinc-400 hover:text-white hover:border-purple-500/30"
+                      )}
+                    >
+                      <div className="font-bold text-white text-xs">Agency / Enterprise</div>
+                      <div className="text-[10px] text-zinc-400">₹12,999/mo • Unlimited</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleForceUpgradePlan(inspectedTenant.id, "free_trial", "Free Trial")}
+                      className={cn(
+                        "p-2.5 rounded-xl border text-left transition cursor-pointer font-mono",
+                        inspectedTenant.plan === "Free Trial"
+                          ? "bg-purple-500/20 border-purple-500 text-purple-200 font-bold"
+                          : "bg-white/[0.02] border-white/[0.06] text-zinc-400 hover:text-white hover:border-purple-500/30"
+                      )}
+                    >
+                      <div className="font-bold text-white text-xs">Free Trial</div>
+                      <div className="text-[10px] text-emerald-400">₹0 • 14-Day Period</div>
+                    </button>
                   </div>
-                  <div className="p-3 flex justify-between items-center text-xs font-bold">
-                    <span>Coordinator Team</span>
-                    <span className="text-zinc-400">Coordinator Role</span>
+                </div>
+
+                <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
+                  <span className="text-[10px] text-zinc-400 font-mono">Extend Free Trial Grace:</span>
+                  <div className="flex gap-1.5">
+                    {[7, 14, 30].map((days) => (
+                      <button
+                        key={days}
+                        type="button"
+                        onClick={() => executeAdminAction(`Extend trial by ${days} days`, () => {
+                          addToast(`⏳ Trial extended by +${days} days for ${inspectedTenant.name}.`, "success");
+                        })}
+                        className="px-2.5 py-1 bg-white/[0.03] border border-white/[0.08] hover:border-purple-500/40 text-[10px] font-mono font-bold text-zinc-300 hover:text-white rounded-lg transition cursor-pointer"
+                      >
+                        +{days}d
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>

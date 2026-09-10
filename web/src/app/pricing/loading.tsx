@@ -125,14 +125,14 @@ export function PricingLoader({ onComplete, durationMs = 2000 }: PricingLoaderPr
                 <span className="text-[9.5px] font-black text-indigo-300 uppercase tracking-wider flex items-center gap-1">
                   <Sparkles size={10} className="fill-indigo-300" /> Popular
                 </span>
-                <span className="text-xs sm:text-sm font-black text-white">₹5,999<span className="text-[9px] text-slate-400 font-normal">/mo</span></span>
+                <span className="text-xs sm:text-sm font-black text-white">₹4,999<span className="text-[9px] text-slate-400 font-normal">/mo</span></span>
                 <span className="text-[9px] text-indigo-200 font-medium">Up to 20 Events</span>
               </div>
 
               {/* Agency Tier */}
               <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.1] shadow-lg flex flex-col items-center space-y-1.5 text-center backdrop-blur-md">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Agency</span>
-                <span className="text-xs sm:text-sm font-black text-white">₹11,999<span className="text-[9px] text-slate-400 font-normal">/mo</span></span>
+                <span className="text-xs sm:text-sm font-black text-white">₹12,999<span className="text-[9px] text-slate-400 font-normal">/mo</span></span>
                 <span className="text-[9px] text-slate-400 font-medium">Unlimited Scale</span>
               </div>
             </div>

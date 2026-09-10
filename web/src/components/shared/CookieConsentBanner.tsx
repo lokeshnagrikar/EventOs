@@ -15,10 +15,22 @@ export function CookieConsentBanner() {
     const savedConsent = localStorage.getItem("eventos_cookie_consent");
     if (!savedConsent) {
       // Small delay so it smoothly slides in after initial page render
-      const timer = setTimeout(() => setIsOpen(true), 1200);
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("cookie-banner-state", { detail: { open: true } }));
+        }
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, []);
+
+  const closeBanner = () => {
+    setIsOpen(false);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("cookie-banner-state", { detail: { open: false } }));
+    }
+  };
 
   const handleAcceptAll = () => {
     localStorage.setItem(
@@ -26,7 +38,7 @@ export function CookieConsentBanner() {
       JSON.stringify({ essential: true, analytics: true, timestamp: new Date().toISOString() })
     );
     document.cookie = "eventos_consent=all; path=/; max-age=31536000; SameSite=Lax";
-    setIsOpen(false);
+    closeBanner();
   };
 
   const handleAcceptEssential = () => {
@@ -35,7 +47,7 @@ export function CookieConsentBanner() {
       JSON.stringify({ essential: true, analytics: false, timestamp: new Date().toISOString() })
     );
     document.cookie = "eventos_consent=essential; path=/; max-age=31536000; SameSite=Lax";
-    setIsOpen(false);
+    closeBanner();
   };
 
   const handleSaveCustom = () => {
@@ -44,7 +56,7 @@ export function CookieConsentBanner() {
       JSON.stringify({ essential: true, analytics: analyticsEnabled, timestamp: new Date().toISOString() })
     );
     document.cookie = `eventos_consent=${analyticsEnabled ? "all" : "essential"}; path=/; max-age=31536000; SameSite=Lax`;
-    setIsOpen(false);
+    closeBanner();
   };
 
   return (
@@ -55,7 +67,7 @@ export function CookieConsentBanner() {
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 80, opacity: 0, scale: 0.98 }}
           transition={{ type: "spring", stiffness: 350, damping: 28 }}
-          className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-[9999] max-w-lg w-full"
+          className="fixed bottom-3 left-3 right-3 sm:left-6 sm:right-auto sm:bottom-6 z-[99990] sm:max-w-md w-auto pointer-events-auto"
         >
           <div className="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-zinc-950/90 p-5 sm:p-6 shadow-2xl shadow-purple-950/40 backdrop-blur-xl">
             {/* Ambient background glow */}
@@ -138,11 +150,11 @@ export function CookieConsentBanner() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
                 <button
                   type="button"
                   onClick={() => setShowPreferences(!showPreferences)}
-                  className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 font-medium transition-colors"
+                  className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 font-medium transition-colors py-1 cursor-pointer"
                 >
                   <Settings2 className="h-3.5 w-3.5" />
                   {showPreferences ? "Hide Settings" : "Customize"}
@@ -152,14 +164,14 @@ export function CookieConsentBanner() {
                   <button
                     type="button"
                     onClick={showPreferences ? handleSaveCustom : handleAcceptEssential}
-                    className="rounded-lg border border-zinc-750 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all shadow-sm"
+                    className="flex-1 sm:flex-initial text-center justify-center rounded-xl border border-zinc-750 bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer"
                   >
                     {showPreferences ? "Save Preferences" : "Essential Only"}
                   </button>
                   <button
                     type="button"
                     onClick={handleAcceptAll}
-                    className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 hover:from-purple-500 hover:to-pink-500 transition-all"
+                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-600/30 hover:from-purple-500 hover:to-pink-500 transition-all active:scale-95 cursor-pointer"
                   >
                     <Check className="h-3.5 w-3.5" />
                     Accept All

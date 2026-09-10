@@ -197,13 +197,13 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       // 1. Update company branding to "Dream Weddings Studio"
       await api.put("/auth/settings/company", {
         name: "Dream Weddings Studio",
-        email: "hello@dreamweddings.com",
-        phone: "+1 555 987 6543",
-        website: "https://dreamweddings.com",
-        timezone: "America/New_York",
-        currency: "USD",
-        primaryColor: "#ec4899",
-        secondaryColor: "#0f172a",
+        email: "hello@dreamweddings.in",
+        phone: "+91 98765 43210",
+        website: "https://dreamweddings.in",
+        timezone: "Asia/Kolkata",
+        currency: "INR",
+        primaryColor: "#7c3aed",
+        secondaryColor: "#09090b",
         logoUrl: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=200&auto=format&fit=crop"
       });
 

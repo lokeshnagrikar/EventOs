@@ -146,6 +146,22 @@ export default function AiAssistant() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [isCookieBannerOpen, setIsCookieBannerOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedConsent = localStorage.getItem("eventos_cookie_consent");
+    if (!savedConsent) {
+      setIsCookieBannerOpen(true);
+    }
+
+    const handleCookieState = (e: any) => {
+      setIsCookieBannerOpen(Boolean(e.detail?.open));
+    };
+
+    window.addEventListener("cookie-banner-state", handleCookieState);
+    return () => window.removeEventListener("cookie-banner-state", handleCookieState);
+  }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -535,7 +551,10 @@ export default function AiAssistant() {
         whileHover={{ scale: 1.12, y: -4 }}
         whileTap={{ scale: 0.94 }}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="ai-trigger-btn fixed bottom-6 right-6 w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center z-[9999] group cursor-pointer focus:outline-none select-none drop-shadow-[0_10px_24px_rgba(37,99,235,0.35)]"
+        className={cn(
+          "ai-trigger-btn fixed right-4 sm:right-6 w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center z-[9990] group cursor-pointer focus:outline-none select-none drop-shadow-[0_10px_24px_rgba(37,99,235,0.35)] transition-all duration-300",
+          isCookieBannerOpen ? "bottom-44 sm:bottom-6" : "bottom-5 sm:bottom-6"
+        )}
         title="EventOS AI Assistant (Cmd + Space)"
         aria-label="Open EventOS AI Assistant"
       >
@@ -561,7 +580,10 @@ export default function AiAssistant() {
             exit={{ opacity: 0, scale: 0.94, y: 16 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             ref={containerRef}
-            className="fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-32px)] sm:w-[430px] h-[540px] sm:h-[590px] max-h-[calc(100vh-140px)] bg-[#090d1f]/90 dark:bg-[#060813]/95 border border-blue-500/25 dark:border-white/[0.12] rounded-[28px] shadow-[0_30px_90px_rgba(0,0,0,0.7),0_0_50px_rgba(37,99,235,0.22),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-[36px] backdrop-saturate-[1.9] flex flex-col overflow-hidden z-[9999] font-sans antialiased"
+            className={cn(
+              "fixed right-3 sm:right-6 w-[calc(100vw-24px)] sm:w-[430px] h-[520px] sm:h-[590px] max-h-[calc(100dvh-120px)] bg-[#090d1f]/95 dark:bg-[#060813]/98 border border-blue-500/25 dark:border-white/[0.12] rounded-[28px] shadow-[0_30px_90px_rgba(0,0,0,0.8),0_0_50px_rgba(37,99,235,0.22),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-[36px] backdrop-saturate-[1.9] flex flex-col overflow-hidden z-[9999] font-sans antialiased",
+              isCookieBannerOpen ? "bottom-52 sm:bottom-24" : "bottom-20 sm:bottom-24"
+            )}
           >
             {/* Top Accent Gradient Line with Glow */}
             <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 w-full shrink-0 shadow-[0_0_12px_rgba(59,130,246,0.6)]" />

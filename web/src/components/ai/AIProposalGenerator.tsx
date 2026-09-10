@@ -163,11 +163,11 @@ export default function AIProposalGenerator() {
               {/* Total Investment Summary */}
               <div className="flex justify-between items-center pt-3 border-t border-white/[0.06]">
                 <div className="text-[11px] text-zinc-400 font-mono">
-                  <span>Deposit Required: 25% (${(totalAmount * 0.25).toLocaleString()})</span>
+                  <span>Deposit Required: 25% (₹{(totalAmount * 0.25).toLocaleString("en-IN")})</span>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] text-zinc-500 uppercase font-mono block">Total Proposal Investment</span>
-                  <span className="text-xl font-black text-white font-mono">${totalAmount.toLocaleString()} USD</span>
+                  <span className="text-xl font-black text-white font-mono">₹{totalAmount.toLocaleString("en-IN")}</span>
                 </div>
               </div>
             </div>

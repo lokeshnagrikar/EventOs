@@ -85,11 +85,11 @@ export default function ReferralAffiliateEngine() {
         </div>
         <div className="p-4 border border-white/[0.06] bg-white/[0.02] rounded-2xl">
           <span className="text-[10px] text-zinc-500 font-mono uppercase font-black block">Referred Revenue</span>
-          <span className="text-lg font-black text-purple-400 mt-1 block">$42,500 USD</span>
+          <span className="text-lg font-black text-purple-400 mt-1 block">₹35,00,000</span>
         </div>
         <div className="p-4 border border-white/[0.06] bg-white/[0.02] rounded-2xl">
           <span className="text-[10px] text-zinc-500 font-mono uppercase font-black block">Affiliate Payouts</span>
-          <span className="text-lg font-black text-amber-400 mt-1 block">$2,500 Paid</span>
+          <span className="text-lg font-black text-amber-400 mt-1 block">₹1,75,000 Paid</span>
         </div>
       </div>
 

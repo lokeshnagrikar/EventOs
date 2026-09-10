@@ -2825,10 +2825,26 @@ export default function SettingsPage() {
 
                           {/* Plans Cards - Balanced 3x2 Grid */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                            {[...plans].sort((a, b) => a.price - b.price).map((p) => {
+                            {[...plans].sort((a, b) => {
+                              const order = ["free_trial", "starter", "professional", "business", "agency", "enterprise"];
+                              const idxA = order.indexOf(a.code.toLowerCase());
+                              const idxB = order.indexOf(b.code.toLowerCase());
+                              return (idxA !== -1 ? idxA : 99) - (idxB !== -1 ? idxB : 99);
+                            }).map((p) => {
                               const isCurrent = subscription?.plan?.code === p.code;
-                              const isRecommended = p.code === "professional";
-                              const priceVal = billingInterval === "YEARLY" ? p.price * 0.8 * 12 : p.price;
+                              const isRecommended = p.code.toLowerCase() === "professional";
+
+                              const getCanonicalPrice = (code: string, fallback: number) => {
+                                const c = code.toLowerCase();
+                                if (c === "free_trial") return 0;
+                                if (c === "starter") return 1999;
+                                if (c === "professional") return 4999;
+                                if (c === "agency" || c === "enterprise") return 12999;
+                                return fallback;
+                              };
+
+                              const basePrice = getCanonicalPrice(p.code, p.price);
+                              const priceVal = billingInterval === "YEARLY" ? basePrice * 0.8 * 12 : basePrice;
                               const labelVal = billingInterval === "YEARLY" ? "/ yr" : "/ mo";
 
                               return (
@@ -2857,9 +2873,10 @@ export default function SettingsPage() {
 
                                   {/* Limits details */}
                                   <div className="border-t border-zinc-900 pt-3 space-y-2 font-bold font-mono text-[9px] text-zinc-400 leading-relaxed">
-                                    <p className="flex justify-between"><span>Users:</span> <span className="text-zinc-200">{p.maxUsers} Users</span></p>
-                                    <p className="flex justify-between"><span>Storage:</span> <span className="text-zinc-200">{(p.maxStorage / (1024 * 1024 * 1024)).toFixed(0)} GB</span></p>
-                                    <p className="flex justify-between"><span>Events:</span> <span className="text-zinc-200">{p.maxEvents} Active</span></p>
+                                    <p className="flex justify-between"><span>Users:</span> <span className="text-zinc-200">{p.code === "enterprise" ? "Unlimited Users" : `${p.maxUsers} Users`}</span></p>
+                                    <p className="flex justify-between"><span>Extra Seat:</span> <span className="text-purple-400">{p.code === "enterprise" ? "Unlimited" : p.code === "free_trial" ? "N/A" : "₹799 / mo"}</span></p>
+                                    <p className="flex justify-between"><span>Storage:</span> <span className="text-zinc-200">{p.code === "enterprise" ? "1 TB Cloud" : `${(p.maxStorage / (1024 * 1024 * 1024)).toFixed(0)} GB`}</span></p>
+                                    <p className="flex justify-between"><span>Events:</span> <span className="text-zinc-200">{p.code === "enterprise" ? "Unlimited Active" : `${p.maxEvents} Active`}</span></p>
                                     <p className="flex justify-between"><span>AI Credits:</span> <span className="text-zinc-200">{p.maxAiCredits} / mo</span></p>
                                     <p className="flex justify-between"><span>Custom Domain:</span> <span className="text-zinc-200">{p.customDomainSupported ? "Yes" : "No"}</span></p>
                                     <p className="flex justify-between"><span>White label:</span> <span className="text-zinc-200">{p.whiteLabelSupported ? "Yes" : "No"}</span></p>
@@ -2868,9 +2885,9 @@ export default function SettingsPage() {
                                   <button
                                     onClick={async () => {
                                       if (usage) {
-                                        const usersExceeded = usage.usersCount > p.maxUsers;
+                                        const usersExceeded = usage.usersCount > p.maxUsers && p.code !== "enterprise";
                                         const storageExceeded = usage.storageBytes > p.maxStorage;
-                                        const eventsExceeded = usage.eventsCount > p.maxEvents;
+                                        const eventsExceeded = usage.eventsCount > p.maxEvents && p.code !== "enterprise";
 
                                         if (usersExceeded || storageExceeded || eventsExceeded) {
                                           setTargetDowngradePlan(p);
@@ -2893,25 +2910,21 @@ export default function SettingsPage() {
                                       // Trigger Real Stripe Checkout for Paid Tiers in INR
                                       setIsCheckingOutPlan(p.code);
                                       try {
-                                        const res = await api.post("/auth/billing/subscription/checkout", { planCode: p.code });
+                                        const res = await api.post("/auth/billing/subscription/checkout", { 
+                                          planCode: p.code,
+                                          interval: billingInterval 
+                                        });
                                         const checkoutUrl = res.data?.data?.url;
                                         if (checkoutUrl) {
                                           addToast(`Redirecting to secure Stripe checkout in INR...`, "info");
                                           window.location.href = checkoutUrl;
-                                        } else {
-                                          await upgradeSubscription(p.code);
-                                          addToast(`Switched to ${p.name} plan!`, "success");
-                                          setShowPricingUpgrade(false);
+                                          return;
                                         }
+                                        throw new Error("No checkout URL received from payment server");
                                       } catch (err: any) {
                                         console.error("Payment checkout error:", err);
-                                        try {
-                                          await upgradeSubscription(p.code);
-                                          addToast(`Activated ${p.name} plan!`, "success");
-                                          setShowPricingUpgrade(false);
-                                        } catch (fallbackErr: any) {
-                                          addToast(err.response?.data?.message || err.message || "Payment checkout failed.", "error");
-                                        }
+                                        const errMsg = err.response?.data?.message || err.message || "Stripe Checkout session creation failed.";
+                                        addToast(errMsg, "error");
                                       } finally {
                                         setIsCheckingOutPlan(null);
                                       }
@@ -2927,7 +2940,7 @@ export default function SettingsPage() {
                                     {isCheckingOutPlan === p.code ? (
                                       <>
                                         <Loader2 size={12} className="animate-spin" />
-                                        <span>Connecting Payment...</span>
+                                        <span>Connecting Stripe...</span>
                                       </>
                                     ) : isCurrent ? (
                                       "Active Plan"
