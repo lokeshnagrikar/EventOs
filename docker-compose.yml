@@ -35,20 +35,22 @@ services:
       retries: 5
 
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:3.13-management
     container_name: eventos-rabbitmq
+    hostname: rabbitmq
     ports:
       - "${RABBITMQ_PORT:-5672}:5672"
       - "${RABBITMQ_MGMT_PORT:-15672}:15672"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-eventos_guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-eventos_guest_pass}
+      RABBITMQ_NODENAME: rabbit@rabbitmq
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - eventos-net
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping || rabbitmqctl status || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 10
