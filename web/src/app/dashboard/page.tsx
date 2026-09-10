@@ -974,40 +974,46 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── ACTION REQUIRED & TIMEFRAME COMMAND BAR ─────────────────────────────────── */}
-      <div className="mb-6 p-4 rounded-2xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-md flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+      <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-2xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-md flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3 sm:gap-4">
         {/* Urgent Action Pills */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto">
           <div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold cursor-pointer hover:bg-red-500/15 transition shadow-sm"
+            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 sm:py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold cursor-pointer hover:bg-red-500/15 transition shadow-sm"
             onClick={() => router.push("/portal/quotes")}
           >
-            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            <span>2 Proposals Awaiting Sign-off</span>
-            <ChevronRight size={13} className="opacity-60" />
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+              <span>2 Proposals Awaiting Sign-off</span>
+            </span>
+            <ChevronRight size={13} className="opacity-60 shrink-0" />
           </div>
 
           <div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-bold cursor-pointer hover:bg-amber-500/15 transition shadow-sm"
+            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 sm:py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-bold cursor-pointer hover:bg-amber-500/15 transition shadow-sm"
             onClick={() => router.push("/finance")}
           >
-            <span className="h-2 w-2 rounded-full bg-amber-400" />
-            <span className="font-mono tabular-nums">₹3,50,000</span>
-            <span>Milestone Advance Due Today</span>
-            <ChevronRight size={13} className="opacity-60" />
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
+              <span className="font-mono tabular-nums">₹3,50,000</span>
+              <span>Milestone Advance Due</span>
+            </span>
+            <ChevronRight size={13} className="opacity-60 shrink-0" />
           </div>
 
           <div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold cursor-pointer hover:bg-emerald-500/15 transition shadow-sm"
+            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 sm:py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold cursor-pointer hover:bg-emerald-500/15 transition shadow-sm"
             onClick={() => router.push("/events")}
           >
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            <span>Next Event: Sharma Wedding Gala (In 2 days • Taj Palace)</span>
-            <ChevronRight size={13} className="opacity-60" />
+            <span className="flex items-center gap-1.5 truncate">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+              <span className="truncate">Next: Sharma Wedding Gala (Taj Palace)</span>
+            </span>
+            <ChevronRight size={13} className="opacity-60 shrink-0" />
           </div>
         </div>
 
         {/* Timeframe selector pills */}
-        <div className="flex items-center gap-1 bg-zinc-950/80 p-1 rounded-xl border border-zinc-800 self-end xl:self-center">
+        <div className="flex items-center gap-1 bg-zinc-950/80 p-1 rounded-xl border border-zinc-800 w-full sm:w-auto overflow-x-auto no-scrollbar justify-between sm:justify-start">
           {[
             { id: "TODAY", label: "Today" },
             { id: "WEEK", label: "This Week" },
@@ -1021,7 +1027,7 @@ export default function DashboardPage() {
                 addToast(`Filtered dashboard metrics: ${tf.label}`, "info");
               }}
               className={cn(
-                "px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                "px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
                 timeRange === tf.id
                   ? "bg-purple-600 text-white shadow-sm"
                   : "text-zinc-400 hover:text-zinc-200"
@@ -1034,8 +1040,8 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── QUICK COMMAND ROW ────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-3 mb-6 select-none bg-zinc-950/20 border border-zinc-900 p-2.5 rounded-2xl">
-        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-550 pl-2">Quick Action Console:</span>
+      <div className="flex items-center gap-2.5 mb-4 sm:mb-6 select-none bg-zinc-950/20 border border-zinc-900 p-2 sm:p-2.5 rounded-2xl overflow-x-auto no-scrollbar touch-pan-x">
+        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-550 pl-2 shrink-0 hidden sm:inline">Quick Action Console:</span>
         {[
           { label: "Create Lead", icon: Users, type: "lead" },
           { label: "Create Booking", icon: Bookmark, type: "booking" },

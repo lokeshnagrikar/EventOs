@@ -73,14 +73,14 @@ export default function PageShell({
 
   if (bare) {
     return (
-      <div className="min-h-screen bg-background text-foreground font-sans relative overflow-hidden theme-dynamic">
+      <div className="min-h-screen min-h-dvh bg-background text-foreground font-sans relative overflow-x-hidden theme-dynamic">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-background text-foreground font-sans relative overflow-hidden transition-all duration-200 theme-dynamic">
+    <div className="min-h-screen min-h-dvh h-dvh flex bg-background text-foreground font-sans relative overflow-x-hidden transition-all duration-200 theme-dynamic">
       {/* Clean workspace background — no decorative blurs */}
 
       {/* Command Palette */}
@@ -112,7 +112,7 @@ export default function PageShell({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 350 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-[#09090b] flex flex-col justify-between border-r border-slate-200/80 dark:border-white/[0.06] shadow-2xl md:hidden overflow-hidden"
+              className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-[#09090b] flex flex-col justify-between border-r border-slate-200/80 dark:border-white/[0.06] shadow-2xl md:hidden overflow-hidden pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,16px)]"
             >
               <Sidebar
                 isCollapsed={false}
@@ -128,7 +128,7 @@ export default function PageShell({
       </AnimatePresence>
 
       {/* Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative z-10">
+      <div className="flex-1 flex flex-col min-w-0 h-dvh max-h-dvh overflow-hidden relative z-10">
         <Navbar
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           onSearchClick={() => setIsPaletteOpen(true)}
@@ -138,7 +138,7 @@ export default function PageShell({
           id="main-content"
           data-lenis-prevent
           className={cn(
-            "flex-1 overflow-y-auto p-6 md:p-8 space-y-6 max-w-7xl w-full mx-auto pb-24 scrollbar-none hover:scrollbar-thin",
+            "flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto pb-28 md:pb-24 scrollbar-none hover:scrollbar-thin",
             className
           )}
         >
@@ -154,7 +154,7 @@ export default function PageShell({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-6 mb-6 pt-1"
+              className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-zinc-800/80 pb-4 sm:pb-6 mb-4 sm:mb-6 pt-1"
             >
               <div>
                 {/* Breadcrumbs */}

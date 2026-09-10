@@ -189,7 +189,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
     <header className="sticky top-0 z-30 h-[60px] w-full border-b border-border bg-card/80 backdrop-blur-2xl px-5 flex items-center justify-between shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-colors select-none">
       
       {/* ── LEFT: BREADCRUMBS & MOBILE MENU TRIGGER ── */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
           onClick={onMenuToggle}
           className="h-9 w-9 border border-border rounded-xl bg-card/80 hover:bg-muted md:hidden flex items-center justify-center text-foreground hover:text-purple-400 active:scale-95 transition-all cursor-pointer shadow-sm shrink-0"
@@ -197,6 +197,11 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
         >
           <Menu size={18} />
         </button>
+
+        {/* Mobile current title */}
+        <span className="sm:hidden text-xs font-extrabold text-foreground truncate max-w-[130px]">
+          {crumbs[crumbs.length - 1]?.label || "Dashboard"}
+        </span>
 
         <nav className="hidden sm:flex items-center gap-1.5 text-xs font-semibold">
           {crumbs.map((crumb, idx) => {

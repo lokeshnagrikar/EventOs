@@ -1188,16 +1188,16 @@ export default function SettingsPage() {
     <PageShell
       title="Workspace Settings"
       subtitle="Configure branding design systems, user permissions, billing rules, and security."
-      className="p-6 max-w-7xl mx-auto"
+      className="p-3 sm:p-6 max-w-7xl mx-auto"
     >
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden z-10 min-h-[calc(100vh-180px)] md:h-[calc(100vh-160px)] border border-zinc-850 bg-zinc-950/40 backdrop-blur-xl rounded-2xl shadow-2xl" style={{ fontFamily: fontSelection }}>
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden z-10 min-h-[calc(100dvh-120px)] md:h-[calc(100dvh-150px)] border border-zinc-850 bg-zinc-950/40 backdrop-blur-xl rounded-2xl shadow-2xl" style={{ fontFamily: fontSelection }}>
 
         {/* Mobile Horizontal Scrollable Tab Bar */}
-        <div className="relative md:hidden border-b border-zinc-850 bg-[#0c0c0e]/95 shrink-0">
+        <div className="relative md:hidden border-b border-zinc-850 bg-[#0c0c0e]/95 shrink-0 sticky top-0 z-20">
           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0c0c0e] to-transparent pointer-events-none z-10" />
           <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-[#0c0c0e] to-transparent pointer-events-none z-10" />
           
-          <div className="p-3 flex items-center gap-2 overflow-x-auto scrollbar-none touch-pan-x pl-4 pr-6">
+          <div className="p-2.5 flex items-center gap-2 overflow-x-auto scrollbar-none touch-pan-x pl-3 pr-8">
             {allowedSections.map((s) => {
               const Icon = s.icon;
               const isActive = activeTab === s.id;
@@ -1209,13 +1209,13 @@ export default function SettingsPage() {
                     e.currentTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
                   }}
                   className={cn(
-                    "px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shrink-0 transition-all active:scale-95 border",
+                    "px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shrink-0 transition-all active:scale-95 border",
                     isActive
                       ? "bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white border-purple-400/60 shadow-lg shadow-purple-500/25 ring-1 ring-purple-400/30"
                       : "bg-zinc-900/90 hover:bg-zinc-850 text-zinc-400 border-zinc-800 hover:text-white"
                   )}
                 >
-                  <Icon size={14} className={isActive ? "text-white" : "text-zinc-400"} />
+                  <Icon size={13} className={isActive ? "text-white" : "text-zinc-400"} />
                   <span className="whitespace-nowrap">{s.label}</span>
                 </button>
               );
@@ -2792,39 +2792,41 @@ export default function SettingsPage() {
                           initial={{ opacity: 0, scale: 0.95, y: 20 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                          className="relative w-full max-w-5xl overflow-y-auto max-h-[90vh] rounded-3xl border border-zinc-850 bg-zinc-950 p-6 space-y-6 shadow-2xl"
+                          className="relative w-full max-w-5xl overflow-y-auto max-h-[92dvh] rounded-2xl sm:rounded-3xl border border-zinc-850 bg-zinc-950 p-4 sm:p-6 space-y-4 sm:space-y-6 shadow-2xl"
                         >
-                          <div className="flex justify-between items-center border-b border-zinc-900 pb-3">
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-900 pb-3">
                             <div>
                               <h2 className="text-sm font-black uppercase text-white tracking-wider">Choose a Subscription Plan</h2>
                               <p className="text-[10px] text-zinc-500">Pick the best plan for your team and scaling operations.</p>
                             </div>
-                            {/* Monthly/Yearly billing interval toggle */}
-                            <div className="flex items-center gap-2 p-1 border border-zinc-900 bg-zinc-950 rounded-xl font-mono text-[9px] font-bold">
+                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                              {/* Monthly/Yearly billing interval toggle */}
+                              <div className="flex items-center gap-1.5 p-1 border border-zinc-900 bg-zinc-950 rounded-xl font-mono text-[9px] font-bold">
+                                <button
+                                  onClick={() => setBillingInterval("MONTHLY")}
+                                  className={cn("px-2.5 py-1 rounded-lg transition-all", billingInterval === "MONTHLY" ? "bg-purple-600 text-white font-black" : "text-zinc-500 hover:text-zinc-300")}
+                                >
+                                  Monthly
+                                </button>
+                                <button
+                                  onClick={() => setBillingInterval("YEARLY")}
+                                  className={cn("px-2.5 py-1 rounded-lg transition-all relative flex items-center gap-1", billingInterval === "YEARLY" ? "bg-purple-600 text-white font-black" : "text-zinc-500 hover:text-zinc-300")}
+                                >
+                                  Yearly
+                                  <span className="absolute -top-3.5 -right-3 px-1 rounded bg-gradient-to-r from-pink-500 to-purple-500 text-[6px] text-white uppercase font-black tracking-widest scale-90">Save 20%</span>
+                                </button>
+                              </div>
                               <button
-                                onClick={() => setBillingInterval("MONTHLY")}
-                                className={cn("px-2.5 py-1 rounded-lg transition-all", billingInterval === "MONTHLY" ? "bg-purple-600 text-white font-black" : "text-zinc-500 hover:text-zinc-300")}
+                                onClick={() => setShowPricingUpgrade(false)}
+                                className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 transition"
                               >
-                                Monthly
-                              </button>
-                              <button
-                                onClick={() => setBillingInterval("YEARLY")}
-                                className={cn("px-2.5 py-1 rounded-lg transition-all relative flex items-center gap-1", billingInterval === "YEARLY" ? "bg-purple-600 text-white font-black" : "text-zinc-500 hover:text-zinc-300")}
-                              >
-                                Yearly
-                                <span className="absolute -top-3.5 -right-3 px-1 rounded bg-gradient-to-r from-pink-500 to-purple-500 text-[6px] text-white uppercase font-black tracking-widest scale-90">Save 20%</span>
+                                <X size={16} />
                               </button>
                             </div>
-                            <button
-                              onClick={() => setShowPricingUpgrade(false)}
-                              className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 transition"
-                            >
-                              <X size={16} />
-                            </button>
                           </div>
 
                           {/* Plans Cards - Balanced 3x2 Grid */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                             {[...plans].sort((a, b) => {
                               const order = ["free_trial", "starter", "professional", "business", "agency", "enterprise"];
                               const idxA = order.indexOf(a.code.toLowerCase());
