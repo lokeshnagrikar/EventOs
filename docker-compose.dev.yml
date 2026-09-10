@@ -44,13 +44,14 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-eventos_guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-eventos_guest_pass}
-      RABBITMQ_NODENAME: rabbit@rabbitmq-dev
+      RABBITMQ_ERLANG_COOKIE: "eventos_secure_rabbit_cookie_2026"
+      RABBITMQ_NODENAME: rabbit@localhost
     volumes:
       - rabbitmq-dev-data:/var/lib/rabbitmq
     networks:
       - eventos-dev-net
     healthcheck:
-      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping || rabbitmqctl status || exit 1"]
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 15s
       timeout: 10s
       retries: 5

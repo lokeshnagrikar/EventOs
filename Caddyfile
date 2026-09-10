@@ -1,0 +1,3 @@
+api.eventosapp.in {
+    reverse_proxy api-gateway:8080
+}
