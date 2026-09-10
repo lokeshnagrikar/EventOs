@@ -121,11 +121,11 @@ export default function PortalSupportPage() {
             </div>
           </div>
           <div>
-            <p className="font-extrabold text-xs text-zinc-200">planner@eventos.io</p>
+            <p className="font-extrabold text-xs text-zinc-200">support@eventosapp.in</p>
             <p className="text-[10px] text-zinc-500 mt-0.5">Average response: 2 hours</p>
           </div>
           <a
-            href="mailto:planner@eventos.io"
+            href="mailto:support@eventosapp.in"
             className="flex items-center gap-1 text-[10px] font-bold text-emerald-450 hover:text-emerald-450 group hover:underline"
           >
             Send Email Inquiry <ExternalLink size={10} className="group-hover:translate-x-0.5 transition-transform" />

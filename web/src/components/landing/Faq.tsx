@@ -119,7 +119,7 @@ export function Faq() {
           <p className="text-slate-600 font-medium text-sm">
             Still have questions?{" "}
             <a
-              href="mailto:support@eventos.io"
+              href="mailto:support@eventosapp.in"
               className="text-purple-400 font-bold hover:text-purple-300 transition-colors hover:underline"
             >
               Chat with our team →

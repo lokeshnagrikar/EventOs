@@ -97,7 +97,7 @@ export default function PrivacyPolicyPage() {
             <p className="text-zinc-400">
               If you have any questions regarding your data privacy or request data deletion, email our team at:
             </p>
-            <p className="text-purple-400 font-semibold">privacy@eventos.app</p>
+            <p className="text-purple-400 font-semibold">privacy@eventosapp.in</p>
           </section>
         </div>
       </main>

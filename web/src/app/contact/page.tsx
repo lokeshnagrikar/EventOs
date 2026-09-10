@@ -86,7 +86,7 @@ export default function ContactPage() {
               <ul className="space-y-4 text-xs font-semibold text-zinc-450">
                 <li className="flex items-center gap-3">
                   <Mail size={13} className="text-purple-400" />
-                  <span>sales@eventos.agency</span>
+                  <span>sales@eventosapp.in</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone size={13} className="text-purple-400" />

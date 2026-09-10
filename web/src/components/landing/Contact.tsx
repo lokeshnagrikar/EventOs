@@ -108,8 +108,8 @@ export function Contact() {
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 font-heading">Direct Email Desk</h4>
                   <p className="text-xs text-slate-600 mt-0.5 font-medium">Rapid response within 12 hours</p>
-                  <a href="mailto:hello@eventos.io" className="text-xs font-bold text-purple-700 hover:text-purple-900 transition-colors mt-1 block">
-                    hello@eventos.io →
+                  <a href="mailto:hello@eventosapp.in" className="text-xs font-bold text-purple-700 hover:text-purple-900 transition-colors mt-1 block">
+                    hello@eventosapp.in →
                   </a>
                 </div>
               </div>

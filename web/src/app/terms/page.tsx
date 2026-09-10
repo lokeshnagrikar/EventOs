@@ -82,7 +82,7 @@ export default function TermsOfServicePage() {
             <p className="text-zinc-400">
               For questions regarding account terms or business agreements:
             </p>
-            <p className="text-purple-400 font-semibold">support@eventos.app</p>
+            <p className="text-purple-400 font-semibold">support@eventosapp.in</p>
           </section>
         </div>
       </main>

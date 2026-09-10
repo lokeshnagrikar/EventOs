@@ -69,7 +69,7 @@ export default function RefundPolicyPage() {
               3. Refund Request Terms
             </h2>
             <p className="text-zinc-400">
-              If you experience service disruption or accidental duplicate charges, notify our team within 7 days of the transaction at <span className="text-purple-400 font-semibold">support@eventos.app</span> for immediate verification and processing.
+              If you experience service disruption or accidental duplicate charges, notify our team within 7 days of the transaction at <span className="text-purple-400 font-semibold">support@eventosapp.in</span> for immediate verification and processing.
             </p>
           </section>
         </div>

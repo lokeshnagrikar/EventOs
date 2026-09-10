@@ -2,12 +2,21 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../store/authStore';
 
 const getBaseURL = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL;
+  }
   if (typeof window !== 'undefined') {
+    if (window.location.hostname.includes('eventosapp.in')) {
+      return 'https://api.eventosapp.in/api/v1';
+    }
     if (window.location.hostname.includes('onrender.com')) {
       return 'https://eventos-api-gateway.onrender.com/api/v1';
     }
   }
-  return process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+  return 'https://api.eventosapp.in/api/v1';
 };
 
 export const apiClient = axios.create({

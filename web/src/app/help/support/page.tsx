@@ -247,7 +247,7 @@ export default function SupportPage() {
               <h4 className="text-xs font-extrabold text-zinc-300">Contact Options</h4>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2 text-zinc-400 font-semibold">
-                  <MessageSquare size={12} className="text-purple-400" /> support@eventos.dev
+                  <MessageSquare size={12} className="text-purple-400" /> support@eventosapp.in
                 </div>
                 <div className="flex items-center gap-2 text-zinc-400 font-semibold">
                   <MessageSquare size={12} className="text-purple-400" /> Workspace Chat (real-time)

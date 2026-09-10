@@ -69,7 +69,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
-      if (hostname.includes("onrender.com")) {
+      if (hostname.includes("eventosapp.in")) {
+        // Production EventOS VPS via Caddy
+        wsUrl = `wss://api.eventosapp.in/api/v1/auth/ws`;
+      } else if (hostname.includes("onrender.com")) {
         // Production Render
         wsUrl = `wss://eventos-api-gateway.onrender.com/api/v1/auth/ws`;
       } else if (hostname === "localhost" || hostname === "127.0.0.1") {
@@ -77,7 +80,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         wsUrl = `${protocol}//localhost:8080/api/v1/auth/ws`;
       } else {
         // Other environments
-        wsUrl = `${protocol}//${window.location.host}/api/v1/auth/ws`;
+        wsUrl = `${protocol}//api.eventosapp.in/api/v1/auth/ws`;
       }
     }
 

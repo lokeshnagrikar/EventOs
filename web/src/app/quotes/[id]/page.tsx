@@ -490,7 +490,7 @@ export default function QuoteDetailPage() {
               <div className="space-y-1 text-left md:text-right">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold block print:text-zinc-650">Provider Info</span>
                 <h4 className="font-extrabold text-sm text-zinc-150 print:text-black">EventOS Planner Corp</h4>
-                <p className="text-zinc-450 print:text-zinc-650">billing@eventos.com</p>
+                <p className="text-zinc-450 print:text-zinc-650">billing@eventosapp.in</p>
                 <p className="text-zinc-450 print:text-zinc-650">+91 99999 88888</p>
               </div>
             </div>
