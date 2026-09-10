@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { 
   Search, 
   Bell, 
@@ -15,10 +15,22 @@ import {
   Sun,
   Moon,
   Zap,
-  Users
+  Users,
+  CreditCard,
+  FileText,
+  Calendar,
+  DollarSign,
+  CheckCheck,
+  Filter,
+  ArrowRight,
+  Clock,
+  Trash2,
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import { useToastStore } from "@/lib/toastStore";
 import { useAuthStore } from "@/store/authStore";
@@ -28,30 +40,54 @@ interface NavbarProps {
   onSearchClick: () => void;
 }
 
-interface NotificationItem {
+export interface NotificationItem {
   id: string;
   title: string;
   desc: string;
   time: string;
+  timestamp: number;
   unread: boolean;
   type: "info" | "success" | "warning" | "error";
+  href: string;
+  category: "lead" | "quote" | "event" | "payment" | "system";
+}
+
+function formatRelativeTime(dateStrOrTs?: string | number | Date): string {
+  if (!dateStrOrTs) return "Just now";
+  try {
+    const date = typeof dateStrOrTs === "number" ? new Date(dateStrOrTs) : new Date(dateStrOrTs);
+    const now = Date.now();
+    const diffMs = now - date.getTime();
+    if (isNaN(diffMs) || diffMs < 0) return "Just now";
+    const diffSecs = Math.floor(diffMs / 1000);
+    if (diffSecs < 45) return "Just now";
+    const diffMins = Math.floor(diffSecs / 60);
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+  } catch {
+    return "Recent";
+  }
 }
 
 export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
+  const router = useRouter();
   const pathname = usePathname();
   const { status, subscribe, activeUsers } = useSocket();
   const { addToast } = useToastStore();
-  const { user } = useAuthStore();
+  const { user, activeTenantId } = useAuthStore();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<"dark" | "light">("dark");
+  const [filterTab, setFilterTab] = useState<"all" | "unread">("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Dynamic notification items list
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    { id: "1", title: "New Lead Logged", desc: "Rahul & Varsha requested a proposal for Udaipur Wedding.", time: "10 mins ago", unread: true, type: "info" },
-    { id: "2", title: "UPI Payment Received", desc: "₹1,50,000 cleared for booking #BK-2026-042.", time: "2 hours ago", unread: true, type: "success" },
-    { id: "3", title: "Proposal E-Signed", desc: "Client approved & signed Proposal #QT-2026-089.", time: "1 day ago", unread: false, type: "success" },
-  ]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // 1. Synchronize Dark / Light Theme on mount & listen to changes
   useEffect(() => {
@@ -69,16 +105,170 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
     }
   }, []);
 
-  // 2. Real-Time Notification & Toast Handler
-  const handleIncomingNotification = useCallback((data: { title: string; desc: string; type?: "info" | "success" | "warning" | "error" }) => {
-    const notifId = Math.random().toString(36).substring(7);
+  // 2. Fetch real dynamic workspace activities from backend
+  const fetchWorkspaceNotifications = useCallback(async () => {
+    if (!activeTenantId && !user) return;
+    setIsRefreshing(true);
+
+    try {
+      // Local storage read & dismissed tracking
+      const storageKeyRead = `eventos_notifs_read_${activeTenantId || "default"}`;
+      const storageKeyDismissed = `eventos_notifs_dismissed_${activeTenantId || "default"}`;
+      const readIds = new Set<string>(JSON.parse(localStorage.getItem(storageKeyRead) || "[]"));
+      const dismissedIds = new Set<string>(JSON.parse(localStorage.getItem(storageKeyDismissed) || "[]"));
+
+      // Fetch CRM Leads, Quotes, Events, and Invoices in parallel
+      const [leadsRes, quotesRes, eventsRes, invoicesRes] = await Promise.allSettled([
+        api.get("/crm/leads"),
+        api.get("/crm/quotes"),
+        api.get("/events"),
+        api.get("/events/invoices"),
+      ]);
+
+      const dynamicList: NotificationItem[] = [];
+
+      // 1. Process Live Leads
+      if (leadsRes.status === "fulfilled" && Array.isArray(leadsRes.value.data?.data)) {
+        leadsRes.value.data.data.slice(0, 4).forEach((lead: any) => {
+          const id = `lead-${lead.id}`;
+          if (dismissedIds.has(id)) return;
+          const ts = lead.createdAt ? new Date(lead.createdAt).getTime() : Date.now() - 1000 * 60 * 20;
+          const budgetFormatted = lead.budget ? ` · ₹${Number(lead.budget).toLocaleString("en-IN")}` : "";
+          dynamicList.push({
+            id,
+            title: `New Lead: ${lead.name || "Inquiry"}`,
+            desc: `${lead.eventType || "Event inquiry"}${budgetFormatted} requested via portal.`,
+            time: formatRelativeTime(ts),
+            timestamp: ts,
+            unread: !readIds.has(id),
+            type: "info",
+            href: "/crm",
+            category: "lead",
+          });
+        });
+      }
+
+      // 2. Process Live Quotes
+      if (quotesRes.status === "fulfilled" && Array.isArray(quotesRes.value.data?.data)) {
+        quotesRes.value.data.data.slice(0, 4).forEach((quote: any) => {
+          const id = `quote-${quote.id}`;
+          if (dismissedIds.has(id)) return;
+          const ts = quote.createdAt ? new Date(quote.createdAt).getTime() : Date.now() - 1000 * 60 * 60;
+          const isApproved = quote.status === "APPROVED" || quote.status === "ACCEPTED" || quote.status === "SIGNED";
+          dynamicList.push({
+            id,
+            title: `Proposal #${quote.quoteNumber || "QT"} ${quote.status || "Draft"}`,
+            desc: `${quote.clientName || "Client"} · ₹${Number(quote.totalAmount || 0).toLocaleString("en-IN")}`,
+            time: formatRelativeTime(ts),
+            timestamp: ts,
+            unread: !readIds.has(id),
+            type: isApproved ? "success" : "warning",
+            href: "/quotes",
+            category: "quote",
+          });
+        });
+      }
+
+      // 3. Process Live Events
+      if (eventsRes.status === "fulfilled" && Array.isArray(eventsRes.value.data?.data)) {
+        eventsRes.value.data.data.slice(0, 4).forEach((evt: any) => {
+          const id = `event-${evt.id}`;
+          if (dismissedIds.has(id)) return;
+          const ts = evt.createdAt ? new Date(evt.createdAt).getTime() : Date.now() - 1000 * 60 * 120;
+          dynamicList.push({
+            id,
+            title: `Operational Event: ${evt.name}`,
+            desc: `${evt.venue || "Venue Assigned"} · ${evt.startDate ? new Date(evt.startDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "Scheduled"}`,
+            time: formatRelativeTime(ts),
+            timestamp: ts,
+            unread: !readIds.has(id),
+            type: "info",
+            href: "/events",
+            category: "event",
+          });
+        });
+      }
+
+      // 4. Process Live Invoices
+      if (invoicesRes.status === "fulfilled" && Array.isArray(invoicesRes.value.data?.data)) {
+        invoicesRes.value.data.data.slice(0, 3).forEach((inv: any) => {
+          const id = `inv-${inv.id}`;
+          if (dismissedIds.has(id)) return;
+          const ts = inv.createdAt ? new Date(inv.createdAt).getTime() : Date.now() - 1000 * 60 * 180;
+          const isPaid = inv.status === "PAID";
+          dynamicList.push({
+            id,
+            title: `Invoice #${inv.invoiceNumber || "INV"} ${inv.status || "PENDING"}`,
+            desc: `₹${Number(inv.amount || 0).toLocaleString("en-IN")} · ${isPaid ? "Payment cleared via UPI" : "Payment milestone pending"}`,
+            time: formatRelativeTime(ts),
+            timestamp: ts,
+            unread: !readIds.has(id),
+            type: isPaid ? "success" : "warning",
+            href: "/finance",
+            category: "payment",
+          });
+        });
+      }
+
+      // Fallback: If tenant is fresh / brand new with no records, provide real workspace onboarding status
+      if (dynamicList.length === 0) {
+        const defaultNotifs: NotificationItem[] = [
+          {
+            id: "sys-workspace-ready",
+            title: "Workspace Engine Active",
+            desc: "Your EventOS tenancy is configured and ready for live clients.",
+            time: "Just now",
+            timestamp: Date.now(),
+            unread: !readIds.has("sys-workspace-ready"),
+            type: "success",
+            href: "/dashboard",
+            category: "system",
+          },
+          {
+            id: "sys-billing-ready",
+            title: "Payment Gateway Initialized",
+            desc: "Stripe & UPI gateways active in ₹ INR for automated bookings.",
+            time: "1 hour ago",
+            timestamp: Date.now() - 3600000,
+            unread: !readIds.has("sys-billing-ready"),
+            type: "info",
+            href: "/settings",
+            category: "payment",
+          }
+        ];
+        defaultNotifs.forEach((d) => {
+          if (!dismissedIds.has(d.id)) dynamicList.push(d);
+        });
+      }
+
+      // Sort newest first
+      dynamicList.sort((a, b) => b.timestamp - a.timestamp);
+      setNotifications(dynamicList);
+    } catch (err) {
+      console.warn("Failed to load dynamic workspace notifications:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [activeTenantId, user]);
+
+  // Trigger initial fetch when active workspace loads
+  useEffect(() => {
+    fetchWorkspaceNotifications();
+  }, [fetchWorkspaceNotifications]);
+
+  // 3. Real-Time Notification & Toast Handler
+  const handleIncomingNotification = useCallback((data: { title: string; desc: string; type?: "info" | "success" | "warning" | "error"; href?: string; category?: any }) => {
+    const notifId = `rt-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const newNotif: NotificationItem = {
       id: notifId,
       title: data.title || "Real-Time Activity",
       desc: data.desc || "New event logged in EventOS workspace",
       time: "Just now",
+      timestamp: Date.now(),
       unread: true,
-      type: data.type || "info"
+      type: data.type || "info",
+      href: data.href || "/dashboard",
+      category: data.category || "system"
     };
 
     setNotifications((prev) => [newNotif, ...prev]);
@@ -93,7 +283,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
   useEffect(() => {
     // Listen to custom window events
     const handleAddNotification = (e: Event) => {
-      const customEvent = e as CustomEvent<{ title: string; desc: string; type?: "info" | "success" | "warning" | "error" }>;
+      const customEvent = e as CustomEvent<{ title: string; desc: string; type?: "info" | "success" | "warning" | "error"; href?: string; category?: any }>;
       if (customEvent.detail) {
         handleIncomingNotification(customEvent.detail);
       }
@@ -116,7 +306,9 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
         handleIncomingNotification({
           title: payload.title || "Real-time Update",
           desc: payload.desc || payload.message || "New activity detected",
-          type: payload.type || "info"
+          type: payload.type || "info",
+          href: payload.href || "/dashboard",
+          category: payload.category || "system"
         });
       });
     }
@@ -128,7 +320,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
     };
   }, [status, subscribe, handleIncomingNotification]);
 
-  // 3. Dynamic Theme Toggle Function
+  // 4. Dynamic Theme Toggle Function
   const toggleTheme = () => {
     const nextTheme = currentTheme === "dark" ? "light" : "dark";
     setCurrentTheme(nextTheme);
@@ -144,16 +336,55 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
     }
 
     window.dispatchEvent(new CustomEvent("theme-changed", { detail: nextTheme }));
-
-    // Trigger feedback toast
     addToast(`Switched to ${nextTheme.toUpperCase()} mode`, "info", { duration: 2500 });
   };
 
+  // Mark all notifications read
   const markAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    const storageKeyRead = `eventos_notifs_read_${activeTenantId || "default"}`;
+    const allIds = notifications.map((n) => n.id);
+    localStorage.setItem(storageKeyRead, JSON.stringify(allIds));
+    addToast("All workspace notifications marked as read", "info", { duration: 2000 });
+  };
+
+  // Mark single item read & navigate
+  const handleItemClick = (item: NotificationItem) => {
+    setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n)));
+    const storageKeyRead = `eventos_notifs_read_${activeTenantId || "default"}`;
+    const existing = JSON.parse(localStorage.getItem(storageKeyRead) || "[]");
+    if (!existing.includes(item.id)) {
+      localStorage.setItem(storageKeyRead, JSON.stringify([...existing, item.id]));
+    }
+    setNotificationsOpen(false);
+    router.push(item.href || "/dashboard");
+  };
+
+  // Dismiss single notification
+  const handleDismissItem = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    const storageKeyDismissed = `eventos_notifs_dismissed_${activeTenantId || "default"}`;
+    const existing = JSON.parse(localStorage.getItem(storageKeyDismissed) || "[]");
+    if (!existing.includes(id)) {
+      localStorage.setItem(storageKeyDismissed, JSON.stringify([...existing, id]));
+    }
+  };
+
+  // Clear all notifications
+  const handleClearAll = () => {
+    const storageKeyDismissed = `eventos_notifs_dismissed_${activeTenantId || "default"}`;
+    const allIds = notifications.map((n) => n.id);
+    localStorage.setItem(storageKeyDismissed, JSON.stringify(allIds));
+    setNotifications([]);
+    addToast("Cleared all workspace notifications", "info", { duration: 2000 });
   };
 
   const unreadCount = notifications.filter((n) => n.unread).length;
+  const filteredNotifications = useMemo(() => {
+    if (filterTab === "unread") return notifications.filter((n) => n.unread);
+    return notifications;
+  }, [notifications, filterTab]);
 
   // Dynamic Online Count: calculates real connected users or current user session
   const onlineCount = activeUsers?.length > 0 ? activeUsers.length : (user ? 1 : 0);
@@ -186,7 +417,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
   const crumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-30 h-[60px] w-full border-b border-border bg-card/80 backdrop-blur-2xl px-5 flex items-center justify-between shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-colors select-none">
+    <header className="sticky top-0 z-40 h-[60px] w-full border-b border-border bg-card/95 backdrop-blur-2xl px-5 flex items-center justify-between shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-colors select-none">
       
       {/* ── LEFT: BREADCRUMBS & MOBILE MENU TRIGGER ── */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -271,10 +502,15 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
           }}
         >
           <button
-            onClick={() => setNotificationsOpen(!notificationsOpen)}
+            onClick={() => {
+              setNotificationsOpen(!notificationsOpen);
+              if (!notificationsOpen) {
+                fetchWorkspaceNotifications();
+              }
+            }}
             className={cn(
               "relative p-2 border border-border rounded-xl bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer",
-              notificationsOpen && "bg-muted border-foreground/20"
+              notificationsOpen && "bg-muted border-foreground/20 text-foreground"
             )}
             aria-label="View notifications"
           >
@@ -283,9 +519,9 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-white font-extrabold text-[9px] flex items-center justify-center ring-2 ring-background shadow-md shadow-purple-500/40"
+                className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center ring-2 ring-background shadow-md shadow-purple-600/40"
               >
-                {unreadCount}
+                {unreadCount > 9 ? "9+" : unreadCount}
               </motion.span>
             )}
           </button>
@@ -293,45 +529,62 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
           <AnimatePresence>
             {notificationsOpen && (
               <>
-                <div className="fixed inset-0 z-40" aria-hidden="true" onClick={() => setNotificationsOpen(false)} />
+                {/* Backdrop dismiss overlay */}
+                <div 
+                  className="fixed inset-0 z-50 bg-black/20" 
+                  aria-hidden="true" 
+                  onClick={() => setNotificationsOpen(false)} 
+                />
+                
+                {/* Dropdown Container: SOLID OPAQUE bg-zinc-950 to prevent transparency bleed */}
                 <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  initial={{ opacity: 0, y: 10, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute right-0 mt-2.5 w-88 max-w-[calc(100vw-2rem)] border border-border bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl p-4 z-50 overflow-hidden text-xs text-foreground"
+                  className="absolute right-0 mt-2.5 w-[390px] max-w-[calc(100vw-1.5rem)] border border-zinc-800 bg-zinc-950 text-zinc-100 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] ring-1 ring-white/10 z-[60] overflow-hidden text-xs flex flex-col"
                 >
-                  {/* Header & Global Actions */}
-                  <div className="flex items-center justify-between border-b border-border pb-3">
-                    <div className="flex items-center gap-1.5">
-                      <Zap size={14} className="text-purple-500" />
-                      <span className="font-extrabold text-foreground">Workspace Notifications</span>
+                  {/* Top Bar Header */}
+                  <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                        <Zap size={13} />
+                      </div>
+                      <span className="font-extrabold text-sm text-zinc-100 tracking-tight">Workspace Feed</span>
                       {unreadCount > 0 && (
-                        <span className="bg-purple-500/20 text-purple-400 font-extrabold px-1.5 py-0.5 rounded-full text-[9px]">
+                        <span className="bg-purple-500/20 text-purple-400 font-extrabold px-2 py-0.5 rounded-full text-[10px] tabular-nums border border-purple-500/30">
                           {unreadCount} new
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      {unreadCount > 0 && (
-                        <button 
-                          onClick={markAllRead} 
-                          className="text-[10px] text-purple-400 hover:text-purple-300 font-bold uppercase tracking-wider cursor-pointer hover:underline"
-                        >
-                          Read all
-                        </button>
-                      )}
+                    
+                    <div className="flex items-center gap-1.5">
+                      {/* Refresh Button */}
+                      <button
+                        onClick={fetchWorkspaceNotifications}
+                        disabled={isRefreshing}
+                        className={cn(
+                          "p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 rounded-lg transition-colors cursor-pointer",
+                          isRefreshing && "animate-spin text-purple-400"
+                        )}
+                        title="Sync latest notifications"
+                      >
+                        <RefreshCw size={12} />
+                      </button>
+
+                      {/* Test Alert Simulator */}
                       <button
                         onClick={() => {
                           const testEvents = [
-                            { title: "New Lead Logged", desc: "Varun & Priya requested pricing for Goa Concert 2026.", type: "info" as const, href: "/crm" },
-                            { title: "UPI Payment Received", desc: "₹85,000 cleared for Invoice #INV-2026-904.", type: "success" as const, href: "/finance" },
-                            { title: "Run-of-Show Alert", desc: "Soundcheck completed for Stage 1 Scenography.", type: "warning" as const, href: "/events" },
+                            { title: "New Lead Logged", desc: "Varun & Priya requested pricing for Goa Gala 2026 (₹4,50,000).", type: "info" as const, href: "/crm", category: "lead" },
+                            { title: "UPI Payment Received", desc: "₹85,000 advance cleared for Invoice #INV-2026-904.", type: "success" as const, href: "/finance", category: "payment" },
+                            { title: "Run-of-Show Alert", desc: "Soundcheck completed for Taj Palace Ballroom 1.", type: "warning" as const, href: "/events", category: "event" },
+                            { title: "Proposal E-Signed", desc: "Client accepted and e-signed Proposal #QT-2026-118.", type: "success" as const, href: "/quotes", category: "quote" },
                           ];
                           const randomEvt = testEvents[Math.floor(Math.random() * testEvents.length)];
                           handleIncomingNotification(randomEvt);
                         }}
-                        className="text-[10px] bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-md font-bold transition-all cursor-pointer"
+                        className="text-[10px] bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 px-2 py-1 rounded-lg font-bold transition-all cursor-pointer"
                         title="Simulate Real-Time Incoming Notification Alert"
                       >
                         + Test Alert
@@ -339,86 +592,142 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                     </div>
                   </div>
 
-                  {/* Notification List */}
-                  <div className="divide-y divide-border/60 max-h-80 overflow-y-auto mt-1 pr-1">
-                    {notifications.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => {
-                          // Mark item as read
-                          setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n)));
-                          setNotificationsOpen(false);
-                          // Determine target route based on notification content
-                          if (item.title.includes("Lead") || item.desc.includes("proposal")) window.location.href = "/crm";
-                          else if (item.title.includes("Payment") || item.desc.includes("cleared")) window.location.href = "/finance";
-                          else if (item.title.includes("Proposal") || item.title.includes("Signed")) window.location.href = "/quotes";
-                          else window.location.href = "/dashboard";
-                        }}
+                  {/* Filter Tabs & Mark Read Bar */}
+                  <div className="px-4 py-2 bg-zinc-950/80 border-b border-zinc-800/60 flex items-center justify-between text-[11px]">
+                    <div className="flex items-center gap-1 bg-zinc-900/80 p-0.5 rounded-lg border border-zinc-800/80">
+                      <button
+                        onClick={() => setFilterTab("all")}
                         className={cn(
-                          "py-3 px-2 flex gap-3 transition-all rounded-xl cursor-pointer group hover:bg-muted/60 relative my-1",
-                          item.unread ? "bg-purple-500/5 border border-purple-500/15" : "hover:bg-muted/40"
+                          "px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer",
+                          filterTab === "all" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"
                         )}
                       >
+                        All ({notifications.length})
+                      </button>
+                      <button
+                        onClick={() => setFilterTab("unread")}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer",
+                          filterTab === "unread" ? "bg-purple-600/30 text-purple-200 shadow-sm" : "text-zinc-400 hover:text-zinc-200"
+                        )}
+                      >
+                        Unread ({unreadCount})
+                      </button>
+                    </div>
+
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={markAllRead} 
+                        className="text-[10px] text-purple-400 hover:text-purple-300 font-bold tracking-wider cursor-pointer hover:underline inline-flex items-center gap-1"
+                      >
+                        <CheckCheck size={11} />
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Notification Items List */}
+                  <div className="divide-y divide-zinc-800/60 max-h-[350px] overflow-y-auto pr-0.5 bg-zinc-950">
+                    {filteredNotifications.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => handleItemClick(item)}
+                        className={cn(
+                          "p-3.5 flex gap-3 transition-all cursor-pointer group hover:bg-zinc-900/80 relative border-l-2",
+                          item.unread 
+                            ? "bg-purple-950/20 border-l-purple-500" 
+                            : "border-l-transparent hover:border-l-zinc-700 opacity-90 hover:opacity-100"
+                        )}
+                      >
+                        {/* Category Icon Badge */}
                         <div
                           className={cn(
-                            "h-7 w-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm",
-                            item.type === "success" && "bg-emerald-500/10 text-emerald-500",
-                            item.type === "info" && "bg-purple-500/10 text-purple-400",
-                            item.type === "warning" && "bg-amber-500/10 text-amber-500",
-                            item.type === "error" && "bg-red-500/10 text-red-500"
+                            "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border shadow-sm",
+                            item.category === "lead" && "bg-blue-500/10 text-blue-400 border-blue-500/20",
+                            item.category === "payment" && "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                            item.category === "quote" && "bg-purple-500/10 text-purple-400 border-purple-500/20",
+                            item.category === "event" && "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                            item.category === "system" && "bg-zinc-800 text-zinc-300 border-zinc-700"
                           )}
                         >
-                          {item.type === "success" && <CheckCircle2 size={13} />}
-                          {item.type === "info" && <Activity size={13} />}
-                          {item.type === "warning" && <MessageSquare size={13} />}
-                          {item.type === "error" && <Zap size={13} />}
+                          {item.category === "lead" && <Users size={14} />}
+                          {item.category === "payment" && <CreditCard size={14} />}
+                          {item.category === "quote" && <FileText size={14} />}
+                          {item.category === "event" && <Calendar size={14} />}
+                          {item.category === "system" && <Zap size={14} />}
                         </div>
+
+                        {/* Text Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start gap-2">
-                            <span className={cn("font-bold block text-foreground truncate text-xs group-hover:text-purple-400 transition-colors", item.unread && "font-black")}>
+                            <span className={cn(
+                              "text-xs block text-zinc-100 truncate group-hover:text-purple-400 transition-colors",
+                              item.unread ? "font-black text-white" : "font-semibold text-zinc-200"
+                            )}>
                               {item.title}
                             </span>
-                            <span className="text-[9px] text-muted-foreground shrink-0 font-medium">{item.time}</span>
+                            <span className="text-[10px] text-zinc-500 shrink-0 font-medium whitespace-nowrap">
+                              {item.time}
+                            </span>
                           </div>
-                          <p className="text-muted-foreground text-[11px] leading-relaxed mt-0.5">{item.desc}</p>
-                          <span className="text-[9px] text-purple-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity mt-1 inline-flex items-center gap-1">
-                            Click to view details &rarr;
-                          </span>
+                          
+                          <p className="text-zinc-400 text-[11px] leading-relaxed mt-0.5 line-clamp-2">
+                            {item.desc}
+                          </p>
+
+                          <div className="flex items-center gap-2 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-[10px] text-purple-400 font-bold inline-flex items-center gap-1">
+                              Open module <ArrowRight size={10} />
+                            </span>
+                          </div>
                         </div>
-                        {/* Remove Notification Button */}
+
+                        {/* Dismiss Single Item Button */}
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setNotifications((prev) => prev.filter((n) => n.id !== item.id));
-                          }}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-red-400 transition-all rounded-md self-start"
-                          title="Remove notification"
+                          onClick={(e) => handleDismissItem(e, item.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded-md transition-all self-start"
+                          title="Dismiss notification"
                         >
                           &times;
                         </button>
                       </div>
                     ))}
-                    {notifications.length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Zap size={20} className="mx-auto mb-2 opacity-40 text-purple-400" />
-                        <p className="font-bold text-xs">All Caught Up!</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">No active notifications in your workspace.</p>
+
+                    {/* Empty State */}
+                    {filteredNotifications.length === 0 && (
+                      <div className="text-center py-10 px-4">
+                        <div className="h-10 w-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-2.5 text-zinc-500">
+                          <Zap size={18} className="text-purple-400 opacity-60" />
+                        </div>
+                        <p className="font-bold text-xs text-zinc-200">All Caught Up!</p>
+                        <p className="text-[11px] text-zinc-500 mt-1 max-w-[220px] mx-auto">
+                          {filterTab === "unread" 
+                            ? "No unread alerts in this workspace." 
+                            : "No new activity logged in your workspace."}
+                        </p>
                       </div>
                     )}
                   </div>
 
                   {/* Footer Actions */}
-                  {notifications.length > 0 && (
-                    <div className="border-t border-border pt-2.5 mt-2 flex justify-between items-center text-[10px]">
+                  <div className="border-t border-zinc-800/80 bg-zinc-900/60 px-4 py-2.5 flex justify-between items-center text-[10px]">
+                    {notifications.length > 0 ? (
                       <button
-                        onClick={() => setNotifications([])}
-                        className="text-muted-foreground hover:text-red-400 transition-colors font-bold cursor-pointer"
+                        onClick={handleClearAll}
+                        className="text-zinc-400 hover:text-red-400 transition-colors font-bold cursor-pointer inline-flex items-center gap-1"
                       >
+                        <Trash2 size={11} />
                         Clear All
                       </button>
-                      <span className="text-muted-foreground text-[9px]">Click notification to navigate</span>
-                    </div>
-                  )}
+                    ) : (
+                      <span className="text-zinc-500 font-medium">Workspace Feed Empty</span>
+                    )}
+
+                    <span className="text-zinc-500 text-[10px] flex items-center gap-1.5 font-medium">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Live Feed
+                    </span>
+                  </div>
                 </motion.div>
               </>
             )}
@@ -455,4 +764,5 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
     </header>
   );
 }
+
 

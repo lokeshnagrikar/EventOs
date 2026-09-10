@@ -634,7 +634,10 @@ export function Navbar({ activeSection }: NavbarProps) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.99 }}
                 transition={{ type: "spring", damping: 26, stiffness: 320 }}
-                className="w-full md:hidden pointer-events-auto overflow-hidden rounded-[26px] border border-purple-500/30 bg-[#090a16]/95 backdrop-blur-2xl backdrop-saturate-[1.8] shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(168,85,247,0.2),inset_0_1px_1.5px_rgba(255,255,255,0.2)] max-h-[calc(88dvh-70px)] flex flex-col relative"
+                className="w-full md:hidden pointer-events-auto overflow-hidden rounded-[26px] border border-purple-500/30 bg-[#090a16]/95 backdrop-blur-2xl backdrop-saturate-[1.8] shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(168,85,247,0.2),inset_0_1px_1.5px_rgba(255,255,255,0.2)] flex flex-col relative max-h-[calc(100vh-5.5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-5.5rem)] supports-[height:100svh]:max-h-[calc(100svh-5.5rem)]"
+                style={{
+                  maxHeight: "calc(100svh - 5.5rem)",
+                }}
               >
                 {/* Top & bottom specular sheen lines */}
                 <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-purple-400/60 to-transparent pointer-events-none" />
@@ -645,7 +648,13 @@ export function Navbar({ activeSection }: NavbarProps) {
                 <div className="absolute -bottom-12 left-0 w-60 h-60 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none" />
 
                 {/* Content Body with full scrolling support so no sub-menus or CTA buttons get cut off */}
-                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 pb-8 space-y-3 relative z-10 touch-pan-y">
+                <div
+                  data-lenis-prevent
+                  className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 pb-8 space-y-3 relative z-10 touch-pan-y scrollbar-thin"
+                  style={{
+                    WebkitOverflowScrolling: "touch",
+                  }}
+                >
                   {/* Workspace Selector Pill */}
                   <div className="pb-0.5">
                     <WorkspaceSelectorPill />
