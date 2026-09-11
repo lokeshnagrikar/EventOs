@@ -306,6 +306,8 @@ export default function SettingsPage() {
   const [fontSelection, setFontSelection] = useState("Inter");
   const [darkThemeLogo, setDarkThemeLogo] = useState("");
   const [gradientPresets, setGradientPresets] = useState("");
+  const [isUploadingBrandingLogo, setIsUploadingBrandingLogo] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
 
   // Team directory states
   const [teamSearch, setTeamSearch] = useState("");
@@ -876,6 +878,82 @@ export default function SettingsPage() {
       language,
       businessHours
     });
+  };
+
+  const handleBrandingLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      addToast("Logo size must be less than 5MB.", "error");
+      return;
+    }
+    const localUrl = URL.createObjectURL(file);
+    setCompanyLogo(localUrl);
+    setIsUploadingBrandingLogo(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      addToast("Uploading company logo to Cloudinary CDN...", "info");
+      const res = await api.post("/gallery/items/upload-avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const cdnUrl = res.data?.data?.url;
+      if (cdnUrl) {
+        setCompanyLogo(cdnUrl);
+        URL.revokeObjectURL(localUrl);
+        addToast("Company logo uploaded successfully to CDN!", "success");
+      }
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setCompanyLogo(reader.result);
+          addToast("Logo saved locally as Base64.", "info");
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploadingBrandingLogo(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      addToast("Favicon size must be less than 2MB.", "error");
+      return;
+    }
+    const localUrl = URL.createObjectURL(file);
+    setFaviconUrl(localUrl);
+    setIsUploadingFavicon(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      addToast("Uploading favicon to Cloudinary CDN...", "info");
+      const res = await api.post("/gallery/items/upload-avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const cdnUrl = res.data?.data?.url;
+      if (cdnUrl) {
+        setFaviconUrl(cdnUrl);
+        URL.revokeObjectURL(localUrl);
+        addToast("Favicon uploaded successfully to CDN!", "success");
+      }
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setFaviconUrl(reader.result);
+          addToast("Favicon saved locally.", "info");
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploadingFavicon(false);
+      e.target.value = "";
+    }
   };
 
   const handleBrandingSave = () => {
@@ -1622,41 +1700,137 @@ export default function SettingsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
                     <div className="space-y-4">
+                      {/* 1. Company Brand Logo Uploader */}
+                      <div className="space-y-2 p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[9.5px] text-zinc-400 uppercase font-black">Company Brand Logo</label>
+                          <label className="text-[10px] text-purple-400 hover:text-purple-300 font-bold cursor-pointer transition flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-lg">
+                            {isUploadingBrandingLogo ? <Loader2 size={11} className="animate-spin text-purple-400" /> : <Upload size={11} />}
+                            <span>{isUploadingBrandingLogo ? "Uploading..." : "Upload from Device"}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={isUploadingBrandingLogo}
+                              onChange={handleBrandingLogoUpload}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+
+                        {companyLogo && (
+                          <div className="flex items-center gap-2.5 p-2 bg-black/40 border border-zinc-800 rounded-lg">
+                            <div className="h-8 w-8 rounded bg-zinc-900 border border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+                              <img src={companyLogo} alt="Logo" className="h-full w-full object-contain p-0.5" />
+                            </div>
+                            <span className="text-[10px] text-zinc-400 font-mono truncate flex-1">{companyLogo}</span>
+                            <button
+                              type="button"
+                              onClick={() => setCompanyLogo("")}
+                              className="text-[10px] text-zinc-500 hover:text-red-400 font-bold px-1.5"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )}
+
+                        <input
+                          type="text"
+                          value={companyLogo}
+                          onChange={(e) => setCompanyLogo(e.target.value)}
+                          placeholder="Or paste Logo URL (https://...)"
+                          className="w-full px-3 py-1.5 bg-[#121214] border border-zinc-800 rounded-lg text-white text-[11px] font-mono outline-none focus:border-purple-500"
+                        />
+                      </div>
+
+                      {/* 2. Favicon Uploader */}
+                      <div className="space-y-2 p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[9.5px] text-zinc-400 uppercase font-black">Favicon (Browser Tab Icon)</label>
+                          <label className="text-[10px] text-purple-400 hover:text-purple-300 font-bold cursor-pointer transition flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-lg">
+                            {isUploadingFavicon ? <Loader2 size={11} className="animate-spin text-purple-400" /> : <Upload size={11} />}
+                            <span>{isUploadingFavicon ? "Uploading..." : "Upload from Device"}</span>
+                            <input
+                              type="file"
+                              accept="image/*,.ico"
+                              disabled={isUploadingFavicon}
+                              onChange={handleFaviconUpload}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+
+                        {faviconUrl && (
+                          <div className="flex items-center gap-2.5 p-2 bg-black/40 border border-zinc-800 rounded-lg">
+                            <div className="h-6 w-6 rounded bg-zinc-900 border border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+                              <img src={faviconUrl} alt="Favicon" className="h-full w-full object-contain p-0.5" />
+                            </div>
+                            <span className="text-[10px] text-zinc-400 font-mono truncate flex-1">{faviconUrl}</span>
+                            <button
+                              type="button"
+                              onClick={() => setFaviconUrl("")}
+                              className="text-[10px] text-zinc-500 hover:text-red-400 font-bold px-1.5"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )}
+
+                        <input
+                          type="text"
+                          value={faviconUrl}
+                          onChange={(e) => setFaviconUrl(e.target.value)}
+                          placeholder="Or paste Favicon URL (https://...)"
+                          className="w-full px-3 py-1.5 bg-[#121214] border border-zinc-800 rounded-lg text-white text-[11px] font-mono outline-none focus:border-purple-500"
+                        />
+                      </div>
+
+                      {/* 3. Primary Color Theme */}
                       <div className="space-y-1.5">
-                        <label className="text-[9px] text-zinc-550 uppercase font-black">Primary Color Theme</label>
+                        <label className="text-[9.5px] text-zinc-550 uppercase font-black">Primary Color Theme</label>
                         <div className="flex gap-2 items-center">
-                          <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="h-8 w-12 rounded border border-zinc-800 bg-transparent" />
-                          <span className="font-mono">{accentColor}</span>
+                          <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="h-8 w-12 rounded border border-zinc-800 bg-transparent cursor-pointer" />
+                          <span className="font-mono text-zinc-300 font-bold">{accentColor}</span>
                         </div>
                       </div>
 
+                      {/* 4. Primary Font Selection */}
                       <div className="space-y-1.5">
-                        <label className="text-[9px] text-zinc-550 uppercase font-black">Primary Font Selection</label>
-                        <select value={fontSelection} onChange={(e) => setFontSelection(e.target.value)} className="w-full px-3 py-2 bg-[#121214] border border-zinc-800 rounded-xl text-white">
-                          <option value="Inter">Inter (Standard UI)</option>
-                          <option value="Roboto">Roboto (Clean sans)</option>
-                          <option value="monospace">Cascadia Code</option>
+                        <label className="text-[9.5px] text-zinc-550 uppercase font-black">Primary Font Selection</label>
+                        <select value={fontSelection} onChange={(e) => setFontSelection(e.target.value)} className="w-full px-3 py-2 bg-[#121214] border border-zinc-800 rounded-xl text-white outline-none focus:border-purple-500">
+                          <option value="Inter">Inter (Standard Modern UI)</option>
+                          <option value="Roboto">Roboto (Clean Sans)</option>
+                          <option value="monospace">Cascadia Code (Monospace)</option>
                         </select>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] text-zinc-550 uppercase font-black">Favicon URL Link</label>
-                        <input type="text" value={faviconUrl} onChange={(e) => setFaviconUrl(e.target.value)} className="w-full px-3 py-2 bg-[#121214] border border-zinc-800 rounded-xl text-white" />
                       </div>
                     </div>
 
                     {/* Preview Widget */}
-                    <div className="p-5 border border-zinc-800 bg-zinc-950/20 rounded-2xl space-y-4 flex flex-col justify-between">
-                      <span className="text-[9px] text-zinc-555 uppercase font-black tracking-widest block">Live Studio Preview</span>
+                    <div className="p-5 border border-zinc-800 bg-zinc-950/40 rounded-2xl space-y-4 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[9px] text-zinc-555 uppercase font-black tracking-widest block">Live Studio Preview</span>
+                        <p className="text-[11px] text-zinc-400 mt-1">Real-time preview of how clients view your branding.</p>
+                      </div>
 
-                      <div className="space-y-3 p-4 bg-[#111113]/55 border border-zinc-800 rounded-xl text-center">
-                        <span className="text-[10px] font-black text-zinc-350 block">Preview Button State</span>
-                        <button className="px-4 py-1.5 text-xs font-bold text-white rounded-lg transition-all" style={{ backgroundColor: accentColor }}>
-                          Sample Trigger
+                      <div className="space-y-4 p-5 bg-[#111113] border border-zinc-850 rounded-xl text-center flex flex-col items-center">
+                        {/* Preview Logo */}
+                        <div className="h-12 w-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden">
+                          {companyLogo ? (
+                            <img src={companyLogo} alt="Logo" className="h-full w-full object-contain p-1" />
+                          ) : (
+                            <Palette size={20} className="text-purple-400" />
+                          )}
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-white block">{companyName || "Your Company Brand"}</span>
+                          <span className="text-[10px] text-zinc-500 block">Workspace Theme Preview</span>
+                        </div>
+
+                        <button className="px-5 py-2 text-xs font-bold text-white rounded-xl transition-all shadow-lg cursor-pointer" style={{ backgroundColor: accentColor }}>
+                          Sample Brand Button
                         </button>
                       </div>
 
-                      <span className="text-[8px] text-zinc-650 block text-center mt-3">Color theme settings updates on click save.</span>
+                      <span className="text-[9px] text-zinc-500 block text-center">Click "Save Branding Setup" to sync with all client portals.</span>
                     </div>
                   </div>
                 </div>

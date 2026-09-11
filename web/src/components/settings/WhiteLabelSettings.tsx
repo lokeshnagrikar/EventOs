@@ -73,21 +73,49 @@ export default function WhiteLabelSettings() {
     }, 1200);
   };
 
-  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        addToast("Logo file size must be less than 2MB.", "error");
-        return;
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      addToast("Logo file size must be less than 5MB.", "error");
+      return;
+    }
+
+    // Instant local preview
+    const localPreviewUrl = URL.createObjectURL(file);
+    setLogoUrl(localPreviewUrl);
+    setIsUploadingLogo(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      addToast("Uploading logo to Cloudinary CDN...", "info");
+      const res = await api.post("/gallery/items/upload-avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const cdnUrl = res.data?.data?.url;
+      if (cdnUrl) {
+        setLogoUrl(cdnUrl);
+        URL.revokeObjectURL(localPreviewUrl);
+        addToast("Logo successfully uploaded to Cloudinary CDN!", "success");
       }
+    } catch (err) {
+      // Fallback to base64 if offline or network error
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === "string") {
           setLogoUrl(reader.result);
-          addToast("Logo image selected successfully!", "success");
+          addToast("Logo saved locally as Base64.", "info");
         }
       };
       reader.readAsDataURL(file);
+    } finally {
+      setIsUploadingLogo(false);
+      e.target.value = "";
     }
   };
 
@@ -240,26 +268,50 @@ export default function WhiteLabelSettings() {
             </div>
 
             {/* Logo Image URL & Direct Upload */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-bold text-zinc-300">Custom Brand Logo URL or File</label>
-                <label className="text-[11px] text-purple-400 hover:text-purple-300 font-bold cursor-pointer transition flex items-center gap-1">
-                  <ImageIcon size={12} />
-                  <span>Choose Local File</span>
+                <label className="text-xs font-bold text-zinc-300">Custom Brand Logo</label>
+                <label className="text-[11px] text-purple-400 hover:text-purple-300 font-bold cursor-pointer transition flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-lg">
+                  {isUploadingLogo ? <Loader2 size={12} className="animate-spin text-purple-400" /> : <ImageIcon size={12} />}
+                  <span>{isUploadingLogo ? "Uploading to CDN..." : "Upload from Device"}</span>
                   <input
                     type="file"
                     accept="image/*"
+                    disabled={isUploadingLogo}
                     onChange={handleLogoFileUpload}
                     className="hidden"
                   />
                 </label>
               </div>
+
+              {/* Logo Preview if available */}
+              {logoUrl && (
+                <div className="flex items-center gap-3 p-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl">
+                  <div className="h-10 w-10 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                    <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-contain p-1" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] text-emerald-400 font-bold block flex items-center gap-1">
+                      <CheckCircle2 size={10} /> Active Logo
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-mono truncate block">{logoUrl}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLogoUrl("")}
+                    className="text-[10px] text-zinc-400 hover:text-red-400 font-bold transition px-2 py-1"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+
               <input
                 type="text"
                 value={logoUrl}
                 onChange={(e) => setLogoUrl(e.target.value)}
-                placeholder="https://yourdomain.com/logo.png or choose file above"
-                className="w-full px-3.5 py-2 bg-white/[0.02] border border-white/[0.06] text-white rounded-xl text-xs outline-none focus:border-purple-500 font-mono"
+                placeholder="Or paste direct logo URL (https://...)"
+                className="w-full px-3.5 py-2 bg-white/[0.02] border border-white/[0.06] text-white rounded-xl text-xs outline-none focus:border-purple-500 font-mono text-[11px]"
               />
             </div>
 
