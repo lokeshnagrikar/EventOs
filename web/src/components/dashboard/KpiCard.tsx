@@ -85,42 +85,42 @@ export default function KpiCard({
       transition={{ duration: 0.18, ease: "easeOut" }}
       onClick={onClick}
       className={cn(
-        "relative rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 p-5 flex flex-col justify-between min-h-[140px] hover:shadow-[0_0_30px_rgba(139,92,246,0.03)] group overflow-hidden select-none transition-colors",
+        "relative rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 p-3.5 sm:p-5 flex flex-col justify-between min-h-[125px] sm:min-h-[140px] hover:shadow-[0_0_30px_rgba(139,92,246,0.03)] group overflow-hidden select-none transition-colors",
         onClick && "cursor-pointer"
       )}
     >
       {/* Decorative Glow accent */}
       <div className={cn("absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br opacity-5 blur-[40px] rounded-full group-hover:opacity-10 transition-opacity", gradientAccent)} />
 
-      <div className="flex justify-between items-start gap-4">
-        <div className="space-y-1">
-          <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block">{title}</span>
-          <p className="text-2xl font-black tracking-tight text-zinc-100 group-hover:text-white transition-colors font-mono tabular-nums">
+      <div className="flex justify-between items-start gap-2 sm:gap-4">
+        <div className="space-y-1 min-w-0 flex-1">
+          <span className="text-[9px] sm:text-[10px] font-bold text-zinc-550 uppercase tracking-widest block leading-none truncate">{title}</span>
+          <p className="text-xl sm:text-2xl font-black tracking-tight text-zinc-100 group-hover:text-white transition-colors font-mono tabular-nums truncate mt-1">
             {typeof displayValue === "number" ? displayValue.toLocaleString("en-IN") : displayValue}
           </p>
         </div>
         
         {/* Glow Badge Icon */}
-        <div className={cn("h-8 w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40", gradientAccent)}>
-          <Icon size={14} className="text-zinc-100" />
+        <div className={cn("h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40 shrink-0", gradientAccent)}>
+          <Icon size={13} className="text-zinc-100" />
         </div>
       </div>
 
-      <div className="flex justify-between items-end pt-4 border-t border-zinc-900 mt-2">
-        <div className="space-y-1">
+      <div className="flex justify-between items-end pt-3 sm:pt-4 border-t border-zinc-900 mt-2">
+        <div className="space-y-1 min-w-0">
           {trend && (
-            <div className={cn("flex items-center gap-1 text-[11px] font-bold", trend.isPositive ? "text-emerald-500" : "text-red-500")}>
-              {trend.isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+            <div className={cn("flex items-center gap-1 text-[10px] sm:text-[11px] font-bold", trend.isPositive ? "text-emerald-500" : "text-red-500")}>
+              {trend.isPositive ? <ArrowUpRight size={12} className="shrink-0" /> : <ArrowDownRight size={12} className="shrink-0" />}
               <span>{trend.value}%</span>
-              <span className="text-zinc-550 font-normal text-[10px] lowercase">vs past month</span>
+              <span className="text-zinc-550 font-normal text-[9px] lowercase hidden xs:inline">vs past month</span>
             </div>
           )}
-          <span className="text-[10px] text-zinc-500 font-semibold block leading-none">{subtitle}</span>
+          <span className="text-[9px] sm:text-[10px] text-zinc-500 font-semibold block leading-none truncate">{subtitle}</span>
         </div>
 
         {/* Sparkline chart */}
-        <div className="h-8 w-24 opacity-60 group-hover:opacity-100 transition-opacity">
-          <svg viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+        <div className="h-7 sm:h-8 w-16 sm:w-24 opacity-60 group-hover:opacity-100 transition-opacity shrink-0">
+          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
             <polyline
               fill="none"
               stroke={trend?.isPositive ? "#10b981" : "#ef4444"}

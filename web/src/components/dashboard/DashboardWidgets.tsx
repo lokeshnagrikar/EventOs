@@ -55,7 +55,7 @@ export function UpcomingEventsWidget({
   if (isLoading) return <CardSkeleton />;
 
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
+    <div className="p-4 sm:p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
       <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
         <Calendar size={13} className="text-purple-400" />
         Upcoming schedules
@@ -63,13 +63,13 @@ export function UpcomingEventsWidget({
 
       <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
         {events.map((evt) => (
-          <div key={evt.id} className="flex justify-between items-center p-3 border border-zinc-850 rounded-xl bg-zinc-950/20 hover:border-purple-500/20 hover:bg-purple-500/[0.01] transition-all text-xs font-medium">
-            <div>
-              <span className="font-extrabold text-zinc-200 block">{evt.name}</span>
-              <span className="text-[10px] text-zinc-550 block pt-0.5">{evt.type} • {evt.location || "Venue TBA"}</span>
+          <div key={evt.id} className="flex justify-between items-center p-3 border border-zinc-850 rounded-xl bg-zinc-950/20 hover:border-purple-500/20 hover:bg-purple-500/[0.01] transition-all text-xs font-medium gap-2">
+            <div className="min-w-0 flex-1">
+              <span className="font-extrabold text-zinc-200 block truncate">{evt.name}</span>
+              <span className="text-[10px] text-zinc-550 block pt-0.5 truncate">{evt.type} • {evt.location || "Venue TBA"}</span>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] text-zinc-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-md font-bold">
+            <div className="text-right shrink-0">
+              <span className="text-[10px] text-zinc-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-md font-bold whitespace-nowrap">
                 {formatEventDate(evt.startDate)}
               </span>
             </div>
@@ -104,7 +104,7 @@ export function RecentLeadsWidget({
   if (isLoading) return <CardSkeleton />;
 
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
+    <div className="p-4 sm:p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
       <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
         <Users size={13} className="text-purple-400" />
         Recent enquiries
@@ -112,13 +112,13 @@ export function RecentLeadsWidget({
 
       <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
         {leads.map((l) => (
-          <div key={l.id} className="flex justify-between items-center p-3 border border-zinc-850 rounded-xl bg-zinc-950/20 hover:border-purple-500/20 hover:bg-purple-500/[0.01] transition-all text-xs font-medium">
-            <div>
-              <span className="font-extrabold text-zinc-200 block">{l.name}</span>
-              <span className="text-[10px] text-zinc-550 block pt-0.5">{l.eventType} • {l.phone}</span>
+          <div key={l.id} className="flex justify-between items-center p-3 border border-zinc-850 rounded-xl bg-zinc-950/20 hover:border-purple-500/20 hover:bg-purple-500/[0.01] transition-all text-xs font-medium gap-2">
+            <div className="min-w-0 flex-1">
+              <span className="font-extrabold text-zinc-200 block truncate">{l.name}</span>
+              <span className="text-[10px] text-zinc-550 block pt-0.5 truncate">{l.eventType} • {l.phone}</span>
             </div>
-            <div className="text-right">
-              <span className="font-bold text-emerald-450 font-mono">
+            <div className="text-right shrink-0">
+              <span className="font-bold text-emerald-450 font-mono whitespace-nowrap">
                 ₹{l.budget ? l.budget.toLocaleString() : "0"}
               </span>
             </div>
@@ -151,7 +151,7 @@ export function TeamActivityFeedWidget({
   if (isLoading) return <CardSkeleton />;
 
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
+    <div className="p-4 sm:p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
       <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
         <Sparkles size={13} className="text-purple-400" />
         Activity Feed
@@ -198,7 +198,7 @@ export function BookingTimelineWidget({ isLoading = false }: { isLoading?: boole
   ];
 
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
+    <div className="p-4 sm:p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
       <div>
         <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Standard Booking Sequence</h3>
         <p className="text-[11px] text-zinc-550">Active milestones tracker</p>
@@ -245,7 +245,7 @@ export function QuotePipelineWidget({ isLoading = false }: { isLoading?: boolean
   ];
 
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
+    <div className="p-4 sm:p-6 rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 transition-colors space-y-4">
       <div>
         <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Leads-to-Bookings Funnel</h3>
         <p className="text-[11px] text-zinc-550">Quote pipeline progression value</p>

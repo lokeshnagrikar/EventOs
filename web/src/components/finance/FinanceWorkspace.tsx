@@ -531,7 +531,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
     >
       {/* Global Finance Tab Selection */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-850 pb-4 select-none">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar touch-pan-x max-w-full pb-1 md:pb-0">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -540,10 +540,10 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 key={tab.key}
                 onClick={() => { setActiveTab(tab.key); setSearchQuery(""); }}
                 className={cn(
-                  "px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+                  "px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0",
                   isActive
                     ? "bg-purple-600/10 text-purple-400 border border-purple-550/20"
-                    : "text-zinc-500 hover:text-zinc-300 border border-transparent hover:bg-zinc-900/40"
+                    : "text-zinc-500 hover:text-zinc-350 border border-transparent hover:bg-zinc-900/40"
                 )}
               >
                 <Icon size={12} />
@@ -553,7 +553,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           })}
         </div>
 
-        <div className="relative w-full max-w-xs">
+        <div className="relative w-full md:max-w-xs shrink-0">
           <Search size={13} className="absolute left-3 top-2.5 text-zinc-550" />
           <input
             type="text"
@@ -1671,18 +1671,18 @@ function FinanceKpiCard({ title, value, icon: Icon, trend, accent, sparkData, is
   return (
     <motion.div
       whileHover={{ y: -3 }}
-      className="relative rounded-2xl border border-zinc-800 bg-[#141416]/40 p-5 flex flex-col justify-between min-h-[140px] hover:shadow-[0_0_30px_rgba(168,85,247,0.02)] group overflow-hidden select-none transition-colors"
+      className="relative rounded-2xl border border-zinc-800 bg-[#141416]/40 p-3.5 sm:p-5 flex flex-col justify-between min-h-[125px] sm:min-h-[140px] hover:shadow-[0_0_30px_rgba(168,85,247,0.02)] group overflow-hidden select-none transition-colors"
     >
       <div className={cn("absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br opacity-5 blur-[40px] rounded-full group-hover:opacity-10 transition-opacity", accent)} />
       
-      <div className="flex justify-between items-start gap-4">
-        <div className="space-y-1">
-          <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block">{title}</span>
-          <p className="text-xl font-extrabold tracking-tight text-zinc-200">
+      <div className="flex justify-between items-start gap-3 sm:gap-4">
+        <div className="space-y-1 min-w-0">
+          <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block truncate">{title}</span>
+          <p className="text-lg sm:text-xl font-extrabold tracking-tight text-zinc-200 truncate">
             {isCount ? (displayValue ?? 0) : `₹${(Number(displayValue) || 0).toLocaleString()}`}
           </p>
         </div>
-        <div className={cn("h-8 w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40", accent)}>
+        <div className={cn("h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40 shrink-0", accent)}>
           <Icon size={14} className="text-zinc-100" />
         </div>
       </div>

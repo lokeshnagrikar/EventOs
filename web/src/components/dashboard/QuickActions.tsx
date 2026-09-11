@@ -65,7 +65,7 @@ export default function QuickActions() {
   return (
     <>
       {/* Floating Menu */}
-      <div className="fixed bottom-6 right-24 z-50 flex flex-col items-end gap-3 select-none">
+      <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-24 z-50 flex flex-col items-end gap-3 select-none">
         
         {/* Expanded Actions List */}
         <AnimatePresence>

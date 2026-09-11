@@ -206,8 +206,8 @@ function Sparkline({ data, isPositive }: { data: number[]; isPositive: boolean }
     .join(" ");
 
   return (
-    <div className="h-9 w-28 opacity-80 group-hover:opacity-100 transition-opacity">
-      <svg viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+    <div className="h-8 sm:h-9 w-20 sm:w-28 opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
         <polyline
           fill="none"
           stroke={isPositive ? "#10b981" : "#ef4444"}
@@ -888,53 +888,53 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ─── DYNAMIC CONTROL HEADER BAR ────────────────────────────────────────────── */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 border-b border-zinc-850 pb-6 mb-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3 sm:gap-4 border-b border-zinc-850 pb-4 sm:pb-6 mb-4 sm:mb-6">
+        <div className="space-y-1 min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
               {greeting}, <span className="text-purple-400">{user?.firstName || "Lokesh"}</span>
             </h1>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full border border-purple-500/20 bg-purple-500/10 text-purple-400 font-mono">
+            <span className="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full border border-purple-500/20 bg-purple-500/10 text-purple-400 font-mono shrink-0">
               Enterprise Suite
             </span>
           </div>
-          <p className="text-xs text-zinc-450 font-bold flex flex-wrap items-center gap-x-2 gap-y-1 select-none">
+          <p className="text-[11px] sm:text-xs text-zinc-450 font-bold flex flex-wrap items-center gap-x-2 gap-y-1 select-none">
             <span>Today is {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</span>
             {liveTime && (
               <>
                 <span className="text-zinc-650">•</span>
-                <span className="flex items-center gap-1 text-zinc-300 bg-white/[0.03] border border-white/[0.05] px-2 py-0.5 rounded-md font-mono text-[10px]">
+                <span className="flex items-center gap-1 text-zinc-300 bg-white/[0.03] border border-white/[0.05] px-2 py-0.5 rounded-md font-mono text-[9.5px] sm:text-[10px]">
                   ⏰ {liveTime}
                 </span>
               </>
             )}
             <span className="text-zinc-650">•</span>
-            <span className="text-purple-400/90 font-extrabold">{currentCompanyName}</span>
+            <span className="text-purple-400/90 font-extrabold truncate">{currentCompanyName}</span>
           </p>
         </div>
 
         {/* CONTROLS (Customizer, Presets, Export, Share) */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full xl:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
           {/* Customizer Mode Toggle */}
           <button
             onClick={() => setIsCustomizeMode(!isCustomizeMode)}
             className={cn(
-              "flex items-center gap-2 px-3.5 py-1.8 rounded-xl text-xs font-bold transition-all border cursor-pointer",
+              "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 sm:py-1.8 rounded-xl text-[11px] sm:text-xs font-bold transition-all border cursor-pointer",
               isCustomizeMode
                 ? "bg-purple-500/15 text-purple-300 border-purple-500/35 shadow-lg shadow-purple-500/5 animate-pulse"
                 : "bg-zinc-950/40 text-zinc-400 hover:text-white border-zinc-850 hover:border-zinc-700"
             )}
           >
-            <SlidersHorizontal size={13} />
-            {isCustomizeMode ? "Exit Customizer" : "Customize Layout"}
+            <SlidersHorizontal size={12.5} />
+            <span>{isCustomizeMode ? "Exit" : "Customize"}</span>
           </button>
 
           {/* Layout Presets Selection */}
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-initial">
             <select
               value={layoutPreset}
               onChange={(e) => applyLayoutPreset(e.target.value)}
-              className="bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-850 text-zinc-350 hover:text-white px-3.5 py-1.8 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
+              className="w-full bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-850 text-zinc-350 hover:text-white px-3 sm:px-3.5 py-1.5 sm:py-1.8 rounded-xl text-[11px] sm:text-xs font-bold focus:outline-none cursor-pointer"
             >
               <option value="Default">Default Layout</option>
               <option value="Operations">Operations View</option>
@@ -945,7 +945,7 @@ export default function DashboardPage() {
 
           <button
             onClick={resetLayout}
-            className="p-2 bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-850 text-zinc-400 hover:text-white rounded-xl transition cursor-pointer"
+            className="p-1.5 sm:p-2 bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-850 text-zinc-400 hover:text-white rounded-xl transition cursor-pointer"
             title="Reset Dashboard Grid"
           >
             <RefreshCw size={13} />
@@ -956,16 +956,16 @@ export default function DashboardPage() {
           {/* Reports Panel Trigger */}
           <button
             onClick={() => setIsReportModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-1.8 bg-zinc-955/40 hover:bg-zinc-900 border border-zinc-850 hover:border-zinc-700 text-xs font-bold text-zinc-350 hover:text-white rounded-xl transition cursor-pointer"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 sm:py-1.8 bg-zinc-955/40 hover:bg-zinc-900 border border-zinc-850 hover:border-zinc-700 text-[11px] sm:text-xs font-bold text-zinc-350 hover:text-white rounded-xl transition cursor-pointer"
           >
             <Download size={12} />
-            <span>Generate Report</span>
+            <span className="hidden xs:inline">Generate</span> Report
           </button>
 
           {/* Share Dashboard Link */}
           <button
             onClick={() => setIsShareModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-1.8 bg-[#141416]/40 hover:bg-zinc-850 border border-zinc-850 hover:border-zinc-700/80 rounded-xl text-xs font-bold text-zinc-300 hover:text-white transition duration-250 cursor-pointer"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 sm:py-1.8 bg-[#141416]/40 hover:bg-zinc-850 border border-zinc-850 hover:border-zinc-700/80 rounded-xl text-[11px] sm:text-xs font-bold text-zinc-300 hover:text-white transition duration-250 cursor-pointer"
           >
             <Share2 size={12} />
             <span>Share</span>
@@ -976,49 +976,49 @@ export default function DashboardPage() {
       {/* ─── ACTION REQUIRED & TIMEFRAME COMMAND BAR ─────────────────────────────────── */}
       <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-2xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-md flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3 sm:gap-4">
         {/* Urgent Action Pills */}
-        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto min-w-0">
           <div
-            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 sm:py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold cursor-pointer hover:bg-red-500/15 transition shadow-sm"
+            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 sm:py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] sm:text-xs font-bold cursor-pointer hover:bg-red-500/15 transition shadow-sm min-w-0"
             onClick={() => router.push("/portal/quotes")}
           >
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 min-w-0 truncate">
               <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shrink-0" />
-              <span>2 Proposals Awaiting Sign-off</span>
+              <span className="truncate">2 Proposals Awaiting Sign-off</span>
             </span>
             <ChevronRight size={13} className="opacity-60 shrink-0" />
           </div>
 
           <div
-            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 sm:py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-bold cursor-pointer hover:bg-amber-500/15 transition shadow-sm"
+            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 sm:py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] sm:text-xs font-bold cursor-pointer hover:bg-amber-500/15 transition shadow-sm min-w-0"
             onClick={() => router.push("/finance")}
           >
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 min-w-0 truncate">
               <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
               <span className="font-mono tabular-nums">₹3,50,000</span>
-              <span>Milestone Advance Due</span>
+              <span className="truncate">Milestone Due</span>
             </span>
             <ChevronRight size={13} className="opacity-60 shrink-0" />
           </div>
 
           <div
-            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 sm:py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold cursor-pointer hover:bg-emerald-500/15 transition shadow-sm"
+            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 sm:py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] sm:text-xs font-bold cursor-pointer hover:bg-emerald-500/15 transition shadow-sm min-w-0"
             onClick={() => router.push("/events")}
           >
-            <span className="flex items-center gap-1.5 truncate">
+            <span className="flex items-center gap-1.5 min-w-0 truncate">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
-              <span className="truncate">Next: Sharma Wedding Gala (Taj Palace)</span>
+              <span className="truncate">Next: Sharma Wedding Gala</span>
             </span>
             <ChevronRight size={13} className="opacity-60 shrink-0" />
           </div>
         </div>
 
-        {/* Timeframe selector pills */}
-        <div className="flex items-center gap-1 bg-zinc-950/80 p-1 rounded-xl border border-zinc-800 w-full sm:w-auto overflow-x-auto no-scrollbar justify-between sm:justify-start">
+        {/* Timeframe selector pills - iOS style segmented on mobile */}
+        <div className="grid grid-cols-4 sm:flex items-center gap-1 bg-zinc-950/80 p-1 rounded-xl border border-zinc-800 w-full sm:w-auto text-center shrink-0">
           {[
             { id: "TODAY", label: "Today" },
-            { id: "WEEK", label: "This Week" },
-            { id: "MONTH", label: "This Month" },
-            { id: "FY26", label: "FY 2026-27" },
+            { id: "WEEK", label: "Week" },
+            { id: "MONTH", label: "Month" },
+            { id: "FY26", label: "FY26" },
           ].map((tf) => (
             <button
               key={tf.id}
@@ -1027,7 +1027,7 @@ export default function DashboardPage() {
                 addToast(`Filtered dashboard metrics: ${tf.label}`, "info");
               }}
               className={cn(
-                "px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                "px-2 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap text-center",
                 timeRange === tf.id
                   ? "bg-purple-600 text-white shadow-sm"
                   : "text-zinc-400 hover:text-zinc-200"
@@ -1040,7 +1040,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── QUICK COMMAND ROW ────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 mb-4 sm:mb-6 select-none bg-zinc-950/20 border border-zinc-900 p-2 sm:p-2.5 rounded-2xl overflow-x-auto no-scrollbar touch-pan-x">
+      <div className="flex items-center gap-2 sm:gap-2.5 mb-4 sm:mb-6 select-none bg-zinc-950/20 border border-zinc-900 p-2 sm:p-2.5 rounded-2xl overflow-x-auto no-scrollbar touch-pan-x">
         <span className="text-[9px] font-black uppercase tracking-widest text-zinc-550 pl-2 shrink-0 hidden sm:inline">Quick Action Console:</span>
         {[
           { label: "Create Lead", icon: Users, type: "lead" },
@@ -1058,10 +1058,10 @@ export default function DashboardPage() {
                 if (act.type) setIsQuickActionOpen(act.type);
                 else if (act.route) router.push(act.route);
               }}
-              className="flex items-center gap-2 px-3.5 py-1.5 bg-[#141416]/40 hover:bg-zinc-850 border border-zinc-850 hover:border-purple-500/20 rounded-xl text-xs font-bold text-zinc-300 hover:text-white transition duration-200 cursor-pointer shadow-md active:scale-98"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 bg-[#141416]/40 hover:bg-zinc-850 border border-zinc-850 hover:border-purple-500/20 rounded-xl text-[11px] sm:text-xs font-bold text-zinc-300 hover:text-white transition duration-200 cursor-pointer shadow-md active:scale-98 shrink-0 whitespace-nowrap"
             >
-              <Icon size={12.5} className="text-purple-400" />
-              {act.label}
+              <Icon size={12} className="text-purple-400 shrink-0" />
+              <span>{act.label}</span>
             </button>
           );
         })}
@@ -1110,11 +1110,16 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ─── WIDGET GRID LAYOUT ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {widgetOrder
           .filter((w) => w.visible)
           .map((widget) => {
-            const sizeClass = widget.colSpan;
+            const sizeClass =
+              widget.colSpan === "col-span-3"
+                ? "col-span-1 lg:col-span-3"
+                : widget.colSpan === "col-span-2"
+                ? "col-span-1 lg:col-span-2"
+                : "col-span-1";
 
             return (
               <motion.div
@@ -1166,7 +1171,7 @@ export default function DashboardPage() {
 
                 {/* RADAR: EVENT OPERATIONS RADAR (THIS WEEK) */}
                 {widget.id === "radar" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[300px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[300px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2.5">
@@ -1255,7 +1260,7 @@ export default function DashboardPage() {
 
                 {/* 0. CONTROL CENTER WIDGET */}
                 {widget.id === "control" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[340px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
                         <div>
@@ -1390,7 +1395,7 @@ export default function DashboardPage() {
 
                 {/* 1. HEALTH SCORE WIDGET */}
                 {widget.id === "health" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[340px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
                         <div>
@@ -1456,7 +1461,7 @@ export default function DashboardPage() {
 
                 {/* 2. TODAY'S FOCUS PRIORITY CHECKS */}
                 {widget.id === "priority" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[340px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1519,7 +1524,7 @@ export default function DashboardPage() {
 
                 {/* 3. AI BUSINESS ADVISOR */}
                 {widget.id === "advisor" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[340px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1564,7 +1569,7 @@ export default function DashboardPage() {
 
                 {/* 4. KPI CARDS (FULL WIDTH GRID INCLUDED IN A SINGLE WIDGET) */}
                 {widget.id === "kpi" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                     {[
                       { title: "Total Revenue Collections", value: kpiMetrics.revenue, prefix: "₹", suffix: "", trend: kpiMetrics.growthPercent, points: [410, 530, 480, 690, 820, kpiMetrics.revenue / 1000], isPos: true, comparison: "vs last month", icon: DollarSign, color: "from-purple-500 to-pink-500" },
                       { title: "Outstanding Collections", value: kpiMetrics.outstanding, prefix: "₹", suffix: "", trend: -8.2, points: [180, 172, 160, 155, 150, kpiMetrics.outstanding / 1000], isPos: false, comparison: "vs last month", icon: Clock, color: "from-amber-500 to-red-500" },
@@ -1585,28 +1590,28 @@ export default function DashboardPage() {
                       return (
                         <div
                           key={kpi.title}
-                          className="group relative p-5 rounded-2xl border border-zinc-850 bg-[#121214]/30 hover:border-zinc-700 min-h-[145px] hover:shadow-[0_0_30px_rgba(139,92,246,0.02)] transition-all duration-300 select-none cursor-pointer overflow-hidden"
+                          className="group relative p-3.5 sm:p-5 rounded-2xl border border-zinc-850 bg-[#121214]/30 hover:border-zinc-700 min-h-[130px] sm:min-h-[145px] hover:shadow-[0_0_30px_rgba(139,92,246,0.02)] transition-all duration-300 select-none cursor-pointer overflow-hidden"
                         >
                           <div className={cn("absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br opacity-5 blur-[40px] rounded-full group-hover:opacity-10 transition-opacity", kpi.color)} />
 
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="space-y-1">
-                              <span className="text-[9.5px] font-bold text-zinc-555 uppercase tracking-widest block leading-none">{kpi.title}</span>
-                              <p className="text-2xl font-black tracking-tight text-zinc-150 group-hover:text-white transition-colors mt-1 font-mono">
+                          <div className="flex justify-between items-start gap-2 sm:gap-4">
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <span className="text-[9px] sm:text-[9.5px] font-bold text-zinc-555 uppercase tracking-widest block leading-none truncate">{kpi.title}</span>
+                              <p className="text-lg sm:text-2xl font-black tracking-tight text-zinc-150 group-hover:text-white transition-colors mt-1 font-mono truncate">
                                 <AnimatedNumber value={kpi.value} prefix={kpi.prefix} suffix={kpi.suffix} />
                               </p>
                             </div>
-                            <div className={cn("h-7 w-7 rounded-lg bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40", kpi.color)}>
+                            <div className={cn("h-7 w-7 rounded-lg bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40 shrink-0", kpi.color)}>
                               <Icon size={12} className="text-zinc-100" />
                             </div>
                           </div>
 
-                          <div className="flex justify-between items-end pt-4 border-t border-zinc-900 mt-3">
-                            <div className="space-y-0.5">
-                              <div className={cn("flex items-center gap-1 text-[10.5px] font-bold", trendIsPositive ? "text-emerald-500" : "text-red-500")}>
-                                {trendIsPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                          <div className="flex justify-between items-end pt-3 sm:pt-4 border-t border-zinc-900 mt-2 sm:mt-3">
+                            <div className="space-y-0.5 min-w-0">
+                              <div className={cn("flex items-center gap-1 text-[10px] sm:text-[10.5px] font-bold", trendIsPositive ? "text-emerald-500" : "text-red-500")}>
+                                {trendIsPositive ? <ArrowUpRight size={12} className="shrink-0" /> : <ArrowDownRight size={12} className="shrink-0" />}
                                 <span>{trendIsPositive ? "+" : ""}{kpi.trend}%</span>
-                                <span className="text-zinc-555 font-normal text-[9px] lowercase leading-none">{kpi.comparison}</span>
+                                <span className="text-zinc-555 font-normal text-[8.5px] sm:text-[9px] lowercase leading-none hidden xs:inline">{kpi.comparison}</span>
                               </div>
                             </div>
                             <Sparkline data={kpi.points} isPositive={trendIsPositive} />
@@ -1619,7 +1624,7 @@ export default function DashboardPage() {
 
                 {/* 5. SALES ANALYTICS FUNNEL */}
                 {widget.id === "sales" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">CRM Leads Funnel</span>
@@ -1670,7 +1675,7 @@ export default function DashboardPage() {
 
                 {/* 6. FINANCE DASHBOARD FLOW */}
                 {widget.id === "finance" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
@@ -1744,7 +1749,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-zinc-900 flex justify-between items-center text-[10px] font-bold text-zinc-500">
+                    <div className="pt-3 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0 text-[10px] font-bold text-zinc-500">
                       <span>Operating Cost Index: <strong className="text-zinc-200">₹3,84,000</strong></span>
                       <span>Total Unbilled Assets: <strong className="text-purple-400">₹94,000</strong></span>
                     </div>
@@ -1753,7 +1758,7 @@ export default function DashboardPage() {
 
                 {/* 7. EVENT & PACKAGE TRACKER */}
                 {widget.id === "events" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Operational Metrics</span>
@@ -1801,7 +1806,7 @@ export default function DashboardPage() {
 
                 {/* 8. TEAM PERFORMANCE & BURNOUT */}
                 {widget.id === "team" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-3">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Resource roster metrics</span>
@@ -1857,7 +1862,7 @@ export default function DashboardPage() {
 
                 {/* 9. CLIENT INSIGHTS & NPS */}
                 {widget.id === "clients" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Client Satisfaction Index</span>
@@ -1908,7 +1913,7 @@ export default function DashboardPage() {
 
                 {/* 10. MEDIA STORAGE ANALYTICS */}
                 {widget.id === "media" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Photo Album Resources</span>
@@ -1964,7 +1969,7 @@ export default function DashboardPage() {
 
                 {/* 11. WORKSPACE TIMELINE LOGS */}
                 {widget.id === "activity" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Audit Security Logs</span>
@@ -1989,7 +1994,7 @@ export default function DashboardPage() {
 
                 {/* 12. CORPORATE GOALS PROGRESS */}
                 {widget.id === "goals" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -2035,7 +2040,7 @@ export default function DashboardPage() {
 
                 {/* 13. PREDICTIVE BUSINESS GROWTH */}
                 {widget.id === "forecasting" && (
-                  <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">AI Business Forecasting</span>
@@ -2084,7 +2089,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-zinc-900 flex justify-between items-center text-[10px] font-bold text-zinc-555">
+                    <div className="pt-3 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0 text-[10px] font-bold text-zinc-555">
                       <span>Staff Shortage Warning: <strong className="text-red-400">Nov/Dec Wedding Season</strong></span>
                       <span>Storage Full Projection: <strong className="text-amber-500">24 Days</strong></span>
                     </div>
@@ -2110,7 +2115,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="relative w-full max-w-lg bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-5 z-50 text-xs text-zinc-300 select-none"
+              className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 z-50 text-xs text-zinc-300 select-none"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -2194,7 +2199,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="relative w-full max-w-md bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-4 z-50 text-xs text-zinc-300"
+              className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl shadow-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-zinc-300"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -2272,7 +2277,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="relative w-full max-w-md bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-4 z-50 text-xs text-zinc-300"
+              className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl shadow-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-zinc-300"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -2346,7 +2351,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="relative w-full max-w-sm bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl p-6 space-y-4 z-50 text-xs text-zinc-300"
+                className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-zinc-300"
               >
                 <h3 className="text-sm font-extrabold text-white">Create New Lead Inbound</h3>
                 <form
@@ -2379,7 +2384,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="relative w-full max-w-sm bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl p-6 space-y-4 z-50 text-xs text-zinc-300"
+                className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-zinc-300"
               >
                 <h3 className="text-sm font-extrabold text-white">Confirm Booking Order</h3>
                 <form
@@ -2416,7 +2421,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="relative w-full max-w-sm bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl p-6 space-y-4 z-50 text-xs text-zinc-300"
+                className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-zinc-300"
               >
                 <h3 className="text-sm font-extrabold text-white">Generate Ledger Invoice</h3>
                 <form
@@ -2449,7 +2454,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="relative w-full max-w-sm bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl p-6 space-y-4 z-50 text-xs text-zinc-300"
+                className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-[#0c0c0e]/95 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-zinc-300"
               >
                 <h3 className="text-sm font-extrabold text-white">Invite Roster Team Member</h3>
                 <form

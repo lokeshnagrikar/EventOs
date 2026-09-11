@@ -727,13 +727,13 @@ export default function CrmPage() {
         </div>
 
         {/* View Mode Switcher */}
-        <div className="flex bg-zinc-950/60 border border-zinc-850 p-0.5 rounded-xl self-start font-semibold">
+        <div className="flex items-center bg-zinc-950/60 border border-zinc-850 p-0.5 rounded-xl self-start font-semibold overflow-x-auto no-scrollbar max-w-full touch-pan-x">
           {(["dashboard", "board", "table", "list", "compact", "timeline", "recycle"] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => handleSetViewMode(mode)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold rounded-lg transition-all cursor-pointer",
+                "flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold rounded-lg transition-all cursor-pointer shrink-0 whitespace-nowrap",
                 viewMode === mode ? "bg-zinc-800 text-purple-400" : "text-zinc-500 hover:text-zinc-300"
               )}
             >

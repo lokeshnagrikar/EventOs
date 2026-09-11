@@ -226,7 +226,7 @@ export default function EventsDashboard() {
     }
   });
 
-  const events = useMemo(() => {
+  const events = useMemo<Event[]>(() => {
     if (Array.isArray(eventsResponse?.data)) return eventsResponse.data;
     if (Array.isArray((eventsResponse as any)?.data?.content)) return (eventsResponse as any).data.content;
     if (Array.isArray((eventsResponse as any)?.content)) return (eventsResponse as any).content;
@@ -359,7 +359,7 @@ export default function EventsDashboard() {
 
     // 1. Double booking warning (same resource assigned to two active events on same date)
     const resourceDateMap: Record<string, string[]> = {}; // resourceId -> list of dates
-    const activeEventsList = events.filter(e => e.status !== "COMPLETED" && e.status !== "CANCELLED");
+    const activeEventsList = events.filter((e: Event) => e.status !== "COMPLETED" && e.status !== "CANCELLED");
 
     activeEventsList.forEach((ev: any) => {
       if (!ev.startDate) return;
@@ -397,7 +397,7 @@ export default function EventsDashboard() {
         // Check if assigned anywhere
         Object.entries(assignments).forEach(([evId, alloc]) => {
           if ((alloc.vehicles || []).includes(veh.id)) {
-            const evName = events.find(e => e.id === evId)?.name || "Active Event";
+            const evName = events.find((e: Event) => e.id === evId)?.name || "Active Event";
             warnings.push(`Vehicle Conflict Warning: Vehicle '${veh.name}' (${veh.plateNumber}) is in MAINTENANCE but allocated to '${evName}'!`);
           }
         });
@@ -408,8 +408,8 @@ export default function EventsDashboard() {
   }, [events, assignments, resources, inventory, vehicles]);
 
   // Search filter
-  const filteredEvents = useMemo(() => {
-    return events.filter((e) => {
+  const filteredEvents = useMemo<Event[]>(() => {
+    return events.filter((e: Event) => {
       const name = (e.name || "").toLowerCase();
       const vName = (e.venueName || "").toLowerCase();
       const loc = (e.location || "").toLowerCase();
@@ -433,15 +433,15 @@ export default function EventsDashboard() {
 
   // KPIs
   const kpiData = useMemo(() => {
-    const active = events.filter((e) => e.status === "IN_PROGRESS").length;
-    const upcoming = events.filter((e) => ["PLANNING", "CONFIRMED", "IN_PREPARATION"].includes(e.status)).length;
-    const completed = events.filter((e) => e.status === "COMPLETED").length;
-    const cancelled = events.filter((e) => e.status === "CANCELLED").length;
+    const active = events.filter((e: Event) => e.status === "IN_PROGRESS").length;
+    const upcoming = events.filter((e: Event) => ["PLANNING", "CONFIRMED", "IN_PREPARATION"].includes(e.status)).length;
+    const completed = events.filter((e: Event) => e.status === "COMPLETED").length;
+    const cancelled = events.filter((e: Event) => e.status === "CANCELLED").length;
 
-    const totalBudget = events.reduce((sum: number, e: any) => sum + (Number(e.budget) || 0), 0);
+    const totalBudget = events.reduce((sum: number, e: Event) => sum + (Number(e.budget) || 0), 0);
     const budgetUsed = events
-      .filter((e: any) => e.status === "COMPLETED" || e.status === "IN_PROGRESS")
-      .reduce((sum: number, e: any) => sum + (Number(e.budget) || 0), 0) * 0.85;
+      .filter((e: Event) => e.status === "COMPLETED" || e.status === "IN_PROGRESS")
+      .reduce((sum: number, e: Event) => sum + (Number(e.budget) || 0), 0) * 0.85;
     const budgetRemaining = Math.max(0, totalBudget - budgetUsed);
 
     return { active, upcoming, completed, cancelled, totalBudget, budgetUsed, budgetRemaining };
@@ -649,8 +649,8 @@ export default function EventsDashboard() {
     <div className="space-y-6 select-none text-zinc-300">
 
       {/* Category selector row */}
-      <div className="flex bg-zinc-900 border border-zinc-850 p-1.5 rounded-2xl text-[10.5px] font-bold uppercase select-none w-full justify-between items-center gap-2 relative">
-        <div className="flex items-center gap-1.5 overflow-x-auto">
+      <div className="flex flex-col sm:flex-row bg-zinc-900 border border-zinc-850 p-1.5 rounded-2xl text-[10.5px] font-bold uppercase select-none w-full justify-between items-stretch sm:items-center gap-2 relative">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar touch-pan-x min-w-0 pb-1 sm:pb-0">
           {([
             { key: "pipelines", label: "Pipelines & Events", icon: FolderKanban },
             { key: "checkin", label: "Venue Check-in (PWA)", icon: Zap },
@@ -665,7 +665,7 @@ export default function EventsDashboard() {
                 key={cat.key}
                 onClick={() => setMainCategory(cat.key)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap uppercase text-[10px] font-black tracking-wider",
+                  "flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 uppercase text-[10px] font-black tracking-wider",
                   mainCategory === cat.key ? "bg-purple-950/20 text-purple-400 border border-purple-900/40 shadow-sm" : "text-zinc-500 hover:text-zinc-350 border border-transparent"
                 )}
               >
@@ -677,15 +677,17 @@ export default function EventsDashboard() {
         </div>
 
         {/* Global Warning Counter indicator */}
-        {conflictWarnings.length > 0 ? (
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-red-950/20 border border-red-500/20 rounded-xl text-red-400 font-extrabold text-[9px] animate-pulse">
-            <AlertTriangle size={11} /> {conflictWarnings.length} OPERATIONS CONFLICTS
-          </div>
-        ) : (
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-950/20 border border-emerald-500/20 rounded-xl text-emerald-400 font-extrabold text-[9px]">
-            <CheckCircle2 size={11} /> 0 OPERATIONS CONFLICTS
-          </div>
-        )}
+        <div className="shrink-0 self-start sm:self-center">
+          {conflictWarnings.length > 0 ? (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-red-950/20 border border-red-500/20 rounded-xl text-red-400 font-extrabold text-[9px] animate-pulse whitespace-nowrap">
+              <AlertTriangle size={11} /> {conflictWarnings.length} OPERATIONS CONFLICTS
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-950/20 border border-emerald-500/20 rounded-xl text-emerald-400 font-extrabold text-[9px] whitespace-nowrap">
+              <CheckCircle2 size={11} /> 0 OPERATIONS CONFLICTS
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Dynamic Warnings log banner */}
@@ -730,7 +732,7 @@ export default function EventsDashboard() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
-                "p-2 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer",
+                "p-2 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0",
                 showFilters || statusFilter !== "ALL" || typeFilter !== "ALL"
                   ? "border-purple-500/40 bg-purple-500/10 text-purple-400"
                   : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200"
@@ -746,10 +748,10 @@ export default function EventsDashboard() {
         </div>
 
         {/* View Selection Tabs (Conditional on Category) */}
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full lg:w-auto justify-between lg:justify-end">
           {mainCategory === "pipelines" ? (
             <>
-              <div className="flex bg-zinc-950/60 border border-zinc-850 p-0.5 rounded-xl text-[10px] font-bold">
+              <div className="flex bg-zinc-950/60 border border-zinc-850 p-0.5 rounded-xl text-[10px] font-bold overflow-x-auto no-scrollbar touch-pan-x max-w-full">
                 {[
                   { id: "dashboard", label: "Overview", icon: FolderKanban },
                   { id: "grid", label: "Grid", icon: Grid },
@@ -765,7 +767,7 @@ export default function EventsDashboard() {
                       key={tab.id}
                       onClick={() => handleTabChange(tab.id as any)}
                       className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer font-extrabold uppercase",
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer font-extrabold uppercase whitespace-nowrap shrink-0",
                         activeTab === tab.id ? "bg-zinc-800 text-purple-400" : "text-zinc-500 hover:text-zinc-350"
                       )}
                     >
@@ -778,7 +780,7 @@ export default function EventsDashboard() {
 
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition shadow-md active:scale-95 cursor-pointer animate-pulse"
+                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition shadow-md active:scale-95 cursor-pointer whitespace-nowrap shrink-0 animate-pulse"
               >
                 <Plus size={13} />
                 Create Event
@@ -941,7 +943,7 @@ export default function EventsDashboard() {
                                     primaryAction={{ label: "Create Event", onClick: () => setShowCreateModal(true) }}
                                   />
                                 ) : (
-                                  filteredEvents.slice(0, 4).map((e) => (
+                                  filteredEvents.slice(0, 4).map((e: Event) => (
                                     <div
                                       key={e.id}
                                       onClick={() => router.push(`/events/${e.id}`)}
@@ -987,7 +989,7 @@ export default function EventsDashboard() {
                     {/* 2. GRID */}
                     {activeTab === "grid" && (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredEvents.map((e, idx) => (
+                        {filteredEvents.map((e: Event, idx: number) => (
                           <EventCard key={e.id} event={e} index={idx} />
                         ))}
                         {filteredEvents.length === 0 && <GlobalEmptyState variant="events" icon={CalendarIcon} title="No Events found" description="Initialize a new event workspace!" />}
@@ -1010,7 +1012,7 @@ export default function EventsDashboard() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-850/40">
-                            {filteredEvents.map((e) => (
+                            {filteredEvents.map((e: Event) => (
                               <tr key={e.id} className="hover:bg-zinc-900/10 text-zinc-300 transition-colors">
                                 <td className="p-4 font-extrabold text-zinc-200">{e.name}</td>
                                 <td className="p-4">
@@ -1042,17 +1044,17 @@ export default function EventsDashboard() {
                         {(provided) => (
                           <div ref={provided.innerRef} {...provided.droppableProps} className="flex gap-4 overflow-x-auto pb-4">
                             {COLUMNS.map((column) => {
-                              const colEvents = filteredEvents.filter((e) => e.status === column.id);
+                              const colEvents = filteredEvents.filter((e: Event) => e.status === column.id);
                               return (
                                 <div key={column.id} className="w-80 shrink-0 flex flex-col bg-[#111113]/30 border border-zinc-850 rounded-2xl p-4 space-y-4">
                                   <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
                                     <span className="text-[10px] font-black uppercase text-zinc-450 tracking-wider">{column.label}</span>
-                                    <span className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full font-bold">{colEvents.length}</span>
+                                    <span className="text-[10px] font-mono bg-zinc-900 border border-zinc-850 text-zinc-400 px-2 py-0.5 rounded-full font-bold">{colEvents.length}</span>
                                   </div>
                                   <Droppable droppableId={column.id} type="CARD">
                                     {(prov) => (
                                       <div ref={prov.innerRef} {...prov.droppableProps} className="flex-1 space-y-3 min-h-[300px]">
-                                        {colEvents.map((e, idx) => (
+                                        {colEvents.map((e: Event, idx: number) => (
                                           <Draggable key={e.id} draggableId={e.id} index={idx}>
                                             {(dragProv) => (
                                               <div
@@ -1114,7 +1116,7 @@ export default function EventsDashboard() {
                               const dayStr = String(dayNumber).padStart(2, "0");
                               const datePrefix = `${year}-${monthStr}-${dayStr}`;
                               const matched = isCurrentMonth
-                                ? filteredEvents.filter(e => e.startDate && e.startDate.startsWith(datePrefix))
+                                ? filteredEvents.filter((e: Event) => e.startDate && e.startDate.startsWith(datePrefix))
                                 : [];
                               const isToday = isCurrentMonth &&
                                 new Date().toDateString() === new Date(year, month, dayNumber).toDateString();
@@ -1139,7 +1141,7 @@ export default function EventsDashboard() {
                                     )}
                                   </div>
                                   <div className="space-y-1 mt-1">
-                                    {matched.slice(0, 2).map(e => (
+                                    {matched.slice(0, 2).map((e: Event) => (
                                       <div key={e.id} className="text-[7.5px] font-extrabold uppercase bg-purple-950/30 border border-purple-900/30 text-purple-400 p-0.5 rounded truncate leading-tight" title={e.name}>
                                         {e.name}
                                       </div>
@@ -1164,7 +1166,7 @@ export default function EventsDashboard() {
                           {filteredEvents.length === 0 ? (
                             <div className="text-zinc-550 text-xs py-8 italic">No events scheduled on timeline.</div>
                           ) : (
-                            filteredEvents.map((e, idx) => (
+                            filteredEvents.map((e: Event, idx: number) => (
                               <div key={e.id} className="relative group">
                                 <span className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full bg-zinc-900 border-2 border-purple-650" />
                                 <div className="p-4 bg-zinc-950/40 border border-zinc-850 rounded-xl hover:border-zinc-800 transition space-y-1">
@@ -1196,7 +1198,7 @@ export default function EventsDashboard() {
                       <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
                         <span className="text-[8px] text-zinc-550 uppercase font-black block">Today's executions</span>
                         <div className="space-y-3">
-                          {filteredEvents.map(e => (
+                          {filteredEvents.map((e: Event) => (
                             <div key={e.id} className="flex justify-between items-center p-3 bg-zinc-950/30 border border-zinc-850 rounded-xl">
                               <div className="space-y-0.5">
                                 <span className="font-extrabold text-zinc-200 text-xs block">{e.name}</span>
@@ -1321,7 +1323,7 @@ export default function EventsDashboard() {
                   <div className="lg:col-span-1 space-y-4">
                     <span className="text-[9px] uppercase font-black text-zinc-550 block tracking-wider font-mono">Allocation pipelines drops</span>
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-                      {events.filter(e => e.status !== "COMPLETED").map(ev => {
+                      {events.filter((e: Event) => e.status !== "COMPLETED").map((ev: Event) => {
                         const allocs = assignments[ev.id]?.resources || [];
                         return (
                           <Droppable key={ev.id} droppableId={`event-assign-${ev.id}`}>

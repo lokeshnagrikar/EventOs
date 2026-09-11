@@ -167,33 +167,33 @@ export default function QuotesPage() {
       ) : (
         <div className="space-y-6">
           {/* Summary KPI Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Total Proposals</span>
-              <p className="text-xl font-black text-white font-mono tabular-nums">{quotes.length}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+            <div className="p-3 sm:p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block truncate">Total Proposals</span>
+              <p className="text-lg sm:text-xl font-black text-white font-mono tabular-nums truncate">{quotes.length}</p>
             </div>
-            <div className="p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Pipeline Value</span>
-              <p className="text-xl font-black text-emerald-400 font-mono tabular-nums">
+            <div className="p-3 sm:p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block truncate">Pipeline Value</span>
+              <p className="text-lg sm:text-xl font-black text-emerald-400 font-mono tabular-nums truncate">
                 ₹{quotes.reduce((acc, q) => acc + (q.total || 0), 0).toLocaleString("en-IN")}
               </p>
             </div>
-            <div className="p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Accepted Deals</span>
-              <p className="text-xl font-black text-purple-400 font-mono tabular-nums">
+            <div className="p-3 sm:p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block truncate">Accepted Deals</span>
+              <p className="text-lg sm:text-xl font-black text-purple-400 font-mono tabular-nums truncate">
                 {quotes.filter((q) => ["ACCEPTED", "APPROVED", "PAID", "E_SIGNED"].includes(q.status)).length}
               </p>
             </div>
-            <div className="p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Awaiting Sign-Off</span>
-              <p className="text-xl font-black text-amber-400 font-mono tabular-nums">
+            <div className="p-3 sm:p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block truncate">Awaiting Sign-Off</span>
+              <p className="text-lg sm:text-xl font-black text-amber-400 font-mono tabular-nums truncate">
                 {quotes.filter((q) => ["SENT", "VIEWED", "PENDING", "DRAFT"].includes(q.status)).length}
               </p>
             </div>
           </div>
 
           {/* Grid Layout of Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {quotes.map((q) => {
               const statusStyle = STATUS_COLORS[q.status] || "border-zinc-800 text-zinc-400";
               const templateLabel = TEMPLATE_LABELS[q.templateName] || q.templateName;
@@ -202,7 +202,7 @@ export default function QuotesPage() {
                 <div
                   key={q.id}
                   onClick={() => router.push(`/quotes/${q.id}`)}
-                  className="p-5 rounded-2xl border border-zinc-800/80 bg-[#121214]/50 hover:border-purple-500/30 hover:bg-[#121214]/80 transition-all cursor-pointer flex flex-col justify-between h-[215px] hover:shadow-xl hover:shadow-purple-500/5 group"
+                  className="p-4 sm:p-5 rounded-2xl border border-zinc-800/80 bg-[#121214]/50 hover:border-purple-500/30 hover:bg-[#121214]/80 transition-all cursor-pointer flex flex-col justify-between h-[215px] hover:shadow-xl hover:shadow-purple-500/5 group"
                 >
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">

@@ -112,7 +112,7 @@ export default function PageShell({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 350 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-[#09090b] flex flex-col justify-between border-r border-slate-200/80 dark:border-white/[0.06] shadow-2xl md:hidden overflow-hidden pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,16px)]"
+              className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-[#09090b] flex flex-col justify-between border-r border-slate-200/80 dark:border-white/[0.06] shadow-2xl md:hidden overflow-hidden pt-[max(env(safe-area-inset-top,0px),0.75rem)] pb-[max(env(safe-area-inset-bottom,0px),1rem)]"
             >
               <Sidebar
                 isCollapsed={false}
@@ -138,7 +138,7 @@ export default function PageShell({
           id="main-content"
           data-lenis-prevent
           className={cn(
-            "flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto pb-28 md:pb-24 scrollbar-none hover:scrollbar-thin",
+            "flex-1 overflow-y-auto min-w-0 max-w-full overflow-x-hidden px-3 py-3.5 sm:px-6 sm:py-6 md:p-8 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto pb-28 md:pb-24 scrollbar-none hover:scrollbar-thin",
             className
           )}
         >
@@ -154,29 +154,29 @@ export default function PageShell({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-zinc-800/80 pb-4 sm:pb-6 mb-4 sm:mb-6 pt-1"
+              className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-zinc-800/80 pb-3.5 sm:pb-6 mb-3.5 sm:mb-6 pt-1"
             >
-              <div>
+              <div className="min-w-0 flex-1">
                 {/* Breadcrumbs */}
                 {breadcrumbs && breadcrumbs.length > 0 && (
                   <nav
                     aria-label="Breadcrumb"
-                    className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-medium mb-3 tracking-wide"
+                    className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-medium mb-2 sm:mb-3 tracking-wide overflow-x-auto no-scrollbar"
                   >
                     {breadcrumbs.map((crumb, idx) => (
                       <React.Fragment key={idx}>
                         {idx > 0 && (
-                          <ChevronRight size={12} className="text-zinc-600" />
+                          <ChevronRight size={12} className="text-zinc-600 shrink-0" />
                         )}
                         {crumb.href ? (
                           <Link
                             href={crumb.href}
-                            className="hover:text-white transition-colors"
+                            className="hover:text-white transition-colors truncate"
                           >
                             {crumb.label}
                           </Link>
                         ) : (
-                          <span className="text-zinc-400">{crumb.label}</span>
+                          <span className="text-zinc-400 truncate">{crumb.label}</span>
                         )}
                       </React.Fragment>
                     ))}
@@ -184,20 +184,19 @@ export default function PageShell({
                 )}
 
                 {title && (
-                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white leading-snug">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white leading-snug truncate">
                     {title}
                   </h2>
                 )}
                 {subtitle && (
-                  <p className="text-xs md:text-sm text-zinc-400 mt-2 font-normal leading-relaxed">
+                  <p className="text-[11px] sm:text-xs md:text-sm text-zinc-400 mt-1 sm:mt-2 font-normal leading-relaxed">
                     {subtitle}
                   </p>
                 )}
               </div>
 
-
               {actions && (
-                <div className="flex items-center gap-3 shrink-0">{actions}</div>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0 w-full md:w-auto">{actions}</div>
               )}
             </motion.div>
           )}

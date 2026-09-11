@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
@@ -20,6 +20,17 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
   weight: ["400", "500", "600", "700", "800"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0B0F19" },
+    { media: "(prefers-color-scheme: light)", color: "#FAF9F6" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: "EventOS | The Operating System for Event Businesses",

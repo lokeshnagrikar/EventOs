@@ -417,7 +417,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
   const crumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-40 h-[60px] w-full border-b border-border bg-card/95 backdrop-blur-2xl px-5 flex items-center justify-between shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-colors select-none">
+    <header className="sticky top-0 z-40 h-[60px] w-full border-b border-border bg-card/95 backdrop-blur-2xl px-3 sm:px-5 flex items-center justify-between shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-colors select-none">
       
       {/* ── LEFT: BREADCRUMBS & MOBILE MENU TRIGGER ── */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -430,7 +430,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
         </button>
 
         {/* Mobile current title */}
-        <span className="sm:hidden text-xs font-extrabold text-foreground truncate max-w-[130px]">
+        <span className="sm:hidden text-xs font-extrabold text-foreground truncate max-w-[140px]">
           {crumbs[crumbs.length - 1]?.label || "Dashboard"}
         </span>
 
@@ -542,17 +542,17 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute right-0 mt-2.5 w-[390px] max-w-[calc(100vw-1.5rem)] border border-zinc-800 bg-zinc-950 text-zinc-100 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] ring-1 ring-white/10 z-[60] overflow-hidden text-xs flex flex-col"
+                  className="absolute -right-2 sm:right-0 mt-2.5 w-[calc(100vw-1.5rem)] sm:w-[380px] max-w-[390px] border border-zinc-800 bg-zinc-950 text-zinc-100 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] ring-1 ring-white/10 z-[60] overflow-hidden text-xs flex flex-col"
                 >
                   {/* Top Bar Header */}
-                  <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-6 w-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                  <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                      <div className="h-6 w-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
                         <Zap size={13} />
                       </div>
-                      <span className="font-extrabold text-sm text-zinc-100 tracking-tight">Workspace Feed</span>
+                      <span className="font-extrabold text-xs sm:text-sm text-zinc-100 tracking-tight truncate">Workspace Feed</span>
                       {unreadCount > 0 && (
-                        <span className="bg-purple-500/20 text-purple-400 font-extrabold px-2 py-0.5 rounded-full text-[10px] tabular-nums border border-purple-500/30">
+                        <span className="bg-purple-500/20 text-purple-400 font-extrabold px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] tabular-nums border border-purple-500/30 shrink-0">
                           {unreadCount} new
                         </span>
                       )}
