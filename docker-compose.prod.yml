@@ -82,6 +82,8 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - APP_MAIL_FROM=${APP_MAIL_FROM:-support@eventosapp.in}
       - FRONTEND_URL=${FRONTEND_URL:-https://eventosapp.in}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-e7f9a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-171503360314-e51mor0dee5v5f5jqi3gincelrhuva4l.apps.googleusercontent.com}
     depends_on:
       postgres:
         condition: service_healthy
