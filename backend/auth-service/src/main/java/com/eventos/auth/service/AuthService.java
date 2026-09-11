@@ -330,7 +330,7 @@ public class AuthService {
 
         // Email Verification Check (Auto-verify platform superadmin and system domain accounts)
         if (!user.isEmailVerified()) {
-            if (email.endsWith("@eventos.co") || email.endsWith("@eventos.com")
+            if (email.endsWith("@eventos.co") || email.endsWith("@eventos.com") || email.endsWith("@eventosapp.in")
                     || (selectedMembership.getRole() != null && "SUPER_ADMIN".equals(selectedMembership.getRole().getName()))) {
                 user.setEmailVerified(true);
                 userRepository.save(user);
@@ -347,7 +347,7 @@ public class AuthService {
 
         // Extract permissions
         List<String> permissions = extractPermissionsFromRole(selectedMembership.getRole());
-        if (email.endsWith("@eventos.co") || email.endsWith("@eventos.com")) {
+        if (email.endsWith("@eventos.co") || email.endsWith("@eventos.com") || email.endsWith("@eventosapp.in")) {
             String rolePrefix = email.split("@")[0];
             if (!"admin".equals(rolePrefix)) {
                 permissions = List.of(rolePrefix);

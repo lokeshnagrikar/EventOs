@@ -181,6 +181,48 @@ export default function SuperAdminLoginPage() {
           </motion.div>
         )}
 
+        {/* Rapid Clearance Presets for Testing & RBAC Verification */}
+        <div className="mb-5 p-3 rounded-2xl bg-zinc-950/60 border border-zinc-800/80">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400">
+              Clearance Role Presets
+            </span>
+            <span className="text-[9px] font-mono text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
+              One-Click Select
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {[
+              { label: "Root SuperAdmin", email: "admin@eventosapp.in", badge: "All Operations" },
+              { label: "Operations Lead", email: "operations@eventosapp.in", badge: "Tenants & Rollouts" },
+              { label: "Support Lead", email: "support_agent@eventosapp.in", badge: "Tickets & Comms" },
+              { label: "Finance Officer", email: "finance_admin@eventosapp.in", badge: "Billing & Subscriptions" },
+              { label: "DevOps Engineer", email: "developer@eventosapp.in", badge: "Telemetry & Logs" },
+              { label: "Compliance Auditor", email: "auditor@eventosapp.in", badge: "Strict Read-Only" },
+            ].map((preset) => (
+              <button
+                key={preset.email}
+                type="button"
+                onClick={() => {
+                  setEmail(preset.email);
+                  setPassword("admin123");
+                }}
+                className={cn(
+                  "p-2 text-left rounded-xl border border-zinc-850 bg-zinc-900/60 transition group cursor-pointer hover:border-purple-500/50 hover:bg-purple-500/10",
+                  email === preset.email ? "border-purple-500 bg-purple-500/15 ring-1 ring-purple-500/30" : ""
+                )}
+              >
+                <div className="text-[10px] font-bold text-zinc-200 group-hover:text-white flex items-center justify-between">
+                  <span>{preset.label}</span>
+                </div>
+                <div className="text-[9px] font-mono text-zinc-500 truncate mt-0.5">
+                  {preset.badge}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Authentication Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-1.5">
@@ -193,7 +235,7 @@ export default function SuperAdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@eventos.com"
+                placeholder="admin@eventosapp.in"
                 required
                 autoComplete="email"
                 autoFocus

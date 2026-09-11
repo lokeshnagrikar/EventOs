@@ -28,9 +28,9 @@ interface ChurnRiskItem {
 }
 
 const INITIAL_LEAD_SCORES: LeadScoreItem[] = [
-  { id: "lead-1", name: "Samantha & Daniel", eventType: "Destination Wedding", budget: "$150,000", score: 94, grade: "HOT", reason: "High budget fit, prompt response, verified venue date" },
-  { id: "lead-2", name: "Global Tech Summit 2026", eventType: "Corporate Conference", budget: "$85,000", score: 88, grade: "HOT", reason: "RFP pre-approved, contract ready for signature" },
-  { id: "lead-3", name: "Marcus Vance", eventType: "Birthday Gala", budget: "$12,000", score: 45, grade: "COLD", reason: "Budget below minimum threshold, delayed response" },
+  { id: "lead-1", name: "Samantha & Daniel", eventType: "Destination Wedding", budget: "₹15,00,000", score: 94, grade: "HOT", reason: "High budget fit, prompt response, verified venue date" },
+  { id: "lead-2", name: "Global Tech Summit 2026", eventType: "Corporate Conference", budget: "₹8,50,000", score: 88, grade: "HOT", reason: "RFP pre-approved, contract ready for signature" },
+  { id: "lead-3", name: "Marcus Vance", eventType: "Birthday Gala", budget: "₹1,20,000", score: 45, grade: "COLD", reason: "Budget below minimum threshold, delayed response" },
 ];
 
 const INITIAL_CHURN_RISKS: ChurnRiskItem[] = [
@@ -38,7 +38,7 @@ const INITIAL_CHURN_RISKS: ChurnRiskItem[] = [
     id: "churn-1",
     clientName: "Elevate Orgs",
     eventName: "Annual Partner Summit",
-    contractValue: "$45,000",
+    contractValue: "₹4,50,000",
     riskScore: 82,
     riskLevel: "CRITICAL",
     signals: ["Invoice #INV-2041 unpaid for 14 days", "3 unopened event timeline emails", "Venue scope reduced"],
@@ -48,7 +48,7 @@ const INITIAL_CHURN_RISKS: ChurnRiskItem[] = [
     id: "churn-2",
     clientName: "Harper & Mason Wedding",
     eventName: "Luxury Beachfront Wedding",
-    contractValue: "$95,000",
+    contractValue: "₹9,50,000",
     riskScore: 58,
     riskLevel: "MEDIUM",
     signals: ["Delay in guest list submission", "Competitor quote requested"],
@@ -63,7 +63,11 @@ export default function LeadScoringChurnPredictor() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleRunAiAnalysis = () => {
-    setIsGenerating(true);
+    setIsAnalyzing(true);
+    setTimeout(() => {
+      setIsAnalyzing(false);
+      addToast("AI Predictive models refreshed with latest pipeline telemetry.", "success");
+    }, 1200);
   };
 
   const handleExecuteRetentionAction = (clientName: string, action: string) => {

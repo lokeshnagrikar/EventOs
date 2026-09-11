@@ -52,6 +52,7 @@ interface PublicQuote {
   venueName?: string;
   clientNotes?: string;
   termsConditions?: string;
+  pdfUrl?: string;
   createdAt: string;
   items: QuoteItem[];
 }

@@ -29,7 +29,7 @@ import {
   ChevronRight,
   Loader2
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getAppBaseUrl } from "@/lib/utils";
 
 interface QuoteItem {
   id: string;
@@ -217,7 +217,7 @@ export default function QuoteDetailPage() {
 
   const copyShareableLink = () => {
     if (typeof window !== "undefined") {
-      const publicShareUrl = `${window.location.origin}/quotes/share/${quoteId}`;
+      const publicShareUrl = `${getAppBaseUrl()}/quotes/share/${quoteId}`;
       navigator.clipboard.writeText(publicShareUrl);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
@@ -233,7 +233,7 @@ export default function QuoteDetailPage() {
     if (typeof window === "undefined") return;
     const phone = lead?.phone || lead?.contact?.phone || "";
     const cleanPhone = phone.replace(/[^0-9]/g, "");
-    const publicShareUrl = `${window.location.origin}/quotes/share/${quoteId}`;
+    const publicShareUrl = `${getAppBaseUrl()}/quotes/share/${quoteId}`;
     const textMessage = encodeURIComponent(
       `Hello ${lead?.name || "Client"},\n\n` +
       `Here is your official EventOS Proposal & Price Quote (#${quote?.quoteNumber}):\n` +

@@ -27,6 +27,7 @@ interface Album {
   id: string;
   name: string;
   itemCount: number;
+  mediaCount?: number;
   createdAt: string;
   status?: string;
   visibility?: string;

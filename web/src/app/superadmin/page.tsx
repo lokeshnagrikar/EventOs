@@ -1028,7 +1028,7 @@ export default function SuperAdminDashboard() {
                   </div>
                   <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-2">
                     <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest block">Expansion Revenue Index</span>
-                    <span className="text-2xl font-black text-pink-400 block">+$18.4k / mo</span>
+                    <span className="text-2xl font-black text-pink-400 block font-mono tabular-nums">+₹1,84,000 / mo</span>
                     <p className="text-[10px] text-zinc-400 font-sans font-medium">Add-on seats & package tier upgrades</p>
                   </div>
                 </div>

@@ -153,7 +153,7 @@ export const TestimonialStack = ({
           
         return (
           <div
-            ref={el => cardRefs.current[index] = el}
+            ref={(el) => { cardRefs.current[index] = el; }}
             key={testimonial.id}
             className="testimonial-card bg-white transition-all duration-300 ease-out select-none cursor-grab active:cursor-grabbing border border-[#E5E7EB] shadow-xl rounded-2xl"
             style={style} // Apply dynamic styles here

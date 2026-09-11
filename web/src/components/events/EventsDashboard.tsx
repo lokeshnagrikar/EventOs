@@ -361,11 +361,11 @@ export default function EventsDashboard() {
     const resourceDateMap: Record<string, string[]> = {}; // resourceId -> list of dates
     const activeEventsList = events.filter(e => e.status !== "COMPLETED" && e.status !== "CANCELLED");
 
-    activeEventsList.forEach(ev => {
+    activeEventsList.forEach((ev: any) => {
       if (!ev.startDate) return;
       const dateStr = ev.startDate.split("T")[0];
       const allocs = assignments[ev.id]?.resources || [];
-      allocs.forEach(resId => {
+      allocs.forEach((resId: string) => {
         const key = `${resId}@@${dateStr}`;
         if (!resourceDateMap[key]) {
           resourceDateMap[key] = [];
@@ -385,14 +385,14 @@ export default function EventsDashboard() {
     });
 
     // 2. Inventory shortage warning (reserved > stock)
-    inventory.forEach(item => {
+    inventory.forEach((item: any) => {
       if (item.reserved > item.stock) {
         warnings.push(`Inventory Shortage Alert: '${item.name}' has ${item.reserved} reservations but only ${item.stock} in stock!`);
       }
     });
 
     // 3. Vehicle shortage/maintenance conflict
-    vehicles.forEach(veh => {
+    vehicles.forEach((veh: any) => {
       if (veh.status === "MAINTENANCE") {
         // Check if assigned anywhere
         Object.entries(assignments).forEach(([evId, alloc]) => {
@@ -438,10 +438,10 @@ export default function EventsDashboard() {
     const completed = events.filter((e) => e.status === "COMPLETED").length;
     const cancelled = events.filter((e) => e.status === "CANCELLED").length;
 
-    const totalBudget = events.reduce((sum, e) => sum + (Number(e.budget) || 0), 0);
+    const totalBudget = events.reduce((sum: number, e: any) => sum + (Number(e.budget) || 0), 0);
     const budgetUsed = events
-      .filter(e => e.status === "COMPLETED" || e.status === "IN_PROGRESS")
-      .reduce((sum, e) => sum + (Number(e.budget) || 0), 0) * 0.85;
+      .filter((e: any) => e.status === "COMPLETED" || e.status === "IN_PROGRESS")
+      .reduce((sum: number, e: any) => sum + (Number(e.budget) || 0), 0) * 0.85;
     const budgetRemaining = Math.max(0, totalBudget - budgetUsed);
 
     return { active, upcoming, completed, cancelled, totalBudget, budgetUsed, budgetRemaining };

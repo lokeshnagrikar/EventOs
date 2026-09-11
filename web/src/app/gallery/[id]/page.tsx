@@ -34,7 +34,7 @@ import {
 import AdvancedUploader from "@/components/gallery/AdvancedUploader";
 import MasonryGallery from "@/components/gallery/MasonryGallery";
 import EXIFLightbox from "@/components/gallery/EXIFLightbox";
-import { cn } from "@/lib/utils";
+import { cn, getAppBaseUrl } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
 import { LoadingScreen } from "@/components/ui/skeletons";
@@ -763,7 +763,7 @@ export default function AlbumDetailPage() {
                     <div className="p-3 bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 rounded-xl space-y-2 text-center">
                       <p className="text-[10px] font-bold">Secure Link Generated Successfully!</p>
                       <p className="font-mono text-[9px] break-all select-all block bg-zinc-950 p-1.5 rounded text-zinc-300">
-                        {typeof window !== "undefined" && `${window.location.origin}/share/${shareSuccessToken}`}
+                        {typeof window !== "undefined" && `${getAppBaseUrl()}/share/${shareSuccessToken}`}
                       </p>
                       <div className="h-20 w-20 mx-auto bg-white p-1 rounded border border-zinc-800 flex items-center justify-center mt-2 shadow">
                         <QrCode size={64} className="text-black" />

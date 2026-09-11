@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link2, Shield, Clock, Eye, Download, ShieldCheck, Mail, Send, Copy, Check, QrCode } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getAppBaseUrl } from "@/lib/utils";
 
 interface SecureShareDrawerProps {
   albumId: string;
@@ -45,7 +45,7 @@ export default function SecureShareDrawer({
 
   const handleCopyLink = (linkId: string, token: string) => {
     if (typeof window !== "undefined") {
-      const shareUrl = `${window.location.origin}/share/${token}`;
+      const shareUrl = `${getAppBaseUrl()}/share/${token}`;
       navigator.clipboard.writeText(shareUrl);
       setCopiedLinkId(linkId);
       setTimeout(() => setCopiedLinkId(null), 2000);

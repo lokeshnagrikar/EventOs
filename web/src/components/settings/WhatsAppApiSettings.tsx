@@ -23,7 +23,7 @@ import {
 import { Icon } from "@iconify/react";
 import { useToastStore } from "@/lib/toastStore";
 import { apiClient } from "@/lib/api-client";
-import { cn } from "@/lib/utils";
+import { cn, getAppBaseUrl } from "@/lib/utils";
 import { formatWhatsAppMessage, generateWhatsAppLink, sendMetaWhatsAppMessage } from "@/lib/whatsapp";
 
 interface WhatsAppConfig {
@@ -163,7 +163,7 @@ export default function WhatsAppApiSettings() {
         eventTitle: "Grand Wedding Reception",
         quoteNumber: "QT-2026-088",
         amount: "₹12,50,000",
-        portalUrl: `${window.location.origin}/portal/quotes/demo`,
+        portalUrl: `${getAppBaseUrl()}/portal/quotes/demo`,
       },
     });
 
@@ -191,7 +191,7 @@ export default function WhatsAppApiSettings() {
   };
 
   const copyWebhookUrl = () => {
-    const webhookUrl = `${window.location.origin}/api/webhooks/whatsapp/meta`;
+    const webhookUrl = `${getAppBaseUrl()}/api/webhooks/whatsapp/meta`;
     navigator.clipboard.writeText(webhookUrl);
     setCopiedWebhookUrl(true);
     setTimeout(() => setCopiedWebhookUrl(false), 2000);
@@ -462,7 +462,7 @@ export default function WhatsAppApiSettings() {
             </button>
           </div>
           <p className="text-[11px] text-zinc-400 font-mono bg-zinc-950 p-2 rounded-xl border border-zinc-850 truncate">
-            {typeof window !== "undefined" ? window.location.origin : "https://eventos.agency"}/api/webhooks/whatsapp/meta
+            {`${getAppBaseUrl()}/api/webhooks/whatsapp/meta`}
           </p>
         </div>
       </div>

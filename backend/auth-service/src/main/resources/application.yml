@@ -70,23 +70,25 @@ spring:
           multiplier: 2.0
           max-interval: 10000ms
   mail:
-    host: ${SMTP_HOST:smtp.gmail.com}
+    host: ${SMTP_HOST:smtp.resend.com}
     port: ${SMTP_PORT:587}
-    username: ${SMTP_USERNAME:devloperonly@gmail.com}
-    password: ${SMTP_PASSWORD:cdonzghpthijtxcf}
+    username: ${SMTP_USERNAME:resend}
+    password: ${SMTP_PASSWORD:}
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-
+            required: true
 
 # Security & JWT configurations
 app:
+  mail:
+    from: ${APP_MAIL_FROM:support@eventosapp.in}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
-  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  frontend-url: ${FRONTEND_URL:https://eventosapp.in}
   jwt:
     secret: ${JWT_SECRET_KEY:9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d}
     expiration-ms: ${JWT_EXPIRATION_MS:3600000}          # 1 hour
