@@ -304,10 +304,10 @@ public class AuthController {
             HttpServletResponse response) {
 
         String token = null;
-        if (cookieToken != null) {
-            token = cookieToken;
-        } else if (bodyRequest != null && bodyRequest.get("refreshToken") != null) {
-            token = bodyRequest.get("refreshToken");
+        if (bodyRequest != null && bodyRequest.get("refreshToken") != null && !bodyRequest.get("refreshToken").trim().isEmpty()) {
+            token = bodyRequest.get("refreshToken").trim();
+        } else if (cookieToken != null && !cookieToken.trim().isEmpty()) {
+            token = cookieToken.trim();
         }
 
         if (token == null) {

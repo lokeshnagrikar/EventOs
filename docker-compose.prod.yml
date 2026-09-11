@@ -197,6 +197,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_URL=redis://redis:6379
       - CORS_ALLOWED_ORIGINS=https://eventosapp.in,https://www.eventosapp.in,https://event-os-woad.vercel.app,http://localhost:3000
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-e7f9a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9}
     depends_on:
       - auth-service
       - crm-service

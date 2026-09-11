@@ -35,20 +35,35 @@ export function WorkspaceSelectorPill() {
   const handleSwitchWorkspace = async (target: WorkspaceMembership) => {
     if (target.tenantId === currentWorkspace.tenantId) {
       setIsOpen(false);
+      router.push("/dashboard");
       return;
     }
 
     setSwitchingId(target.tenantId);
     try {
-      // Attempt backend API tenant switch
-      const res = await apiClient.post(`/auth/switch-tenant`, { tenantId: target.tenantId });
-      const { accessToken, role, permissions } = res.data.data;
-      updateActiveTenant(target.tenantId, accessToken, role, permissions || []);
+      const storedRefreshToken = useAuthStore.getState().refreshToken 
+        || (typeof window !== 'undefined' ? (sessionStorage.getItem('refreshToken') || localStorage.getItem('eventos_refresh_token')) : null);
+
+      const res = await apiClient.post(`/auth/switch`, { 
+        tenantId: target.tenantId,
+        ...(storedRefreshToken ? { refreshToken: storedRefreshToken } : {})
+      });
+      const { accessToken, refreshToken: newRefreshToken, role, permissions, firstName } = res.data.data;
+      
+      document.cookie = "hasSession=true; path=/; SameSite=Lax";
+      if (firstName) {
+        document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
+        localStorage.setItem("user_name", firstName);
+      }
+      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      localStorage.setItem("user_role", role);
+
+      updateActiveTenant(target.tenantId, accessToken, role, permissions || [], newRefreshToken || storedRefreshToken);
       addToast(`Switched workspace to ${target.companyName}!`, "success");
-    } catch (e) {
-      // Dev simulation fallback
-      updateActiveTenant(target.tenantId, "simulated_token_" + target.tenantId, target.role, ["ALL"]);
-      addToast(`Switched workspace to ${target.companyName}!`, "success");
+      router.push("/dashboard");
+    } catch (e: any) {
+      const errMsg = e.response?.data?.error?.message || "Failed to switch workspace.";
+      addToast(errMsg, "error");
     } finally {
       setSwitchingId(null);
       setIsOpen(false);

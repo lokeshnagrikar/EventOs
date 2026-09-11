@@ -63,6 +63,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/captcha",
             "/api/v1/auth/ws",
             "/api/v1/auth/billing/webhook",
+            "/api/v1/auth/billing/plans",
             "/api/v1/crm/quotes/public/",
             "/api/v1/gallery/share/public/",
             "/actuator"

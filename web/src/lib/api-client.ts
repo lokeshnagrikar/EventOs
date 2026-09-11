@@ -187,17 +187,20 @@ apiClient.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         }
         return apiClient(originalRequest);
-      } catch (refreshError) {
+      } catch (refreshError: any) {
         processQueue(refreshError, null);
         isRefreshing = false;
         
-        // Clear auth state on refresh failure
-        useAuthStore.getState().clearAuth();
-        if (typeof window !== 'undefined') {
-          const path = window.location.pathname;
-          const isProtectedRoute = path.startsWith('/dashboard') || path.startsWith('/superadmin');
-          if (isProtectedRoute) {
-            window.location.href = '/?login=true&expired=true';
+        // Only clear auth and redirect if refresh endpoint explicitly rejected the token (401 or 403)
+        const isAuthRejection = refreshError?.response?.status === 401 || refreshError?.response?.status === 403;
+        if (isAuthRejection) {
+          useAuthStore.getState().clearAuth();
+          if (typeof window !== 'undefined') {
+            const path = window.location.pathname;
+            const isProtectedRoute = path.startsWith('/dashboard') || path.startsWith('/superadmin');
+            if (isProtectedRoute) {
+              window.location.href = '/?login=true&expired=true';
+            }
           }
         }
         return Promise.reject(refreshError);

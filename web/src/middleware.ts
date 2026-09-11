@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hasSession = request.cookies.get("hasSession")?.value;
+  const hasSession = request.cookies.get("hasSession")?.value || request.cookies.get("accessToken")?.value;
   const userRole = request.cookies.get("user_role")?.value;
 
   const isAuthRoute = pathname.startsWith("/login") || 
@@ -14,7 +14,6 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = pathname.startsWith("/portal") || 
                             pathname.startsWith("/onboarding") || 
                             pathname.startsWith("/settings") || 
-                            pathname.startsWith("/workspace-select") ||
                             pathname.startsWith("/dashboard") ||
                             pathname.startsWith("/crm") ||
                             pathname.startsWith("/events") ||

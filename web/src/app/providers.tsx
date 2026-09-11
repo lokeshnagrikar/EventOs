@@ -47,7 +47,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const restoreSession = async () => {
       const activeTenant = typeof window !== 'undefined' ? (sessionStorage.getItem("activeTenantId") || localStorage.getItem("eventos_active_tenant_id")) : null;
-      if (activeTenant && !accessToken) {
+      const storedAccessToken = typeof window !== 'undefined' ? (sessionStorage.getItem("accessToken") || localStorage.getItem("eventos_access_token")) : null;
+      if (activeTenant && !accessToken && !storedAccessToken) {
         try {
           const storedRefreshToken = typeof window !== 'undefined' ? (sessionStorage.getItem("refreshToken") || localStorage.getItem("eventos_refresh_token")) : null;
           const { apiClient } = require("@/lib/api-client");
