@@ -168,19 +168,30 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     }
   }, [magicLinkSent, magicLinkTimer]);
 
+  const verifiedMagicTokensRef = useRef<Set<string>>(new Set());
+
   // Magic Token verification from URL query param
   useEffect(() => {
     const magicToken = searchParams?.get("magicToken") || searchParams?.get("token");
-    if (magicToken) {
+    if (magicToken && !verifiedMagicTokensRef.current.has(magicToken)) {
+      verifiedMagicTokensRef.current.add(magicToken);
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("magicToken");
+        url.searchParams.delete("token");
+        url.searchParams.delete("expired");
+        window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+      }
       verifyMagicToken(magicToken);
     }
   }, [searchParams]);
 
   const verifyMagicToken = async (token: string) => {
     setLoading(true);
+    setError(null);
     try {
       const response = await apiClient.post("/auth/verify-magic-token", { token });
-      const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
+      const { accessToken, refreshToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
       
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
       document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
@@ -192,7 +203,8 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         accessToken,
         { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        memberships
+        memberships,
+        refreshToken
       );
       addToast(`Welcome back, ${firstName}! Verified via Magic Link.`, "success");
       if (isModal) closeModal();
@@ -802,6 +814,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             type="button"
             onClick={() => {
               setAuthMode("password");
+              setError(null);
               setForgotPasswordError(null);
               setForgotPasswordSuccess(null);
             }}
@@ -817,6 +830,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             type="button"
             onClick={() => {
               setAuthMode("password");
+              setError(null);
               setMagicLinkSent(false);
             }}
             className={cn(
@@ -831,6 +845,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             type="button"
             onClick={() => {
               setAuthMode("magic-link");
+              setError(null);
             }}
             className={cn(
               "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
@@ -969,7 +984,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             <div className="flex items-center justify-between text-[10px] pt-1">
               <button
                 type="button"
-                onClick={() => setAuthMode("password")}
+                onClick={() => {
+                  setAuthMode("password");
+                  setError(null);
+                }}
                 className="text-zinc-400 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
               >
                 <ArrowLeft size={11} />

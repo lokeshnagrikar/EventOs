@@ -82,7 +82,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, [mounted, accessToken]);
 
   useEffect(() => {
-    if (activeTenantId && accessToken) {
+    const isDashboardRoute = pathname?.startsWith('/dashboard') || pathname?.startsWith('/superadmin') || pathname?.startsWith('/portal');
+    if (activeTenantId && accessToken && isDashboardRoute) {
       fetchPlans();
       fetchSubscription();
       fetchUsage();
@@ -94,7 +95,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         openOnboarding();
       }
     }
-  }, [activeTenantId, accessToken]);
+  }, [activeTenantId, accessToken, pathname]);
 
 
   const [queryClient] = useState(

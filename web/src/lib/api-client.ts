@@ -191,11 +191,12 @@ apiClient.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
         
-        // Clear auth state on refresh failure and redirect to landing modal
+        // Clear auth state on refresh failure
+        useAuthStore.getState().clearAuth();
         if (typeof window !== 'undefined') {
           const path = window.location.pathname;
-          if (path !== '/' && !path.includes('workspace-select')) {
-            useAuthStore.getState().clearAuth();
+          const isProtectedRoute = path.startsWith('/dashboard') || path.startsWith('/superadmin');
+          if (isProtectedRoute) {
             window.location.href = '/?login=true&expired=true';
           }
         }

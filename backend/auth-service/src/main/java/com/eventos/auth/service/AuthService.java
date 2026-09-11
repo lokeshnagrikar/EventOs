@@ -70,6 +70,53 @@ public class AuthService {
     @Value("${spring.profiles.active:dev}")
     private String activeProfile;
 
+    private final java.util.Map<String, String> localTokenStore = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<String, Long> localTokenExpiry = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private void storeTokenFallback(String key, String value, long minutes) {
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.opsForValue().set(key, value, minutes, TimeUnit.MINUTES);
+            }
+        } catch (Exception e) {
+            log.warn("[TOKEN_STORE] Redis set failed for {}: {}", key, e.getMessage());
+        }
+        localTokenStore.put(key, value);
+        localTokenExpiry.put(key, System.currentTimeMillis() + (minutes * 60 * 1000));
+    }
+
+    private String getTokenFallback(String key) {
+        String val = null;
+        try {
+            if (stringRedisTemplate != null) {
+                val = stringRedisTemplate.opsForValue().get(key);
+            }
+        } catch (Exception e) {
+            log.warn("[TOKEN_STORE] Redis get failed for {}: {}", key, e.getMessage());
+        }
+        if (val != null && !val.trim().isEmpty()) return val;
+
+        Long exp = localTokenExpiry.get(key);
+        if (exp != null && System.currentTimeMillis() < exp) {
+            return localTokenStore.get(key);
+        }
+        localTokenStore.remove(key);
+        localTokenExpiry.remove(key);
+        return null;
+    }
+
+    private void deleteTokenFallback(String key) {
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.delete(key);
+            }
+        } catch (Exception e) {
+            log.warn("[TOKEN_STORE] Redis delete failed for {}: {}", key, e.getMessage());
+        }
+        localTokenStore.remove(key);
+        localTokenExpiry.remove(key);
+    }
+
     public AuthService(UserRepository userRepository, RoleRepository roleRepository,
             TenantRepository tenantRepository, CompanyRepository companyRepository,
             RefreshTokenRepository refreshTokenRepository, MembershipRepository membershipRepository,
@@ -579,7 +626,7 @@ public class AuthService {
         String tokenHash = sha256(resetToken);
 
         String redisKey = "reset:token:" + tokenHash;
-        stringRedisTemplate.opsForValue().set(redisKey, user.getEmail(), 15, TimeUnit.MINUTES);
+        storeTokenFallback(redisKey, user.getEmail(), 15);
 
         auditLogService.logEvent(null, user.getId(), "PASSWORD_RESET_REQUEST", null, null,
                 "Password reset token generated for user: " + email);
@@ -606,7 +653,7 @@ public class AuthService {
     public Map<String, Object> resetPassword(String token, String newPassword) {
         String tokenHash = sha256(token);
         String redisKey = "reset:token:" + tokenHash;
-        String email = stringRedisTemplate.opsForValue().get(redisKey);
+        String email = getTokenFallback(redisKey);
         if (email == null) {
             throw new IllegalArgumentException("Invalid or expired password reset token");
         }
@@ -617,7 +664,7 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setEmailVerified(true);
         userRepository.save(user);
-        stringRedisTemplate.delete(redisKey);
+        deleteTokenFallback(redisKey);
 
         // Force logout on all active sessions on password change
         sessionRepository.deleteAllByUserId(user.getId());
@@ -1508,14 +1555,7 @@ public class AuthService {
 
         String magicToken = UUID.randomUUID().toString();
         String redisKey = "MAGIC_LINK:" + magicToken;
-
-        try {
-            if (stringRedisTemplate != null) {
-                stringRedisTemplate.opsForValue().set(redisKey, cleanEmail, 15, TimeUnit.MINUTES);
-            }
-        } catch (Exception e) {
-            log.warn("[MAGIC_LINK] Redis unavailable, generated magic token: {}", magicToken);
-        }
+        storeTokenFallback(redisKey, cleanEmail, 15);
 
         String magicUrl = frontendUrl + "/login?magicToken=" + magicToken;
         log.info("[MAGIC_LINK_GENERATED] Email: {} | Direct Link: {}", cleanEmail, magicUrl);
@@ -1542,15 +1582,7 @@ public class AuthService {
         }
 
         String redisKey = "MAGIC_LINK:" + token;
-        String email = null;
-
-        try {
-            if (stringRedisTemplate != null) {
-                email = stringRedisTemplate.opsForValue().get(redisKey);
-            }
-        } catch (Exception e) {
-            log.warn("[MAGIC_LINK] Redis lookup failed for token {}", token);
-        }
+        String email = getTokenFallback(redisKey);
 
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Magic Link token is invalid or has expired");
@@ -1565,14 +1597,15 @@ public class AuthService {
             userRepository.save(user);
         }
 
-        // Single-use token: invalidate token immediately after successful retrieval
+        // Single-use token: add 60-second grace period for concurrent requests before full purge
         try {
             if (stringRedisTemplate != null) {
-                stringRedisTemplate.delete(redisKey);
+                stringRedisTemplate.expire(redisKey, 60, TimeUnit.SECONDS);
             }
         } catch (Exception e) {
-            log.warn("[MAGIC_LINK] Failed to invalidate used token {}: {}", token, e.getMessage());
+            log.warn("[MAGIC_LINK] Failed to set expiry on used token {}: {}", token, e.getMessage());
         }
+        localTokenExpiry.put(redisKey, System.currentTimeMillis() + 60000L);
 
         List<Membership> allMemberships = membershipRepository.findAllByUserId(user.getId());
         if (allMemberships.isEmpty()) {
