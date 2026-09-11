@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -192,13 +192,13 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     try {
       const response = await apiClient.post("/auth/verify-magic-token", { token });
       const { accessToken, refreshToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
-      
+
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
       document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
       document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
-      
+
       setAuth(
         accessToken,
         { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
@@ -478,7 +478,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       });
 
       const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
-      
+
       // Store lightweight session flag cookie for edge middleware redirection checks
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
       document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
@@ -492,7 +492,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         role,
         tenantName: memberships?.[0]?.tenantName || "EventOS Workspace"
       }));
-      
+
       // Save state in Zustand store
       setAuth(
         accessToken,
@@ -563,14 +563,14 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       });
 
       const { accessToken: jwtToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
-      
+
       // Store session cookies
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
       document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
       document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
-      
+
       // Save state in Zustand store
       setAuth(
         jwtToken,
@@ -628,14 +628,14 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         <div className="mx-auto h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 shadow-md">
           {otpSuccess ? <CheckCircle2 size={24} className="text-emerald-400 animate-scale-in" /> : <Mail size={24} className="animate-pulse" />}
         </div>
-        
+
         <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
             {otpSuccess ? "Verification Successful!" : "Verify Your Account"}
           </h2>
           <p className="text-xs text-zinc-450 leading-relaxed max-w-[280px] mx-auto">
-            {otpSuccess 
-              ? "Your account is now activated. You can now sign in." 
+            {otpSuccess
+              ? "Your account is now activated. You can now sign in."
               : `We've sent a 6-digit verification code to ${otpEmail}`}
           </p>
         </div>
@@ -860,62 +860,60 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
 
       {/* Form elements for Password and Magic Link modes */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
-          {/* Email input */}
-          <motion.div variants={itemVariants} className="space-y-1">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="email">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
-                focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+        {/* Email input */}
+        <motion.div variants={itemVariants} className="space-y-1">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="email">
+            Email Address
+          </label>
+          <div className="relative">
+            <Mail className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
               }`} />
-              <input
-                id="email"
-                type="email"
-                placeholder="you@company.com"
-                autoFocus
-                autoComplete="email"
-                className={`w-full pl-9 pr-3 py-2.5 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
-                  errors.email 
-                    ? "border-rose-500/50" 
-                    : "border-white/10 hover:border-white/20"
+            <input
+              id="email"
+              type="email"
+              placeholder="you@company.com"
+              autoFocus
+              autoComplete="email"
+              className={`w-full pl-9 pr-3 py-2.5 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${errors.email
+                  ? "border-rose-500/50"
+                  : "border-white/10 hover:border-white/20"
                 }`}
-                {...register("email")}
-                onChange={(e) => handleEmailInputChange(e.target.value)}
-                onFocus={() => setFocusedField("email")}
-                onBlur={(e) => {
-                  register("email").onBlur(e);
-                  setFocusedField(null);
+              {...register("email")}
+              onChange={(e) => handleEmailInputChange(e.target.value)}
+              onFocus={() => setFocusedField("email")}
+              onBlur={(e) => {
+                register("email").onBlur(e);
+                setFocusedField(null);
+              }}
+            />
+          </div>
+          {errors.email && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.email.message}</p>}
+
+          {/* Email Domain Auto-Suggestion */}
+          {domainSuggestion && (
+            <div className="pt-1 flex items-center gap-1.5 text-[10px]">
+              <span className="text-zinc-500">Did you mean:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue("email", domainSuggestion);
+                  setDomainSuggestion(null);
                 }}
-              />
+                className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-300 font-bold hover:bg-purple-500/20 transition-all cursor-pointer"
+              >
+                {domainSuggestion}
+              </button>
             </div>
-            {errors.email && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.email.message}</p>}
+          )}
 
-            {/* Email Domain Auto-Suggestion */}
-            {domainSuggestion && (
-              <div className="pt-1 flex items-center gap-1.5 text-[10px]">
-                <span className="text-zinc-500">Did you mean:</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setValue("email", domainSuggestion);
-                    setDomainSuggestion(null);
-                  }}
-                  className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-300 font-bold hover:bg-purple-500/20 transition-all cursor-pointer"
-                >
-                  {domainSuggestion}
-                </button>
-              </div>
-            )}
-
-            {/* Business Email Nudge */}
-            {isPersonalEmail(watch("email")) && (
-              <div className="mt-1 p-2 bg-purple-950/20 border border-purple-500/20 rounded-xl flex items-center gap-2 text-[10px] text-purple-300">
-                <Briefcase size={12} className="shrink-0 text-purple-400" />
-                <span><strong>Pro Tip:</strong> Work emails get priority team collaboration tools!</span>
-              </div>
-            )}
-          </motion.div>
+          {/* Business Email Nudge */}
+          {isPersonalEmail(watch("email")) && (
+            <div className="mt-1 p-2 bg-purple-950/20 border border-purple-500/20 rounded-xl flex items-center gap-2 text-[10px] text-purple-300">
+              <Briefcase size={12} className="shrink-0 text-purple-400" />
+              <span><strong>Pro Tip:</strong> Work emails get priority team collaboration tools!</span>
+            </div>
+          )}
+        </motion.div>
 
         {/* Forgot Password Mode */}
         {authMode === "forgot-password" ? (
@@ -1094,19 +1092,17 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 </button>
               </div>
               <div className="relative">
-                <KeyRound className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
-                  focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
-                }`} />
+                <KeyRound className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+                  }`} />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className={`w-full pl-9 pr-9 py-2.5 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
-                    errors.password 
-                      ? "border-rose-500/50" 
+                  className={`w-full pl-9 pr-9 py-2.5 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${errors.password
+                      ? "border-rose-500/50"
                       : "border-white/10 hover:border-white/20"
-                  }`}
+                    }`}
                   {...register("password")}
                   onFocus={() => setFocusedField("password")}
                   onBlur={(e) => {
@@ -1132,11 +1128,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 role="checkbox"
                 aria-checked={rememberMeValue}
                 onClick={() => setValue("rememberMe", !rememberMeValue)}
-                className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${
-                  rememberMeValue
+                className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${rememberMeValue
                     ? "bg-purple-600 border-purple-500 text-white"
                     : "bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] text-transparent"
-                }`}
+                  }`}
               >
                 {rememberMeValue && <Check size={10} className="stroke-[3]" />}
               </button>
