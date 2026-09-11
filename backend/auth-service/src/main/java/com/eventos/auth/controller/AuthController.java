@@ -617,15 +617,18 @@ public class AuthController {
             HttpServletResponse response) {
 
         String token = null;
-        if (cookieToken != null) {
-            token = cookieToken;
-        } else if (bodyRequest != null && bodyRequest.get("refreshToken") != null) {
+        if (bodyRequest != null && bodyRequest.get("refreshToken") != null && !bodyRequest.get("refreshToken").trim().isEmpty()) {
             token = bodyRequest.get("refreshToken");
+        } else if (cookieToken != null && !cookieToken.trim().isEmpty()) {
+            token = cookieToken;
         }
 
-        if (token == null) {
+        org.springframework.security.core.Authentication currentAuth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+
+        if (token == null && (currentAuth == null || !(currentAuth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal))) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("MISSING_TOKEN", "Refresh token is missing"));
+                    .body(createErrorResponse("MISSING_TOKEN", "Refresh token or active session is missing"));
         }
 
         String tenantIdStr = bodyRequest != null ? bodyRequest.get("tenantId") : null;

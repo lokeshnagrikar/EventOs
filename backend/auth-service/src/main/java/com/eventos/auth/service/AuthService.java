@@ -933,11 +933,30 @@ public class AuthService {
     @Transactional
     public Map<String, Object> switchWorkspace(String rawRefreshToken, UUID targetTenantId,
             String ipAddress, String deviceModel, String osName, String browser, String userAgent) {
-        String presentedHash = sha256(rawRefreshToken);
-        RefreshToken oldToken = refreshTokenRepository.findByToken(presentedHash)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        RefreshToken oldToken = null;
+        if (rawRefreshToken != null && !rawRefreshToken.trim().isEmpty()) {
+            String presentedHash = sha256(rawRefreshToken.trim());
+            oldToken = refreshTokenRepository.findByToken(presentedHash).orElse(null);
+        }
 
-        User user = oldToken.getUser();
+        User user = null;
+        if (oldToken != null) {
+            user = oldToken.getUser();
+            sessionRepository.deleteByRefreshTokenId(oldToken.getId());
+            refreshTokenRepository.delete(oldToken);
+        } else {
+            // Resilient Fallback: Extract authenticated user from SecurityContext (Bearer token)
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                    .getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
+                com.eventos.auth.config.UserPrincipal principal = (com.eventos.auth.config.UserPrincipal) auth.getPrincipal();
+                user = userRepository.findById(principal.getUserId()).orElse(null);
+            }
+        }
+
+        if (user == null) {
+            throw new IllegalArgumentException("Session not found. Please sign in again.");
+        }
 
         Membership membership = membershipRepository.findByUserIdAndTenantId(user.getId(), targetTenantId)
                 .orElseThrow(() -> new IllegalArgumentException("User is not a member of target tenant"));
@@ -945,9 +964,6 @@ public class AuthService {
         if (!"ACTIVE".equals(membership.getStatus())) {
             throw new IllegalArgumentException("Membership in target tenant is not active");
         }
-
-        sessionRepository.deleteByRefreshTokenId(oldToken.getId());
-        refreshTokenRepository.delete(oldToken);
 
         // Extract permissions
         List<String> permissions = new ArrayList<>();
