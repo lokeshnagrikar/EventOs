@@ -46,17 +46,32 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const restoreSession = async () => {
-      const activeTenant = sessionStorage.getItem("activeTenantId");
+      const activeTenant = typeof window !== 'undefined' ? (sessionStorage.getItem("activeTenantId") || localStorage.getItem("eventos_active_tenant_id")) : null;
       if (activeTenant && !accessToken) {
         try {
+          const storedRefreshToken = typeof window !== 'undefined' ? (sessionStorage.getItem("refreshToken") || localStorage.getItem("eventos_refresh_token")) : null;
           const { apiClient } = require("@/lib/api-client");
-          const response = await apiClient.post("/auth/refresh", {});
-          const { accessToken: newAccessToken } = response.data.data;
+          const response = await apiClient.post("/auth/refresh", storedRefreshToken ? { refreshToken: storedRefreshToken } : {});
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
           
-          useAuthStore.setState({ accessToken: newAccessToken });
+          useAuthStore.setState({ 
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken || storedRefreshToken 
+          });
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('accessToken', newAccessToken);
+            localStorage.setItem('eventos_access_token', newAccessToken);
+            if (newRefreshToken) {
+              sessionStorage.setItem('refreshToken', newRefreshToken);
+              localStorage.setItem('eventos_refresh_token', newRefreshToken);
+            }
+          }
         } catch (err) {
           console.error("Failed to restore session token:", err);
-          useAuthStore.getState().clearAuth();
+          const path = typeof window !== 'undefined' ? window.location.pathname : '';
+          if (path !== '/' && !path.includes('workspace-select')) {
+            useAuthStore.getState().clearAuth();
+          }
         }
       }
     };

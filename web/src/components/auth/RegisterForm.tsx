@@ -160,7 +160,8 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
         jwtToken,
         { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        memberships
+        memberships,
+        response.data.data.refreshToken
       );
 
       addToast("Successfully registered workspace via Google!", "success");

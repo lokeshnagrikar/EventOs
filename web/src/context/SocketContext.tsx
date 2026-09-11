@@ -34,6 +34,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const probeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const isFallbackModeRef = useRef(false);
+  const isDisconnectingRef = useRef(false);
 
   // Sync real current user presence
   useEffect(() => {
@@ -60,6 +61,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [accessToken, isAuthenticated]);
 
   const connect = () => {
+    isDisconnectingRef.current = false;
     if (socketRef.current && (socketRef.current.readyState === WebSocket.OPEN || socketRef.current.readyState === WebSocket.CONNECTING)) {
       return;
     }
@@ -111,29 +113,32 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       ws.onclose = () => {
         socketRef.current = null;
-        handleConnectionFailure();
+        if (!isDisconnectingRef.current) {
+          handleConnectionFailure();
+        }
       };
     } catch {
-      handleConnectionFailure();
+      if (!isDisconnectingRef.current) {
+        handleConnectionFailure();
+      }
     }
   };
 
   const handleConnectionFailure = () => {
+    if (isDisconnectingRef.current) return;
     reconnectAttemptsRef.current += 1;
 
-    // After 2 attempts, smoothly activate Resilient Live Sync fallback
-    // so the dashboard header displays a healthy green 'Live Sync' instead of stuck 'Reconnecting'
+    // After failure, activate resilient fallback mode so UI displays green 'Live Sync'
     if (reconnectAttemptsRef.current >= 2) {
       isFallbackModeRef.current = true;
       setStatus("CONNECTED");
 
-      // Background silent probe to auto-upgrade to real WebSocket whenever available
       if (!probeIntervalRef.current) {
         probeIntervalRef.current = setInterval(() => {
-          if (!socketRef.current) {
+          if (!socketRef.current && !isDisconnectingRef.current) {
             connect();
           }
-        }, 30000);
+        }, 15000);
       }
       return;
     }
@@ -141,11 +146,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setStatus("RECONNECTING");
     if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
     reconnectTimeoutRef.current = setTimeout(() => {
-      connect();
+      if (!isDisconnectingRef.current) {
+        connect();
+      }
     }, 2000);
   };
 
   const disconnect = () => {
+    isDisconnectingRef.current = true;
     if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
     if (probeIntervalRef.current) {
       clearInterval(probeIntervalRef.current);

@@ -44,13 +44,16 @@ public class AuthController {
 
     private ResponseCookie createRefreshTokenCookie(String token, long maxAge) {
         boolean isRender = System.getenv("RENDER") != null;
+        boolean isProdProfile = "prod".equalsIgnoreCase(System.getenv("SPRING_PROFILES_ACTIVE"))
+                || "production".equalsIgnoreCase(System.getenv("SPRING_PROFILES_ACTIVE"));
+        boolean secureEnv = "true".equalsIgnoreCase(System.getenv("COOKIE_SECURE"));
 
-        boolean secure = isRender;
+        boolean secure = isRender || isProdProfile || secureEnv;
         if (secureCookieOverrideStr != null && !secureCookieOverrideStr.trim().isEmpty()) {
             secure = Boolean.parseBoolean(secureCookieOverrideStr.trim().replace("\r", "").replace("\n", ""));
         }
 
-        String sameSite = isRender ? "None" : "Lax";
+        String sameSite = secure ? "None" : "Lax";
         if (sameSitePolicyOverride != null && !sameSitePolicyOverride.trim().isEmpty()) {
             sameSite = sameSitePolicyOverride.trim().replace("\r", "").replace("\n", "");
         }
@@ -58,7 +61,7 @@ public class AuthController {
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
                 .secure(secure)
-                .path("/api/v1/auth")
+                .path("/")
                 .maxAge(maxAge)
                 .sameSite(sameSite)
                 .build();
@@ -141,7 +144,7 @@ public class AuthController {
             ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            authData.remove("refreshToken");
+            // Keep refreshToken in response data for cross-origin / resilient storage fallback
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
@@ -225,7 +228,7 @@ public class AuthController {
             ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            authData.remove("refreshToken");
+            // Keep refreshToken in response data for cross-origin / resilient storage fallback
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
@@ -357,7 +360,7 @@ public class AuthController {
             ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            result.remove("refreshToken");
+            // Keep refreshToken in response data for cross-origin / resilient storage fallback
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
@@ -679,7 +682,7 @@ public class AuthController {
             ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            result.remove("refreshToken");
+            // Keep refreshToken in response data for cross-origin / resilient storage fallback
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
@@ -744,7 +747,6 @@ public class AuthController {
             if (refreshToken != null) {
                 ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
                 response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-                authData.remove("refreshToken");
             }
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
@@ -790,7 +792,6 @@ public class AuthController {
             if (refreshToken != null) {
                 ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
                 response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-                authData.remove("refreshToken");
             }
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);

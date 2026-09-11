@@ -34,7 +34,9 @@ export default function WorkspaceSelectPage() {
 
   useEffect(() => {
     setMounted(true);
-    if (memberships.length === 0 && !user) {
+    const storedUser = typeof window !== 'undefined' ? (sessionStorage.getItem('user') || localStorage.getItem('eventos_user_profile')) : null;
+    const storedMemberships = typeof window !== 'undefined' ? (sessionStorage.getItem('memberships') || localStorage.getItem('eventos_memberships')) : null;
+    if (memberships.length === 0 && !user && !storedUser && !storedMemberships) {
       router.push("/?login=true");
     }
   }, [memberships, user, router]);
@@ -60,9 +62,15 @@ export default function WorkspaceSelectPage() {
     setError(null);
     setLoadingTenantId(tenantId);
     try {
-      const response = await apiClient.post("/auth/switch", { tenantId });
+      const storedRefreshToken = useAuthStore.getState().refreshToken 
+        || (typeof window !== 'undefined' ? (sessionStorage.getItem('refreshToken') || localStorage.getItem('eventos_refresh_token')) : null);
+
+      const response = await apiClient.post("/auth/switch", { 
+        tenantId,
+        ...(storedRefreshToken ? { refreshToken: storedRefreshToken } : {})
+      });
       
-      const { accessToken, userId, role, firstName, lastName, memberships: newMemberships, permissions } = response.data.data;
+      const { accessToken, refreshToken: newRefreshToken, userId, role, firstName, lastName, memberships: newMemberships, permissions } = response.data.data;
       
       document.cookie = "hasSession=true; path=/; SameSite=Lax";
       document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
@@ -74,7 +82,8 @@ export default function WorkspaceSelectPage() {
         accessToken,
         { id: userId, email: user?.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        newMemberships
+        newMemberships,
+        newRefreshToken || storedRefreshToken
       );
 
       addToast("Workspace connected.", "success");

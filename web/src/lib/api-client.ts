@@ -59,8 +59,20 @@ const processQueue = (error: any, token: string | null = null) => {
 // 1. Ingress Request Interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = useAuthStore.getState().accessToken;
-    const activeTenantId = useAuthStore.getState().activeTenantId;
+    let token = useAuthStore.getState().accessToken;
+    if (!token && typeof window !== 'undefined') {
+      token = sessionStorage.getItem('accessToken') || localStorage.getItem('eventos_access_token');
+      if (token) {
+        useAuthStore.setState({ accessToken: token });
+      }
+    }
+    let activeTenantId = useAuthStore.getState().activeTenantId;
+    if (!activeTenantId && typeof window !== 'undefined') {
+      activeTenantId = sessionStorage.getItem('activeTenantId') || localStorage.getItem('eventos_active_tenant_id');
+      if (activeTenantId) {
+        useAuthStore.setState({ activeTenantId });
+      }
+    }
     
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -96,6 +108,7 @@ apiClient.interceptors.response.use(
     const isAuthRequest = originalRequest.url?.includes('/auth/login') 
       || originalRequest.url?.includes('/auth/register')
       || originalRequest.url?.includes('/auth/refresh')
+      || originalRequest.url?.includes('/auth/switch')
       || originalRequest.url?.includes('/auth/logout');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
@@ -118,13 +131,16 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
+        const storedRefreshToken = useAuthStore.getState().refreshToken 
+          || (typeof window !== 'undefined' ? (sessionStorage.getItem('refreshToken') || localStorage.getItem('eventos_refresh_token')) : null);
+
         const refreshResponse = await axios.post(
           `${getBaseURL()}/auth/refresh`,
-          {},
+          storedRefreshToken ? { refreshToken: storedRefreshToken } : {},
           { withCredentials: true }
         );
         
-        const { accessToken: newAccessToken, role, firstName, lastName, permissions } = refreshResponse.data.data;
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken, role, firstName, lastName, permissions } = refreshResponse.data.data;
         
         // Update store with new access token and updated user metadata
         const currentState = useAuthStore.getState();
@@ -138,8 +154,18 @@ apiClient.interceptors.response.use(
 
         useAuthStore.setState({ 
           accessToken: newAccessToken,
+          refreshToken: newRefreshToken || storedRefreshToken,
           user: updatedUser
         });
+
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('accessToken', newAccessToken);
+          localStorage.setItem('eventos_access_token', newAccessToken);
+          if (newRefreshToken) {
+            sessionStorage.setItem('refreshToken', newRefreshToken);
+            localStorage.setItem('eventos_refresh_token', newRefreshToken);
+          }
+        }
         
         // IMPORTANT: After a Spring Boot trailing-slash redirect, Axios mutates
         // originalRequest.url to the absolute backend URL. Reset to relative path.
@@ -166,9 +192,12 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
         
         // Clear auth state on refresh failure and redirect to landing modal
-        useAuthStore.getState().clearAuth();
         if (typeof window !== 'undefined') {
-          window.location.href = '/?login=true&expired=true';
+          const path = window.location.pathname;
+          if (path !== '/' && !path.includes('workspace-select')) {
+            useAuthStore.getState().clearAuth();
+            window.location.href = '/?login=true&expired=true';
+          }
         }
         return Promise.reject(refreshError);
       }

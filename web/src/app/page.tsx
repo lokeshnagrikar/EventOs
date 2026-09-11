@@ -128,7 +128,8 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
         accessToken,
         { id: userId, email: response.data.data.email || "", firstName, role, permissions: permissions || [] },
         tenantId,
-        memberships
+        memberships,
+        response.data.data.refreshToken
       );
 
       addToast("Successfully authenticated via Google One-Tap!", "success");
