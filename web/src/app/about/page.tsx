@@ -4,7 +4,7 @@ import React from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { motion } from "framer-motion";
-import { Award, Compass, Heart, Users } from "lucide-react";
+import { Award, Compass, Heart, Users, Instagram, ArrowRight } from "lucide-react";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 
 export default function AboutPage() {
@@ -80,13 +80,41 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Team Section Placeholder */}
-        <div className="p-12 border border-zinc-850 bg-[#121214]/10 rounded-3xl text-center space-y-6 select-none">
-          <div className="space-y-2 max-w-xl mx-auto">
-            <h3 className="text-xl font-black text-white uppercase tracking-tight">Globally Distributed Engineering & Product Team</h3>
-            <p className="text-xs text-zinc-400 font-semibold leading-relaxed">
-              We are a team of SaaS designers, Postgres developers, AWS architects, and CRM strategists obsessed with delivering high-fidelity performance.
-            </p>
+        {/* Founder Spotlight */}
+        <div className="p-8 sm:p-12 border border-zinc-850 bg-gradient-to-br from-zinc-950/80 via-[#121214] to-purple-950/20 rounded-3xl space-y-6 select-none max-w-4xl mx-auto shadow-xl">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
+            <img
+              src="/founder-profile/lokesh-nagrikar.png"
+              alt="Lokesh Nagrikar - Founder of EventOS"
+              className="h-24 w-24 rounded-full object-cover border-2 border-purple-500/40 shadow-xl shrink-0"
+            />
+            <div className="space-y-2 flex-1">
+              <span className="text-[10px] text-purple-400 uppercase font-black tracking-widest block font-mono">
+                Solo Founder & Architect
+              </span>
+              <h3 className="text-2xl font-black text-white">Lokesh Nagrikar</h3>
+              <p className="text-xs text-zinc-400 font-semibold leading-relaxed">
+                Building EventOS out of Nagpur, Maharashtra, India. Dedicated to replacing the fragile mess of spreadsheets, WhatsApp groups, and late-night proposal drafting for independent event creators and wedding agencies across India.
+              </p>
+              <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                <a
+                  href="https://www.instagram.com/solo.founder.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-pink-400 text-xs font-bold transition-all"
+                >
+                  <Instagram size={14} />
+                  <span>@solo.founder.ai on Instagram</span>
+                </a>
+                <a
+                  href="/founder-story"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  <span>Read the full story</span>
+                  <ArrowRight size={13} />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </main>

@@ -3,159 +3,58 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { TestimonialStack, Testimonial } from "@/components/ui/glass-testimonial-swiper";
-import { Users, Calendar, ShieldCheck, Clock, Share, Rocket, Zap, Gem } from "lucide-react";
-
-const testimonialsData: Testimonial[] = [
-  {
-    id: 1,
-    initials: "AS",
-    name: "Aparna Sen",
-    role: "Founder, Sen Weddings & Co.",
-    quote: "EventOS has transformed our wedding agency operations. Proposal drafting that took 4 hours now takes 15 minutes, and clients pay deposits instantly.",
-    tags: [{ text: "Wedding Planner", type: "featured" }, { text: "Verified Agency", type: "default" }],
-    stats: [{ icon: Users, text: "15 min quotes" }, { icon: Calendar, text: "2 years customer" }],
-    avatarGradient: "linear-gradient(135deg, #5e6ad2, #8b5cf6)",
-  },
-  {
-    id: 2,
-    initials: "RK",
-    name: "Rohan Kapoor",
-    role: "Operations Lead, Peak Corporate",
-    quote: "Our production team relies on EventOS for timeline scheduling. Shared vendor dashboards and client approval workflows are completely seamless.",
-    tags: [{ text: "Corporate Events", type: "default" }, { text: "Peak Corporate", type: "default" }],
-    stats: [{ icon: ShieldCheck, text: "Timeline Sync" }, { icon: Users, text: "25+ vendors" }],
-    avatarGradient: "linear-gradient(135deg, #10b981, #059669)",
-  },
-  {
-    id: 3,
-    initials: "MN",
-    name: "Meera Nair",
-    role: "Creative Director, Vogue Gala",
-    quote: "The media gallery feature is a lifesaver. We upload wedding deliverables directly, and clients love the secure, expiring guest links.",
-    tags: [{ text: "Creative Director", type: "default" }, { text: "Gala Specialist", type: "default" }],
-    stats: [{ icon: Rocket, text: "Expiring links" }, { icon: Share, text: "Shared 20x" }],
-    avatarGradient: "linear-gradient(135deg, #f59e0b, #d97706)",
-  },
-  {
-    id: 4,
-    initials: "VM",
-    name: "Vikram Malhotra",
-    role: "Managing Director, Apex Events India",
-    quote: "Managing multiple corporate clients was chaos before EventOS. The multi-tenant workspace switching allows our managers to coordinate securely.",
-    tags: [{ text: "Multi-Tenant CRM", type: "featured" }, { text: "Apex Events", type: "default" }],
-    stats: [{ icon: Gem, text: "Secure Tenants" }, { icon: ShieldCheck, text: "SOC2 compliant" }],
-    avatarGradient: "linear-gradient(135deg, #ec4899, #d946ef)",
-  },
-  {
-    id: 5,
-    initials: "SG",
-    name: "Sanya Gupta",
-    role: "Principal Planner, Luxe Soirees",
-    quote: "Customer support is outstanding, and the product gets better every week. Having leads, quotes, invoices, and payment tracking under one hood is unbeatable.",
-    tags: [{ text: "Invoicing Automations", type: "default" }, { text: "Luxe Soirees", type: "default" }],
-    stats: [{ icon: Zap, text: "Invoice automate" }, { icon: Clock, text: "Saves 15h/wk" }],
-    avatarGradient: "linear-gradient(135deg, #3b82f6, #6366f1)",
-  },
-  {
-    id: 6,
-    initials: "AM",
-    name: "Arjun Mehta",
-    role: "Co-founder, EliteDecor Events",
-    quote: "We scaled from 20 to 80 events per year after switching to EventOS. The invoicing automation alone saves our accounts team 15 hours a week.",
-    tags: [{ text: "Scaled 4x", type: "featured" }, { text: "EliteDecor", type: "default" }],
-    stats: [{ icon: Rocket, text: "80+ events/yr" }, { icon: Users, text: "EliteDecor team" }],
-    avatarGradient: "linear-gradient(135deg, #a855f7, #ec4899)",
-  }
-];
-
-import { TestimonialsColumn, TestimonialItem } from "@/components/ui/testimonials-columns-1";
-
-const marqueeTestimonials: TestimonialItem[] = [
-  {
-    text: "EventOS has transformed our wedding agency operations. Proposal drafting that took 4 hours now takes 15 minutes, and clients pay deposits instantly.",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=250&auto=format&fit=crop",
-    name: "Aparna Sen",
-    role: "Founder",
-    company: "Sen Weddings",
-    badge: "15 min quotes"
-  },
-  {
-    text: "Our production team relies on EventOS for timeline scheduling. Shared vendor dashboards and client approval workflows are completely seamless.",
-    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=250&auto=format&fit=crop",
-    name: "Rohan Kapoor",
-    role: "Operations Lead",
-    company: "Peak Corporate",
-    badge: "Timeline Sync"
-  },
-  {
-    text: "The media gallery feature is a lifesaver. We upload wedding deliverables directly, and clients love the secure, expiring guest links.",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=250&auto=format&fit=crop",
-    name: "Meera Nair",
-    role: "Creative Director",
-    company: "Vogue Gala",
-    badge: "Expiring links"
-  },
-  {
-    text: "Managing multiple corporate clients was chaos before EventOS. The multi-tenant workspace switching allows our managers to coordinate securely.",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=250&auto=format&fit=crop",
-    name: "Vikram Malhotra",
-    role: "Managing Director",
-    company: "Apex Events",
-    badge: "SOC2 compliant"
-  },
-  {
-    text: "Customer support is outstanding, and the product gets better every week. Having leads, quotes, invoices, and payment tracking under one hood is unbeatable.",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop",
-    name: "Sanya Gupta",
-    role: "Principal Planner",
-    company: "Luxe Soirees",
-    badge: "Saves 15h/wk"
-  },
-  {
-    text: "We scaled from 20 to 80 events per year after switching to EventOS. The invoicing automation alone saves our accounts team 15 hours a week.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=250&auto=format&fit=crop",
-    name: "Arjun Mehta",
-    role: "Co-founder",
-    company: "EliteDecor Events",
-    badge: "Scaled 4x"
-  },
-  {
-    text: "The instant UPI & milestone invoice clearing increased our cashflow reliability by 40%. No more chasing payments after event wrap-up.",
-    image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=250&auto=format&fit=crop",
-    name: "Pooja Sharma",
-    role: "Head of Finance",
-    company: "Royal Celebrations",
-    badge: "+40% Cashflow"
-  },
-  {
-    text: "Client feedback on our new interactive proposals has been 100% positive. Clients love approving line items directly from their mobile phones.",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=250&auto=format&fit=crop",
-    name: "Kabir Verma",
-    role: "Event Producer",
-    company: "Starlight Media",
-    badge: "100% Mobile Ready"
-  },
-  {
-    text: "Running 350-guest gala events with minute-by-minute stage cue sheets in EventOS gives our stage managers total peace of mind.",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=250&auto=format&fit=crop",
-    name: "Ananya Roy",
-    role: "Stage Director",
-    company: "Spotlight Agency",
-    badge: "Live Stage Cueing"
-  }
-];
-
-const col1 = marqueeTestimonials.slice(0, 3);
-const col2 = marqueeTestimonials.slice(3, 6);
-const col3 = marqueeTestimonials.slice(6, 9);
+import { MessageSquareWarning, FileSpreadsheet, Images, Sparkles, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { useAuthModalStore } from "@/store/authModalStore";
+import { useRouter } from "next/navigation";
 
 export function Testimonials() {
   const shouldReduceMotion = useReducedMotion();
+  const openModal = useAuthModalStore((state) => state.openModal);
+  const router = useRouter();
+
+  const problemsAndSolutions = [
+    {
+      icon: MessageSquareWarning,
+      iconColor: "text-amber-600 bg-amber-50 border-amber-200/80",
+      tag: "The Coordination Problem",
+      title: "15 WhatsApp Groups & Lost Stage Cues",
+      problem:
+        "Important stage cues, sound check schedules, and vendor instructions get buried across a dozen chaotic WhatsApp groups at 11 PM before the Sangeet.",
+      solution:
+        "Centralized live run-of-show cue sheets with minute-by-minute timeline sync and automated WhatsApp notifications directly to sound engineers, emcees, and crew.",
+    },
+    {
+      icon: FileSpreadsheet,
+      iconColor: "text-purple-600 bg-purple-50 border-purple-200/80",
+      tag: "The Proposal Bottleneck",
+      title: "4 Hours on PDFs & Chasing Advance Deposits",
+      problem:
+        "Manually calculating 18% GST line items, retyping decor specs into Canva or Word templates, and following up for days to get the 30% booking advance cleared.",
+      solution:
+        "Send interactive digital proposals in 60 seconds. Clients approve line items and pay milestone advances via instant UPI QR codes without manual chasing.",
+    },
+    {
+      icon: Images,
+      iconColor: "text-sky-600 bg-sky-50 border-sky-200/80",
+      tag: "The Deliverables Scramble",
+      title: "Expiring Drive Links & Scattered Photo Deliveries",
+      problem:
+        "Photographers sharing loose Google Drive links that expire, RAW photos lost across external hard drives, and frantic WhatsApp messages from clients asking for downloads.",
+      solution:
+        "White-labeled client delivery portals with secure, expiring guest links and digital photo proofing built directly into the event workspace.",
+    },
+  ];
+
+  const foundingPerks = [
+    "Direct 1-on-1 founder onboarding",
+    "Private founder WhatsApp support channel",
+    "Shape our roadmap with custom features",
+    "50% lifetime price lock guaranteed",
+  ];
 
   return (
     <section
-      className="py-24 border-b border-slate-200/80 bg-[#FAF9F6] relative overflow-hidden"
+      className="py-24 border-b border-slate-200/80 bg-[#FAF9F6] relative overflow-hidden text-left"
       id="testimonials"
     >
       {/* Soft background glow circles */}
@@ -169,47 +68,174 @@ export function Testimonials() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto space-y-4 mb-14"
+          className="text-center max-w-3xl mx-auto space-y-4 mb-16"
         >
-          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-purple-600 uppercase">
-            <Icon icon="solar:star-bold-duotone" className="text-amber-500 text-sm" />
-            Client Stories
+          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-purple-700 bg-purple-100/80 border border-purple-200 px-3.5 py-1.5 rounded-full uppercase">
+            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+            Why We're Building EventOS
           </span>
 
-          {/* Aggregate star rating badge */}
-          <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-800 text-xs font-bold uppercase tracking-widest backdrop-blur-md shadow-sm">
-              <div className="flex gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Icon key={i} icon="solar:star-bold" className="text-amber-500 text-base" />
-                ))}
-              </div>
-              <span className="text-slate-900 font-black text-sm">5.0</span>
-              <span className="text-slate-600 text-xs font-semibold">from 200+ agencies</span>
-            </div>
-          </div>
-
-          <p className="text-xs font-extrabold text-purple-600 uppercase tracking-widest">
-            Trusted by leading event agencies across India
-          </p>
-
           <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 font-heading leading-tight">
-            Endorsed by leading{" "}
+            Built out of frustration with spreadsheets, WhatsApp chaos, and{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-amber-600">
-              production teams.
+              payment chasing.
             </span>
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-xl mx-auto">
-            See how high-volume event creators streamline their sales, billing, and scheduling using the EventOS suite.
+
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-2xl mx-auto">
+            Indian wedding and event agencies manage crores in production budgets every season using fragmented WhatsApp chats, fragile Excel sheets, and manual invoice follow-ups. We experienced this operational mess firsthand and decided to build the dedicated operating system the industry actually needs.
           </p>
         </motion.div>
 
-        {/* 3-Column Smooth Marquee Grid */}
-        <div className="flex justify-center gap-6 mt-8 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)] max-h-[520px] sm:max-h-[700px] overflow-hidden">
-          <TestimonialsColumn testimonials={col1} duration={22} />
-          <TestimonialsColumn testimonials={col2} className="hidden md:block" duration={28} reverse />
-          <TestimonialsColumn testimonials={col3} className="hidden lg:block" duration={25} />
+        {/* 3 Problem & Solution Pillars */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          {problemsAndSolutions.map((item, idx) => {
+            const IconComp = item.icon;
+            return (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.45, delay: idx * 0.1 }}
+                className="p-7 rounded-3xl border border-slate-200/90 bg-white/95 backdrop-blur-md shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between space-y-6 group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center border ${item.iconColor} transition-transform duration-300 group-hover:scale-110`}>
+                      <IconComp size={22} />
+                    </div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                      {item.tag}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 font-heading leading-snug">
+                      {item.title}
+                    </h3>
+                  </div>
+
+                  <div className="space-y-3 pt-2">
+                    <div className="p-3.5 rounded-xl bg-rose-50/70 border border-rose-100 text-xs text-rose-950 font-medium leading-relaxed">
+                      <span className="font-extrabold text-rose-700 block uppercase text-[9px] tracking-wider mb-1">
+                        The Pain Today
+                      </span>
+                      {item.problem}
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-100 text-xs text-emerald-950 font-medium leading-relaxed">
+                      <span className="font-extrabold text-emerald-700 block uppercase text-[9px] tracking-wider mb-1 flex items-center gap-1">
+                        <CheckCircle2 size={11} className="text-emerald-600" />
+                        How EventOS Solves It
+                      </span>
+                      {item.solution}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
+
+        {/* Founder Letter & Founding Agency Cohort CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.55 }}
+          className="rounded-3xl border border-purple-200/90 bg-gradient-to-br from-purple-50/70 via-white to-indigo-50/60 p-8 sm:p-12 shadow-xl shadow-purple-500/5 relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-80 h-80 bg-purple-200/30 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left: Founder Message */}
+            <div className="lg:col-span-7 space-y-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 border border-purple-200 text-purple-700 text-xs font-bold uppercase tracking-wider">
+                <ShieldCheck size={14} className="text-purple-600" />
+                Private Beta Cohort • Limited to 25 Founding Agencies
+              </div>
+
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-heading leading-tight">
+                We're looking for 25 high-standard Indian event agencies to build with us.
+              </h3>
+
+              <div className="space-y-3 text-sm text-slate-700 font-medium leading-relaxed">
+                <p>
+                  Generic Western software like HoneyBook or HubSpot doesn't understand 18% GST invoices, banquet lawns with zero mobile signal, or WhatsApp run-of-show alerts.
+                </p>
+                <p>
+                  Instead of launching publicly to hundreds of agencies, we are hand-picking a founding cohort of <strong>25 agency partners</strong>. You'll get direct 1-on-1 access to me, our engineers will build workflows tailored to your agency, and you'll lock in 50% discount pricing for life.
+                </p>
+              </div>
+
+              {/* Founder Sign-off */}
+              <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <img
+                    src="/founder-profile/lokesh-nagrikar.png"
+                    alt="Lokesh Nagrikar - Founder of EventOS"
+                    className="h-14 w-14 rounded-full object-cover border-2 border-purple-500/40 shadow-lg shrink-0"
+                  />
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-900">Lokesh Nagrikar</h4>
+                    <p className="text-xs text-slate-500 font-semibold">Founder & Engineer, EventOS • Nagpur, India</p>
+                  </div>
+                </div>
+
+                <a
+                  href="https://www.instagram.com/solo.founder.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-50 hover:bg-pink-100 border border-pink-200/80 text-pink-700 text-xs font-bold transition-all shrink-0"
+                >
+                  <Icon icon="simple-icons:instagram" className="text-xs text-pink-600" />
+                  <span>@solo.founder.ai</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Right: Founding Member Perks & Action Box */}
+            <div className="lg:col-span-5 p-6 sm:p-7 rounded-2xl bg-white border border-purple-100 shadow-lg shadow-purple-500/5 space-y-6">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 block mb-1">
+                  Founding Partner Benefits
+                </span>
+                <h4 className="text-lg font-bold text-slate-900 font-heading">
+                  What you get as Founding Agency #1–25:
+                </h4>
+              </div>
+
+              <ul className="space-y-2.5 text-xs text-slate-700 font-semibold">
+                {foundingPerks.map((perk) => (
+                  <li key={perk} className="flex items-center gap-2.5">
+                    <div className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={13} />
+                    </div>
+                    <span>{perk}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="space-y-2.5 pt-2">
+                <button
+                  onClick={() => openModal("waitlist")}
+                  className="w-full py-3.5 px-6 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-[0.99] text-white font-extrabold text-sm transition-all shadow-md shadow-purple-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Apply for Founding Agency Cohort</span>
+                  <ArrowRight size={16} />
+                </button>
+
+                <button
+                  onClick={() => router.push("/founder-story")}
+                  className="w-full py-2 text-xs font-bold text-purple-600 hover:text-purple-700 text-center block transition-colors cursor-pointer"
+                >
+                  Read our full founder story & journey →
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

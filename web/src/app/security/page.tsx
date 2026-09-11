@@ -9,7 +9,7 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 
 export default function SecurityPage() {
   const complianceBadges = [
-    { name: "SOC 2 Type II", status: "Certified / Audited Yearly", desc: "Verifies secure management of client data based on security, availability, and processing integrity." },
+    { name: "Tenant-Isolated Architecture", status: "Active in Production", desc: "Each agency operates in an isolated PostgreSQL schema context with segregated query execution." },
     { name: "GDPR Ready", status: "Active Data Protection", desc: "Full alignment with global privacy mandates, offering automated tenant data export and deletion endpoints." },
     { name: "ISO 27001", status: "On Roadmap (Target: Q4 2026)", desc: "Rigorous standards for establishing, implementing, operating, monitoring, and reviewing information security." },
   ];
@@ -81,7 +81,7 @@ export default function SecurityPage() {
           <div className="flex items-center gap-3">
             <Shield size={18} className="text-purple-600 shrink-0" />
             <p className="text-xs font-bold text-slate-800">
-              <span className="text-slate-900 font-extrabold">Last security audit:</span> August 2026 by SRE Hardening Team — Verified Compliant
+              <span className="text-slate-900 font-extrabold">Security Architecture Review:</span> SRE Hardening & Static Analysis — Passing Best Practices
             </p>
           </div>
           <a
@@ -167,12 +167,12 @@ export default function SecurityPage() {
 
         {/* CTA */}
         <div className="p-12 border border-zinc-800 bg-zinc-950 rounded-3xl text-center space-y-4 select-none">
-          <h3 className="text-xl font-black text-white uppercase tracking-tight">Looking for our Security Audits SOC2 Documents?</h3>
+          <h3 className="text-xl font-black text-white uppercase tracking-tight">Looking for our Security & Architecture Documentation?</h3>
           <p className="text-xs text-zinc-400 font-semibold max-w-xl mx-auto leading-relaxed">
-            Our full SOC2 compliance matrices and penetration testing audit sheets are made available upon NDA authorization verification.
+            Our architecture overview, data isolation specifications, and penetration testing summaries are available upon request.
           </p>
           <button className="px-6 py-2.5 bg-purple-650 hover:bg-purple-600 text-white rounded-xl text-xs font-bold transition cursor-pointer">
-            Request Trust Vault Access
+            Request Architecture Summary
           </button>
         </div>
       </main>

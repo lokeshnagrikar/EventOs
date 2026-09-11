@@ -187,7 +187,7 @@ export function Navbar({ activeSection }: NavbarProps) {
     },
     {
       title: "Security & Trust",
-      desc: "SOC2 compliance & multi-tenant isolation",
+      desc: "Enterprise security & tenant isolation",
       icon: "solar:shield-bold-duotone",
       href: "/security",
       iconColor: "text-teal-600",

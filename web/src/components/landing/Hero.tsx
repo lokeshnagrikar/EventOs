@@ -6,7 +6,6 @@ import { motion, AnimatePresence, useReducedMotion, useMotionValue, useTransform
 import { Icon } from "@iconify/react";
 import { Button } from "@/components/ui/button";
 import { AuroraText } from "@/components/ui/aurora-text";
-import { NumberTicker } from "@/components/ui/number-ticker";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { AnimatedMeshGradient } from "@/components/ui/AnimatedMeshGradient";
 import { analytics } from "@/lib/analytics";
@@ -98,36 +97,31 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
 
   const stats = [
     {
-      value: 2847,
-      label: "Events Managed",
-      desc: "Real customer • Anonymized",
+      display: "25 Slots",
+      label: "Founding Agency Cohort",
+      desc: "Private Beta · Direct Founder Onboarding",
       icon: "solar:users-group-rounded-bold-duotone",
       badgeBg: "bg-purple-50 border-purple-200/80 text-[#7C3AED]",
       bg: "from-purple-500/10 via-purple-500/5 to-transparent",
       borderColor: "hover:border-purple-300",
     },
     {
-      value: 12.4,
-      prefix: "₹",
-      suffix: "Cr",
-      decimals: 1,
-      label: "Revenue Processed",
-      desc: "Real customer • Anonymized",
-      icon: "solar:chart-bold-duotone",
+      display: "100%",
+      label: "Tenant Data Isolation",
+      desc: "Independent PostgreSQL Schema per Agency",
+      icon: "solar:shield-check-bold-duotone",
+      badgeBg: "bg-emerald-50 border-emerald-200/80 text-emerald-600",
+      bg: "from-emerald-500/10 via-emerald-500/5 to-transparent",
+      borderColor: "hover:border-emerald-300",
+    },
+    {
+      display: "50% Off",
+      label: "Lifetime Price Lock",
+      desc: "Zero Setup Fees · Locked Pricing Forever",
+      icon: "solar:tag-price-bold-duotone",
       badgeBg: "bg-pink-50 border-pink-200/80 text-pink-600",
       bg: "from-pink-500/10 via-pink-500/5 to-transparent",
       borderColor: "hover:border-pink-300",
-    },
-    {
-      value: 99.4,
-      suffix: "%",
-      decimals: 1,
-      label: "Client Satisfaction",
-      desc: "Real customer • Anonymized",
-      icon: "solar:star-bold-duotone",
-      badgeBg: "bg-sky-50 border-sky-200/80 text-sky-600",
-      bg: "from-sky-500/10 via-sky-500/5 to-transparent",
-      borderColor: "hover:border-sky-300",
     },
   ];
 
@@ -382,10 +376,10 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
         {/* Trust signals */}
         <div className="gsap-trust opacity-0 flex flex-wrap justify-center items-center gap-5 text-[10px] text-zinc-500 font-bold tracking-wide uppercase mb-10">
           {[
-            { icon: "solar:shield-check-bold-duotone", label: "SOC 2 Certified", color: "text-emerald-500" },
+            { icon: "solar:shield-check-bold-duotone", label: "Enterprise Security Practices", color: "text-emerald-500" },
             { icon: "solar:lock-bold-duotone", label: "Tenant Isolated", color: "text-purple-500" },
             { icon: "solar:check-circle-bold-duotone", label: "GDPR Ready", color: "text-cyan-500" },
-            { icon: "solar:server-bold-duotone", label: "24/7 Monitoring", color: "text-amber-500" },
+            { icon: "solar:server-bold-duotone", label: "Isolated Database Schemas", color: "text-amber-500" },
           ].map((t) => (
             <span key={t.label} className="flex items-center gap-1.5">
               <Icon icon={t.icon} className={`${t.color} text-sm`} />
@@ -592,13 +586,7 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
                 <div className="relative z-10 flex items-center justify-between">
                   <div className="space-y-1.5 text-left">
                     <span className="text-3xl sm:text-4xl font-black text-[#111827] block tracking-tight font-heading">
-                      <NumberTicker
-                        value={stat.value}
-                        prefix={stat.prefix}
-                        suffix={stat.suffix}
-                        decimals={stat.decimals || 0}
-                        duration={1800}
-                      />
+                      {stat.display}
                     </span>
                     <h5 className="text-xs font-extrabold text-slate-900 tracking-wide uppercase">{stat.label}</h5>
                     <p className="text-[11px] text-slate-500 font-semibold flex items-center gap-1.5">

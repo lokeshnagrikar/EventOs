@@ -61,14 +61,22 @@ export default function FounderStoryPage() {
         >
           {/* Founder Bio Header */}
           <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
-            <div className="h-16 w-16 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 p-0.5 shadow-md shrink-0">
-              <div className="h-full w-full rounded-full bg-slate-900 flex items-center justify-center text-white text-xl font-black font-mono">
-                LN
-              </div>
-            </div>
+            <img
+              src="/founder-profile/lokesh-nagrikar.png"
+              alt="Lokesh Nagrikar - Creator & Lead Architect, EventOS"
+              className="h-16 w-16 rounded-full object-cover border-2 border-purple-500/50 shadow-md shrink-0"
+            />
             <div>
               <h3 className="text-base font-extrabold text-slate-900 font-heading">Lokesh Nagrikar</h3>
-              <p className="text-xs font-bold text-purple-600">Creator & Lead Architect, EventOS</p>
+              <p className="text-xs font-bold text-purple-600">Creator & Lead Architect, EventOS • Nagpur, India</p>
+              <a
+                href="https://www.instagram.com/solo.founder.ai/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-bold text-pink-600 hover:text-pink-700 hover:underline flex items-center gap-1 mt-0.5"
+              >
+                <span>@solo.founder.ai on Instagram</span>
+              </a>
             </div>
           </div>
 
@@ -87,7 +95,7 @@ export default function FounderStoryPage() {
             </p>
 
             <p>
-              I built the first version of EventOS in 6 months — working day and night to craft a system that lets planners send itemized PDF proposals in 45 seconds and automate client follow-ups. Today, over <strong>200+ event agencies</strong> are part of our founding waitlist community!
+              I built the first version of EventOS in 6 months — working day and night to craft a system that lets planners send itemized PDF proposals in 45 seconds and automate client follow-ups. We are now accepting our first cohort of <strong>25 founding agencies</strong> into our private beta community!
             </p>
           </div>
 
@@ -95,8 +103,8 @@ export default function FounderStoryPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
             <div className="p-4 rounded-2xl bg-purple-50 border border-purple-100 text-center space-y-1">
               <Users size={18} className="text-purple-600 mx-auto" />
-              <span className="text-xl font-extrabold text-slate-900 block font-heading">200+</span>
-              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wide">Founding Waitlist</span>
+              <span className="text-xl font-extrabold text-slate-900 block font-heading">25 Slots</span>
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wide">Founding Beta Cohort</span>
             </div>
             <div className="p-4 rounded-2xl bg-pink-50 border border-pink-100 text-center space-y-1">
               <Zap size={18} className="text-pink-600 mx-auto" />
@@ -111,21 +119,23 @@ export default function FounderStoryPage() {
           </div>
 
           {/* Build in Public Instagram Link */}
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-center sm:text-left">
-              <Instagram size={22} className="text-pink-600 shrink-0" />
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-50/80 via-pink-50/50 to-indigo-50/80 border border-purple-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5 text-center sm:text-left">
+              <div className="h-11 w-11 rounded-xl bg-pink-500/15 border border-pink-500/30 flex items-center justify-center text-pink-600 shrink-0">
+                <Instagram size={22} />
+              </div>
               <div>
-                <span className="text-xs font-black text-slate-900 block">Follow the Build-in-Public Journey</span>
-                <span className="text-[11px] text-slate-500 font-semibold">Behind-the-scenes engineering reels & daily updates</span>
+                <span className="text-sm font-extrabold text-slate-900 block">Follow the Build-in-Public Journey on Instagram</span>
+                <span className="text-xs text-slate-600 font-medium">Daily engineering reels, feature demos & founder behind-the-scenes (<strong className="text-pink-700 font-bold">@solo.founder.ai</strong>)</span>
               </div>
             </div>
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/solo.founder.ai/"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-white border border-slate-200 text-slate-900 rounded-xl text-xs font-bold hover:bg-slate-100 transition shrink-0"
+              className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-extrabold transition shadow-md active:scale-95 shrink-0"
             >
-              Watch Reels →
+              Follow @solo.founder.ai →
             </a>
           </div>
 

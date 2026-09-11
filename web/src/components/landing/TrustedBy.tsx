@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 
 export function TrustedBy() {
   const metrics = [
-    { value: "200+", label: "event agencies trusted EventOS" },
-    { value: "4,200+", label: "events managed in 2026" },
-    { value: "₹420+ Cr", label: "revenue processed" },
+    { value: "25 Slots", label: "Founding Agencies Cohort" },
+    { value: "1-on-1", label: "Direct Founder Onboarding" },
+    { value: "100%", label: "Tenant-Isolated Architecture" },
   ];
 
   return (

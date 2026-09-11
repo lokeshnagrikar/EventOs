@@ -86,15 +86,15 @@ export function Contact() {
             <div className="space-y-4">
               <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 uppercase">
                 <Icon icon="solar:chat-round-dots-bold-duotone" className="text-purple-600 text-sm" />
-                Contact Enterprise Desk
+                Direct Founder Contact
               </span>
 
               <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight font-heading">
-                Let's scale your event enterprise together.
+                Talk directly with the team building EventOS.
               </h2>
 
               <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
-                Have questions about custom workflows, white-label setup, or enterprise migration? Drop us a line below. Our engineering team is here 24/7.
+                Have questions about our founding agency beta, Indian GST workflows, or custom templates? Drop us a line below — our founder reads and responds to every message personally.
               </p>
             </div>
 
@@ -107,7 +107,7 @@ export function Contact() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 font-heading">Direct Email Desk</h4>
-                  <p className="text-xs text-slate-600 mt-0.5 font-medium">Rapid response within 12 hours</p>
+                  <p className="text-xs text-slate-600 mt-0.5 font-medium">Rapid response from the founder</p>
                   <a href="mailto:hello@eventosapp.in" className="text-xs font-bold text-purple-700 hover:text-purple-900 transition-colors mt-1 block">
                     hello@eventosapp.in →
                   </a>
@@ -120,10 +120,10 @@ export function Contact() {
                   <Clock size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900 font-heading">Operational SLA</h4>
-                  <p className="text-xs text-slate-600 mt-0.5 font-medium">Global support coverage</p>
+                  <h4 className="text-sm font-bold text-slate-900 font-heading">Operational Support SLA</h4>
+                  <p className="text-xs text-slate-600 mt-0.5 font-medium">Direct Founder & Team Support</p>
                   <p className="text-xs font-semibold text-slate-800 mt-1">
-                    Monday – Friday, 9:00 AM – 6:00 PM (SGT)
+                    Monday – Saturday, 9:30 AM – 7:00 PM (IST)
                   </p>
                 </div>
               </div>
@@ -134,10 +134,10 @@ export function Contact() {
                   <MapPin size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900 font-heading">Global Headquarters</h4>
-                  <p className="text-xs text-slate-600 mt-0.5 font-medium">Isolated Enterprise Hub</p>
+                  <h4 className="text-sm font-bold text-slate-900 font-heading">Product Base & HQ</h4>
+                  <p className="text-xs text-slate-600 mt-0.5 font-medium">Proudly Built in India for Event Agencies</p>
                   <p className="text-xs font-semibold text-slate-800 mt-1">
-                    Singapore, Central Business District
+                    Nagpur, Maharashtra, India
                   </p>
                 </div>
               </div>

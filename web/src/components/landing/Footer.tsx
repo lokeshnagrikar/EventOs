@@ -42,7 +42,7 @@ export function Footer() {
     { icon: "simple-icons:x", href: "https://twitter.com", label: "EventOS on X/Twitter" },
     { icon: "simple-icons:github", href: "https://github.com/lokeshnagrikar", label: "EventOS on GitHub" },
     { icon: "simple-icons:linkedin", href: "https://linkedin.com", label: "EventOS on LinkedIn" },
-    { icon: "simple-icons:instagram", href: "https://instagram.com", label: "EventOS on Instagram" },
+    { icon: "simple-icons:instagram", href: "https://www.instagram.com/solo.founder.ai/", label: "Founder on Instagram (@solo.founder.ai)" },
   ];
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -147,7 +147,7 @@ export function Footer() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[10.5px] text-emerald-300 font-bold hover:bg-emerald-900/50 transition-colors w-fit cursor-pointer"
           >
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]" />
-            All systems operational (99.9% Uptime) →
+            All systems operational • Private Beta Active →
           </a>
         </div>
 

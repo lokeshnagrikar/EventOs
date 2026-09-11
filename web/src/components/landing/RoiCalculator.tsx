@@ -202,7 +202,7 @@ export function RoiCalculator() {
 
             <div className="pt-4 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-500 font-medium">
               <ShieldCheck size={16} className="text-purple-600 shrink-0" />
-              <span>Yield benchmarks calibrated from 10,000+ Indian wedding & event agency operations.</span>
+              <span>Yield benchmarks modeled on standard Indian wedding production workflows, milestone invoicing, and follow-up cycles.</span>
             </div>
           </motion.div>
 
