@@ -223,10 +223,10 @@ export default function AiAssistant() {
     }
     if (isPublicMode) {
       return [
+        { label: "Founding Beta Cohort (50% Off)", action: () => handleSendText("How do I join the founding cohort of 25 agencies?") },
+        { label: "Talk with Founder Lokesh", action: () => handleSendText("Who is the founder of EventOS?") },
         { label: "What are the core features?", action: () => handleSendText("What are the core features of EventOS?") },
-        { label: "Explore pricing & plans", action: () => handleSendText("What are your pricing plans?") },
-        { label: "How does White-Labeling work?", action: () => handleSendText("Can I use my custom domain and brand colors?") },
-        { label: "Book a 1-on-1 demo", action: () => handleSendText("How do I book a demo?") }
+        { label: "Explore pricing & plans", action: () => handleSendText("What are your pricing plans?") }
       ];
     }
 
@@ -273,12 +273,12 @@ export default function AiAssistant() {
     if (path === "/login") {
       welcomeText = "Welcome to **EventOS**! 🔐\n\nI am your **Access Specialist**. I can help you sign in, guide you with **Google SSO**, or help you reset a forgotten password.\n\nHow can I help you access your account?";
     } else if (path === "/register") {
-      welcomeText = "Welcome to **EventOS**! ✨\n\nReady to elevate your event agency? Get started with our **14-day free trial** — zero credit card required.\n\nNeed help choosing a plan or signing up with Google SSO?";
+      welcomeText = "Welcome to **EventOS**! ✨\n\nReady to elevate your event agency? Apply for our **Founding Agency Cohort (Private Beta)** — limited to 25 agencies with a **50% lifetime price lock** and direct 1-on-1 founder onboarding.\n\nNeed help choosing a plan or signing up with Google SSO?";
     } else if (isPublicMode) {
-      welcomeText = "Welcome to **EventOS**! ✨\n\nI am your **Product Specialist**. I can help you explore our operating system for event planners, answer questions about features & pricing, or help you book a live demo.\n\nWhat would you like to know about EventOS?";
+      welcomeText = "Welcome to **EventOS**! ✨\n\nI am your **EventOS AI Concierge**. We built EventOS from Nagpur, India to replace chaotic WhatsApp groups and manual Excel quotes with a unified operating system for wedding & event agencies.\n\n• **Private Beta Active**: Limited to **25 Founding Agencies** with **50% lifetime price lock**.\n• **Founder Direct**: Built by **Lokesh Nagrikar** ([@solo.founder.ai](https://www.instagram.com/solo.founder.ai/)).\n\nWhat would you like to know about EventOS?";
     } else {
       const name = user?.firstName || "Partner";
-      welcomeText = `Hello, **${name}**! 👋\n\nI am your **EventOS Co-pilot** for **${pageContext.name}**.\n\nHow can I assist you with your operations and workflows today?`;
+      welcomeText = `Hello, **${name}**! 👋\n\nI am your **EventOS Co-pilot** for **${pageContext.name}** (${pageContext.role}).\n\nI can help you build run-of-show cue sheets, generate GST proposals, verify UPI milestone advances, or organize vendor ingress.\n\nWhat would you like to do?`;
     }
 
     setMessages([
@@ -402,7 +402,30 @@ export default function AiAssistant() {
           aiResponse =
             "**Sign In to Your Workspace:**\n\n" +
             "• Enter your work email and password or use **Continue with Google** to access your dashboard, active events, and team communications.";
-          actionBtn = { label: "Go to Sign In", href: "/login", icon: LogIn };
+        } else if (q.includes("founder") || q.includes("lokesh") || q.includes("instagram") || q.includes("who built") || q.includes("creator") || q.includes("solo")) {
+          aiResponse =
+            "**Meet the Founder of EventOS:**\n\n" +
+            "• **Solo Founder & Architect**: **Lokesh Nagrikar**, building out of Nagpur, Maharashtra, India.\n" +
+            "• **Mission**: Replacing the chaotic mess of 15 WhatsApp groups, manual Word quotes, and unpaid 30% advances with a high-performance, GST-compliant event operating system.\n" +
+            "• **Instagram**: Follow and DM him directly at **[@solo.founder.ai](https://www.instagram.com/solo.founder.ai/)**.\n" +
+            "• **Founding Beta Cohort**: We are onboarding our first 25 agency partners with direct 1-on-1 founder support.";
+          actionBtn = { label: "DM @solo.founder.ai on Instagram", href: "https://www.instagram.com/solo.founder.ai/" };
+          nextSuggestions = [
+            { label: "Apply for Founding Cohort (50% Off)", action: () => handleSendText("How do I join the founding cohort of 25 agencies?") },
+            { label: "Read the full Founder Story", action: () => router.push("/founder-story") }
+          ];
+        } else if (q.includes("cohort") || q.includes("beta") || q.includes("founding") || q.includes("slots")) {
+          aiResponse =
+            "**EventOS Founding Agency Cohort (Private Beta):**\n\n" +
+            "• **Limited to 25 Agencies**: We are hand-picking 25 high-standard Indian event agencies to build with us.\n" +
+            "• **50% Lifetime Price Lock**: Founding members lock in half-price pricing permanently.\n" +
+            "• **Direct Founder Access**: You get direct WhatsApp and 1-on-1 workflow setup with founder Lokesh.\n" +
+            "• **Tailored Modules**: We will customize line-item structures and contract terms to match your exact agency needs.";
+          actionBtn = { label: "Apply for Founding Cohort", href: "/register" };
+          nextSuggestions = [
+            { label: "Explore pricing plans", action: () => handleSendText("What are the pricing plans?") },
+            { label: "Talk with Founder on Instagram", action: () => handleSendText("Who is the founder of EventOS?") }
+          ];
         } else if (q.includes("pricing") || q.includes("cost") || q.includes("plan") || q.includes("tier")) {
           aiResponse =
             "**EventOS Transparent Pricing Plans:**\n\n" +

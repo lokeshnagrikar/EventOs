@@ -30,27 +30,38 @@ export function NumberTicker({
   const shouldReduceMotion = useReducedMotion();
   const [current, setCurrent] = useState(0);
   const rafRef = useRef<number>(0);
-  const startTimeRef = useRef<number | null>(null);
+  const fromValueRef = useRef<number>(0);
 
   useEffect(() => {
-    if (!isInView) return;
+    if (!isInView) {
+      fromValueRef.current = value;
+      return;
+    }
     if (shouldReduceMotion) {
       setCurrent(value);
+      fromValueRef.current = value;
       return;
     }
 
+    const startVal = fromValueRef.current;
+    const endVal = value;
+    const diff = endVal - startVal;
+    let startTime: number | null = null;
+
     const animate = (timestamp: number) => {
-      if (!startTimeRef.current) startTimeRef.current = timestamp;
-      const elapsed = timestamp - startTimeRef.current;
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
       const progress = Math.min(elapsed / duration, 1);
       // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCurrent(parseFloat((eased * value).toFixed(decimals)));
+      const nextVal = startVal + diff * eased;
+      setCurrent(parseFloat(nextVal.toFixed(decimals)));
 
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(animate);
       } else {
-        setCurrent(value);
+        setCurrent(endVal);
+        fromValueRef.current = endVal;
       }
     };
 

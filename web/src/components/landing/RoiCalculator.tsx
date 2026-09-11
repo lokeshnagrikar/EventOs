@@ -6,6 +6,7 @@ import { Calculator, Sparkles, TrendingUp, Clock, ShieldCheck, ArrowRight, Zap, 
 import { Icon } from "@iconify/react";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { cn } from "@/lib/utils";
+import { NumberTicker } from "@/components/ui/number-ticker";
 
 interface AgencyPreset {
   id: string;
@@ -231,7 +232,9 @@ export function RoiCalculator() {
                     </div>
                     <div>
                       <span className="text-xs text-slate-500 block font-bold">Time Reclaimed</span>
-                      <span className="text-xl font-black text-slate-900 font-mono">{hoursSavedPerMonth} hrs/mo</span>
+                      <span className="text-xl font-black text-slate-900 font-mono">
+                        <NumberTicker value={hoursSavedPerMonth} suffix=" hrs/mo" duration={450} />
+                      </span>
                     </div>
                   </div>
                   <span className="text-[10px] text-purple-700 font-bold bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-full font-mono">
@@ -246,7 +249,9 @@ export function RoiCalculator() {
                     </div>
                     <div>
                       <span className="text-xs text-slate-500 block font-bold">Scope Leakage Recovered</span>
-                      <span className="text-xl font-black text-emerald-600 font-mono">{formatCurrency(revenueRecoveredPerMonth)}/mo</span>
+                      <span className="text-xl font-black text-emerald-600 font-mono">
+                        <NumberTicker value={Math.round(revenueRecoveredPerMonth)} prefix="₹" suffix="/mo" duration={450} />
+                      </span>
                     </div>
                   </div>
                   <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full font-mono">
@@ -257,11 +262,15 @@ export function RoiCalculator() {
                 <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 border-2 border-purple-200/90 flex items-center justify-between shadow-xs">
                   <div>
                     <span className="text-[10px] font-black text-purple-800 uppercase tracking-widest block font-mono">Estimated Annual Return</span>
-                    <span className="text-3xl font-black text-purple-900 font-mono tracking-tight">{estimatedRoiMultiplier}x ROI</span>
+                    <span className="text-3xl font-black text-purple-900 font-mono tracking-tight">
+                      <NumberTicker value={estimatedRoiMultiplier} suffix="x ROI" decimals={0} duration={450} />
+                    </span>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] text-slate-500 block font-bold">Annual Net Value</span>
-                    <span className="text-base font-black text-purple-700 font-mono">{formatCurrency(annualValueCreated)}</span>
+                    <span className="text-base font-black text-purple-700 font-mono">
+                      <NumberTicker value={Math.round(annualValueCreated)} prefix="₹" duration={450} />
+                    </span>
                   </div>
                 </div>
               </div>

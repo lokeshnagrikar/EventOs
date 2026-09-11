@@ -351,25 +351,43 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-3.5 w-full sm:w-auto mb-6 z-20">
+        <div className="flex flex-col items-center gap-3 w-full sm:w-auto mb-6 z-20">
+          {/* Founding Cohort Live Scarcity Badge */}
+          <div className="gsap-cta opacity-0 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-50/90 border border-purple-200/90 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-sm">
+            <span className="flex items-center gap-1.5 text-purple-700 font-bold">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600" />
+              </span>
+              Private Beta:
+            </span>
+            <span className="font-extrabold text-slate-900 font-mono">19 of 25 Founding Slots Claimed</span>
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-300/60">
+              6 Left
+            </span>
+          </div>
+
           {/* Primary CTA */}
           <LiquidButton
             variant="brand"
             onClick={handleStartTrial}
-            className="gsap-cta opacity-0 w-full sm:w-auto flex items-center justify-center gap-2.5 px-9 py-6 rounded-full text-base font-extrabold active:scale-[0.98] group cursor-pointer shadow-xl shadow-purple-500/25"
+            className="gsap-cta opacity-0 w-full sm:w-auto flex items-center justify-center gap-2.5 px-9 py-6 rounded-full text-base font-extrabold active:scale-[0.98] group cursor-pointer shadow-xl shadow-purple-500/25 relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/40"
             size="xl"
           >
-            Join Private Beta →
-            <Icon icon="solar:arrow-right-bold" className="text-lg group-hover:translate-x-1 transition-transform duration-200" />
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform ease-in-out" />
+            <span className="relative z-10 flex items-center gap-2">
+              Join Founding Beta Cohort
+              <Icon icon="solar:arrow-right-bold" className="text-lg group-hover:translate-x-1.5 transition-transform duration-200" />
+            </span>
           </LiquidButton>
 
           {/* Secondary Soft Link CTA */}
           <button
             onClick={handleBookDemo}
-            className="gsap-cta opacity-0 text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors flex items-center gap-1.5 py-1 px-3.5 rounded-full hover:bg-purple-50/80 focus:outline-none cursor-pointer"
+            className="gsap-cta opacity-0 text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors flex items-center gap-1.5 py-1 px-3.5 rounded-full hover:bg-purple-50/80 focus:outline-none cursor-pointer group"
           >
-            <span>Get Early Access</span>
-            <Icon icon="solar:alt-arrow-right-bold-duotone" className="text-sm" />
+            <span>Talk 1-on-1 with Founder</span>
+            <Icon icon="solar:alt-arrow-right-bold-duotone" className="text-sm group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
 

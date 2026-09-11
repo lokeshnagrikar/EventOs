@@ -27,9 +27,10 @@ const ProductShowcase = dynamic(() => import("@/components/landing/ProductShowca
 const Testimonials = dynamic(() => import("@/components/landing/Testimonials").then(m => ({ default: m.Testimonials })), { ssr: true });
 const RoiCalculator = dynamic(() => import("@/components/landing/RoiCalculator").then(m => ({ default: m.RoiCalculator })), { ssr: true });
 const EventQuoteCalculator = dynamic(() => import("@/components/quote/EventQuoteCalculator").then(m => ({ default: m.EventQuoteCalculator })), { ssr: false });
+const QuoteSimulator = dynamic(() => import("@/components/landing/QuoteSimulator").then(m => ({ default: m.QuoteSimulator })), { ssr: false });
 const WhatsAppNotificationSimulator = dynamic(() => import("@/components/notifications/WhatsAppNotificationSimulator").then(m => ({ default: m.WhatsAppNotificationSimulator })), { ssr: false });
 const Pricing = dynamic(() => import("@/components/landing/Pricing").then(m => ({ default: m.Pricing })), { ssr: true });
-const Competitors = dynamic(() => import("@/components/landing/Competitors").then(m => ({ default: m.Competitors })), { ssr: true });
+const ChaosVsEventOsSlider = dynamic(() => import("@/components/landing/ChaosVsEventOsSlider").then(m => ({ default: m.ChaosVsEventOsSlider })), { ssr: false });
 const Faq = dynamic(() => import("@/components/landing/Faq").then(m => ({ default: m.Faq })), { ssr: false });
 const FinalCta = dynamic(() => import("@/components/landing/FinalCta").then(m => ({ default: m.FinalCta })), { ssr: true });
 const Contact = dynamic(() => import("@/components/landing/Contact").then(m => ({ default: m.Contact })), { ssr: true });
@@ -176,6 +177,13 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
             </Suspense>
           </div>
 
+          {/* 3. Interactive Chaos vs EventOS Before/After Split Slider */}
+          <div id="chaos-vs-eventos">
+            <Suspense fallback={<SectionSkeleton />}>
+              <ChaosVsEventOsSlider />
+            </Suspense>
+          </div>
+
           {/* 4. Modules Overview — Bento grid with 6 module previews */}
           <div id="modules">
             <Suspense fallback={<SectionSkeleton />}>
@@ -221,10 +229,10 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
             <RoiCalculator />
           </Suspense>
 
-          {/* 9c. Interactive Event Production Quote & PDF Generator */}
-          <div id="quote-calculator" className="py-12 max-w-7xl mx-auto px-4 sm:px-6">
+          {/* 9c. Interactive 45-Second Event Production Quote & PDF Generator */}
+          <div id="quote-calculator">
             <Suspense fallback={<SectionSkeleton />}>
-              <EventQuoteCalculator />
+              <QuoteSimulator />
             </Suspense>
           </div>
 
@@ -234,11 +242,6 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
               <Pricing />
             </Suspense>
           </div>
-
-          {/* Competitor Comparison */}
-          <Suspense fallback={<SectionSkeleton />}>
-            <Competitors />
-          </Suspense>
 
           {/* 11. FAQ Accordion */}
           <div id="faq">

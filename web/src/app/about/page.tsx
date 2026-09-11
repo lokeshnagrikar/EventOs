@@ -81,31 +81,49 @@ export default function AboutPage() {
         </div>
 
         {/* Founder Spotlight */}
-        <div className="p-8 sm:p-12 border border-zinc-850 bg-gradient-to-br from-zinc-950/80 via-[#121214] to-purple-950/20 rounded-3xl space-y-6 select-none max-w-4xl mx-auto shadow-xl">
+        <div className="p-8 sm:p-12 border border-zinc-800/80 bg-gradient-to-br from-zinc-950/90 via-[#121214] to-purple-950/30 rounded-3xl space-y-6 select-none max-w-4xl mx-auto shadow-2xl hover:border-purple-500/30 transition-all duration-300">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-            <img
-              src="/founder-profile/lokesh-nagrikar.png"
-              alt="Lokesh Nagrikar - Founder of EventOS"
-              className="h-24 w-24 rounded-full object-cover border-2 border-purple-500/40 shadow-xl shrink-0"
-            />
-            <div className="space-y-2 flex-1">
-              <span className="text-[10px] text-purple-400 uppercase font-black tracking-widest block font-mono">
-                Solo Founder & Architect
+            <div className="relative shrink-0 group/photo cursor-pointer">
+              <img
+                src="/founder-profile/lokesh-nagrikar.png"
+                alt="Lokesh Nagrikar - Founder of EventOS"
+                className="h-24 w-24 rounded-full object-cover border-2 border-purple-500/50 shadow-xl transition-all duration-300 group-hover/photo:scale-105 group-hover/photo:border-purple-400"
+              />
+              <span className="absolute bottom-1 right-1 flex h-4 w-4 items-center justify-center" title="Online · Building EventOS">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-[#121214]" />
               </span>
+            </div>
+            <div className="space-y-2 flex-1">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="text-[10px] text-purple-400 uppercase font-black tracking-widest font-mono">
+                  Solo Founder & Architect
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Online · Building in Nagpur</span>
+                </span>
+              </div>
               <h3 className="text-2xl font-black text-white">Lokesh Nagrikar</h3>
               <p className="text-xs text-zinc-400 font-semibold leading-relaxed">
                 Building EventOS out of Nagpur, Maharashtra, India. Dedicated to replacing the fragile mess of spreadsheets, WhatsApp groups, and late-night proposal drafting for independent event creators and wedding agencies across India.
               </p>
-              <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3">
-                <a
+              <div className="pt-3 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                <motion.a
                   href="https://www.instagram.com/solo.founder.ai/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-pink-400 text-xs font-bold transition-all"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.96 }}
+                  className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold text-white shadow-lg shadow-pink-500/25 overflow-hidden group/insta cursor-pointer transition-all"
                 >
-                  <Instagram size={14} />
-                  <span>@solo.founder.ai on Instagram</span>
-                </a>
+                  <span className="absolute inset-0 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] transition-all duration-300 group-hover/insta:opacity-95" />
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/insta:translate-x-full duration-700 transition-transform ease-in-out" />
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    <Instagram size={14} />
+                    <span>@solo.founder.ai on Instagram</span>
+                  </span>
+                </motion.a>
                 <a
                   href="/founder-story"
                   className="inline-flex items-center gap-1 text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors"

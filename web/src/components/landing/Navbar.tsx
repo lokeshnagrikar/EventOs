@@ -603,10 +603,11 @@ export function Navbar({ activeSection }: NavbarProps) {
               <LiquidButton
                 variant="appleGlass"
                 onClick={handleStartTrial}
-                className="rounded-full text-xs font-bold uppercase tracking-wider active:scale-[0.98] shadow-md shadow-purple-500/20 whitespace-nowrap shrink-0"
+                className="relative rounded-full text-xs font-bold uppercase tracking-wider active:scale-[0.98] shadow-md shadow-purple-500/20 whitespace-nowrap shrink-0 overflow-hidden group hover:border-purple-500/40 transition-all cursor-pointer"
                 size="default"
               >
-                Join Beta
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full duration-700 transition-transform ease-in-out" />
+                <span className="relative z-10">Join Beta</span>
               </LiquidButton>
             </div>
 

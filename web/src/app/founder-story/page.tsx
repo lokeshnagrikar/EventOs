@@ -60,24 +60,46 @@ export default function FounderStoryPage() {
           className="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-12 shadow-sm space-y-8 text-slate-800 leading-relaxed font-medium text-sm sm:text-base"
         >
           {/* Founder Bio Header */}
-          <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
-            <img
-              src="/founder-profile/lokesh-nagrikar.png"
-              alt="Lokesh Nagrikar - Creator & Lead Architect, EventOS"
-              className="h-16 w-16 rounded-full object-cover border-2 border-purple-500/50 shadow-md shrink-0"
-            />
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900 font-heading">Lokesh Nagrikar</h3>
-              <p className="text-xs font-bold text-purple-600">Creator & Lead Architect, EventOS • Nagpur, India</p>
-              <a
-                href="https://www.instagram.com/solo.founder.ai/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] font-bold text-pink-600 hover:text-pink-700 hover:underline flex items-center gap-1 mt-0.5"
-              >
-                <span>@solo.founder.ai on Instagram</span>
-              </a>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div className="flex items-center gap-4">
+              <div className="relative shrink-0 group/photo cursor-pointer">
+                <img
+                  src="/founder-profile/lokesh-nagrikar.png"
+                  alt="Lokesh Nagrikar - Creator & Lead Architect, EventOS"
+                  className="h-16 w-16 rounded-full object-cover border-2 border-purple-500/50 shadow-md transition-all duration-300 group-hover/photo:scale-105 group-hover/photo:border-purple-600 group-hover/photo:shadow-purple-500/20"
+                />
+                <span className="absolute bottom-0.5 right-0.5 flex h-4 w-4 items-center justify-center" title="Online · Building EventOS">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border-2 border-white" />
+                </span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-extrabold text-slate-900 font-heading">Lokesh Nagrikar</h3>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/70">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Online</span>
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-purple-600">Solo Founder & Lead Architect • Nagpur, India</p>
+              </div>
             </div>
+
+            <motion.a
+              href="https://www.instagram.com/solo.founder.ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.96 }}
+              className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold text-white shadow-md shadow-pink-500/20 overflow-hidden group/insta cursor-pointer transition-shadow hover:shadow-lg hover:shadow-pink-500/30 w-fit"
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] transition-all duration-300 group-hover/insta:opacity-95" />
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/insta:translate-x-full duration-700 transition-transform ease-in-out" />
+              <span className="relative z-10 flex items-center gap-1.5">
+                <Instagram size={14} />
+                <span>@solo.founder.ai on Instagram</span>
+              </span>
+            </motion.a>
           </div>
 
           {/* Story Paragraphs */}
