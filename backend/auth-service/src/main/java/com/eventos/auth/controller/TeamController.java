@@ -33,9 +33,8 @@ public class TeamController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
-    public ResponseEntity<?> getTeamMembers(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getTeamMembers() {
+        UUID tenantId = getTenantId();
         List<Membership> memberships = membershipRepository.findAllByTenantId(tenantId);
 
         List<Map<String, Object>> members = new ArrayList<>();
@@ -64,9 +63,8 @@ public class TeamController {
     @PostMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> addTeamMember(
-            @RequestBody Map<String, String> request,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Map<String, String> request) {
+        UUID tenantId = getTenantId();
 
         String email = request.get("email");
         if (email == null || email.isEmpty()) {
@@ -84,6 +82,8 @@ public class TeamController {
             Map<String, Object> result = authService.inviteTeamMember(tenantId, email, firstName, lastName, roleName,
                     phone, senderId);
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(createErrorResponse("FORBIDDEN", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(createErrorResponse("INVITATION_FAILED", e.getMessage()));
         }
@@ -92,9 +92,8 @@ public class TeamController {
     @PostMapping("/bulk-invite")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> bulkInvite(
-            @RequestBody Map<String, Object> request,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Map<String, Object> request) {
+        UUID tenantId = getTenantId();
         List<String> emails = (List<String>) request.get("emails");
         String roleName = (String) request.getOrDefault("role", "STAFF");
         
@@ -127,14 +126,16 @@ public class TeamController {
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> removeTeamMember(
-            @PathVariable UUID userId,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @PathVariable UUID userId) {
+        UUID tenantId = getTenantId();
         Membership membership = membershipRepository.findByUserIdAndTenantId(userId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found or access denied"));
 
+        validateRoleHierarchyMutation(tenantId, membership);
+
         membership.setStatus("INACTIVE");
         membershipRepository.save(membership);
+        authService.revokeAllUserSessions(userId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -145,14 +146,16 @@ public class TeamController {
     @PutMapping("/{userId}/suspend")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> suspendTeamMember(
-            @PathVariable UUID userId,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @PathVariable UUID userId) {
+        UUID tenantId = getTenantId();
         Membership membership = membershipRepository.findByUserIdAndTenantId(userId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found or access denied"));
 
+        validateRoleHierarchyMutation(tenantId, membership);
+
         membership.setStatus("SUSPENDED");
         membershipRepository.save(membership);
+        authService.revokeAllUserSessions(userId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -163,11 +166,12 @@ public class TeamController {
     @PutMapping("/{userId}/restore")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> restoreTeamMember(
-            @PathVariable UUID userId,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @PathVariable UUID userId) {
+        UUID tenantId = getTenantId();
         Membership membership = membershipRepository.findByUserIdAndTenantId(userId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found or access denied"));
+
+        validateRoleHierarchyMutation(tenantId, membership);
 
         membership.setStatus("ACTIVE");
         membershipRepository.save(membership);
@@ -178,7 +182,22 @@ public class TeamController {
         return ResponseEntity.ok(response);
     }
 
-    private UUID getTenantId(String header) {
+    private void validateRoleHierarchyMutation(UUID tenantId, Membership targetMembership) {
+        UUID currentUserId = getCurrentUserId();
+        if (currentUserId != null && !currentUserId.equals(targetMembership.getUser().getId())) {
+            Membership callerMembership = membershipRepository.findByUserIdAndTenantId(currentUserId, tenantId).orElse(null);
+            if (callerMembership != null && callerMembership.getRole() != null && targetMembership.getRole() != null) {
+                int callerTier = AuthService.getRoleTier(callerMembership.getRole().getName());
+                int targetTier = AuthService.getRoleTier(targetMembership.getRole().getName());
+                if (targetTier >= callerTier) {
+                    throw new org.springframework.web.server.ResponseStatusException(
+                            HttpStatus.FORBIDDEN, "Cannot modify membership of user with equal or higher role");
+                }
+            }
+        }
+    }
+
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
@@ -187,11 +206,8 @@ public class TeamController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 
     private UUID getCurrentUserId() {

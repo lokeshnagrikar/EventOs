@@ -7,12 +7,6 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["images.unsplash.com", "res.cloudinary.com"],
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   onDemandEntries: {
     maxInactiveAge: 15 * 1000, // Keep pages inactive in memory for max 15 seconds
     pagesBufferLength: 2,      // Keep only 2 pages buffered in memory

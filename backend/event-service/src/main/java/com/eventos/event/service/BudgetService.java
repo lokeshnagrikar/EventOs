@@ -129,11 +129,20 @@ public class BudgetService {
         return saved;
     }
 
+    public void deleteExpense(UUID bookingId, UUID expenseId, UUID tenantId) {
+        Expense expense = expenseRepository.findByIdAndTenantId(expenseId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expense not found or access denied"));
+        if (expense.getBookingId() == null || !expense.getBookingId().equals(bookingId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expense does not belong to the requested booking");
+        }
+        expenseRepository.delete(expense);
+        recalculateAndCheckAlerts(bookingId, tenantId);
+    }
+
     public void deleteExpense(UUID expenseId, UUID tenantId) {
         Expense expense = expenseRepository.findByIdAndTenantId(expenseId, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expense not found or access denied"));
-        expenseRepository.delete(expense);
-        recalculateAndCheckAlerts(expense.getBookingId(), tenantId);
+        deleteExpense(expense.getBookingId(), expenseId, tenantId);
     }
 
     // ─── Alerts operations ───

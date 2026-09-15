@@ -22,9 +22,8 @@ public class IntegrationController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
-    public ResponseEntity<?> getIntegrations(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getIntegrations() {
+        UUID tenantId = getTenantId();
         List<Integration> integrations = integrationService.getIntegrations(tenantId);
         
         Map<String, Object> response = new HashMap<>();
@@ -37,9 +36,8 @@ public class IntegrationController {
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> connectIntegration(
             @PathVariable String provider,
-            @RequestBody Map<String, String> request,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Map<String, String> request) {
+        UUID tenantId = getTenantId();
         String credentialsJson = request.getOrDefault("credentialsJson", "{}");
         Integration integration = integrationService.connectIntegration(tenantId, provider, credentialsJson);
         
@@ -52,9 +50,8 @@ public class IntegrationController {
     @DeleteMapping("/{provider}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> disconnectIntegration(
-            @PathVariable String provider,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @PathVariable String provider) {
+        UUID tenantId = getTenantId();
         Integration integration = integrationService.disconnectIntegration(tenantId, provider);
         
         Map<String, Object> response = new HashMap<>();
@@ -63,7 +60,7 @@ public class IntegrationController {
         return ResponseEntity.ok(response);
     }
 
-    private UUID getTenantId(String header) {
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.event.config.UserPrincipal) {
@@ -72,10 +69,7 @@ public class IntegrationController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 }

@@ -31,7 +31,12 @@ public class GalleryItemService {
     private String eventServiceBaseUrl;
 
     private final org.springframework.web.reactive.function.client.WebClient webClient = 
-        org.springframework.web.reactive.function.client.WebClient.builder().build();
+        org.springframework.web.reactive.function.client.WebClient.builder()
+            .clientConnector(new org.springframework.http.client.reactive.ReactorClientHttpConnector(
+                reactor.netty.http.client.HttpClient.create()
+                    .followRedirect(false)
+            ))
+            .build();
 
     private final GalleryItemRepository galleryItemRepository;
     private final AlbumRepository albumRepository;
@@ -215,6 +220,12 @@ public class GalleryItemService {
         Album album = albumRepository.findByIdAndTenantId(dto.getAlbumId(), tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Album not found with ID: " + dto.getAlbumId()));
 
+        if (!cloudinaryService.isValidCloudinaryUrl(dto.getUrl())) {
+            if (!dto.getUrl().startsWith("mock_") && !dto.getPublicId().startsWith("mock_")) {
+                throw new IllegalArgumentException("Invalid media URL: URL must be a valid HTTPS resource hosted on res.cloudinary.com for the configured cloud");
+            }
+        }
+
         GalleryItem item = GalleryItem.builder()
                 .tenantId(tenantId)
                 .album(album)
@@ -327,6 +338,11 @@ public class GalleryItemService {
         if (urlString == null || urlString.trim().isEmpty() || urlString.startsWith("mock_")) {
             return "mock media content bytes".getBytes();
         }
+
+        if (!cloudinaryService.isValidCloudinaryUrl(urlString)) {
+            throw new SecurityException("SSRF blocked: Media download URL is not on the trusted Cloudinary domain");
+        }
+
         try {
             return webClient.get()
                     .uri(urlString)
@@ -334,12 +350,8 @@ public class GalleryItemService {
                     .bodyToMono(byte[].class)
                     .block(java.time.Duration.ofSeconds(10));
         } catch (Exception e) {
-            log.warn("WebClient download failed for {}, falling back to simple URL stream. Error: {}", urlString, e.getMessage());
-            try (java.io.InputStream in = new java.net.URL(urlString).openStream()) {
-                return in.readAllBytes();
-            } catch (Exception ex) {
-                throw new RuntimeException("HTTP download failed: " + ex.getMessage(), ex);
-            }
+            log.error("WebClient download failed for trusted Cloudinary URL {}. Error: {}", urlString, e.getMessage());
+            throw new RuntimeException("HTTP download failed: " + e.getMessage(), e);
         }
     }
 }

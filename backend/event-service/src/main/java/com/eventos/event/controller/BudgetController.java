@@ -137,7 +137,7 @@ public class BudgetController {
             @PathVariable UUID bookingId,
             @PathVariable UUID expenseId) {
         UUID tenantId = getTenantId();
-        budgetService.deleteExpense(expenseId, tenantId);
+        budgetService.deleteExpense(bookingId, expenseId, tenantId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

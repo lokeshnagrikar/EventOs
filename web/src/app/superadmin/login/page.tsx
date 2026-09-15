@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, Lock, User, Eye, EyeOff, ShieldCheck, AlertCircle, Terminal, KeyRound } from "lucide-react";
+import { Shield, Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
-import { cn } from "@/lib/utils";
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
@@ -55,7 +54,7 @@ export default function SuperAdminLoginPage() {
     try {
       const { apiClient } = require("@/lib/api-client");
 
-      // 1. Submit corporate credentials to the real auth-service microservice
+      // 1. Submit administrator credentials to the auth-service
       const response = await apiClient.post("/auth/login", {
         email: email.trim().toLowerCase(),
         password,
@@ -77,7 +76,7 @@ export default function SuperAdminLoginPage() {
 
         // 2. Strict Privilege Boundary: Only SUPER_ADMIN users can access the platform console
         if (role !== "SUPER_ADMIN") {
-          setErrorMessage("Access Denied: Only platform Super Administrators with verified clearances can access this console.");
+          setErrorMessage("Access Denied: Only authorized platform administrators can access this console.");
           addToast("Access Denied: Insufficient platform permissions.", "error");
           setLoading(false);
           return;
@@ -92,7 +91,7 @@ export default function SuperAdminLoginPage() {
         localStorage.setItem("user_name", firstName || "Admin");
         localStorage.setItem("user_role", role);
 
-        // 4. Update Zustand state with cryptographically verified JWT & claims
+        // 4. Update Zustand state with verified JWT & claims
         setAuth(
           accessToken,
           {
@@ -107,17 +106,17 @@ export default function SuperAdminLoginPage() {
           memberships
         );
 
-        addToast(`🛡️ Verified Platform SuperAdmin clearance: Welcome, ${firstName || "Admin"}.`, "success");
+        addToast(`Welcome, ${firstName || "Admin"}.`, "success");
         router.push("/superadmin");
         return;
       } else {
-        throw new Error(response.data?.error?.message || "Authentication rejected by security gateway.");
+        throw new Error(response.data?.error?.message || "Authentication failed.");
       }
     } catch (err: any) {
       const errMsg =
         err.response?.data?.error?.message ||
         err.response?.data?.message ||
-        "Invalid corporate credentials or unauthorized platform access.";
+        "Invalid administrator credentials or unauthorized platform access.";
       const errCode = err.response?.data?.error?.code;
 
       if (errCode === "CAPTCHA_REQUIRED") {
@@ -155,17 +154,11 @@ export default function SuperAdminLoginPage() {
             <Shield size={24} className="text-white" />
           </div>
 
-          <div className="flex items-center justify-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase text-purple-400 tracking-widest bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-              <Terminal size={10} /> ZERO TRUST GATEWAY
-            </span>
-          </div>
-
           <h1 className="text-2xl font-extrabold text-white tracking-tight">
-            Platform Administration
+            EventOS Platform Administration
           </h1>
-          <p className="text-xs text-zinc-500 mt-2 font-medium">
-            Internal console. All authenticated sessions are cryptographic, audited, and immutable.
+          <p className="text-xs text-zinc-400 mt-2 font-medium">
+            Sign in with your authorized administrator credentials
           </p>
         </div>
 
@@ -181,53 +174,11 @@ export default function SuperAdminLoginPage() {
           </motion.div>
         )}
 
-        {/* Rapid Clearance Presets for Testing & RBAC Verification */}
-        <div className="mb-5 p-3 rounded-2xl bg-zinc-950/60 border border-zinc-800/80">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400">
-              Clearance Role Presets
-            </span>
-            <span className="text-[9px] font-mono text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
-              One-Click Select
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {[
-              { label: "Root SuperAdmin", email: "admin@eventosapp.in", badge: "All Operations" },
-              { label: "Operations Lead", email: "operations@eventosapp.in", badge: "Tenants & Rollouts" },
-              { label: "Support Lead", email: "support_agent@eventosapp.in", badge: "Tickets & Comms" },
-              { label: "Finance Officer", email: "finance_admin@eventosapp.in", badge: "Billing & Subscriptions" },
-              { label: "DevOps Engineer", email: "developer@eventosapp.in", badge: "Telemetry & Logs" },
-              { label: "Compliance Auditor", email: "auditor@eventosapp.in", badge: "Strict Read-Only" },
-            ].map((preset) => (
-              <button
-                key={preset.email}
-                type="button"
-                onClick={() => {
-                  setEmail(preset.email);
-                  setPassword("admin123");
-                }}
-                className={cn(
-                  "p-2 text-left rounded-xl border border-zinc-850 bg-zinc-900/60 transition group cursor-pointer hover:border-purple-500/50 hover:bg-purple-500/10",
-                  email === preset.email ? "border-purple-500 bg-purple-500/15 ring-1 ring-purple-500/30" : ""
-                )}
-              >
-                <div className="text-[10px] font-bold text-zinc-200 group-hover:text-white flex items-center justify-between">
-                  <span>{preset.label}</span>
-                </div>
-                <div className="text-[9px] font-mono text-zinc-500 truncate mt-0.5">
-                  {preset.badge}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Authentication Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">
-              Corporate Email Address
+            <label className="text-[10px] font-semibold uppercase text-zinc-400 tracking-wider">
+              Administrator Email
             </label>
             <div className="relative">
               <User size={14} className="absolute left-3.5 top-3.5 text-zinc-500" />
@@ -245,8 +196,8 @@ export default function SuperAdminLoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">
-              Master Access Key
+            <label className="text-[10px] font-semibold uppercase text-zinc-400 tracking-wider">
+              Password
             </label>
             <div className="relative">
               <Lock size={14} className="absolute left-3.5 top-3.5 text-zinc-500" />
@@ -254,10 +205,10 @@ export default function SuperAdminLoginPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter root master password"
+                placeholder="Enter your password"
                 required
                 autoComplete="current-password"
-                className="w-full pl-10 pr-10 py-3 bg-zinc-900/80 border border-zinc-800 rounded-xl text-xs placeholder-zinc-650 text-zinc-100 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/10 transition font-medium"
+                className="w-full pl-10 pr-10 py-3 bg-zinc-900/80 border border-zinc-800 rounded-xl text-xs placeholder-zinc-600 text-zinc-100 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/10 transition font-medium"
               />
               <button
                 type="button"
@@ -316,14 +267,6 @@ export default function SuperAdminLoginPage() {
             </div>
           )}
 
-          {/* Compliance & Security Badge */}
-          <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-xl flex items-center gap-3">
-            <ShieldCheck size={18} className="text-emerald-400 shrink-0" />
-            <div className="text-[10px] text-zinc-400 leading-snug">
-              <span className="font-bold text-zinc-200">Security Clearance Level 4:</span> TLS 1.3 encrypted, active session monitoring, and real-time fraud prevention enabled.
-            </div>
-          </div>
-
           {/* Submit Action Button */}
           <button
             type="submit"
@@ -333,12 +276,12 @@ export default function SuperAdminLoginPage() {
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Verifying Cryptographic Tokens...</span>
+                <span>Signing in...</span>
               </>
             ) : (
               <>
-                <KeyRound size={15} />
-                <span>Authenticate Platform Session</span>
+                <Lock size={15} />
+                <span>Sign In</span>
               </>
             )}
           </button>
@@ -346,11 +289,8 @@ export default function SuperAdminLoginPage() {
 
         {/* Footer info */}
         <div className="mt-8 pt-6 border-t border-zinc-900 text-center">
-          <p className="text-[10px] text-zinc-600 font-medium">
-            EventOS Cloud Platform • Security Protocol Standard 800-63B
-          </p>
-          <p className="text-[9px] text-zinc-700 font-mono mt-1">
-            Unauthorized intrusion attempts are traced and reported to national CERT.
+          <p className="text-[10px] text-zinc-500 font-medium">
+            EventOS Cloud Platform Administration
           </p>
         </div>
       </motion.div>

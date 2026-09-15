@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
+import { clearClientCookie } from "@/lib/clientCookies";
 import {
   Calendar,
   FileText,
@@ -178,10 +179,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     } catch (err) {
       console.error("Portal logout failed:", err);
     }
-    document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "user_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "hasSession=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    clearClientCookie("accessToken");
+    clearClientCookie("user_role");
+    clearClientCookie("user_name");
+    clearClientCookie("hasSession");
     router.push(isExpired ? "/?login=true&expired=true" : "/?login=true");
   };
 

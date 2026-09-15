@@ -23,9 +23,8 @@ public class ApiKeyController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public ResponseEntity<?> getApiKeys(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getApiKeys() {
+        UUID tenantId = getTenantId();
         List<ApiKey> keys = apiKeyRepository.findAllByTenantId(tenantId);
         
         Map<String, Object> response = new HashMap<>();
@@ -37,9 +36,19 @@ public class ApiKeyController {
     @PostMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> generateApiKey(
-            @RequestBody Map<String, String> request,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Map<String, String> request) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal principal && principal.isImpersonated()) {
+            Map<String, Object> errorDetails = new HashMap<>();
+            errorDetails.put("code", "FORBIDDEN");
+            errorDetails.put("message", "API key generation is prohibited during impersonated sessions");
+            Map<String, Object> errResponse = new HashMap<>();
+            errResponse.put("success", false);
+            errResponse.put("error", errorDetails);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errResponse);
+        }
+
+        UUID tenantId = getTenantId();
         String name = request.getOrDefault("name", "Default API Key");
         String scopes = request.getOrDefault("scopes", "crm:read,events:read");
 
@@ -72,8 +81,10 @@ public class ApiKeyController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> revokeApiKey(@PathVariable UUID id) {
-        ApiKey key = apiKeyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("API Key not found"));
+        UUID tenantId = getTenantId();
+        ApiKey key = apiKeyRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "API Key not found"));
         
         key.setRevoked(true);
         apiKeyRepository.save(key);
@@ -87,8 +98,10 @@ public class ApiKeyController {
     @PostMapping("/{id}/rotate")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> rotateApiKey(@PathVariable UUID id) {
-        ApiKey key = apiKeyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("API Key not found"));
+        UUID tenantId = getTenantId();
+        ApiKey key = apiKeyRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "API Key not found"));
 
         String secret = generateRandomString(32);
         String fullKey = key.getPrefix() + "." + secret;
@@ -115,7 +128,7 @@ public class ApiKeyController {
         return sb.toString();
     }
 
-    private UUID getTenantId(String header) {
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
@@ -124,10 +137,7 @@ public class ApiKeyController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 }

@@ -161,7 +161,7 @@ public class BookingController {
             @ExampleObject(name = "Full payment settled", value = "{\"amount\": \"853200.00\"}")
     }))
     @PatchMapping("/{id}/payment")
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     public ResponseEntity<?> updatePayment(@PathVariable UUID id, @RequestBody Map<String, String> request) {
         String amountStr = request.get("amount");
         if (amountStr == null || amountStr.isEmpty()) {

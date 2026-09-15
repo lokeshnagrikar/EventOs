@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 import { useAuthStore } from "@/store/authStore";
+import { setClientCookie } from "@/lib/clientCookies";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { analytics } from "@/lib/analytics";
 import { AuthLoader } from "./AuthLoader";
@@ -149,9 +150,9 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
       const { accessToken: jwtToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
       
       // Store session cookies
-      document.cookie = "hasSession=true; path=/; SameSite=Lax";
-      document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
-      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      setClientCookie("hasSession", "true", 604800);
+      setClientCookie("user_name", firstName, 604800);
+      setClientCookie("user_role", role, 604800);
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
       
@@ -160,8 +161,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
         jwtToken,
         { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        memberships,
-        response.data.data.refreshToken
+        memberships
       );
 
       addToast("Successfully registered workspace via Google!", "success");
@@ -177,7 +177,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
         router.push("/workspace-select");
       }
     } catch (err: any) {
-      console.error("[GOOGLE_AUTH] Full error:", err?.response?.status, err?.response?.data, err?.message);
+      console.error("[GOOGLE_AUTH] Registration failed with status:", err?.response?.status);
       const errMsg = err.response?.data?.error?.message 
         || err.response?.data?.message 
         || (err.response?.status ? `Google registration failed (${err.response.status}). Please try again.` : "Google registration failed. Backend may be offline.")

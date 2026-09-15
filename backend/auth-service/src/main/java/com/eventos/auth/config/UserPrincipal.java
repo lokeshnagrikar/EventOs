@@ -8,6 +8,8 @@ public class UserPrincipal implements Principal {
     private final UUID tenantId;
     private final String email;
     private final String roles;
+    private final boolean impersonated;
+    private final UUID originalAdminId;
 
     @Override
     public String getName() {
@@ -15,10 +17,16 @@ public class UserPrincipal implements Principal {
     }
 
     public UserPrincipal(UUID userId, UUID tenantId, String email, String roles) {
+        this(userId, tenantId, email, roles, false, null);
+    }
+
+    public UserPrincipal(UUID userId, UUID tenantId, String email, String roles, boolean impersonated, UUID originalAdminId) {
         this.userId = userId;
         this.tenantId = tenantId;
         this.email = email;
         this.roles = roles;
+        this.impersonated = impersonated;
+        this.originalAdminId = originalAdminId;
     }
 
     public UUID getUserId() {
@@ -34,6 +42,26 @@ public class UserPrincipal implements Principal {
     }
 
     public String getRoles() {
+        return roles;
+    }
+
+    public boolean isImpersonated() {
+        return impersonated;
+    }
+
+    public UUID getOriginalAdminId() {
+        return originalAdminId;
+    }
+
+    public UUID getEffectiveUserId() {
+        return userId;
+    }
+
+    public UUID getEffectiveTenantId() {
+        return tenantId;
+    }
+
+    public String getEffectiveRoles() {
         return roles;
     }
 }

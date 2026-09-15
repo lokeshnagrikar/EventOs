@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
+import { clearClientCookie } from "@/lib/clientCookies";
 
 const IDLE_TIMEOUT_MS = 60 * 60 * 1000; // 1 Hour Inactivity Timeout
 
@@ -25,9 +26,10 @@ export function useIdleTimer() {
       timerRef.current = setTimeout(() => {
         // Clear session cookies & state on idle timeout
         clearAuth();
-        document.cookie = "hasSession=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        document.cookie = "user_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        clearClientCookie("hasSession");
+        clearClientCookie("user_name");
+        clearClientCookie("user_role");
+        clearClientCookie("accessToken");
         
         addToast("Logged out due to inactivity for your security.", "info");
         router.push("/?login=true&expired=true");

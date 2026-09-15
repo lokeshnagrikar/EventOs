@@ -306,4 +306,79 @@ public class CloudinaryService {
     public boolean isMockMode() {
         return this.isMockMode;
     }
+
+    public boolean isValidCloudinaryUrl(String urlString) {
+        if (urlString == null || urlString.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            String trimmed = urlString.trim();
+
+            // Reject userinfo, backslashes, path traversal sequences
+            if (trimmed.contains("@") || trimmed.contains("\\") || trimmed.contains("..") || trimmed.contains("\0")) {
+                return false;
+            }
+
+            // Decode potential multi-level URL encoding to catch double-encoded traversal like %252e
+            String decoded = trimmed;
+            try {
+                decoded = java.net.URLDecoder.decode(trimmed, java.nio.charset.StandardCharsets.UTF_8.name());
+                decoded = java.net.URLDecoder.decode(decoded, java.nio.charset.StandardCharsets.UTF_8.name());
+            } catch (Exception ignored) {}
+
+            if (decoded.contains("..") || decoded.contains("\\") || decoded.contains("@") || decoded.contains("\0")) {
+                return false;
+            }
+
+            java.net.URI uri = java.net.URI.create(trimmed);
+
+            // 1. HTTPS only
+            if (!"https".equalsIgnoreCase(uri.getScheme())) {
+                return false;
+            }
+
+            // 2. User info strictly forbidden
+            if (uri.getUserInfo() != null) {
+                return false;
+            }
+
+            // 3. Default port (443) only
+            if (uri.getPort() != -1 && uri.getPort() != 443) {
+                return false;
+            }
+
+            // 4. Exact trusted Cloudinary hostname only (rejects localhost, loopbacks, private IPs, metadata IPs, attacker.com)
+            String host = uri.getHost();
+            if (host == null || !host.equalsIgnoreCase("res.cloudinary.com")) {
+                return false;
+            }
+
+            // 5. Safe canonical path, no traversal
+            String path = uri.getPath();
+            if (path == null || path.isEmpty()) {
+                return false;
+            }
+
+            java.net.URI normalized = uri.normalize();
+            if (!normalized.getPath().equals(path) || path.contains("/../") || path.endsWith("/..")) {
+                return false;
+            }
+
+            // 6. Expected cloud name check
+            if (cloudName != null && !cloudName.trim().isEmpty()) {
+                String expected = cloudName.trim();
+                boolean matchesCloudName = path.startsWith("/" + expected + "/");
+                if (!matchesCloudName && "demo".equalsIgnoreCase(expected)) {
+                    matchesCloudName = path.startsWith("/demo/");
+                }
+                if (!matchesCloudName) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

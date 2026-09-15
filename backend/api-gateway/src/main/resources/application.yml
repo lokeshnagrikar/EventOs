@@ -80,15 +80,30 @@ app:
   gateway:
     secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
   rate-limiting:
-    enabled: true
-    default-limit: 100
-    default-window-seconds: 60
-    auth-login-limit: 5
-    auth-login-window-seconds: 10
-    auth-register-limit: 5
-    auth-register-window-seconds: 10
-    password-reset-limit: 3
-    password-reset-window-seconds: 60
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    default-limit: ${RATE_LIMIT_DEFAULT_LIMIT:120}
+    default-window-seconds: ${RATE_LIMIT_DEFAULT_WINDOW:60}
+    auth-login-limit: ${RATE_LIMIT_LOGIN_LIMIT:10}
+    auth-login-window-seconds: ${RATE_LIMIT_LOGIN_WINDOW:60}
+    auth-register-limit: ${RATE_LIMIT_REGISTER_LIMIT:5}
+    auth-register-window-seconds: ${RATE_LIMIT_REGISTER_WINDOW:60}
+    password-reset-limit: ${RATE_LIMIT_PASSWORD_RESET_LIMIT:5}
+    password-reset-window-seconds: ${RATE_LIMIT_PASSWORD_RESET_WINDOW:60}
+    otp-limit: ${RATE_LIMIT_OTP_LIMIT:5}
+    otp-window-seconds: ${RATE_LIMIT_OTP_WINDOW:60}
+    magic-link-limit: ${RATE_LIMIT_MAGIC_LINK_LIMIT:5}
+    magic-link-window-seconds: ${RATE_LIMIT_MAGIC_LINK_WINDOW:60}
+    refresh-limit: ${RATE_LIMIT_REFRESH_LIMIT:60}
+    refresh-window-seconds: ${RATE_LIMIT_REFRESH_WINDOW:60}
+    logout-limit: ${RATE_LIMIT_LOGOUT_LIMIT:20}
+    logout-window-seconds: ${RATE_LIMIT_LOGOUT_WINDOW:60}
+    superadmin-mutation-limit: ${RATE_LIMIT_SUPERADMIN_MUTATION_LIMIT:10}
+    superadmin-mutation-window-seconds: ${RATE_LIMIT_SUPERADMIN_MUTATION_WINDOW:60}
+    superadmin-read-limit: ${RATE_LIMIT_SUPERADMIN_READ_LIMIT:30}
+    superadmin-read-window-seconds: ${RATE_LIMIT_SUPERADMIN_READ_WINDOW:60}
+    public-limit: ${RATE_LIMIT_PUBLIC_LIMIT:60}
+    public-window-seconds: ${RATE_LIMIT_PUBLIC_WINDOW:60}
+    trusted-proxies: ${RATE_LIMIT_TRUSTED_PROXIES:127.0.0.1,::1}
 
 management:
   endpoints:

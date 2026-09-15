@@ -46,6 +46,16 @@ public class Quote extends AbstractTenantAwareEntity {
     @Column(name = "quote_number", nullable = false)
     private String quoteNumber;
 
+    @Column(name = "share_token", nullable = false, unique = true, length = 64)
+    private String shareToken;
+
+    @PrePersist
+    public void ensureShareToken() {
+        if (this.shareToken == null || this.shareToken.trim().isEmpty()) {
+            this.shareToken = java.util.UUID.randomUUID().toString().replace("-", "");
+        }
+    }
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private QuoteStatus status;

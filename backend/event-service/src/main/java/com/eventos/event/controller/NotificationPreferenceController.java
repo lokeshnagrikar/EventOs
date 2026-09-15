@@ -22,9 +22,8 @@ public class NotificationPreferenceController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
-    public ResponseEntity<?> getPreferences(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getPreferences() {
+        UUID tenantId = getTenantId();
         
         Integration integration = integrationRepository.findByTenantIdAndProviderName(tenantId, "NOTIFICATION_PREFERENCES")
                 .orElseGet(() -> {
@@ -47,9 +46,8 @@ public class NotificationPreferenceController {
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
     @Transactional
     public ResponseEntity<?> updatePreferences(
-            @RequestBody Map<String, Object> request,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Map<String, Object> request) {
+        UUID tenantId = getTenantId();
         
         Integration integration = integrationRepository.findByTenantIdAndProviderName(tenantId, "NOTIFICATION_PREFERENCES")
                 .orElseGet(() -> Integration.builder()
@@ -68,7 +66,7 @@ public class NotificationPreferenceController {
         return ResponseEntity.ok(response);
     }
 
-    private UUID getTenantId(String header) {
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.event.config.UserPrincipal) {
@@ -77,10 +75,7 @@ public class NotificationPreferenceController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 }

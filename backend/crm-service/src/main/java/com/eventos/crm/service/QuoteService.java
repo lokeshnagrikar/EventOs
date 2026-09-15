@@ -228,9 +228,12 @@ public class QuoteService {
         // Quote number format QT-XXXX-v1
         String quoteNumber = "QT-" + String.format("%04d", nextVal) + "-v1";
 
+        String shareToken = UUID.randomUUID().toString().replace("-", "");
+
         Quote quote = Quote.builder()
                 .leadId(dto.getLeadId())
                 .quoteNumber(quoteNumber)
+                .shareToken(shareToken)
                 .status(QuoteStatus.DRAFT)
                 .templateName(dto.getTemplateName() != null ? dto.getTemplateName() : "MINIMALIST")
                 .subtotal(subtotal)
@@ -347,9 +350,12 @@ public class QuoteService {
                     .build());
         }
 
+        String shareToken = UUID.randomUUID().toString().replace("-", "");
+
         Quote revision = Quote.builder()
                 .leadId(parent.getLeadId())
                 .quoteNumber(newQuoteNumber)
+                .shareToken(shareToken)
                 .status(QuoteStatus.DRAFT)
                 .templateName(parent.getTemplateName())
                 .subtotal(parent.getSubtotal())
@@ -629,8 +635,8 @@ public class QuoteService {
 
     // ─── Public Quote Portal Methods (Direct Client Access) ────────────────────
 
-    public com.eventos.crm.dto.PublicQuoteResponseDto getPublicQuote(String token) {
-        Quote quote = findQuoteByTokenOrId(token);
+    public com.eventos.crm.dto.PublicQuoteResponseDto getPublicQuote(String shareToken) {
+        Quote quote = findQuoteByShareToken(shareToken);
         UUID tenantId = quote.getTenantId();
 
         // Mark as viewed if currently sent
@@ -643,8 +649,8 @@ public class QuoteService {
         return mapToPublicDto(quote, lead);
     }
 
-    public com.eventos.crm.dto.PublicQuoteResponseDto approvePublicQuote(String token, String signerName, String signerTitle) {
-        Quote quote = findQuoteByTokenOrId(token);
+    public com.eventos.crm.dto.PublicQuoteResponseDto approvePublicQuote(String shareToken, String signerName, String signerTitle) {
+        Quote quote = findQuoteByShareToken(shareToken);
         UUID tenantId = quote.getTenantId();
 
         if (quote.getStatus() != QuoteStatus.ACCEPTED) {
@@ -670,8 +676,8 @@ public class QuoteService {
         return mapToPublicDto(quote, lead);
     }
 
-    public com.eventos.crm.dto.PublicQuoteResponseDto rejectPublicQuote(String token, String rejectionNotes) {
-        Quote quote = findQuoteByTokenOrId(token);
+    public com.eventos.crm.dto.PublicQuoteResponseDto rejectPublicQuote(String shareToken, String rejectionNotes) {
+        Quote quote = findQuoteByShareToken(shareToken);
         UUID tenantId = quote.getTenantId();
 
         quote.setStatus(QuoteStatus.REJECTED);
@@ -695,18 +701,12 @@ public class QuoteService {
         return pdfGenerationService.generateQuotePdf(quote, lead);
     }
 
-    private Quote findQuoteByTokenOrId(String token) {
-        if (token == null || token.trim().isEmpty()) {
-            throw new IllegalArgumentException("Quote identifier cannot be empty");
+    private Quote findQuoteByShareToken(String shareToken) {
+        if (shareToken == null || shareToken.trim().isEmpty()) {
+            throw new IllegalArgumentException("Quote share token cannot be empty");
         }
-        try {
-            UUID id = UUID.fromString(token.trim());
-            return quoteRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Quote not found with ID: " + token));
-        } catch (IllegalArgumentException ex) {
-            return quoteRepository.findByQuoteNumber(token.trim())
-                    .orElseThrow(() -> new IllegalArgumentException("Quote not found with number: " + token));
-        }
+        return quoteRepository.findByShareToken(shareToken.trim())
+                .orElseThrow(() -> new IllegalArgumentException("Quote not found with provided share token"));
     }
 
     private com.eventos.crm.dto.PublicQuoteResponseDto mapToPublicDto(Quote quote, Lead lead) {
@@ -734,6 +734,7 @@ public class QuoteService {
         return com.eventos.crm.dto.PublicQuoteResponseDto.builder()
                 .id(quote.getId())
                 .quoteNumber(quote.getQuoteNumber())
+                .shareToken(quote.getShareToken())
                 .status(quote.getStatus() != null ? quote.getStatus().name() : "DRAFT")
                 .templateName(quote.getTemplateName())
                 .subtotal(quote.getSubtotal())

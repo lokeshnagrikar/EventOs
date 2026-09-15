@@ -50,9 +50,8 @@ public class BillingController {
 
     @GetMapping("/subscription")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
-    public ResponseEntity<?> getSubscription(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getSubscription() {
+        UUID tenantId = getTenantId();
         Subscription subscription = billingService.getSubscription(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -64,14 +63,19 @@ public class BillingController {
     @PostMapping("/subscription/upgrade")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> upgradeSubscription(
-            @RequestBody Map<String, String> body,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Map<String, String> body) {
+        UUID tenantId = getTenantId();
         String planCode = body.get("planCode");
         if (planCode == null || planCode.isEmpty()) {
             throw new org.springframework.web.server.ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "planCode parameter is missing");
         }
+
+        if (billingService.isPaidPlan(planCode)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Direct upgrade to paid plan '" + planCode + "' is not permitted. Paid plan activation requires verified checkout via /subscription/checkout.");
+        }
+
         Subscription updated = billingService.upgradeSubscription(tenantId, planCode);
 
         Map<String, Object> response = new HashMap<>();
@@ -82,9 +86,8 @@ public class BillingController {
 
     @PostMapping("/subscription/cancel")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public ResponseEntity<?> cancelSubscription(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> cancelSubscription() {
+        UUID tenantId = getTenantId();
         Subscription cancelled = billingService.cancelSubscription(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -95,9 +98,8 @@ public class BillingController {
 
     @PostMapping("/subscription/pause")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public ResponseEntity<?> pauseSubscription(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> pauseSubscription() {
+        UUID tenantId = getTenantId();
         Subscription paused = billingService.pauseSubscription(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -108,9 +110,8 @@ public class BillingController {
 
     @PostMapping("/subscription/reactivate")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public ResponseEntity<?> reactivateSubscription(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> reactivateSubscription() {
+        UUID tenantId = getTenantId();
         Subscription reactivated = billingService.reactivateSubscription(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -121,9 +122,8 @@ public class BillingController {
 
     @GetMapping("/usage")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
-    public ResponseEntity<?> getUsage(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getUsage() {
+        UUID tenantId = getTenantId();
         TenantUsage usage = billingService.getUsage(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -135,9 +135,8 @@ public class BillingController {
     @PostMapping("/usage/increment")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> incrementUsage(
-            @RequestBody Map<String, Object> body,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Map<String, Object> body) {
+        UUID tenantId = getTenantId();
         String metric = (String) body.get("metric");
         Integer amount = (Integer) body.get("amount");
         if (metric == null || amount == null) {
@@ -154,9 +153,8 @@ public class BillingController {
 
     @GetMapping("/invoices")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public ResponseEntity<?> getInvoices(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getInvoices() {
+        UUID tenantId = getTenantId();
         List<Invoice> invoices = billingService.getInvoices(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -167,9 +165,8 @@ public class BillingController {
 
     @GetMapping("/payment-methods")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public ResponseEntity<?> getPaymentMethods(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getPaymentMethods() {
+        UUID tenantId = getTenantId();
         List<PaymentMethod> paymentMethods = billingService.getPaymentMethods(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -181,9 +178,8 @@ public class BillingController {
     @PostMapping("/payment-methods")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> addPaymentMethod(
-            @RequestBody PaymentMethod pm,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody PaymentMethod pm) {
+        UUID tenantId = getTenantId();
         PaymentMethod saved = billingService.addPaymentMethod(tenantId, pm);
 
         Map<String, Object> response = new HashMap<>();
@@ -195,9 +191,8 @@ public class BillingController {
     @DeleteMapping("/payment-methods/{id}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> deletePaymentMethod(
-            @PathVariable UUID id,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @PathVariable UUID id) {
+        UUID tenantId = getTenantId();
         billingService.deletePaymentMethod(tenantId, id);
 
         Map<String, Object> response = new HashMap<>();
@@ -208,9 +203,8 @@ public class BillingController {
     @PostMapping("/payment-methods/{id}/default")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> setDefaultPaymentMethod(
-            @PathVariable UUID id,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @PathVariable UUID id) {
+        UUID tenantId = getTenantId();
         billingService.setDefaultPaymentMethod(tenantId, id);
 
         Map<String, Object> response = new HashMap<>();
@@ -220,9 +214,8 @@ public class BillingController {
 
     @GetMapping("/settings")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
-    public ResponseEntity<?> getSettings(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getSettings() {
+        UUID tenantId = getTenantId();
         WorkspaceSettings settings = billingService.getWorkspaceSettings(tenantId);
 
         Map<String, Object> response = new HashMap<>();
@@ -234,9 +227,8 @@ public class BillingController {
     @PutMapping("/settings")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> updateSettings(
-            @RequestBody WorkspaceSettings settings,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody WorkspaceSettings settings) {
+        UUID tenantId = getTenantId();
         WorkspaceSettings updated = billingService.updateWorkspaceSettings(tenantId, settings);
 
         Map<String, Object> response = new HashMap<>();
@@ -247,7 +239,7 @@ public class BillingController {
 
     // Super Admin Dashboard Metrics API
     @GetMapping("/superadmin/dashboard")
-    @PreAuthorize("hasRole('SUPER_ADMIN')") // Only Platform Superadmin can hit admin stats
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('admin:read')")
     public ResponseEntity<?> getSuperAdminDashboard() {
         Map<String, Object> metrics = billingService.getSuperAdminDashboardMetrics();
         Map<String, Object> response = new HashMap<>();
@@ -258,7 +250,7 @@ public class BillingController {
 
     // Super Admin Tenants List API
     @GetMapping("/superadmin/tenants")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('tenant:read')")
     public ResponseEntity<?> getSuperAdminTenants() {
         List<Map<String, Object>> tenants = billingService.getSuperAdminTenants();
         Map<String, Object> response = new HashMap<>();
@@ -269,7 +261,7 @@ public class BillingController {
 
     // Super Admin Users List API
     @GetMapping("/superadmin/users")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('user:read')")
     public ResponseEntity<?> getSuperAdminUsers() {
         List<Map<String, Object>> users = billingService.getSuperAdminUsers();
         Map<String, Object> response = new HashMap<>();
@@ -280,9 +272,16 @@ public class BillingController {
 
     // Super Admin Impersonate Tenant API
     @PostMapping("/superadmin/tenants/{id}/impersonate")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> impersonateTenant(@PathVariable UUID id) {
-        String token = billingService.impersonateTenant(id);
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('tenant:impersonate')")
+    public ResponseEntity<?> impersonateTenant(@PathVariable UUID id, jakarta.servlet.http.HttpServletRequest request) {
+        UUID adminUserId = null;
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
+            adminUserId = ((com.eventos.auth.config.UserPrincipal) auth.getPrincipal()).getUserId();
+        }
+        String ip = request != null ? request.getRemoteAddr() : null;
+        String token = billingService.impersonateTenant(id, adminUserId, ip);
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("accessToken", token);
@@ -291,11 +290,11 @@ public class BillingController {
 
     // Super Admin Upgrade Tenant API
     @PostMapping("/superadmin/tenants/{id}/upgrade")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('billing:write')")
     public ResponseEntity<?> forceUpgradeTenant(
             @PathVariable UUID id,
-            @RequestBody Map<String, String> body) {
-        String planCode = body.get("planCode");
+            @RequestBody Map<String, Object> body) {
+        String planCode = body.get("planCode") != null ? body.get("planCode").toString() : null;
         if (planCode == null || planCode.isEmpty()) {
             throw new org.springframework.web.server.ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "planCode parameter is missing");
@@ -309,7 +308,7 @@ public class BillingController {
 
     // Super Admin Cohort Analytics API
     @GetMapping("/superadmin/analytics/cohorts")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('telemetry:read')")
     public ResponseEntity<?> getCohortAnalytics() {
         Map<String, Object> data = billingService.getCohortAnalytics();
         Map<String, Object> response = new HashMap<>();
@@ -320,7 +319,7 @@ public class BillingController {
 
     // Super Admin Announcements API - GET
     @GetMapping("/superadmin/announcements")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('announcements:read')")
     public ResponseEntity<?> getAnnouncements() {
         List<Map<String, Object>> list = billingService.getAnnouncements();
         Map<String, Object> response = new HashMap<>();
@@ -331,7 +330,7 @@ public class BillingController {
 
     // Super Admin Announcements API - POST
     @PostMapping("/superadmin/announcements")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('announcements:write')")
     public ResponseEntity<?> createAnnouncement(@RequestBody Map<String, String> body) {
         Map<String, Object> created = billingService.createAnnouncement(body);
         Map<String, Object> response = new HashMap<>();
@@ -342,7 +341,7 @@ public class BillingController {
 
     // Super Admin Security Blacklist API - GET
     @GetMapping("/superadmin/security/blacklist")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('blacklist:read')")
     public ResponseEntity<?> getBlacklist() {
         List<Map<String, Object>> list = billingService.getBlacklistedIps();
         Map<String, Object> response = new HashMap<>();
@@ -353,7 +352,7 @@ public class BillingController {
 
     // Super Admin Security Blacklist API - POST
     @PostMapping("/superadmin/security/blacklist")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('blacklist:write')")
     public ResponseEntity<?> addBlacklistIp(@RequestBody Map<String, String> body) {
         Map<String, Object> created = billingService.addBlacklistIp(body);
         Map<String, Object> response = new HashMap<>();
@@ -364,7 +363,7 @@ public class BillingController {
 
     // Super Admin Security Blacklist API - DELETE
     @DeleteMapping("/superadmin/security/blacklist/{ip}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('blacklist:write')")
     public ResponseEntity<?> removeBlacklistIp(@PathVariable String ip) {
         billingService.removeBlacklistIp(ip);
         Map<String, Object> response = new HashMap<>();
@@ -375,7 +374,7 @@ public class BillingController {
 
     // Super Admin Update Tenant Status API
     @PostMapping("/superadmin/tenants/{id}/status")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('tenant:write')")
     public ResponseEntity<?> updateTenantStatus(
             @PathVariable UUID id,
             @RequestBody Map<String, String> body) {
@@ -389,7 +388,7 @@ public class BillingController {
 
     // Super Admin Update User Status API
     @PostMapping("/superadmin/users/{id}/status")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('tenant:user:status')")
     public ResponseEntity<?> updateUserStatus(
             @PathVariable UUID id,
             @RequestBody Map<String, String> body) {
@@ -403,7 +402,7 @@ public class BillingController {
 
     // Super Admin Reset User Password API
     @PostMapping("/superadmin/users/reset-password")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('user:password-reset')")
     public ResponseEntity<?> resetUserPassword(
             @RequestBody Map<String, String> body) {
         String email = body.get("email");
@@ -421,10 +420,9 @@ public class BillingController {
     @PostMapping("/subscription/checkout")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> createCheckoutSession(
-            @RequestBody Map<String, String> body,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+            @RequestBody Map<String, String> body) {
 
-        UUID tenantId = getTenantId(tenantIdHeader);
+        UUID tenantId = getTenantId();
         String planCode = body.get("planCode");
         if (planCode == null || planCode.isEmpty()) {
             throw new org.springframework.web.server.ResponseStatusException(
@@ -499,6 +497,10 @@ public class BillingController {
 
             com.stripe.model.checkout.Session session = com.stripe.model.checkout.Session.create(params);
 
+            if (session != null && session.getId() != null) {
+                billingService.createCheckoutBinding(session.getId(), tenantId, planCode, chargedPaise, "inr", session.getCustomer());
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("data", Map.of("url", session.getUrl()));
@@ -537,14 +539,8 @@ public class BillingController {
                         .getObject()
                         .orElseThrow(() -> new IllegalArgumentException("Invalid Checkout Session webhook payload"));
 
-                String tenantIdStr = session.getMetadata().get("tenantId");
-                String planCode = session.getMetadata().get("planCode");
-
-                if (tenantIdStr != null && planCode != null) {
-                    UUID tenantId = UUID.fromString(tenantIdStr);
-                    billingService.upgradeSubscription(tenantId, planCode);
-                    log.info("[STRIPE WEBHOOK] Successfully upgraded Tenant {} to plan {}", tenantIdStr, planCode);
-                }
+                billingService.processStripeCheckoutSession(session);
+                log.info("[STRIPE WEBHOOK] Successfully verified and processed Checkout Session: {}", session.getId());
             }
 
             return ResponseEntity.ok("Webhook Handled Successfully");
@@ -559,7 +555,7 @@ public class BillingController {
 
     // Super Admin platform logs API
     @GetMapping("/superadmin/logs")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('audit:read')")
     public ResponseEntity<?> getSuperAdminLogs() {
         List<AuditLog> logs = auditLogRepository.findAll();
         logs.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
@@ -570,7 +566,7 @@ public class BillingController {
         return ResponseEntity.ok(response);
     }
 
-    private UUID getTenantId(String header) {
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
@@ -579,10 +575,7 @@ public class BillingController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 }

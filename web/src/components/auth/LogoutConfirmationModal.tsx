@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 export function LogoutConfirmationModal() {
   const router = useRouter();
   const { isLogoutOpen, closeLogoutModal } = useAuthModalStore();
-  const { clearAuth, user, activeTenantId, memberships } = useAuthStore();
+  const { clearAuth, logout, user, activeTenantId, memberships } = useAuthStore();
   const addToast = useToastStore((state) => state.addToast);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -21,22 +21,14 @@ export function LogoutConfirmationModal() {
   const handleConfirmLogout = async () => {
     setLoggingOut(true);
     try {
-      // Clear cookies
-      document.cookie = "hasSession=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      document.cookie = "user_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
-      // Clear local storage items
-      localStorage.removeItem("user_name");
-      localStorage.removeItem("user_role");
-
-      // Clear Zustand Auth state
-      clearAuth();
+      // Invalidate backend session and clear local state
+      await logout();
 
       addToast("Successfully signed out. See you soon!", "info");
       closeLogoutModal();
       router.push("/");
     } catch (e) {
+      clearAuth();
       addToast("Signed out of local session.", "info");
       closeLogoutModal();
       router.push("/");

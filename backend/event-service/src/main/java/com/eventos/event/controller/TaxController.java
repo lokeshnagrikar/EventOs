@@ -23,9 +23,8 @@ public class TaxController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
-    public ResponseEntity<?> getTaxSettings(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getTaxSettings() {
+        UUID tenantId = getTenantId();
         TaxSettings settings = taxSettingsRepository.findById(tenantId)
                 .orElseGet(() -> {
                     TaxSettings defaultSettings = TaxSettings.builder()
@@ -50,9 +49,8 @@ public class TaxController {
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional
     public ResponseEntity<?> updateTaxSettings(
-            @RequestBody TaxSettings details,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody TaxSettings details) {
+        UUID tenantId = getTenantId();
         TaxSettings settings = taxSettingsRepository.findById(tenantId)
                 .orElseGet(() -> {
                     details.setTenantId(tenantId);
@@ -74,7 +72,7 @@ public class TaxController {
         return ResponseEntity.ok(response);
     }
 
-    private UUID getTenantId(String header) {
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.event.config.UserPrincipal) {
@@ -83,10 +81,7 @@ public class TaxController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 }

@@ -18,6 +18,7 @@ public interface QuoteRepository extends JpaRepository<Quote, UUID> {
     Page<Quote> findAllByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
     Optional<Quote> findByIdAndTenantId(UUID id, UUID tenantId);
     Optional<Quote> findByQuoteNumber(String quoteNumber);
+    Optional<Quote> findByShareToken(String shareToken);
     List<Quote> findAllByLeadIdAndTenantId(UUID leadId, UUID tenantId);
     long countByTenantId(UUID tenantId);
 

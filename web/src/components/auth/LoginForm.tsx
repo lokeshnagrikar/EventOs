@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/authStore";
+import { setClientCookie } from "@/lib/clientCookies";
 import { useToastStore } from "@/lib/toastStore";
 import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, X, Wand2, MessageSquare, Phone, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -107,8 +108,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
   const [authMode, setAuthMode] = useState<"password" | "magic-link" | "forgot-password">("password");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
-  const [magicLinkTimer, setMagicLinkTimer] = useState(60);
-  const [magicLinkUrl, setMagicLinkUrl] = useState<string | null>(null);
+  const [magicLinkTimer, setMagicLinkTimer] = useState(0);
 
   // Inline Forgot Password State
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
@@ -191,11 +191,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     setError(null);
     try {
       const response = await apiClient.post("/auth/verify-magic-token", { token });
-      const { accessToken, refreshToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
+      const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
 
-      document.cookie = "hasSession=true; path=/; SameSite=Lax";
-      document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
-      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      setClientCookie("hasSession", "true", 604800);
+      setClientCookie("user_name", firstName, 604800);
+      setClientCookie("user_role", role, 604800);
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
 
@@ -203,8 +203,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         accessToken,
         { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        memberships,
-        refreshToken
+        memberships
       );
       addToast(`Welcome back, ${firstName}! Verified via Magic Link.`, "success");
       if (isModal) closeModal();
@@ -239,15 +238,10 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     setError(null);
     setMagicLinkLoading(true);
     try {
-      const res = await apiClient.post("/auth/magic-link", { email: emailVal });
-      const magicUrl = res.data?.magicLinkUrl || res.data?.data?.magicLinkUrl;
-      setMagicLinkUrl(magicUrl || null);
+      await apiClient.post("/auth/magic-link", { email: emailVal });
       setMagicLinkSent(true);
       setMagicLinkTimer(60);
       addToast(`Magic Link sent to ${emailVal}! Check your inbox.`, "success");
-      if (magicUrl) {
-        console.log("[MAGIC_LINK_URL]", magicUrl);
-      }
     } catch (err: any) {
       const errMsg = err.response?.data?.error?.message || err.response?.data?.message || "Failed to dispatch Magic Link. Please verify your email.";
       setError(errMsg);
@@ -480,9 +474,9 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
 
       // Store lightweight session flag cookie for edge middleware redirection checks
-      document.cookie = "hasSession=true; path=/; SameSite=Lax";
-      document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
-      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      setClientCookie("hasSession", "true", 604800);
+      setClientCookie("user_name", firstName, 604800);
+      setClientCookie("user_role", role, 604800);
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
       localStorage.setItem("eventos_last_user", JSON.stringify({
@@ -498,8 +492,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         accessToken,
         { id: userId, email: data.email, firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        memberships,
-        response.data.data.refreshToken
+        memberships
       );
 
       analytics.trackAuth("login", data.email);
@@ -565,9 +558,9 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       const { accessToken: jwtToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
 
       // Store session cookies
-      document.cookie = "hasSession=true; path=/; SameSite=Lax";
-      document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
-      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      setClientCookie("hasSession", "true", 604800);
+      setClientCookie("user_name", firstName, 604800);
+      setClientCookie("user_role", role, 604800);
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
 
@@ -576,8 +569,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         jwtToken,
         { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        memberships,
-        response.data.data.refreshToken
+        memberships
       );
 
       addToast("Successfully authenticated via Google!", "success");
@@ -1011,21 +1003,6 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                   We sent a 1-click login link to <span className="text-purple-300 font-bold">{watch("email")}</span>. Click the link in your email to sign in instantly.
                 </p>
               </div>
-
-              {magicLinkUrl && (
-                <div className="pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.location.href = magicLinkUrl;
-                    }}
-                    className="w-full py-2.5 px-3 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:opacity-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-purple-900/40 active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Sparkles size={13} className="text-white" />
-                    <span>Sign In with Magic Link Now 🪄</span>
-                  </button>
-                </div>
-              )}
 
               <div className="pt-2 flex justify-between items-center text-[10px]">
                 <button

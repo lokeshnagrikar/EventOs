@@ -1,6 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
+
+function verifyFounderKey(suppliedKey: string | null | undefined): boolean {
+  const configuredKey = process.env.FOUNDER_SECRET_KEY;
+  if (!configuredKey || configuredKey.trim().length === 0 || !suppliedKey || typeof suppliedKey !== "string" || suppliedKey.trim().length === 0) {
+    return false;
+  }
+  const suppliedBuf = Buffer.from(suppliedKey.trim());
+  const configuredBuf = Buffer.from(configuredKey.trim());
+  if (suppliedBuf.length !== configuredBuf.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(suppliedBuf, configuredBuf);
+}
+
+function extractFounderKey(req: NextRequest): string | null {
+  const headerKey = req.headers.get("x-founder-key");
+  if (headerKey) return headerKey;
+  const authHeader = req.headers.get("authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    return authHeader.substring(7);
+  }
+  return null;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -76,7 +100,7 @@ export async function POST(req: NextRequest) {
     // Real spot calculation based on actual leads
     const spotNumber = Math.min(waitlistData.length, 25);
 
-    console.log(`[EventOS Waitlist] New lead captured: ${entry.name} (${entry.agencyName}) - ${entry.whatsapp} - Spot #${spotNumber}`);
+    console.log(`[EventOS Waitlist] New lead captured: ${entry.name} (${entry.agencyName}) - Spot #${spotNumber}`);
 
     return NextResponse.json({
       success: true,
@@ -89,7 +113,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("Waitlist submission error:", error);
+    console.error("Waitlist submission error:", error?.message || "unknown");
     return NextResponse.json(
       { success: false, error: "Internal server error. Please try again or WhatsApp us directly." },
       { status: 500 }
@@ -98,8 +122,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const key = searchParams.get("key") || req.headers.get("x-founder-key");
+  const key = extractFounderKey(req);
 
   // Read waitlist data
   const filePath = path.join(process.cwd(), "data", "waitlist.json");
@@ -119,7 +142,7 @@ export async function GET(req: NextRequest) {
   }
 
   // If founder secret matches, return full lead list
-  if (key === "eventos2026" || key === process.env.FOUNDER_SECRET_KEY) {
+  if (verifyFounderKey(key)) {
     return NextResponse.json({
       success: true,
       totalLeads: waitlistData.length,
@@ -139,12 +162,14 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { key, id, updates } = body;
+    const key = extractFounderKey(req);
 
-    if (key !== "eventos2026" && key !== process.env.FOUNDER_SECRET_KEY) {
+    if (!verifyFounderKey(key)) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+
+    const body = await req.json();
+    const { id, updates } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: "Lead ID required" }, { status: 400 });
@@ -186,13 +211,14 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const key = searchParams.get("key") || req.headers.get("x-founder-key");
-    const id = searchParams.get("id");
+    const key = extractFounderKey(req);
 
-    if (key !== "eventos2026" && key !== process.env.FOUNDER_SECRET_KEY) {
+    if (!verifyFounderKey(key)) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
 
     if (!id) {
       return NextResponse.json({ success: false, error: "Lead ID required" }, { status: 400 });

@@ -62,7 +62,9 @@ export default function FounderWaitlistPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/waitlist?key=${encodeURIComponent(key)}`);
+      const res = await fetch("/api/waitlist", {
+        headers: { "x-founder-key": key },
+      });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -93,9 +95,11 @@ export default function FounderWaitlistPage() {
         // UPDATE (PUT)
         const res = await fetch("/api/waitlist", {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-founder-key": passkey,
+          },
           body: JSON.stringify({
-            key: passkey,
             id: editingLead.id,
             updates: modalForm,
           }),
@@ -126,9 +130,11 @@ export default function FounderWaitlistPage() {
     try {
       const res = await fetch("/api/waitlist", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-founder-key": passkey,
+        },
         body: JSON.stringify({
-          key: passkey,
           id,
           updates: { status: newStatus },
         }),
@@ -145,8 +151,9 @@ export default function FounderWaitlistPage() {
   const handleDeleteLead = async (id: string, agencyName: string) => {
     if (!confirm(`Are you sure you want to delete lead "${agencyName}"?`)) return;
     try {
-      const res = await fetch(`/api/waitlist?id=${encodeURIComponent(id)}&key=${encodeURIComponent(passkey)}`, {
+      const res = await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
+        headers: { "x-founder-key": passkey },
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Delete failed");
@@ -240,7 +247,7 @@ export default function FounderWaitlistPage() {
           <form onSubmit={handleLogin} className="space-y-3">
             <input
               type="password"
-              placeholder="Enter Founder Key (eventos2026)"
+              placeholder="Enter Founder Key"
               value={passkey}
               onChange={(e) => setPasskey(e.target.value)}
               className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-all"

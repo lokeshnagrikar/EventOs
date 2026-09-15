@@ -29,6 +29,9 @@ import java.util.stream.Stream;
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
+    @Value("${app.jwt.public-key:}")
+    private String rawPublicKey;
+
     @Value("${app.gateway.secret:}")
     private String gatewaySecret;
 
@@ -38,30 +41,27 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @jakarta.annotation.PostConstruct
     public void init() {
         try {
-            // Load RSA public key from PEM file — same resolution order used by the
-            // API Gateway (JwtAuthFilter) and Auth Service (JwtService) so all three
-            // agree on the same RS256 key used to sign tokens.
-            String keyPath = System.getenv().getOrDefault("JWT_KEY_PATH", ".");
-            java.io.File publicKeyFile = new java.io.File(keyPath, "jwt_public.pem");
-
-            if (!publicKeyFile.exists()) {
-                publicKeyFile = new java.io.File("../jwt_public.pem");
-            }
-            if (!publicKeyFile.exists()) {
-                publicKeyFile = new java.io.File("../../jwt_public.pem");
-            }
-            if (!publicKeyFile.exists()) {
-                publicKeyFile = new java.io.File("d:/EventOs/jwt_public.pem");
-            }
-
-            if (publicKeyFile.exists()) {
-                String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
-                this.publicKey = parsePublicKey(publicPem);
+            if (rawPublicKey != null && !rawPublicKey.trim().isEmpty()) {
+                this.publicKey = parsePublicKey(rawPublicKey);
                 this.jwtParser = Jwts.parser().verifyWith(this.publicKey).build();
-                logger.info("CRM-Service: RSA public key loaded for RS256 JWT validation from " + publicKeyFile.getAbsolutePath());
+                logger.info("CRM-Service: Loaded RS256 public key from environment.");
+                return;
+            }
+
+            if (System.getenv("JWT_KEY_PATH") != null) {
+                String keyPath = System.getenv("JWT_KEY_PATH");
+                java.io.File publicKeyFile = new java.io.File(keyPath, "jwt_public.pem");
+                if (publicKeyFile.exists()) {
+                    String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
+                    this.publicKey = parsePublicKey(publicPem);
+                    this.jwtParser = Jwts.parser().verifyWith(this.publicKey).build();
+                    logger.info("CRM-Service: RSA public key loaded for RS256 JWT validation from " + publicKeyFile.getAbsolutePath());
+                    return;
+                } else {
+                    logger.warn("CRM-Service: JWT_KEY_PATH configured but jwt_public.pem missing in: " + keyPath);
+                }
             } else {
-                logger.warn("CRM-Service: jwt_public.pem not found — direct Bearer token validation will be unavailable. " +
-                            "Requests through the API Gateway (X-User-* headers) will still work correctly.");
+                logger.info("CRM-Service: No explicit JWT_PUBLIC_KEY or JWT_KEY_PATH configured. Direct Bearer token validation will be unavailable (Gateway headers used).");
             }
         } catch (Exception e) {
             throw new RuntimeException("CRM-Service: Failed to initialise RSA public key for JWT validation", e);
@@ -82,8 +82,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String userEmailHeader = request.getHeader("X-User-Email");
         final String gatewaySecretHeader = request.getHeader("X-Gateway-Secret");
 
+        final boolean hasIdentityHeaders = tenantIdHeader != null || userIdHeader != null 
+                || userRolesHeader != null || userPermissionsHeader != null || userEmailHeader != null;
+
         // ── Path 1: Trusted Gateway Headers ────────────────────────────────────
-        if (tenantIdHeader != null && userIdHeader != null) {
+        if (hasIdentityHeaders) {
             // Verify gateway secret to prevent header spoofing
             if (gatewaySecret == null || gatewaySecret.trim().isEmpty() || !gatewaySecret.equals(gatewaySecretHeader)) {
                 logger.warn("Blocked direct access attempt with spoofed user headers (missing or invalid gateway secret).");
@@ -92,7 +95,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Invalid Gateway Trust Secret\"}}");
                 return;
             }
-            try {
+            if (tenantIdHeader != null && userIdHeader != null) {
+                try {
                 UUID tenantId = UUID.fromString(tenantIdHeader);
                 UUID userId = UUID.fromString(userIdHeader);
                 String email = userEmailHeader != null ? userEmailHeader : "";
@@ -120,8 +124,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 TenantContext.setTenantId(tenantId);
-            } catch (Exception e) {
-                logger.warn("Failed to authenticate via Gateway headers: " + e.getMessage());
+                } catch (Exception e) {
+                    logger.warn("Failed to authenticate via Gateway headers: " + e.getMessage());
+                }
             }
             try {
                 filterChain.doFilter(request, response);

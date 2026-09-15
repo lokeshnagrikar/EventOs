@@ -2,272 +2,474 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Sparkles, Calendar, CheckCircle2, AlertTriangle, RefreshCw, Zap, ArrowRight, Clock, Volume2, ShieldCheck, MessageSquare } from "lucide-react";
+import {
+  Sparkles,
+  FileText,
+  Calendar,
+  UserCheck,
+  CheckCircle2,
+  Sliders,
+  ArrowRight,
+  ShieldCheck,
+  Clock,
+  Send,
+  Edit3,
+  ListTodo,
+} from "lucide-react";
 import { Icon } from "@iconify/react";
 import { cn } from "@/lib/utils";
 import { useAuthModalStore } from "@/store/authModalStore";
 
-interface TimelineItem {
-  id: string;
-  time: string;
+type CapabilityId = "proposal" | "timeline" | "leads";
+
+interface Capability {
+  id: CapabilityId;
   title: string;
-  vendor: string;
-  location: string;
-  status: "completed" | "conflict" | "resolved" | "scheduled";
-  conflictText?: string;
-  resolutionText?: string;
+  shortDesc: string;
+  badge: string;
+  icon: string;
 }
 
-const initialItems: TimelineItem[] = [
+const capabilities: Capability[] = [
   {
-    id: "t1",
-    time: "08:00 AM",
-    title: "Floral Mandap & Stage Scenography Ingress",
-    vendor: "Royal Stage Decorators & Scenography",
-    location: "Royal Banquet Lawns",
-    status: "completed",
+    id: "proposal",
+    title: "AI Proposal Assistant",
+    shortDesc: "Generate professional proposal drafts faster.",
+    badge: "Draft & Quotation",
+    icon: "solar:document-text-bold-duotone",
   },
   {
-    id: "t2",
-    time: "11:00 AM",
-    title: "JBL Line Array Sound Check & Bass Leveling",
-    vendor: "BeatSync DJ & Catering Technical Staff",
-    location: "Grand Ballroom Stage",
-    status: "conflict",
-    conflictText: "⚠️ Timeline Overlap Detected: Heavy Sound Check overlaps with Live Flambé Catering Setup in Ballroom.",
-    resolutionText: "✓ AI Auto-Shifted Sound Check to 10:15 AM (0 Venue Conflict Guaranteed).",
+    id: "timeline",
+    title: "AI Timeline Assistant",
+    shortDesc: "Turn event details into structured timelines and tasks.",
+    badge: "Operations & Schedule",
+    icon: "solar:calendar-bold-duotone",
   },
   {
-    id: "t3",
-    time: "02:30 PM",
-    title: "Baraat Welcome & Offline PWA Gate Check-In",
-    vendor: "EventOS Mobile Gateways & Hospitality Crew",
-    location: "South Entrance Gate",
-    status: "scheduled",
-  },
-  {
-    id: "t4",
-    time: "07:30 PM",
-    title: "Sangeet Stage Pyrotechnics & 40ft LED Screen Rigging",
-    vendor: "PyroTech & Video Rigging Roster",
-    location: "Main Stage Arena",
-    status: "scheduled",
+    id: "leads",
+    title: "AI Lead Insights",
+    shortDesc: "Identify promising leads and prioritize follow-ups.",
+    badge: "CRM & Enquiry",
+    icon: "solar:users-group-rounded-bold-duotone",
   },
 ];
 
 export function RunOfShowSimulator() {
   const shouldReduceMotion = useReducedMotion();
   const openModal = useAuthModalStore((state) => state.openModal);
-
-  const [items, setItems] = useState<TimelineItem[]>(initialItems);
-  const [isResolving, setIsResolving] = useState<boolean>(false);
-  const [isResolved, setIsResolved] = useState<boolean>(false);
-  const [whatsappSent, setWhatsappSent] = useState<boolean>(false);
-
-  const handleResolveConflict = () => {
-    setIsResolving(true);
-    setTimeout(() => {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === "t2"
-            ? { ...item, time: "10:15 AM", status: "resolved" }
-            : item
-        )
-      );
-      setIsResolving(false);
-      setIsResolved(true);
-    }, 1100);
-  };
-
-  const handleReset = () => {
-    setItems(initialItems);
-    setIsResolved(false);
-    setWhatsappSent(false);
-  };
-
-  const handleSendWhatsapp = () => {
-    setWhatsappSent(true);
-    setTimeout(() => setWhatsappSent(false), 3000);
-  };
+  const [activeTab, setActiveTab] = useState<CapabilityId>("proposal");
 
   return (
-    <section className="py-24 bg-[#FAF9F6] relative overflow-hidden border-b border-slate-200/80 font-sans" id="timeline-simulator">
-      {/* Background Radial Glows */}
-      <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-[500px] h-[300px] bg-purple-100/30 blur-[130px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-10 right-1/4 w-[450px] h-[250px] bg-indigo-100/30 blur-[130px] rounded-full pointer-events-none z-0" />
+    <section
+      id="ai-assistant"
+      className="py-24 sm:py-32 bg-[#FAF9F6] relative overflow-hidden border-b border-slate-200/80 font-sans text-left"
+    >
+      {/* Subtle ambient glows */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-purple-100/25 blur-[140px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[400px] h-[250px] bg-indigo-100/20 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-3xl mx-auto space-y-4 mb-16"
+          className="text-center max-w-3xl mx-auto space-y-4 mb-12 sm:mb-16"
         >
-          <span className="inline-flex items-center gap-1.5 text-xs font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 uppercase">
-            <Icon icon="solar:star-shine-bold-duotone" className="text-purple-600 text-sm" />
-            AI Co-Pilot & Run-of-Show Engine
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 font-heading text-balance">
-            Zero Venue Slot Conflicts.{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600">
-              100% Automated.
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200/80 text-purple-700 text-xs font-extrabold uppercase tracking-widest">
+            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+            <span>Smart Assistance</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 font-heading text-balance leading-[1.12]">
+            Let AI Handle{" "}
+            <span className="bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 bg-clip-text text-transparent">
+              the Busywork.
             </span>
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
-            Test the live AI Conflict Engine below. When sound checks, stage rigging, or catering prep overlap, EventOS automatically recalculates the optimal run-of-show schedule and alerts vendors on WhatsApp.
+
+          <p className="text-slate-600 text-base sm:text-lg leading-relaxed font-medium max-w-2xl mx-auto">
+            Use AI to speed up repetitive work while keeping your team in control.
           </p>
+
+          {/* Main Control Pledge */}
+          <div className="pt-2">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-bold shadow-2xs">
+              <Sliders className="w-3.5 h-3.5 text-purple-600" />
+              <span>AI helps you work faster. You stay in control.</span>
+            </span>
+          </div>
         </motion.div>
 
-        {/* Interactive Simulator Shell */}
-        <div className="max-w-4xl mx-auto bg-white/95 border border-slate-200/90 rounded-3xl p-5 sm:p-8 shadow-xl shadow-slate-200/50 backdrop-blur-xl relative overflow-hidden space-y-6">
-          {/* Top Line Accent */}
-          <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500" />
-
-          {/* Simulator Bar Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-slate-100">
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-purple-700 bg-purple-50 border border-purple-200 px-3 py-1 rounded-full inline-block mb-1 font-mono">
-                LIVE DEMO • Event ID: #EOS-ROYAL-928
-              </span>
-              <h3 className="text-lg font-black text-slate-900 font-heading">Royal Palace Wedding — Run of Show Timeline</h3>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {!isResolved ? (
-                <button
-                  onClick={handleResolveConflict}
-                  disabled={isResolving}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 hover:opacity-95 text-white font-extrabold text-xs shadow-lg shadow-purple-500/20 active:scale-95 transition flex items-center gap-2 cursor-pointer"
-                >
-                  {isResolving ? (
-                    <>
-                      <RefreshCw size={14} className="animate-spin text-white" />
-                      <span>AI Recalculating Schedule...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap size={14} className="text-cyan-200" />
-                      <span>Run AI Conflict Resolver</span>
-                    </>
-                  )}
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleSendWhatsapp}
-                    className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold transition hover:bg-emerald-100 flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                  >
-                    <MessageSquare size={13} className="text-emerald-600" />
-                    <span>{whatsappSent ? "Vendor Alert Sent ✓" : "Notify Vendor on WhatsApp"}</span>
-                  </button>
-                  <button
-                    onClick={handleReset}
-                    className="px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer"
-                  >
-                    Reset Demo
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Timeline Feed Container */}
-          <div className="space-y-4 relative">
-            {items.map((item) => (
-              <motion.div
-                key={item.id}
-                layout
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        {/* 3 Capabilities Grid Selector */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 max-w-5xl mx-auto">
+          {capabilities.map((cap) => {
+            const isActive = activeTab === cap.id;
+            return (
+              <button
+                key={cap.id}
+                onClick={() => setActiveTab(cap.id)}
                 className={cn(
-                  "p-4 sm:p-5 rounded-2xl border transition-all text-xs relative overflow-hidden",
-                  item.status === "completed" && "bg-slate-50/70 border-slate-200/80 text-slate-500",
-                  item.status === "scheduled" && "bg-white border-slate-200 text-slate-800 shadow-2xs",
-                  item.status === "conflict" && "bg-amber-50/80 border-2 border-amber-400 text-amber-950 shadow-md shadow-amber-500/10 animate-pulse",
-                  item.status === "resolved" && "bg-emerald-50/80 border-2 border-emerald-400 text-emerald-950 shadow-md shadow-emerald-500/10"
+                  "p-5 rounded-2xl border text-left transition-all duration-200 cursor-pointer relative overflow-hidden group",
+                  isActive
+                    ? "bg-white border-purple-500/80 shadow-lg shadow-purple-500/10 ring-1 ring-purple-500/40"
+                    : "bg-white/80 hover:bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs"
                 )}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-24 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-mono font-black text-sm text-indigo-700 shrink-0 shadow-2xs">
-                      {item.time}
-                    </div>
-                    <div>
-                      <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
-                        <span>{item.title}</span>
-                        {item.id === "t2" && item.status === "conflict" && (
-                          <span className="flex h-2 w-2 relative">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-                          </span>
-                        )}
-                      </h4>
-                      <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
-                        {item.vendor} • <span className="text-slate-700">{item.location}</span>
-                      </p>
-                    </div>
-                  </div>
+                {/* Active Indicator Bar */}
+                {isActive && (
+                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-purple-600 to-indigo-600" />
+                )}
 
-                  <div className="flex items-center gap-2 self-start sm:self-center">
-                    <span className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border font-mono",
-                      item.status === "completed" && "bg-slate-100 text-slate-600 border-slate-200",
-                      item.status === "scheduled" && "bg-purple-50 text-purple-700 border-purple-200",
-                      item.status === "conflict" && "bg-amber-100 text-amber-800 border-amber-300 font-bold",
-                      item.status === "resolved" && "bg-emerald-100 text-emerald-800 border-emerald-300 font-bold"
-                    )}>
-                      {item.status === "completed" ? "Done ✓" :
-                       item.status === "scheduled" ? "Scheduled" :
-                       item.status === "conflict" ? "Slot Overlap" : "AI Shifted ✓"}
-                    </span>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div
+                    className={cn(
+                      "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
+                      isActive
+                        ? "bg-purple-600 text-white shadow-xs"
+                        : "bg-purple-50 text-purple-600 group-hover:bg-purple-100/70"
+                    )}
+                  >
+                    <Icon icon={cap.icon} className="text-xl" />
                   </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 font-mono">
+                    {cap.badge}
+                  </span>
                 </div>
 
-                {/* Banner Notes for Conflict & Resolution */}
-                <AnimatePresence mode="wait">
-                  {item.conflictText && item.status === "conflict" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-3 p-3 rounded-xl bg-amber-100/90 border border-amber-300 text-amber-900 text-[11px] font-bold flex items-center gap-2"
-                    >
-                      <AlertTriangle size={15} className="text-amber-600 shrink-0" />
-                      <span>{item.conflictText}</span>
-                    </motion.div>
-                  )}
+                <h3 className="text-base font-extrabold text-slate-900 mb-1">
+                  {cap.title}
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                  {cap.shortDesc}
+                </p>
+              </button>
+            );
+          })}
+        </div>
 
-                  {item.resolutionText && item.status === "resolved" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-3 p-3 rounded-xl bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-[11px] font-bold flex items-center gap-2"
-                    >
-                      <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
-                      <span>{item.resolutionText}</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Simulator Footer Security Note */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-slate-500 font-bold border-t border-slate-100">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-purple-600" />
-              <span>Multi-Vendor Conflict Resolution Algorithm v2.4 Active</span>
+        {/* Interactive Assistant Preview Canvas */}
+        <div className="max-w-5xl mx-auto">
+          <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xl shadow-slate-200/50 overflow-hidden">
+            {/* Window Top Bar */}
+            <div className="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 text-xs">
+              <div className="flex items-center gap-2.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500/80 inline-block" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80 inline-block" />
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80 inline-block" />
+                <span className="text-slate-400 font-mono text-[11px] ml-2">
+                  EventOS Assistant Workspace
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-purple-300 font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Human-in-the-Loop • Final Review Required</span>
+              </div>
             </div>
-            <button
-              onClick={() => openModal("register")}
-              className="text-purple-600 hover:text-purple-700 transition flex items-center gap-1 font-extrabold cursor-pointer"
-            >
-              <span>Unlock AI Scheduler for Your Agency</span>
-              <ArrowRight size={12} />
-            </button>
+
+            {/* Dynamic Assistant Previews */}
+            <div className="p-6 sm:p-8 min-h-[380px]">
+              <AnimatePresence mode="wait">
+                {/* 1. AI PROPOSAL ASSISTANT */}
+                {activeTab === "proposal" && (
+                  <motion.div
+                    key="proposal"
+                    initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-6"
+                  >
+                    {/* Prompt Brief Box */}
+                    <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wide">
+                            Enquiry Input
+                          </span>
+                          <p className="text-xs font-extrabold text-slate-900">
+                            3-Day Destination Wedding • 450 Guests • Taj Hotel Delhi
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-bold text-purple-800 bg-white px-3 py-1 rounded-full border border-purple-200 shadow-2xs shrink-0">
+                        Proposal Draft Ready
+                      </span>
+                    </div>
+
+                    {/* Generated Structured Draft */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                          Suggested Line Items & Deliverables (Editable)
+                        </h4>
+                        <span className="text-[11px] text-slate-500 font-semibold">
+                          Based on agency pricing templates
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        {[
+                          {
+                            category: "Stage & Decor",
+                            title: "Mandap Scenography & Floral Pathways",
+                            notes: "Custom fresh florals with Rajasthani canopy",
+                          },
+                          {
+                            category: "Sound & Light",
+                            title: "Dual Line Array & Ambience Truss Rigging",
+                            notes: "Sound check 3 hours before baraat ingress",
+                          },
+                          {
+                            category: "Hospitality",
+                            title: "Airport Escorts & Front Desk PWA Check-In",
+                            notes: "Crew coordination for 450 guests",
+                          },
+                          {
+                            category: "Catering Management",
+                            title: "Banquet Flow & Live Counter Logistics",
+                            notes: "Coordinated with venue chef timeline",
+                          },
+                        ].map((item, i) => (
+                          <div
+                            key={i}
+                            className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-purple-700 uppercase">
+                                {item.category}
+                              </span>
+                              <Edit3 className="w-3.5 h-3.5 text-slate-400" />
+                            </div>
+                            <p className="font-bold text-slate-900 text-xs">
+                              {item.title}
+                            </p>
+                            <p className="text-[11px] text-slate-500">
+                              {item.notes}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Review Controls Footer */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2 text-slate-700 font-medium">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>
+                          You review and customize every line item before sending to the client.
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => openModal("register")}
+                          className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition cursor-pointer"
+                        >
+                          Customize & Send
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 2. AI TIMELINE ASSISTANT */}
+                {activeTab === "timeline" && (
+                  <motion.div
+                    key="timeline"
+                    initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-6"
+                  >
+                    {/* Brief Box */}
+                    <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wide">
+                            Timeline Generator
+                          </span>
+                          <p className="text-xs font-extrabold text-slate-900">
+                            Structured Day-of-Event Run-of-Show
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-bold text-indigo-800 bg-white px-3 py-1 rounded-full border border-indigo-200 shadow-2xs shrink-0">
+                        Zero Schedule Clashes
+                      </span>
+                    </div>
+
+                    {/* Timeline Run List */}
+                    <div className="space-y-2.5 text-xs">
+                      {[
+                        {
+                          time: "08:00 AM",
+                          cue: "Floral Mandap Ingress & Stage Scenography",
+                          vendor: "Royal Stage Decorators",
+                          status: "Assigned",
+                        },
+                        {
+                          time: "10:15 AM",
+                          cue: "JBL Line Array Sound Check & Bass Balance",
+                          vendor: "BeatSync Audio Staff",
+                          status: "Buffer Verified",
+                        },
+                        {
+                          time: "03:30 PM",
+                          cue: "Baraat Welcome & PWA Gate QR Check-In",
+                          vendor: "Hospitality Lead Team",
+                          status: "Assigned",
+                        },
+                        {
+                          time: "07:30 PM",
+                          cue: "Sangeet Pyrotechnics & Couple Grand Entry",
+                          vendor: "PyroTech Crew",
+                          status: "Scheduled",
+                        },
+                      ].map((slot, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-xs font-extrabold text-indigo-700 shrink-0 w-20">
+                              {slot.time}
+                            </span>
+                            <div>
+                              <p className="font-bold text-slate-900">{slot.cue}</p>
+                              <p className="text-[11px] text-slate-500">{slot.vendor}</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700 shrink-0">
+                            {slot.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Planner Control Note */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2 text-slate-700 font-medium">
+                        <ListTodo className="w-4 h-4 text-indigo-600 shrink-0" />
+                        <span>
+                          Reorder cues with drag-and-drop or adjust times manually whenever plans change.
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => openModal("register")}
+                        className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition cursor-pointer shrink-0"
+                      >
+                        Adjust Timeline
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 3. AI LEAD INSIGHTS */}
+                {activeTab === "leads" && (
+                  <motion.div
+                    key="leads"
+                    initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-6"
+                  >
+                    {/* Brief Box */}
+                    <div className="p-4 rounded-2xl bg-pink-50/60 border border-pink-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-xl bg-pink-600 text-white flex items-center justify-center shrink-0">
+                          <UserCheck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-pink-700 uppercase tracking-wide">
+                            Enquiry Intelligence
+                          </span>
+                          <p className="text-xs font-extrabold text-slate-900">
+                            Actionable Follow-Up Prioritization
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-bold text-pink-800 bg-white px-3 py-1 rounded-full border border-pink-200 shadow-2xs shrink-0">
+                        Prompt Follow-Up Suggested
+                      </span>
+                    </div>
+
+                    {/* Sample Leads Priority Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            High Intent
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">WhatsApp Enquiry</span>
+                        </div>
+                        <h5 className="font-extrabold text-slate-900 text-sm">
+                          Meera & Rohan • Dec 2026
+                        </h5>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          Confirmed venue date at Taj Delhi, 450 guests, comprehensive package requested.
+                        </p>
+                        <div className="pt-2 border-t border-slate-200/70 text-[11px] font-semibold text-purple-700 flex items-center gap-1.5">
+                          <Send size={12} />
+                          <span>Suggested: Send customized proposal draft</span>
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            Venue Shortlisting
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">Website Form</span>
+                        </div>
+                        <h5 className="font-extrabold text-slate-900 text-sm">
+                          Kavita & Siddharth • Nov 2026
+                        </h5>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          Deciding between Udaipur and Jaipur, 300 guests, budget tier shared.
+                        </p>
+                        <div className="pt-2 border-t border-slate-200/70 text-[11px] font-semibold text-purple-700 flex items-center gap-1.5">
+                          <Clock size={12} />
+                          <span>Suggested: Share destination venue comparison deck</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Planner Control Note */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2 text-slate-700 font-medium">
+                        <ShieldCheck className="w-4 h-4 text-pink-600 shrink-0" />
+                        <span>
+                          No automated outreach is ever sent without your team’s explicit review and trigger.
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => openModal("register")}
+                        className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition cursor-pointer shrink-0"
+                      >
+                        Review Enquiries
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
+        </div>
+
+        {/* Section Bottom CTA / Micro-note */}
+        <div className="mt-10 text-center">
+          <p className="text-xs text-slate-600 font-medium">
+            AI features assist your team behind the scenes — keeping your agency's unique touch front and center.
+          </p>
         </div>
       </div>
     </section>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/authStore";
+import { setClientCookie } from "@/lib/clientCookies";
 import { useToastStore } from "@/lib/toastStore";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { 
@@ -26,7 +27,7 @@ import { cn } from "@/lib/utils";
 export default function WorkspaceSelectPage() {
   const router = useRouter();
   const addToast = useToastStore((state) => state.addToast);
-  const { memberships, user, setAuth, clearAuth } = useAuthStore();
+  const { memberships, user, setAuth, clearAuth, logout } = useAuthStore();
 
   const [loadingTenantId, setLoadingTenantId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,19 +63,15 @@ export default function WorkspaceSelectPage() {
     setError(null);
     setLoadingTenantId(tenantId);
     try {
-      const storedRefreshToken = useAuthStore.getState().refreshToken 
-        || (typeof window !== 'undefined' ? (sessionStorage.getItem('refreshToken') || localStorage.getItem('eventos_refresh_token')) : null);
-
       const response = await apiClient.post("/auth/switch", { 
-        tenantId,
-        ...(storedRefreshToken ? { refreshToken: storedRefreshToken } : {})
+        tenantId
       });
       
-      const { accessToken, refreshToken: newRefreshToken, userId, role, firstName, lastName, memberships: newMemberships, permissions } = response.data.data;
+      const { accessToken, userId, role, firstName, lastName, memberships: newMemberships, permissions } = response.data.data;
       
-      document.cookie = "hasSession=true; path=/; SameSite=Lax";
-      document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
-      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      setClientCookie("hasSession", "true", 604800);
+      setClientCookie("user_name", firstName, 604800);
+      setClientCookie("user_role", role, 604800);
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
       
@@ -82,8 +79,7 @@ export default function WorkspaceSelectPage() {
         accessToken,
         { id: userId, email: user?.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        newMemberships,
-        newRefreshToken || storedRefreshToken
+        newMemberships
       );
 
       addToast("Workspace connected.", "success");
@@ -106,11 +102,10 @@ export default function WorkspaceSelectPage() {
   const handleLogout = async () => {
     setLoadingTenantId("LOGOUT");
     try {
-      await apiClient.post("/auth/logout", { email: user?.email || "" });
+      await logout();
     } catch (e) {
-      // Clear local auth even if network fails
-    } finally {
       clearAuth();
+    } finally {
       addToast("Signed out successfully.", "info");
       router.push("/?login=true");
     }

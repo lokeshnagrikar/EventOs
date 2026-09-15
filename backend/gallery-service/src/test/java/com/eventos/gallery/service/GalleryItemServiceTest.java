@@ -116,6 +116,7 @@ public class GalleryItemServiceTest {
         dto.setResourceType("image");
 
         when(albumRepository.findByIdAndTenantId(albumId, tenantId)).thenReturn(Optional.of(mockAlbum));
+        when(cloudinaryService.isValidCloudinaryUrl(any())).thenReturn(true);
         when(galleryItemRepository.save(any(GalleryItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         GalleryItemResponseDto response = galleryItemService.confirmUpload(dto, tenantId);
@@ -128,6 +129,23 @@ public class GalleryItemServiceTest {
         assertEquals(1920, response.getWidth());
         assertEquals(1080, response.getHeight());
         assertEquals("image", response.getResourceType());
+    }
+
+    @Test
+    void testConfirmUpload_RejectsInvalidUrl() {
+        ConfirmUploadDto dto = new ConfirmUploadDto();
+        dto.setAlbumId(albumId);
+        dto.setName("exploit.jpg");
+        dto.setType(GalleryItemType.IMAGE);
+        dto.setUrl("https://attacker.com/malicious.jpg");
+        dto.setPublicId("attacker/photo1");
+
+        when(albumRepository.findByIdAndTenantId(albumId, tenantId)).thenReturn(Optional.of(mockAlbum));
+        when(cloudinaryService.isValidCloudinaryUrl("https://attacker.com/malicious.jpg")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            galleryItemService.confirmUpload(dto, tenantId);
+        });
     }
 
     @Test

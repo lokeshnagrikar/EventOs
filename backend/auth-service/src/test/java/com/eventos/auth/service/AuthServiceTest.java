@@ -175,6 +175,7 @@ public class AuthServiceTest {
 
         when(refreshTokenRepository.findByToken(anyString())).thenReturn(Optional.empty()); // No active token found
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("refresh:grace:" + tokenHash)).thenReturn(null);
         when(valueOperations.get("rotated:token:" + tokenHash)).thenReturn(testUser.getId().toString()); // Compromised
                                                                                                          // user ID
                                                                                                          // found in
@@ -196,6 +197,7 @@ public class AuthServiceTest {
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("reset:token:" + tokenHash)).thenReturn(testUser.getEmail());
         when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(eq("newPassword"), any())).thenReturn(false);
         when(passwordEncoder.encode("newPassword")).thenReturn("newHashedPassword");
 
         authService.resetPassword(token, "newPassword");
@@ -229,7 +231,7 @@ public class AuthServiceTest {
         Map<String, Object> response = authService.resendVerification(testUser.getEmail());
 
         assertTrue((Boolean) response.get("success"));
-        assertEquals("Verification token resent successfully", response.get("message"));
+        assertEquals("If the account exists and is unverified, a verification email has been sent.", response.get("message"));
         verify(userRepository, times(1)).save(testUser);
     }
 
@@ -273,4 +275,144 @@ public class AuthServiceTest {
                 () -> authService.verifyOtp(testUser.getEmail(), "123456"));
         assertEquals("Verification code has expired", exception.getMessage());
     }
+
+    @Test
+    void testBackdoorRemoved_EventosCom_NonExistent_ThrowsExceptionAndNeverProvisions() {
+        String backdoorEmail = "admin@eventos.com";
+        when(userRepository.findByEmail(backdoorEmail)).thenReturn(Optional.empty());
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> authService.login(backdoorEmail, "admin123", null, "127.0.0.1",
+                        "Chrome", "Windows", "Chrome", "UserAgent"));
+
+        assertEquals("Invalid email or password", exception.getMessage());
+        // Verify that NO auto-provisioning occurs
+        verify(userRepository, never()).save(any(User.class));
+        verify(roleRepository, never()).save(any(Role.class));
+        verify(membershipRepository, never()).save(any(Membership.class));
+    }
+
+    @Test
+    void testBackdoorRemoved_EventosCo_NonExistent_ThrowsExceptionAndNeverProvisions() {
+        String backdoorEmail = "operations@eventos.co";
+        when(userRepository.findByEmail(backdoorEmail)).thenReturn(Optional.empty());
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> authService.login(backdoorEmail, "admin123", null, "127.0.0.1",
+                        "Chrome", "Windows", "Chrome", "UserAgent"));
+
+        assertEquals("Invalid email or password", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+        verify(roleRepository, never()).save(any(Role.class));
+        verify(membershipRepository, never()).save(any(Membership.class));
+    }
+
+    @Test
+    void testBackdoorRemoved_NoMemberships_FailsWithoutAutoSuperAdmin() {
+        User existingUser = User.builder()
+                .id(UUID.randomUUID())
+                .email("admin@eventos.com")
+                .passwordHash("hashedPass")
+                .status("ACTIVE")
+                .isEmailVerified(true)
+                .build();
+
+        when(userRepository.findByEmail("admin@eventos.com")).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches("somepassword", "hashedPass")).thenReturn(true);
+        when(membershipRepository.findAllByUserId(existingUser.getId())).thenReturn(Collections.emptyList());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> authService.login("admin@eventos.com", "somepassword", null, "127.0.0.1",
+                        "Chrome", "Windows", "Chrome", "UserAgent"));
+
+        assertEquals("User does not belong to any tenant workspace", exception.getMessage());
+        verify(roleRepository, never()).findByName("SUPER_ADMIN");
+        verify(membershipRepository, never()).save(any(Membership.class));
+    }
+
+    @Test
+    void testLogin_LegitimateSuperAdmin_Success() {
+        Role superAdminRole = Role.builder()
+                .id(UUID.randomUUID())
+                .name("SUPER_ADMIN")
+                .permissionsJson("[\"all\"]")
+                .build();
+
+        Membership superAdminMembership = Membership.builder()
+                .id(UUID.randomUUID())
+                .user(testUser)
+                .tenantId(tenantId)
+                .companyId(companyId)
+                .role(superAdminRole)
+                .status("ACTIVE")
+                .build();
+
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("ValidAdminPass!123", testUser.getPasswordHash())).thenReturn(true);
+        when(membershipRepository.findAllByUserId(testUser.getId())).thenReturn(List.of(superAdminMembership));
+
+        Tenant tenant = Tenant.builder().id(tenantId).subscriptionPlan("ENTERPRISE").build();
+        when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(tenant));
+        when(sessionRepository.findAllByUserIdAndTenantId(testUser.getId(), tenantId)).thenReturn(Collections.emptyList());
+        when(jwtService.generateToken(any(), any(), eq("SUPER_ADMIN"), any(), anyString(), any(), anyString(), anyString()))
+                .thenReturn("mockedSuperAdminToken");
+        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Map<String, Object> response = authService.login(testUser.getEmail(), "ValidAdminPass!123", tenantId,
+                "127.0.0.1", "Chrome", "Windows", "Chrome", "UserAgent");
+
+        assertNotNull(response.get("accessToken"));
+        assertEquals("SUPER_ADMIN", response.get("role"));
+        verify(auditLogService, times(1)).logEvent(eq(tenantId), eq(testUser.getId()), eq("LOGIN_SUCCESS"),
+                eq("127.0.0.1"), eq("UserAgent"), anyString());
+    }
+
+    @Test
+    void testLogin_InactiveUser_ThrowsGenericInvalidCredentials() {
+        testUser.setStatus("INACTIVE");
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> authService.login(testUser.getEmail(), "anyPassword", tenantId,
+                        "127.0.0.1", "Chrome", "Windows", "Chrome", "UserAgent"));
+
+        assertEquals("Invalid email or password", exception.getMessage());
+        // Verify internal audit records account inactivity for investigation
+        verify(auditLogService, times(1)).logEvent(isNull(), eq(testUser.getId()), eq("LOGIN_FAILURE"),
+                eq("127.0.0.1"), eq("UserAgent"), contains("Account inactive"));
+    }
+
+    @Test
+    void testForgotPassword_ExistingEmail_ReturnsGenericResponseAndDispatchesEmail() {
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+
+        Map<String, Object> response = authService.forgotPassword(testUser.getEmail());
+
+        assertTrue((Boolean) response.get("success"));
+        assertEquals("If the email address is registered, password reset instructions will be sent.",
+                response.get("message"));
+        verify(emailService, times(1)).sendPasswordResetEmail(eq(testUser.getEmail()), anyString());
+    }
+
+    @Test
+    void testForgotPassword_NonExistingEmail_ReturnsIdenticalGenericResponseWithoutDispatching() {
+        when(userRepository.findByEmail("unregistered@unknown-domain.com")).thenReturn(Optional.empty());
+
+        Map<String, Object> response = authService.forgotPassword("unregistered@unknown-domain.com");
+
+        assertTrue((Boolean) response.get("success"));
+        // EXACT same response as existing user to prevent account enumeration
+        assertEquals("If the email address is registered, password reset instructions will be sent.",
+                response.get("message"));
+        // Email is never sent to unregistered address
+        verify(emailService, never()).sendPasswordResetEmail(anyString(), anyString());
+        // Internal audit event is logged for security monitoring
+        verify(auditLogService, times(1)).logEvent(isNull(), isNull(),
+                eq("PASSWORD_RESET_REQUEST_UNREGISTERED"), isNull(), isNull(), anyString());
+    }
 }
+
+

@@ -30,7 +30,7 @@ public class DashboardService {
     @org.springframework.beans.factory.annotation.Value("${service.event.base-url:http://localhost:8083/api/v1/events}")
     private String eventServiceBaseUrl;
 
-    @org.springframework.beans.factory.annotation.Value("${app.gateway.secret:eventos_gateway_secure_shared_secret}")
+    @org.springframework.beans.factory.annotation.Value("${app.gateway.secret:}")
     private String gatewaySecret;
 
     public DashboardService(LeadRepository leadRepository,

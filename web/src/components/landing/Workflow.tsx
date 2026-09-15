@@ -1,230 +1,393 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import { useReducedMotion } from "framer-motion";
-import { AnimatedBeam } from "@/components/ui/animated-beam";
+import React, { useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { CheckCircle2, ArrowRight, Sparkles, ChevronRight, Layers, ArrowDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
+interface WorkflowStep {
+  number: string;
+  title: string;
+  shortDesc: string;
+  icon: string;
+  color: string;
+  bgLight: string;
+  borderColor: string;
+  previewTitle: string;
+  previewBadge: string;
+  previewDetails: { label: string; value: string }[];
+  previewNote: string;
 }
 
-const steps = [
+const steps: WorkflowStep[] = [
   {
-    title: "Lead",
-    desc: "Client inquiry logged in CRM",
-    icon: "solar:users-group-rounded-bold-duotone",
-    iconColor: "#8B5CF6",
-    gradientFrom: "#8B5CF6",
-    gradientTo: "#EC4899",
-    pathColor: "rgba(139, 92, 246, 0.15)",
-    borderColor: "border-purple-500/30",
+    number: "01",
+    title: "LEAD",
+    shortDesc: "Capture and organize every enquiry.",
+    icon: "solar:user-plus-bold-duotone",
+    color: "text-purple-600",
+    bgLight: "bg-purple-50",
+    borderColor: "border-purple-200",
+    previewTitle: "Inquiry Pipeline & Lead Capture",
+    previewBadge: "New Lead",
+    previewDetails: [
+      { label: "Client", value: "Pooja & Rohan" },
+      { label: "Event Type", value: "Destination Wedding (3 Days)" },
+      { label: "Est. Budget", value: "₹35,00,000" },
+      { label: "Channel", value: "Website Contact Form" },
+    ],
+    previewNote: "Auto-synced into pipeline without manual spreadsheet entry.",
   },
   {
-    title: "Quote",
-    desc: "Proposal drafted & accepted",
+    number: "02",
+    title: "QUOTE",
+    shortDesc: "Create professional quotations and proposals.",
     icon: "solar:document-text-bold-duotone",
-    iconColor: "#EC4899",
-    gradientFrom: "#EC4899",
-    gradientTo: "#06B6D4",
-    pathColor: "rgba(236, 72, 153, 0.15)",
-    borderColor: "border-pink-500/30",
+    color: "text-pink-600",
+    bgLight: "bg-pink-50",
+    borderColor: "border-pink-200",
+    previewTitle: "Smart Proposal & Line-Item Estimate",
+    previewBadge: "Proposal Drafted",
+    previewDetails: [
+      { label: "Proposal #", value: "QT-2026-088" },
+      { label: "Production", value: "Floral Mandap, Rigging, Stage" },
+      { label: "Tax Breakup", value: "18% GST Itemized" },
+      { label: "Advance Term", value: "30% Upon Digital Approval" },
+    ],
+    previewNote: "Clients review, sign and accept directly on their phone.",
   },
   {
-    title: "Booking",
-    desc: "Contract signed, dates locked",
+    number: "03",
+    title: "BOOKING",
+    shortDesc: "Convert approved quotes into active events.",
     icon: "solar:check-square-bold-duotone",
-    iconColor: "#06B6D4",
-    gradientFrom: "#06B6D4",
-    gradientTo: "#10B981",
-    pathColor: "rgba(6, 182, 212, 0.15)",
-    borderColor: "border-cyan-500/30",
+    color: "text-indigo-600",
+    bgLight: "bg-indigo-50",
+    borderColor: "border-indigo-200",
+    previewTitle: "Contract Lock & Event Onboarding",
+    previewBadge: "Booking Confirmed",
+    previewDetails: [
+      { label: "Event ID", value: "#EVT-ROYAL-928" },
+      { label: "Dates Locked", value: "18–20 Oct 2026" },
+      { label: "Venue", value: "Taj Palace Banquets, Delhi" },
+      { label: "Status", value: "Converted from Quote #088" },
+    ],
+    previewNote: "Zero re-typing. The signed quote becomes an active project.",
   },
   {
-    title: "Payment",
-    desc: "Milestones invoiced & cleared",
+    number: "04",
+    title: "PAYMENT",
+    shortDesc: "Track advances, milestones and invoices.",
     icon: "solar:wallet-money-bold-duotone",
-    iconColor: "#10B981",
-    gradientFrom: "#10B981",
-    gradientTo: "#F59E0B",
-    pathColor: "rgba(16, 185, 129, 0.15)",
-    borderColor: "border-emerald-500/30",
+    color: "text-emerald-600",
+    bgLight: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+    previewTitle: "Milestone Billing & Instant Receipts",
+    previewBadge: "Advance Cleared",
+    previewDetails: [
+      { label: "Deposit Amount", value: "₹10,50,000" },
+      { label: "Payment Mode", value: "UPI / Corporate Bank Transfer" },
+      { label: "Next Milestone", value: "40% 7 Days Before Sangeet" },
+      { label: "GST Receipt", value: "Auto-Generated & Sent" },
+    ],
+    previewNote: "Clients pay in one click. Invoices reconcile automatically.",
   },
   {
-    title: "Gallery",
-    desc: "High-res media delivered",
+    number: "05",
+    title: "PLAN",
+    shortDesc: "Create timelines, tasks and coordinate your team.",
+    icon: "solar:calendar-bold-duotone",
+    color: "text-blue-600",
+    bgLight: "bg-blue-50",
+    borderColor: "border-blue-200",
+    previewTitle: "Run-of-Show & Vendor Assignments",
+    previewBadge: "Timeline Active",
+    previewDetails: [
+      { label: "Stage Ingress", value: "08:00 AM • Floral & Decor Team" },
+      { label: "Sound Check", value: "10:15 AM • Line Array Bass Test" },
+      { label: "Baraat Gate", value: "03:30 PM • Hospitality Escort" },
+      { label: "Conflict Engine", value: "0 Overlaps Guaranteed" },
+    ],
+    previewNote: "Minute-by-minute cues shared with crew via live link.",
+  },
+  {
+    number: "06",
+    title: "EVENT",
+    shortDesc: "Manage execution with mobile-friendly workflows.",
+    icon: "solar:smartphone-bold-duotone",
+    color: "text-amber-600",
+    bgLight: "bg-amber-50",
+    borderColor: "border-amber-200",
+    previewTitle: "Event-Day Ground Coordination",
+    previewBadge: "Execution Live",
+    previewDetails: [
+      { label: "Gate Check-In", value: "Offline PWA QR Scanner" },
+      { label: "Guest Count", value: "450 RSVP Verified" },
+      { label: "WhatsApp Alert", value: "Directions Sent to VIP Guests" },
+      { label: "Crew Status", value: "12 Coordinators Synced" },
+    ],
+    previewNote: "Works even with zero mobile signal inside banquet halls.",
+  },
+  {
+    number: "07",
+    title: "DELIVER",
+    shortDesc: "Share galleries and final deliverables through the client portal.",
     icon: "solar:gallery-bold-duotone",
-    iconColor: "#F59E0B",
-    gradientFrom: "#F59E0B",
-    gradientTo: "#F59E0B",
-    pathColor: "rgba(245, 158, 11, 0.15)",
-    borderColor: "border-amber-500/30",
+    color: "text-violet-600",
+    bgLight: "bg-violet-50",
+    borderColor: "border-violet-200",
+    previewTitle: "White-Label Client Media Delivery",
+    previewBadge: "Reel Published",
+    previewDetails: [
+      { label: "Client Portal", value: "secure.eventos.in/pooja-rohan" },
+      { label: "High-Res Photos", value: "1,450 Edited Assets" },
+      { label: "Access Security", value: "Passcode & Expiry Controls" },
+      { label: "Client Action", value: "Photo Proofing & Download" },
+    ],
+    previewNote: "Branded delivery without expiring Google Drive links.",
   },
 ];
 
 export function Workflow() {
   const shouldReduceMotion = useReducedMotion();
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  const refs = [
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-  ];
+  const [activeStepIndex, setActiveStepIndex] = useState(0);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    if (shouldReduceMotion) {
-      gsap.set(".gsap-workflow-step", { opacity: 1, scale: 1, y: 0 });
-      gsap.set(".gsap-workflow-stat", { opacity: 1, y: 0 });
-      return;
-    }
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: "#workflow-timeline-container",
-        start: "top 80%",
-        toggleActions: "play none none none",
-      },
-    });
-
-    tl.fromTo(
-      ".gsap-workflow-step",
-      { opacity: 0, scale: 0.85, y: 20 },
-      {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        stagger: 0.12,
-        duration: 0.55,
-        ease: "power2.out",
-        onComplete: () => {
-          window.dispatchEvent(new Event("resize"));
-        }
-      }
-    ).fromTo(
-      ".gsap-workflow-stat",
-      { opacity: 0, y: 15 },
-      {
-        opacity: 1,
-        y: 0,
-        stagger: 0.1,
-        duration: 0.45,
-        ease: "power2.out",
-      },
-      "-=0.25"
-    );
-
-    const timer1 = setTimeout(() => window.dispatchEvent(new Event("resize")), 400);
-    const timer2 = setTimeout(() => window.dispatchEvent(new Event("resize")), 1200);
-
-    return () => {
-      ScrollTrigger.getAll().forEach(t => t.kill());
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }, [shouldReduceMotion]);
+  const currentStep = steps[activeStepIndex];
 
   return (
     <section
       id="workflow"
-      className="py-24 border-b border-purple-500/10 bg-transparent relative overflow-hidden text-left"
+      className="py-24 sm:py-32 bg-[#FAF9F6] border-b border-slate-200/80 relative overflow-hidden font-sans text-left"
     >
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-purple-500/5 to-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
+      {/* Background Soft Glows */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-purple-100/30 blur-[140px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-12 right-1/4 w-[400px] h-[250px] bg-indigo-100/30 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-4 mb-20">
-          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-[#06B6D4] uppercase">
-            <Icon icon="solar:routing-bold-duotone" className="text-sm" />
-            Integrated Lifecycle
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-3xl mx-auto space-y-4 mb-14 sm:mb-18"
+        >
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200/80 text-purple-700 text-xs font-extrabold uppercase tracking-widest">
+            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+            Connected Workflow
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading">
-            The Complete Event{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 to-purple-600">
-              Workflow
+
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 font-heading leading-[1.12] text-balance">
+            From First Enquiry to{" "}
+            <span className="bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 bg-clip-text text-transparent">
+              Final Delivery.
             </span>
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
-            See how prospective leads turn into fully paid bookings and finished galleries inside the automated EventOS ecosystem — no context switching required.
+
+          <p className="text-slate-600 text-base sm:text-lg leading-relaxed font-medium max-w-2xl mx-auto">
+            One connected workflow for your entire event.
           </p>
+
+          {/* Standalone Key Callout Statement */}
+          <div className="pt-2">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-purple-200/90 shadow-sm text-xs sm:text-sm font-extrabold text-slate-900">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>One connected workflow. No duplicate data entry.</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ------------------------------------------------------------- */}
+        {/* DESKTOP LAYOUT: Horizontal Connected Sequence (7 Stages)     */}
+        {/* ------------------------------------------------------------- */}
+        <div className="hidden lg:block space-y-8">
+          {/* Horizontal Track */}
+          <div className="grid grid-cols-7 gap-3 relative">
+            {steps.map((step, idx) => {
+              const isActive = activeStepIndex === idx;
+              return (
+                <button
+                  key={step.title}
+                  type="button"
+                  onClick={() => setActiveStepIndex(idx)}
+                  className={cn(
+                    "relative text-left p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col justify-between group h-full",
+                    isActive
+                      ? "bg-white border-purple-500/80 shadow-lg shadow-purple-500/10 -translate-y-1.5"
+                      : "bg-white/80 border-slate-200/90 hover:bg-white hover:border-slate-300 shadow-xs hover:-translate-y-0.5"
+                  )}
+                >
+                  {/* Active highlight top strip */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-workflow-bar"
+                      className="absolute top-0 inset-x-4 h-1 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full"
+                    />
+                  )}
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={cn(
+                          "text-[11px] font-black font-mono tracking-wider transition-colors",
+                          isActive ? "text-purple-700 font-bold" : "text-slate-400 group-hover:text-slate-600"
+                        )}
+                      >
+                        {step.number}
+                      </span>
+                      <div
+                        className={cn(
+                          "h-8 w-8 rounded-xl flex items-center justify-center border transition-all",
+                          step.bgLight,
+                          step.borderColor,
+                          step.color
+                        )}
+                      >
+                        <Icon icon={step.icon} className="text-base" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3
+                        className={cn(
+                          "text-xs font-black uppercase tracking-wider font-heading transition-colors",
+                          isActive ? "text-slate-900" : "text-slate-700 group-hover:text-slate-900"
+                        )}
+                      >
+                        {step.title}
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-snug font-medium line-clamp-2">
+                        {step.shortDesc}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Flow Arrow to next node */}
+                  {idx < steps.length - 1 && (
+                    <div className="absolute -right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                      <div className="h-6 w-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shadow-xs">
+                        <ChevronRight size={12} />
+                      </div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Step Preview Screen */}
+          <motion.div
+            key={currentStep.number}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="rounded-3xl border border-purple-200/90 bg-white p-7 sm:p-8 shadow-md relative overflow-hidden"
+          >
+            <div className="flex items-center justify-between pb-5 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className={cn("h-11 w-11 rounded-2xl flex items-center justify-center border", currentStep.bgLight, currentStep.borderColor, currentStep.color)}>
+                  <Icon icon={currentStep.icon} className="text-xl" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                      Step {currentStep.number} • {currentStep.title}
+                    </span>
+                    <span className="text-xs font-bold text-slate-400">→</span>
+                    <span className="text-xs font-extrabold text-slate-800">{currentStep.shortDesc}</span>
+                  </div>
+                  <h4 className="text-base font-extrabold text-slate-900 mt-0.5 font-heading">
+                    {currentStep.previewTitle}
+                  </h4>
+                </div>
+              </div>
+
+              <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {currentStep.previewBadge}
+              </span>
+            </div>
+
+            {/* Micro Details Grid */}
+            <div className="grid grid-cols-4 gap-4 pt-5">
+              {currentStep.previewDetails.map((detail) => (
+                <div key={detail.label} className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    {detail.label}
+                  </span>
+                  <p className="text-xs font-extrabold text-slate-900 truncate">
+                    {detail.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom Benefit Callout */}
+            <div className="mt-5 p-3 rounded-xl bg-purple-50/60 border border-purple-100 flex items-center justify-between text-xs">
+              <span className="text-purple-900 font-semibold">
+                ✓ {currentStep.previewNote}
+              </span>
+              <div className="flex items-center gap-1 text-[11px] font-bold text-purple-700">
+                <span>Next: {steps[(activeStepIndex + 1) % steps.length].title}</span>
+                <ArrowRight size={12} />
+              </div>
+            </div>
+          </motion.div>
         </div>
 
-        {/* Workflow Beam Container */}
-        <div id="workflow-timeline-container" ref={containerRef} className="relative w-full py-8">
-          
-          {/* Animated Beams */}
-          {!shouldReduceMotion &&
-            steps.slice(0, -1).map((step, idx) => (
-              <AnimatedBeam
-                key={idx}
-                containerRef={containerRef}
-                fromRef={refs[idx]}
-                toRef={refs[idx + 1]}
-                curvature={0}
-                duration={3.5}
-                delay={idx * 0.4}
-                gradientStartColor={step.gradientFrom}
-                gradientStopColor={step.gradientTo}
-                pathColor={step.gradientFrom}
-                pathOpacity={0.25}
-                pathWidth={2.5}
-              />
-            ))}
+        {/* ------------------------------------------------------------- */}
+        {/* MOBILE & TABLET LAYOUT: Vertical Connected Timeline (1-7)    */}
+        {/* ------------------------------------------------------------- */}
+        <div className="lg:hidden relative space-y-6">
+          {/* Vertical Connecting Line */}
+          <div className="absolute left-[26px] top-6 bottom-6 w-[2px] bg-gradient-to-b from-purple-500 via-indigo-500 to-violet-500 pointer-events-none" />
 
-          {/* Step Nodes */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-4 relative z-10">
-            {steps.map((step, idx) => (
+          {steps.map((step, idx) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -15 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: idx * 0.06 }}
+              className="relative flex items-start gap-4"
+            >
+              {/* Timeline Icon Node */}
               <div
-                key={step.title}
-                className="gsap-workflow-step opacity-0 flex flex-col items-center text-center space-y-4"
+                className={cn(
+                  "relative z-10 h-13 w-13 rounded-2xl flex items-center justify-center border-2 bg-white shadow-md shrink-0",
+                  step.borderColor
+                )}
               >
-                <div
-                  ref={refs[idx]}
-                  className={`h-16 w-16 rounded-full border-2 bg-white flex items-center justify-center shadow-md relative group transition-all duration-300 hover:bg-slate-50 ${step.borderColor}`}
-                  style={{ boxShadow: `0 0 20px ${step.iconColor}20` }}
-                >
-                  <Icon icon={step.icon} style={{ color: step.iconColor }} className="text-2xl" />
-                  {/* Step number badge */}
-                  <span
-                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-extrabold border text-white"
-                    style={{ background: step.iconColor, borderColor: "#FAF9F6" }}
-                  >
-                    {idx + 1}
+                <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center", step.bgLight, step.color)}>
+                  <Icon icon={step.icon} className="text-lg" />
+                </div>
+                <span className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-slate-900 text-white text-[9px] font-extrabold flex items-center justify-center font-mono shadow-xs">
+                  {step.number}
+                </span>
+              </div>
+
+              {/* Step Card */}
+              <div className="flex-1 p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-purple-700 font-heading">
+                    {step.title}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+                    Step {step.number}
                   </span>
                 </div>
 
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-slate-900">{step.title}</h3>
-                  <p className="text-slate-600 text-[10px] sm:text-xs leading-relaxed max-w-[120px] mx-auto font-medium">
-                    {step.desc}
-                  </p>
+                <p className="text-sm font-bold text-slate-900 leading-snug">
+                  {step.shortDesc}
+                </p>
+
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600 font-medium">
+                  {step.previewNote}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom stat bar */}
-        <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-          {[
-            { value: "< 15 min", label: "Average time to create & send a proposal" },
-            { value: "Zero", label: "Manual data re-entry between pipeline stages" },
-            { value: "100%", label: "Automated invoice generation from bookings" },
-          ].map((item) => (
-            <div key={item.label} className="gsap-workflow-stat opacity-0 text-center p-4 rounded-xl bg-white/80 border border-slate-200/80 shadow-sm backdrop-blur-md">
-              <p className="text-lg font-extrabold text-slate-900 font-heading">{item.value}</p>
-              <p className="text-[10px] text-slate-600 mt-1 leading-snug font-medium">{item.label}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
-
       </div>
     </section>
   );

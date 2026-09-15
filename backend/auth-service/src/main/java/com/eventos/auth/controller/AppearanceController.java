@@ -21,9 +21,8 @@ public class AppearanceController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
-    public ResponseEntity<?> getAppearance(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getAppearance() {
+        UUID tenantId = getTenantId();
         Company company = brandingService.getBrandingSettings(tenantId);
         
         Map<String, Object> data = new HashMap<>();
@@ -43,9 +42,8 @@ public class AppearanceController {
     @PutMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> updateAppearance(
-            @RequestBody Company appearanceDetails,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Company appearanceDetails) {
+        UUID tenantId = getTenantId();
         Company company = brandingService.updateBrandingSettings(tenantId, appearanceDetails);
         
         Map<String, Object> response = new HashMap<>();
@@ -54,7 +52,7 @@ public class AppearanceController {
         return ResponseEntity.ok(response);
     }
 
-    private UUID getTenantId(String header) {
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
@@ -63,10 +61,7 @@ public class AppearanceController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 }

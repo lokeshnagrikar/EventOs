@@ -21,23 +21,25 @@ data:
   GALLERY_SERVICE_URL: http://gallery-service:8084/api/v1/gallery
   AUTH_SERVICE_URL: http://auth-service:8081/api/v1/auth
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: eventos-secrets
-  namespace: eventos
-type: Opaque
-data:
-  # Base64 encoded values for production secrets
-  # JWT_SECRET_KEY: 9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d
-  jwt-secret: OWE0ZjJjOGQ3ZTZiNWEzZjFjMmQzZTRmNWE2YjdjOGQ5ZTBmMWEyYjNjNGQ1ZTZmN2E4YjljMGQxZTJmM2E0YjVjNmQ=
-  postgres-user: ZXZlbnRvc19hZG1pbg== # eventos_admin
-  postgres-password: ZXZlbnRvc19zZWN1cmVfcGFzcw== # eventos_secure_pass
-  rabbitmq-user: ZXZlbnRvc19ndWVzdA== # eventos_guest
-  rabbitmq-password: ZXZlbnRvc19ndWVzdF9wYXNz # eventos_guest_pass
-  cloudinary-cloud-name: ZGVtbw== # demo
-  cloudinary-api-key: ZGVtb19rZXk= # demo_key
-  cloudinary-api-secret: ZGVtb19zZWN1cmV0 # demo_secret
+# ==============================================================================
+# Production Secrets: Externalized Secret Reference Notice
+# In compliance with Phase 2R-FIX-02 security requirements, production credentials
+# and asymmetric keys are NOT committed to version control.
+# Operators must pre-provision the 'eventos-production-secrets' Secret via Vault,
+# AWS Secrets Manager, SealedSecrets, or:
+# kubectl create secret generic eventos-production-secrets -n eventos \
+#   --from-literal=POSTGRES_USER=... \
+#   --from-literal=POSTGRES_PASSWORD=... \
+#   --from-literal=RABBITMQ_DEFAULT_USER=... \
+#   --from-literal=RABBITMQ_DEFAULT_PASS=... \
+#   --from-file=JWT_PRIVATE_KEY=./jwt_private.pem \
+#   --from-file=JWT_PUBLIC_KEY=./jwt_public.pem \
+#   --from-literal=GATEWAY_TRUST_SECRET=... \
+#   --from-literal=ENCRYPTION_KEY=... \
+#   --from-literal=CLOUDINARY_CLOUD_NAME=... \
+#   --from-literal=CLOUDINARY_API_KEY=... \
+#   --from-literal=CLOUDINARY_API_SECRET=...
+# ==============================================================================
 ---
 # Persistent Volumes for Databases
 apiVersion: v1
@@ -73,17 +75,17 @@ spec:
           image: postgres:17-alpine
           ports:
             - containerPort: 5432
-          environment:
+          env:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-user
+                  name: eventos-production-secrets
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-password
+                  name: eventos-production-secrets
+                  key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               value: eventos_root
           volumeMounts:
@@ -96,15 +98,14 @@ spec:
             requests:
               cpu: "250m"
               memory: 256Mi
-          healthCheck:
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "eventos_admin", "-d", "eventos_root"]
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
             initialDelaySeconds: 15
             periodSeconds: 10
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "eventos_admin", "-d", "eventos_root"]
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
             initialDelaySeconds: 10
             periodSeconds: 5
       volumes:
@@ -195,17 +196,17 @@ spec:
           ports:
             - containerPort: 5672
             - containerPort: 15672
-          environment:
+          env:
             - name: RABBITMQ_DEFAULT_USER
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: rabbitmq-user
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_USER
             - name: RABBITMQ_DEFAULT_PASS
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: rabbitmq-password
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_PASS
           resources:
             limits:
               cpu: "500m"
@@ -272,18 +273,43 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-user
+                  name: eventos-production-secrets
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-password
-            - name: JWT_SECRET_KEY
+                  name: eventos-production-secrets
+                  key: POSTGRES_PASSWORD
+            - name: JWT_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: jwt-secret
+                  name: eventos-production-secrets
+                  key: JWT_PRIVATE_KEY
+            - name: JWT_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: JWT_PUBLIC_KEY
+            - name: GATEWAY_TRUST_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: GATEWAY_TRUST_SECRET
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: ENCRYPTION_KEY
+            - name: SPRING_RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_USER
+            - name: SPRING_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_PASS
           resources:
             limits:
               cpu: "500m"
@@ -349,33 +375,48 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-user
+                  name: eventos-production-secrets
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-password
-            - name: JWT_SECRET_KEY
+                  name: eventos-production-secrets
+                  key: POSTGRES_PASSWORD
+            - name: JWT_PUBLIC_KEY
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: jwt-secret
+                  name: eventos-production-secrets
+                  key: JWT_PUBLIC_KEY
+            - name: GATEWAY_TRUST_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: GATEWAY_TRUST_SECRET
             - name: CLOUDINARY_CLOUD_NAME
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: cloudinary-cloud-name
+                  name: eventos-production-secrets
+                  key: CLOUDINARY_CLOUD_NAME
             - name: CLOUDINARY_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: cloudinary-api-key
+                  name: eventos-production-secrets
+                  key: CLOUDINARY_API_KEY
             - name: CLOUDINARY_API_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: cloudinary-api-secret
+                  name: eventos-production-secrets
+                  key: CLOUDINARY_API_SECRET
+            - name: SPRING_RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_USER
+            - name: SPRING_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_PASS
           resources:
             limits:
               cpu: "500m"
@@ -441,18 +482,33 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-user
+                  name: eventos-production-secrets
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-password
-            - name: JWT_SECRET_KEY
+                  name: eventos-production-secrets
+                  key: POSTGRES_PASSWORD
+            - name: JWT_PUBLIC_KEY
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: jwt-secret
+                  name: eventos-production-secrets
+                  key: JWT_PUBLIC_KEY
+            - name: GATEWAY_TRUST_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: GATEWAY_TRUST_SECRET
+            - name: SPRING_RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_USER
+            - name: SPRING_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_PASS
           resources:
             limits:
               cpu: "500m"
@@ -518,33 +574,48 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-user
+                  name: eventos-production-secrets
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: postgres-password
-            - name: JWT_SECRET_KEY
+                  name: eventos-production-secrets
+                  key: POSTGRES_PASSWORD
+            - name: JWT_PUBLIC_KEY
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: jwt-secret
+                  name: eventos-production-secrets
+                  key: JWT_PUBLIC_KEY
+            - name: GATEWAY_TRUST_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: GATEWAY_TRUST_SECRET
             - name: CLOUDINARY_CLOUD_NAME
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: cloudinary-cloud-name
+                  name: eventos-production-secrets
+                  key: CLOUDINARY_CLOUD_NAME
             - name: CLOUDINARY_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: cloudinary-api-key
+                  name: eventos-production-secrets
+                  key: CLOUDINARY_API_KEY
             - name: CLOUDINARY_API_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: cloudinary-api-secret
+                  name: eventos-production-secrets
+                  key: CLOUDINARY_API_SECRET
+            - name: SPRING_RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_USER
+            - name: SPRING_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: RABBITMQ_DEFAULT_PASS
           resources:
             limits:
               cpu: "500m"
@@ -613,11 +684,16 @@ spec:
               value: http://event-service:8083
             - name: SPRING_CLOUD_GATEWAY_ROUTES_3_URI
               value: http://gallery-service:8084
-            - name: JWT_SECRET_KEY
+            - name: JWT_PUBLIC_KEY
               valueFrom:
                 secretKeyRef:
-                  name: eventos-secrets
-                  key: jwt-secret
+                  name: eventos-production-secrets
+                  key: JWT_PUBLIC_KEY
+            - name: GATEWAY_TRUST_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: eventos-production-secrets
+                  key: GATEWAY_TRUST_SECRET
           resources:
             limits:
               cpu: "500m"

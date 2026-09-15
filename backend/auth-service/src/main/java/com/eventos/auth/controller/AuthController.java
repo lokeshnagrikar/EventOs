@@ -13,8 +13,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+import com.eventos.auth.config.UserPrincipal;
 
 import java.util.HashMap;
 import java.util.List;
@@ -42,20 +45,59 @@ public class AuthController {
     @org.springframework.beans.factory.annotation.Value("${app.security.cookie.samesite:#{null}}")
     private String sameSitePolicyOverride;
 
-    private ResponseCookie createRefreshTokenCookie(String token, long maxAge) {
-        boolean isRender = System.getenv("RENDER") != null;
-        boolean isProdProfile = "prod".equalsIgnoreCase(System.getenv("SPRING_PROFILES_ACTIVE"))
-                || "production".equalsIgnoreCase(System.getenv("SPRING_PROFILES_ACTIVE"));
-        boolean secureEnv = "true".equalsIgnoreCase(System.getenv("COOKIE_SECURE"));
+    @Autowired
+    private org.springframework.core.env.Environment environment;
 
-        boolean secure = isRender || isProdProfile || secureEnv;
-        if (secureCookieOverrideStr != null && !secureCookieOverrideStr.trim().isEmpty()) {
-            secure = Boolean.parseBoolean(secureCookieOverrideStr.trim().replace("\r", "").replace("\n", ""));
+    @Autowired(required = false)
+    private com.eventos.auth.config.ProductionSecurityValidator productionSecurityValidator;
+
+    public boolean isProduction() {
+        if (productionSecurityValidator != null) {
+            return productionSecurityValidator.isProduction();
+        }
+        if (environment != null) {
+            for (String profile : environment.getActiveProfiles()) {
+                if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
+                    return true;
+                }
+            }
+        }
+        String sysProfile = System.getProperty("spring.profiles.active");
+        if (sysProfile != null && ("prod".equalsIgnoreCase(sysProfile) || "production".equalsIgnoreCase(sysProfile))) {
+            return true;
+        }
+        String envProfile = System.getenv("SPRING_PROFILES_ACTIVE");
+        return envProfile != null && ("prod".equalsIgnoreCase(envProfile) || "production".equalsIgnoreCase(envProfile));
+    }
+
+    private ResponseCookie createRefreshTokenCookie(String token, long maxAge) {
+        boolean isProd = isProduction();
+
+        // In production, Secure MUST ALWAYS be true.
+        // COOKIE_SECURE=false or app.security.cookie.secure=false CANNOT downgrade production!
+        boolean secure;
+        if (isProd) {
+            secure = true;
+        } else {
+            // In non-production (local development / test):
+            // Default to false for localhost HTTP compatibility, but honor explicit COOKIE_SECURE=true if configured.
+            boolean secureEnv = "true".equalsIgnoreCase(System.getenv("COOKIE_SECURE"));
+            boolean secureOverride = secureCookieOverrideStr != null && Boolean.parseBoolean(secureCookieOverrideStr.trim());
+            secure = secureEnv || secureOverride;
         }
 
-        String sameSite = secure ? "None" : "Lax";
+        String sameSite = "Lax";
         if (sameSitePolicyOverride != null && !sameSitePolicyOverride.trim().isEmpty()) {
-            sameSite = sameSitePolicyOverride.trim().replace("\r", "").replace("\n", "");
+            String candidate = sameSitePolicyOverride.trim().replace("\r", "").replace("\n", "");
+            if ("Strict".equalsIgnoreCase(candidate)) {
+                sameSite = "Strict";
+            } else if ("None".equalsIgnoreCase(candidate)) {
+                sameSite = "None";
+                // SameSite=None strictly requires Secure=true in all environments per RFC 6265bis
+                secure = true;
+            } else {
+                sameSite = "Lax";
+            }
         }
 
         return ResponseCookie.from("refreshToken", token)
@@ -100,11 +142,7 @@ public class AuthController {
             }
 
             // Extract client metadata
-            String ipAddress = httpRequest.getRemoteAddr();
-            String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
-            if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-                ipAddress = xForwardedFor.split(",")[0].trim();
-            }
+            String ipAddress = extractClientIp(httpRequest);
             String userAgent = httpRequest.getHeader("User-Agent");
             String deviceModel = "Browser";
             String osName = "Web Client";
@@ -139,18 +177,31 @@ public class AuthController {
             Map<String, Object> authData = authService.login(
                     email, password, selectTenantId, ipAddress, deviceModel, osName, browser, userAgent,
                     request.getCaptchaId(), request.getCaptchaValue());
-            String refreshToken = (String) authData.get("refreshToken");
+
+            if (Boolean.TRUE.equals(authData.get("requires2fa"))) {
+                Map<String, Object> challengeResponse = new HashMap<>();
+                challengeResponse.put("success", true);
+                challengeResponse.put("requires2fa", true);
+                challengeResponse.put("challengeToken", authData.get("challengeToken"));
+                challengeResponse.put("message", authData.get("message"));
+                return ResponseEntity.ok(challengeResponse);
+            }
+
+            String refreshToken = (String) authData.remove("refreshToken");
 
             ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            // Keep refreshToken in response data for cross-origin / resilient storage fallback
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
             successResponse.put("data", authData);
 
             return ResponseEntity.ok(successResponse);
+        } catch (com.eventos.auth.exception.RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("RATE_LIMITED", e.getMessage()));
         } catch (IllegalArgumentException e) {
             if ("CAPTCHA_REQUIRED".equals(e.getMessage())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -163,11 +214,51 @@ public class AuthController {
                                 "Please verify your email address before logging in."));
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("INVALID_CREDENTIALS", e.getMessage()));
+                    .body(createErrorResponse("INVALID_CREDENTIALS", "Invalid email or password"));
         } catch (Exception e) {
             log.error("[LOGIN] Login execution failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse("LOGIN_FAILED", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/2fa/verify")
+    public ResponseEntity<?> verify2Fa(@RequestBody Map<String, String> request, HttpServletRequest httpRequest,
+            HttpServletResponse response) {
+        String challengeToken = request.get("challengeToken");
+        String code = request.get("code");
+        if (challengeToken == null || code == null) {
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Challenge token and code are required"));
+        }
+
+        String ipAddress = extractClientIp(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        String deviceModel = "Browser";
+        String osName = "Web Client";
+        String browser = "Unknown Browser";
+
+        try {
+            Map<String, Object> authData = authService.verify2FaChallenge(challengeToken, code,
+                    ipAddress, deviceModel, osName, browser, userAgent);
+
+            String refreshToken = (String) authData.remove("refreshToken");
+            if (refreshToken != null) {
+                ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
+                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            }
+
+            Map<String, Object> successResponse = new HashMap<>();
+            successResponse.put("success", true);
+            successResponse.put("data", authData);
+            return ResponseEntity.ok(successResponse);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(createErrorResponse("SECURITY_VIOLATION", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("INVALID_2FA_CODE", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[2FA_VERIFY] Verification failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("VERIFICATION_FAILED", e.getMessage()));
         }
     }
 
@@ -223,12 +314,11 @@ public class AuthController {
 
             Map<String, Object> authData = authService.loginOrRegisterWithGoogle(
                     idToken, accessToken, selectTenantId, ipAddress, deviceModel, osName, browser, userAgent);
-            String refreshToken = (String) authData.get("refreshToken");
+            String refreshToken = (String) authData.remove("refreshToken");
 
             ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            // Keep refreshToken in response data for cross-origin / resilient storage fallback
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
@@ -287,6 +377,10 @@ public class AuthController {
         try {
             Map<String, Object> result = authService.verifyOtp(email, otp);
             return ResponseEntity.ok(result);
+        } catch (com.eventos.auth.exception.RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("RATE_LIMITED", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(createErrorResponse("INVALID_OTP", e.getMessage()));
         } catch (Exception e) {
@@ -304,15 +398,15 @@ public class AuthController {
             HttpServletResponse response) {
 
         String token = null;
-        if (bodyRequest != null && bodyRequest.get("refreshToken") != null && !bodyRequest.get("refreshToken").trim().isEmpty()) {
-            token = bodyRequest.get("refreshToken").trim();
-        } else if (cookieToken != null && !cookieToken.trim().isEmpty()) {
+        if (cookieToken != null && !cookieToken.trim().isEmpty()) {
             token = cookieToken.trim();
+        } else if (bodyRequest != null && bodyRequest.get("refreshToken") != null && !bodyRequest.get("refreshToken").trim().isEmpty()) {
+            token = bodyRequest.get("refreshToken").trim();
         }
 
         if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("MISSING_TOKEN", "Refresh token is missing"));
+                    .body(createErrorResponse("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token"));
         }
 
         try {
@@ -354,54 +448,61 @@ public class AuthController {
             }
 
             Map<String, Object> result = authService.refresh(token, ipAddress, deviceModel, osName, browser, userAgent);
-            String newRefreshToken = (String) result.get("refreshToken");
+            String newRefreshToken = (String) result.remove("refreshToken");
 
             // Set rotated refresh token cookie
             ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            // Keep refreshToken in response data for cross-origin / resilient storage fallback
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
             successResponse.put("data", result);
             return ResponseEntity.ok(successResponse);
         } catch (SecurityException e) {
-            // Replay attack detected. Invalidate cookies.
+            // Replay attack detected. Invalidate cookies and fail closed with generic 401.
             ResponseCookie cookie = createRefreshTokenCookie("", 0);
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("REPLAY_ATTACK_DETECTED", e.getMessage()));
+                    .body(createErrorResponse("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token"));
         } catch (IllegalArgumentException e) {
+            ResponseCookie cookie = createRefreshTokenCookie("", 0);
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("INVALID_TOKEN", e.getMessage()));
+                    .body(createErrorResponse("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token"));
         } catch (Exception e) {
             log.error("[REFRESH] Refresh token execution failed", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(createErrorResponse("REFRESH_FAILED", e.getMessage()));
+            ResponseCookie cookie = createRefreshTokenCookie("", 0);
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token"));
         }
     }
 
     @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> logout(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             @CookieValue(name = "refreshToken", required = false) String cookieToken,
-            @RequestBody(required = false) Map<String, String> request,
             HttpServletResponse response) {
 
-        String email = request != null ? request.get("email") : null;
-        if (email != null) {
-            authService.logout(email);
-        } else if (cookieToken != null) {
-            authService.logoutByToken(cookieToken);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserPrincipal principal)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("UNAUTHORIZED", "Authentication required for logout"));
         }
 
+        String bearerToken = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            if (jwtService != null) {
-                jwtService.blacklistToken(token);
-            }
+            bearerToken = authHeader.substring(7).trim();
         }
+
+        authService.logoutAuthenticatedUser(
+                principal.getUserId(),
+                principal.getTenantId(),
+                cookieToken,
+                bearerToken
+        );
 
         ResponseCookie cookie = createRefreshTokenCookie("", 0);
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -413,17 +514,21 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDto request) {
-        String email = request.getEmail();
-        if (email == null) {
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDto request, HttpServletRequest httpRequest) {
+        String email = request != null ? request.getEmail() : null;
+        if (email == null || email.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Email is required"));
         }
         try {
-            Map<String, Object> result = authService.forgotPassword(email);
+            String ipAddress = extractClientIp(httpRequest);
+            Map<String, Object> result = authService.forgotPassword(email, ipAddress);
             return ResponseEntity.ok(result);
+        } catch (com.eventos.auth.exception.RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("RATE_LIMITED", e.getMessage()));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(createErrorResponse("USER_NOT_FOUND", e.getMessage()));
+            return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", e.getMessage()));
         }
     }
 
@@ -445,10 +550,44 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/bootstrap/superadmin")
+    public ResponseEntity<?> bootstrapSuperAdmin(
+            @RequestBody AdminBootstrapDto request,
+            @RequestHeader(value = "X-Bootstrap-Secret", required = false) String headerSecret,
+            HttpServletRequest httpRequest) {
+        try {
+            String suppliedSecret = request.getBootstrapSecret() != null && !request.getBootstrapSecret().trim().isEmpty()
+                    ? request.getBootstrapSecret()
+                    : headerSecret;
+            String ipAddress = extractClientIp(httpRequest);
+            String userAgent = httpRequest.getHeader("User-Agent");
+
+            Map<String, Object> result = authService.bootstrapSuperAdmin(
+                    request.getEmail(),
+                    request.getNewPassword(),
+                    suppliedSecret,
+                    ipAddress,
+                    userAgent);
+            return ResponseEntity.ok(result);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("BOOTSTRAP_UNAUTHORIZED", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(createErrorResponse("BOOTSTRAP_ALREADY_COMPLETED", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(createErrorResponse("BAD_REQUEST", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[ADMIN_BOOTSTRAP] Bootstrap execution failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("BOOTSTRAP_FAILED", "Bootstrap execution failed"));
+        }
+    }
+
     @GetMapping("/sessions")
     public ResponseEntity<?> getActiveSessions(
-            @CookieValue(name = "refreshToken", required = false) String cookieToken,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+            @CookieValue(name = "refreshToken", required = false) String cookieToken) {
 
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
@@ -462,13 +601,9 @@ public class AuthController {
         UUID userId = principal.getUserId();
         UUID tenantId = principal.getTenantId();
 
-        if (tenantId == null && tenantIdHeader != null && !tenantIdHeader.isEmpty()) {
-            tenantId = UUID.fromString(tenantIdHeader);
-        }
-
         if (tenantId == null) {
-            return ResponseEntity.badRequest()
-                    .body(createErrorResponse("BAD_REQUEST", "Tenant workspace context is missing"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("UNAUTHORIZED", "Tenant workspace context is missing"));
         }
 
         String currentHash = "";
@@ -507,8 +642,7 @@ public class AuthController {
 
     @DeleteMapping("/sessions/{id}")
     public ResponseEntity<?> revokeSession(
-            @PathVariable UUID id,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+            @PathVariable UUID id) {
 
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
@@ -522,13 +656,9 @@ public class AuthController {
         UUID userId = principal.getUserId();
         UUID tenantId = principal.getTenantId();
 
-        if (tenantId == null && tenantIdHeader != null && !tenantIdHeader.isEmpty()) {
-            tenantId = UUID.fromString(tenantIdHeader);
-        }
-
         if (tenantId == null) {
-            return ResponseEntity.badRequest()
-                    .body(createErrorResponse("BAD_REQUEST", "Tenant workspace context is missing"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("UNAUTHORIZED", "Tenant workspace context is missing"));
         }
 
         try {
@@ -549,8 +679,7 @@ public class AuthController {
     @PostMapping("/invitations")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> createInvitation(
-            @RequestBody InviteRequestDto request,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+            @RequestBody InviteRequestDto request) {
         String email = request.getEmail();
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body(createErrorResponse("BAD_REQUEST", "Email is required"));
@@ -568,12 +697,9 @@ public class AuthController {
         if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
             tenantId = ((com.eventos.auth.config.UserPrincipal) auth.getPrincipal()).getTenantId();
         }
-        if (tenantId == null && tenantIdHeader != null && !tenantIdHeader.isEmpty()) {
-            tenantId = UUID.fromString(tenantIdHeader);
-        }
         if (tenantId == null) {
-            return ResponseEntity.badRequest()
-                    .body(createErrorResponse("BAD_REQUEST", "Tenant workspace context is missing"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("UNAUTHORIZED", "Tenant workspace context is missing"));
         }
 
         // Resolve senderId
@@ -679,13 +805,12 @@ public class AuthController {
 
             Map<String, Object> result = authService.switchWorkspace(token, targetTenantId, ipAddress, deviceModel,
                     osName, browser, userAgent);
-            String newRefreshToken = (String) result.get("refreshToken");
+            String newRefreshToken = (String) result.remove("refreshToken");
 
             // Set new refresh token cookie
             ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, 7 * 24 * 60 * 60);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            // Keep refreshToken in response data for cross-origin / resilient storage fallback
 
             Map<String, Object> successResponse = new HashMap<>();
             successResponse.put("success", true);
@@ -729,6 +854,10 @@ public class AuthController {
         try {
             Map<String, Object> result = authService.sendMagicLink(email);
             return ResponseEntity.ok(result);
+        } catch (com.eventos.auth.exception.RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("RATE_LIMITED", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(createErrorResponse("MAGIC_LINK_FAILED", e.getMessage()));
         } catch (Exception e) {
@@ -746,7 +875,7 @@ public class AuthController {
         }
         try {
             Map<String, Object> authData = authService.verifyMagicToken(token);
-            String refreshToken = (String) authData.get("refreshToken");
+            String refreshToken = (String) authData.remove("refreshToken");
             if (refreshToken != null) {
                 ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
                 response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -755,6 +884,10 @@ public class AuthController {
             successResponse.put("success", true);
             successResponse.put("data", authData);
             return ResponseEntity.ok(successResponse);
+        } catch (com.eventos.auth.exception.RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("RATE_LIMITED", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(createErrorResponse("INVALID_MAGIC_TOKEN", e.getMessage()));
         } catch (Exception e) {
@@ -773,6 +906,10 @@ public class AuthController {
         try {
             Map<String, Object> result = authService.sendWhatsAppOtp(phone);
             return ResponseEntity.ok(result);
+        } catch (com.eventos.auth.exception.RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("RATE_LIMITED", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(createErrorResponse("WHATSAPP_OTP_FAILED", e.getMessage()));
         } catch (Exception e) {
@@ -791,7 +928,7 @@ public class AuthController {
         }
         try {
             Map<String, Object> authData = authService.verifyWhatsAppOtp(phone, otp);
-            String refreshToken = (String) authData.get("refreshToken");
+            String refreshToken = (String) authData.remove("refreshToken");
             if (refreshToken != null) {
                 ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
                 response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -800,6 +937,10 @@ public class AuthController {
             successResponse.put("success", true);
             successResponse.put("data", authData);
             return ResponseEntity.ok(successResponse);
+        } catch (com.eventos.auth.exception.RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("RATE_LIMITED", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(createErrorResponse("INVALID_WHATSAPP_OTP", e.getMessage()));
         } catch (Exception e) {
@@ -807,6 +948,53 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse("VERIFICATION_FAILED", e.getMessage()));
         }
+    }
+
+    @org.springframework.beans.factory.annotation.Value("${app.rate-limiting.trusted-proxies:127.0.0.1,::1}")
+    private String trustedProxies;
+
+    private static final java.util.regex.Pattern IPV4_PATTERN = java.util.regex.Pattern.compile("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+    private static final java.util.regex.Pattern IPV6_PATTERN = java.util.regex.Pattern.compile("^[0-9a-fA-F:]+$");
+
+    private boolean isTrustedProxy(String ip) {
+        if (ip == null || ip.trim().isEmpty()) return false;
+        String clean = ip.trim();
+        if (clean.equals("127.0.0.1") || clean.equals("::1") || clean.equals("0:0:0:0:0:0:0:1")) return true;
+        if (trustedProxies != null && !trustedProxies.trim().isEmpty()) {
+            for (String entry : trustedProxies.split(",")) {
+                if (entry.trim().equalsIgnoreCase(clean)) return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isValidIp(String ip) {
+        if (ip == null || ip.length() > 45) return false;
+        return IPV4_PATTERN.matcher(ip).matches() || (ip.contains(":") && IPV6_PATTERN.matcher(ip).matches());
+    }
+
+    public String extractClientIp(HttpServletRequest httpRequest) {
+        if (httpRequest == null) return "unknown";
+        String remoteIp = httpRequest.getRemoteAddr();
+        if (remoteIp == null) return "unknown";
+
+        if (isTrustedProxy(remoteIp)) {
+            String xf = httpRequest.getHeader("X-Forwarded-For");
+            if (xf != null && !xf.trim().isEmpty()) {
+                String candidate = xf.split(",")[0].trim();
+                if (isValidIp(candidate)) {
+                    return candidate;
+                }
+            }
+            String xr = httpRequest.getHeader("X-Real-IP");
+            if (xr != null && !xr.trim().isEmpty()) {
+                String candidate = xr.trim();
+                if (isValidIp(candidate)) {
+                    return candidate;
+                }
+            }
+        }
+        return remoteIp;
     }
 
     private Map<String, Object> createErrorResponse(String code, String message) {
@@ -828,6 +1016,7 @@ public class AuthController {
     private com.eventos.auth.service.EmailService emailService;
 
     @GetMapping("/test-email")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> testEmail(@RequestParam String to) {
         log.info("[TEST_EMAIL] Sending diagnostic email to: {}", to);
         Map<String, Object> response = new HashMap<>();

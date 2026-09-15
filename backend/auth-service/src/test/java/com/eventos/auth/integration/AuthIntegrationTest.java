@@ -159,6 +159,37 @@ public class AuthIntegrationTest {
                         .content(objectMapper.writeValueAsString(invalidLoginRequest)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success", is(false)))
-                .andExpect(jsonPath("$.error.code", is("INVALID_CREDENTIALS")));
+                .andExpect(jsonPath("$.error.code", is("INVALID_CREDENTIALS")))
+                .andExpect(jsonPath("$.error.message", is("Invalid email or password")));
+
+        // 4. Login with non-existent email -> Identical generic response
+        LoginRequestDto nonExistentLoginRequest = LoginRequestDto.builder()
+                .email("nonexistent@test.com")
+                .password("AnyPass123")
+                .build();
+
+        mockMvc.perform(post("/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(nonExistentLoginRequest)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success", is(false)))
+                .andExpect(jsonPath("$.error.code", is("INVALID_CREDENTIALS")))
+                .andExpect(jsonPath("$.error.message", is("Invalid email or password")));
+
+        // 5. Forgot password for existing email -> Generic message
+        mockMvc.perform(post("/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("email", "integration@test.com"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.message", is("If the email address is registered, password reset instructions will be sent.")));
+
+        // 6. Forgot password for non-existing email -> Identical generic message
+        mockMvc.perform(post("/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("email", "doesnotexist@test.com"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)))
+                .andExpect(jsonPath("$.message", is("If the email address is registered, password reset instructions will be sent.")));
     }
 }

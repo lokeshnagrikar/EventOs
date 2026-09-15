@@ -107,23 +107,14 @@ export default function PublicQuoteSharePage() {
       setLoading(true);
       try {
         const { api } = await import("@/lib/api");
-        const response = await api.get(`/crm/quotes/${token}`);
-        if (response.data?.data) {
-          setQuote(response.data.data);
+        const publicRes = await api.get(`/crm/quotes/public/${token}`);
+        if (publicRes.data?.data) {
+          setQuote(publicRes.data.data);
           setLoading(false);
           return;
         }
       } catch (err) {
-        // Try public endpoint fallback
-        try {
-          const { api } = await import("@/lib/api");
-          const publicRes = await api.get(`/crm/quotes/public/${token}`);
-          if (publicRes.data?.data) {
-            setQuote(publicRes.data.data);
-            setLoading(false);
-            return;
-          }
-        } catch (e) {}
+        // Log notice or continue to local cache fallback
       }
 
       // Check localStorage for quotes created in Quote Calculator or Quote Builder
@@ -200,7 +191,8 @@ export default function PublicQuoteSharePage() {
     if (!signerName.trim()) return;
 
     try {
-      const response = await axios.post(`/api/v1/crm/quotes/public/${token}/approve`, {
+      const { api } = await import("@/lib/api");
+      const response = await api.post(`/crm/quotes/public/${token}/approve`, {
         signerName,
         signerTitle,
         timestamp: new Date().toISOString(),
@@ -222,7 +214,8 @@ export default function PublicQuoteSharePage() {
     e.preventDefault();
 
     try {
-      const response = await axios.post(`/api/v1/crm/quotes/public/${token}/reject`, {
+      const { api } = await import("@/lib/api");
+      const response = await api.post(`/crm/quotes/public/${token}/reject`, {
         rejectionNotes,
       });
       if (response.data?.data) {

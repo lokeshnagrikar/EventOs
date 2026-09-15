@@ -199,7 +199,7 @@ public class ShareLinkService {
                 .failureReason(failureReason)
                 .build();
         shareLinkAccessLogRepository.save(logEntry);
-        log.info("Access attempt logged: token={}, success={}, reason={}, ip={}, ua={}", token, success, failureReason, ip, ua);
+        log.info("Access attempt logged: shareLinkId={}, success={}, reason={}, ip={}", logEntry.getId(), success, failureReason, ip);
     }
 
     public List<com.eventos.gallery.entity.ShareLinkAccessLog> getAccessLogs(String token, UUID tenantId) {

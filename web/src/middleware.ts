@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifyAccessToken } from "@/lib/jwtVerify";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSession = request.cookies.get("hasSession")?.value || request.cookies.get("accessToken")?.value;
   const userRole = request.cookies.get("user_role")?.value;
@@ -10,27 +11,56 @@ export function middleware(request: NextRequest) {
                       pathname.startsWith("/register");
 
   const isSuperAdminRoute = pathname.startsWith("/superadmin") && pathname !== "/superadmin/login";
+
+  const PLATFORM_ROLES = new Set([
+    "SUPER_ADMIN",
+    "OPERATIONS_LEAD",
+    "SUPPORT_LEAD",
+    "FINANCE_OFFICER",
+    "DEVOPS_ENGINEER",
+    "COMPLIANCE_AUDITOR",
+  ]);
+
+  // --- 1. SUPERADMIN ROUTE PROTECTION (PHASE 2D/2E) ---
+  // Cryptographically verify accessToken JWT for all protected /superadmin/* routes.
+  // Never trust client-controlled cookies (hasSession, user_role) as proof of authorization.
+  if (isSuperAdminRoute) {
+    const accessToken = request.cookies.get("accessToken")?.value;
+    if (!accessToken) {
+      const loginUrl = new URL("/superadmin/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    const verifiedPayload = await verifyAccessToken(accessToken);
+    if (!verifiedPayload || !verifiedPayload.roles || !PLATFORM_ROLES.has(verifiedPayload.roles as string)) {
+      const loginUrl = new URL("/superadmin/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    return NextResponse.next();
+  }
                       
   const isProtectedRoute = pathname.startsWith("/portal") || 
                             pathname.startsWith("/onboarding") || 
                             pathname.startsWith("/settings") || 
-                            pathname.startsWith("/dashboard") ||
-                            pathname.startsWith("/crm") ||
-                            pathname.startsWith("/events") ||
-                            pathname.startsWith("/bookings") ||
-                            pathname.startsWith("/quotes") ||
-                            pathname.startsWith("/payments") ||
-                            pathname.startsWith("/invoices") ||
-                            pathname.startsWith("/calculator") ||
-                            pathname.startsWith("/gallery") ||
-                            pathname.startsWith("/activity") ||
-                            pathname.startsWith("/ai") ||
-                            pathname.startsWith("/chat") ||
-                            pathname.startsWith("/developer") ||
-                            pathname.startsWith("/import") ||
-                            pathname.startsWith("/automation") ||
-                            isSuperAdminRoute ||
-                            pathname.startsWith("/finance") ||
+                            pathname.startsWith("/dashboard") || 
+                            pathname.startsWith("/crm") || 
+                            pathname.startsWith("/events") || 
+                            pathname.startsWith("/bookings") || 
+                            pathname.startsWith("/quotes") || 
+                            pathname.startsWith("/payments") || 
+                            pathname.startsWith("/invoices") || 
+                            pathname.startsWith("/calculator") || 
+                            pathname.startsWith("/gallery") || 
+                            pathname.startsWith("/activity") || 
+                            pathname.startsWith("/ai") || 
+                            pathname.startsWith("/chat") || 
+                            pathname.startsWith("/developer") || 
+                            pathname.startsWith("/import") || 
+                            pathname.startsWith("/automation") || 
+                            pathname.startsWith("/finance") || 
                             pathname.startsWith("/reports");
 
   // Direct /login and /register visitors to the unified landing modal
@@ -52,32 +82,28 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Extract cryptographically verified role from accessToken when present
+  const accessToken = request.cookies.get("accessToken")?.value;
+  const verifiedPayload = accessToken ? await verifyAccessToken(accessToken) : null;
+  const verifiedRole = (verifiedPayload?.roles as string) || null;
+  const effectiveRole = verifiedRole || userRole;
+
   // Require session for protected routes
   if (isProtectedRoute && !hasSession) {
-    const redirectPath = pathname.startsWith("/superadmin") ? "/superadmin/login" : "/";
-    const loginUrl = new URL(redirectPath, request.url);
-    if (!pathname.startsWith("/superadmin")) {
-      loginUrl.searchParams.set("login", "true");
-    }
-    loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // 1. Superadmin console role enforcement
-  if (isSuperAdminRoute && userRole !== "SUPER_ADMIN") {
-    const loginUrl = new URL("/superadmin/login", request.url);
+    const loginUrl = new URL("/", request.url);
+    loginUrl.searchParams.set("login", "true");
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // 2. Client role boundary: CLIENT accounts must only access the client portal
-  if (hasSession && userRole === "CLIENT" && !pathname.startsWith("/portal") && isProtectedRoute) {
+  if (hasSession && effectiveRole === "CLIENT" && !pathname.startsWith("/portal") && isProtectedRoute) {
     return NextResponse.redirect(new URL("/portal", request.url));
   }
 
   // 3. Agency staff/admin boundary: Non-clients navigating directly to /portal get sent to their workspace
-  if (hasSession && pathname.startsWith("/portal") && userRole && userRole !== "CLIENT") {
-    if (userRole === "SUPER_ADMIN") {
+  if (hasSession && pathname.startsWith("/portal") && effectiveRole && effectiveRole !== "CLIENT") {
+    if (PLATFORM_ROLES.has(effectiveRole)) {
       return NextResponse.redirect(new URL("/superadmin", request.url));
     }
     return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -85,9 +111,12 @@ export function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from public auth routes
   if (isAuthRoute && hasSession) {
-    if (userRole === "SUPER_ADMIN") {
-      return NextResponse.redirect(new URL("/superadmin", request.url));
-    } else if (userRole === "CLIENT") {
+    if (effectiveRole && PLATFORM_ROLES.has(effectiveRole)) {
+      if (verifiedPayload && verifiedPayload.roles && PLATFORM_ROLES.has(verifiedPayload.roles as string)) {
+        return NextResponse.redirect(new URL("/superadmin", request.url));
+      }
+      return NextResponse.redirect(new URL("/workspace-select", request.url));
+    } else if (effectiveRole === "CLIENT") {
       return NextResponse.redirect(new URL("/portal", request.url));
     } else {
       return NextResponse.redirect(new URL("/workspace-select", request.url));

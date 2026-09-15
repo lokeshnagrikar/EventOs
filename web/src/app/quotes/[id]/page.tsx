@@ -55,6 +55,7 @@ interface Quote {
   createdAt: string;
   items: QuoteItem[];
   pdfUrl?: string;
+  shareToken?: string;
 }
 
 interface Lead {
@@ -217,7 +218,7 @@ export default function QuoteDetailPage() {
 
   const copyShareableLink = () => {
     if (typeof window !== "undefined") {
-      const publicShareUrl = `${getAppBaseUrl()}/quotes/share/${quoteId}`;
+      const publicShareUrl = `${getAppBaseUrl()}/quotes/share/${quote?.shareToken || quoteId}`;
       navigator.clipboard.writeText(publicShareUrl);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
@@ -233,7 +234,7 @@ export default function QuoteDetailPage() {
     if (typeof window === "undefined") return;
     const phone = lead?.phone || lead?.contact?.phone || "";
     const cleanPhone = phone.replace(/[^0-9]/g, "");
-    const publicShareUrl = `${getAppBaseUrl()}/quotes/share/${quoteId}`;
+    const publicShareUrl = `${getAppBaseUrl()}/quotes/share/${quote?.shareToken || quoteId}`;
     const textMessage = encodeURIComponent(
       `Hello ${lead?.name || "Client"},\n\n` +
       `Here is your official EventOS Proposal & Price Quote (#${quote?.quoteNumber}):\n` +

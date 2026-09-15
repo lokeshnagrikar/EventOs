@@ -10,5 +10,6 @@ import java.util.UUID;
 @Repository
 public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID> {
     List<ApiKey> findAllByTenantId(UUID tenantId);
+    Optional<ApiKey> findByIdAndTenantId(UUID id, UUID tenantId);
     Optional<ApiKey> findByPrefixAndIsRevokedFalse(String prefix);
 }

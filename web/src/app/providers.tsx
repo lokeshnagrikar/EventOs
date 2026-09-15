@@ -50,25 +50,19 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       const storedAccessToken = typeof window !== 'undefined' ? (sessionStorage.getItem("accessToken") || localStorage.getItem("eventos_access_token")) : null;
       if (activeTenant && !accessToken && !storedAccessToken) {
         try {
-          const storedRefreshToken = typeof window !== 'undefined' ? (sessionStorage.getItem("refreshToken") || localStorage.getItem("eventos_refresh_token")) : null;
           const { apiClient } = require("@/lib/api-client");
-          const response = await apiClient.post("/auth/refresh", storedRefreshToken ? { refreshToken: storedRefreshToken } : {});
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
+          const response = await apiClient.post("/auth/refresh", {});
+          const { accessToken: newAccessToken } = response.data.data;
           
           useAuthStore.setState({ 
-            accessToken: newAccessToken,
-            refreshToken: newRefreshToken || storedRefreshToken 
+            accessToken: newAccessToken
           });
           if (typeof window !== 'undefined') {
             sessionStorage.setItem('accessToken', newAccessToken);
             localStorage.setItem('eventos_access_token', newAccessToken);
-            if (newRefreshToken) {
-              sessionStorage.setItem('refreshToken', newRefreshToken);
-              localStorage.setItem('eventos_refresh_token', newRefreshToken);
-            }
           }
         } catch (err) {
-          console.error("Failed to restore session token:", err);
+          console.error("Failed to restore session.");
           const path = typeof window !== 'undefined' ? window.location.pathname : '';
           if (path !== '/' && !path.includes('workspace-select')) {
             useAuthStore.getState().clearAuth();

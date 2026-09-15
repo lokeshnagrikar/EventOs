@@ -18,8 +18,15 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
+
+    @Column(name = "tenant_id")
+    private UUID tenantId;
+
+    @Column(name = "is_system_role", nullable = false)
+    @Builder.Default
+    private Boolean isSystemRole = false;
 
     private String description;
 

@@ -30,6 +30,8 @@ web/.env.local
 # Logs and temporary files
 *.log
 *.pem
+*.key
+docker/nginx/ssl/*.key
 **/logs/
 logs/
 **/application.json

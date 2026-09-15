@@ -84,6 +84,22 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.NOT_FOUND, "NOT_FOUND", "Resource not found");
     }
 
+    @ExceptionHandler(com.eventos.auth.exception.RateLimitExceededException.class)
+    public ResponseEntity<?> handleRateLimitExceeded(com.eventos.auth.exception.RateLimitExceededException ex) {
+        java.util.Map<String, Object> body = new java.util.HashMap<>();
+        body.put("success", false);
+        body.put("code", ex.getErrorCode());
+        body.put("message", ex.getMessage());
+        java.util.Map<String, Object> errorDetails = new java.util.HashMap<>();
+        errorDetails.put("code", ex.getErrorCode());
+        errorDetails.put("message", ex.getMessage());
+        body.put("error", errorDetails);
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneral(Exception ex) {
         log.error("Unhandled exception in auth-service", ex);

@@ -22,6 +22,7 @@ import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 
 @Component
@@ -45,6 +46,10 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         this.redisTemplate = redisTemplate;
     }
 
+    public JwtAuthFilter() {
+        this(null);
+    }
+
     // Public endpoints that bypass authentication
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/api/v1/auth/login",
@@ -54,6 +59,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/switch",
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
+            "/api/v1/auth/bootstrap",
             "/api/v1/auth/magic-link",
             "/api/v1/auth/verify-magic-token",
             "/api/v1/auth/verify-email",
@@ -61,6 +67,9 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/resend-verification",
             "/api/v1/auth/accept-invite",
             "/api/v1/auth/captcha",
+            "/api/v1/auth/2fa/verify",
+            "/api/v1/auth/send-whatsapp-otp",
+            "/api/v1/auth/verify-whatsapp-otp",
             "/api/v1/auth/ws",
             "/api/v1/auth/billing/webhook",
             "/api/v1/auth/billing/plans",
@@ -74,61 +83,87 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
     private javax.crypto.SecretKey symmetricKey;
     private boolean useSymmetric = false;
+    private boolean isEphemeral = false;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.core.env.Environment env;
+
+    public boolean isRs256Configured() {
+        return !useSymmetric && publicKey != null && !isEphemeral;
+    }
+
+    public boolean isSymmetric() {
+        return useSymmetric;
+    }
+
+    public boolean isEphemeral() {
+        return isEphemeral;
+    }
+
+    private boolean isProductionProfile() {
+        if (env != null) {
+            for (String profile : env.getActiveProfiles()) {
+                if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
+                    return true;
+                }
+            }
+        }
+        String sysProfile = System.getProperty("spring.profiles.active");
+        if (sysProfile != null && ("prod".equalsIgnoreCase(sysProfile) || "production".equalsIgnoreCase(sysProfile))) {
+            return true;
+        }
+        String envProfile = System.getenv("SPRING_PROFILES_ACTIVE");
+        return envProfile != null && ("prod".equalsIgnoreCase(envProfile) || "production".equalsIgnoreCase(envProfile));
+    }
 
     @jakarta.annotation.PostConstruct
     public void init() {
+        boolean isProd = isProductionProfile();
         try {
-            if (rawPublicKey == null || rawPublicKey.trim().isEmpty()) {
-                String keyPath = System.getenv().getOrDefault("JWT_KEY_PATH", ".");
-                java.io.File privateKeyFile = new java.io.File(keyPath, "jwt_private.pem");
-                java.io.File publicKeyFile = new java.io.File(keyPath, "jwt_public.pem");
+            if (isProd) {
+                if (rawPublicKey != null && !rawPublicKey.trim().isEmpty()) {
+                    this.publicKey = parsePublicKey(rawPublicKey);
+                    log.info("Successfully loaded JWT RSA public key for RS256 validation in production.");
+                } else if (System.getenv("JWT_KEY_PATH") != null) {
+                    String keyPath = System.getenv("JWT_KEY_PATH");
+                    java.io.File publicKeyFile = new java.io.File(keyPath, "jwt_public.pem");
+                    if (publicKeyFile.exists()) {
+                        String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
+                        this.publicKey = parsePublicKey(publicPem);
+                        log.info("Successfully loaded JWT RSA public key from JWT_KEY_PATH in production.");
+                    } else {
+                        throw new IllegalStateException("CRITICAL SECURITY VIOLATION: Production Gateway requires explicit RS256 JWT_PUBLIC_KEY. Public key file not found in JWT_KEY_PATH: " + keyPath);
+                    }
+                } else {
+                    throw new IllegalStateException("CRITICAL SECURITY VIOLATION: Production Gateway requires explicit RS256 JWT_PUBLIC_KEY. Insecure fallbacks and ephemeral keys are prohibited.");
+                }
+            } else {
+                if (rawPublicKey != null && !rawPublicKey.trim().isEmpty()) {
+                    this.publicKey = parsePublicKey(rawPublicKey);
+                    log.info("Successfully loaded JWT RSA public key for RS256 validation.");
+                } else if (System.getenv("JWT_KEY_PATH") != null) {
+                    String keyPath = System.getenv("JWT_KEY_PATH");
+                    java.io.File publicKeyFile = new java.io.File(keyPath, "jwt_public.pem");
 
-                if (!privateKeyFile.exists()) {
-                    java.io.File parentTry = new java.io.File("../jwt_private.pem");
-                    if (parentTry.exists()) {
-                        privateKeyFile = parentTry;
-                        publicKeyFile = new java.io.File("../jwt_public.pem");
+                    if (publicKeyFile.exists()) {
+                        String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
+                        this.publicKey = parsePublicKey(publicPem);
+                        log.info("Successfully loaded shared JWT RSA public key from JWT_KEY_PATH.");
+                    } else {
+                        log.warn("JWT_KEY_PATH configured but jwt_public.pem missing in: {}.", keyPath);
                     }
-                }
-                if (!privateKeyFile.exists()) {
-                    java.io.File doubleParentTry = new java.io.File("../../jwt_private.pem");
-                    if (doubleParentTry.exists()) {
-                        privateKeyFile = doubleParentTry;
-                        publicKeyFile = new java.io.File("../../jwt_public.pem");
-                    }
-                }
-                if (!privateKeyFile.exists()) {
-                    java.io.File absoluteTry = new java.io.File("d:/EventOs/jwt_private.pem");
-                    if (absoluteTry.exists()) {
-                        privateKeyFile = absoluteTry;
-                        publicKeyFile = new java.io.File("d:/EventOs/jwt_public.pem");
-                    }
-                }
-
-                if (privateKeyFile.exists() && publicKeyFile.exists()) {
-                    String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
-                    this.publicKey = parsePublicKey(publicPem);
-                    log.info("Successfully loaded shared JWT RSA public key from file.");
                 } else if (jwtSecret != null && !jwtSecret.trim().isEmpty() && jwtSecret.length() >= 32) {
-                    if ("9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d".equals(jwtSecret.trim())) {
-                        String profile = System.getenv("SPRING_PROFILES_ACTIVE");
-                        if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
-                            throw new IllegalStateException("CRITICAL SECURITY VIOLATION: Default development JWT secret detected in production environment! Configure a unique, rotated JWT_SECRET_KEY in production.");
-                        }
-                    }
                     byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
                     this.symmetricKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretBytes);
                     this.useSymmetric = true;
-                    log.info("Gateway: Fallback to symmetric HS256 JWT validation enabled.");
+                    log.info("Gateway: Fallback to symmetric HS256 JWT validation enabled in non-production.");
                 } else {
                     java.security.KeyPairGenerator keyGen = java.security.KeyPairGenerator.getInstance("RSA");
                     keyGen.initialize(2048);
                     java.security.KeyPair keyPair = keyGen.generateKeyPair();
                     this.publicKey = (RSAPublicKey) keyPair.getPublic();
+                    this.isEphemeral = true;
                 }
-            } else {
-                this.publicKey = parsePublicKey(rawPublicKey);
-                log.info("Successfully loaded JWT RSA public key for RS256 validation.");
             }
 
             io.jsonwebtoken.JwtParserBuilder parserBuilder = Jwts.parser();
@@ -139,6 +174,9 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             }
             this.jwtParser = parserBuilder.build();
         } catch (Exception e) {
+            if (e instanceof IllegalStateException) {
+                throw (IllegalStateException) e;
+            }
             log.error("Failed to initialize JWT Cryptographic Key Parser", e);
             throw new RuntimeException("Failed to initialize JWT public key validation", e);
         }
@@ -162,12 +200,23 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         ServerHttpRequest cleanRequest = request.mutate()
                 .headers(headers -> {
                     headers.remove("X-Tenant-ID");
+                    headers.remove("X-Tenant-Id");
                     headers.remove("X-User-ID");
+                    headers.remove("X-User-Id");
                     headers.remove("X-User-Email");
                     headers.remove("X-User-Roles");
                     headers.remove("X-User-Permissions");
                     headers.remove("X-Trace-ID");
                     headers.remove("X-Gateway-Secret");
+                    headers.remove("X-Impersonated");
+                    headers.remove("X-Admin-User-ID");
+                    headers.remove("X-Admin-User-Id");
+                    headers.remove("X-Original-Admin-ID");
+                    headers.remove("X-Original-Admin-Id");
+                    headers.remove("X-Original-User-ID");
+                    headers.remove("X-Acting-User-ID");
+                    headers.remove("X-User-Tenant");
+                    headers.remove("X-User-Role");
                 })
                 .build();
         ServerWebExchange cleanExchange = exchange.mutate().request(cleanRequest).build();
@@ -189,44 +238,110 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
         String token = authHeader.substring(7);
 
-        // Check if token is blacklisted in Redis
+        Claims claims;
+        try {
+            claims = validateTokenAndGetClaims(token);
+        } catch (Exception e) {
+            return onError(cleanExchange, "JWT token verification failed: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
+        }
+
+        // Issuer & Audience validation (SEC-2N-J)
+        String issuer = claims.getIssuer();
+        if (issuer != null && !issuer.trim().isEmpty() && !"eventos-auth-service".equals(issuer)) {
+            return onError(cleanExchange, "Invalid token issuer", HttpStatus.UNAUTHORIZED);
+        }
+        java.util.Set<String> audience = claims.getAudience();
+        if (audience != null && !audience.isEmpty() && !audience.contains("eventos-platform")) {
+            return onError(cleanExchange, "Invalid token audience", HttpStatus.UNAUTHORIZED);
+        }
+
+        String tenantId = claims.get("tenantId", String.class);
+        String userId = claims.get("userId", String.class);
+        String email = claims.getSubject();
+        String sessionId = claims.get("sessionId", String.class);
+        Object roles = claims.get("roles");
+        Object permissions = claims.get("permissions");
+        Boolean impersonated = claims.get("impersonated", Boolean.class);
+        String adminUserId = claims.get("adminUserId", String.class);
+
+        if (tenantId == null || userId == null) {
+            return onError(cleanExchange, "Invalid token claims", HttpStatus.UNAUTHORIZED);
+        }
+
+        if (redisTemplate == null) {
+            if (isProductionProfile()) {
+                return onError(cleanExchange, "Redis service unavailable for revocation check in production", HttpStatus.UNAUTHORIZED);
+            }
+            return forwardAuthenticatedRequest(cleanExchange, chain, cleanRequest, tenantId, userId, email, roles, permissions, traceId, impersonated, adminUserId);
+        }
+
+        // Check 1: Token blacklist in Redis
         return redisTemplate.hasKey("blacklist:" + token)
                 .flatMap(isBlacklisted -> {
                     if (Boolean.TRUE.equals(isBlacklisted)) {
                         return onError(cleanExchange, "Authorization token is blacklisted", HttpStatus.UNAUTHORIZED);
                     }
 
-                    try {
-                        Claims claims = validateTokenAndGetClaims(token);
+                    // Check 2: Session-level revocation in Redis
+                    Mono<Boolean> sessionRevokedMono = (sessionId != null && !sessionId.trim().isEmpty())
+                            ? redisTemplate.hasKey("session:revoked:" + sessionId)
+                            : Mono.just(false);
 
-                        String tenantId = claims.get("tenantId", String.class);
-                        String userId = claims.get("userId", String.class);
-                        String email = claims.getSubject();
-                        Object roles = claims.get("roles");
-                        Object permissions = claims.get("permissions");
-
-                        if (tenantId == null || userId == null) {
-                            return onError(cleanExchange, "Invalid token claims", HttpStatus.UNAUTHORIZED);
+                    return sessionRevokedMono.flatMap(isSessionRevoked -> {
+                        if (Boolean.TRUE.equals(isSessionRevoked)) {
+                            return onError(cleanExchange, "Session has been revoked", HttpStatus.UNAUTHORIZED);
                         }
 
-                        // Mutate request headers to forward info downstream
-                        ServerHttpRequest authenticatedRequest = cleanRequest.mutate()
-                                .header("X-Tenant-ID", tenantId)
-                                .header("X-User-ID", userId)
-                                .header("X-User-Email", email != null ? email : "")
-                                .header("X-User-Roles", roles != null ? roles.toString() : "")
-                                .header("X-User-Permissions", permissions != null ? permissions.toString() : "")
-                                .header("X-Trace-ID", traceId)
-                                .header("X-Gateway-Secret", gatewaySecret != null ? gatewaySecret : "")
-                                .build();
+                        // Check 3: User-level global revocation timestamp in Redis
+                        return redisTemplate.opsForValue().get("user:revoked_before:" + userId)
+                                .defaultIfEmpty("")
+                                .flatMap(revokedBeforeStr -> {
+                                    if (!revokedBeforeStr.isEmpty()) {
+                                        try {
+                                            long revokedBefore = Long.parseLong(revokedBeforeStr);
+                                            Date issuedAt = claims.getIssuedAt();
+                                            if (issuedAt != null && issuedAt.getTime() <= revokedBefore) {
+                                                return onError(cleanExchange, "Token was revoked due to global user session invalidation", HttpStatus.UNAUTHORIZED);
+                                            }
+                                        } catch (NumberFormatException ignored) {}
+                                    }
 
-                        return chain.filter(cleanExchange.mutate().request(authenticatedRequest).build());
-
-                    } catch (Exception e) {
-                        return onError(cleanExchange, "JWT token verification failed: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
+                                    return forwardAuthenticatedRequest(cleanExchange, chain, cleanRequest, tenantId, userId, email, roles, permissions, traceId, impersonated, adminUserId);
+                                });
+                    });
+                })
+                .onErrorResume(e -> {
+                    log.error("Redis revocation check encountered an error", e);
+                    if (isProductionProfile()) {
+                        return onError(cleanExchange, "Revocation verification failed: service error", HttpStatus.UNAUTHORIZED);
                     }
+                    return forwardAuthenticatedRequest(cleanExchange, chain, cleanRequest, tenantId, userId, email, roles, permissions, traceId, impersonated, adminUserId);
                 });
-    } 
+    }
+
+    private Mono<Void> forwardAuthenticatedRequest(ServerWebExchange cleanExchange, GatewayFilterChain chain,
+                                                   ServerHttpRequest cleanRequest, String tenantId, String userId,
+                                                   String email, Object roles, Object permissions, String traceId,
+                                                   Boolean impersonated, String adminUserId) {
+        ServerHttpRequest.Builder reqBuilder = cleanRequest.mutate()
+                .header("X-Tenant-ID", tenantId)
+                .header("X-User-ID", userId)
+                .header("X-User-Email", email != null ? email : "")
+                .header("X-User-Roles", roles != null ? roles.toString() : "")
+                .header("X-User-Permissions", permissions != null ? permissions.toString() : "")
+                .header("X-Trace-ID", traceId)
+                .header("X-Gateway-Secret", gatewaySecret != null ? gatewaySecret : "");
+
+        if (Boolean.TRUE.equals(impersonated)) {
+            reqBuilder.header("X-Impersonated", "true");
+            if (adminUserId != null && !adminUserId.trim().isEmpty()) {
+                reqBuilder.header("X-Admin-User-ID", adminUserId);
+                reqBuilder.header("X-Original-Admin-ID", adminUserId);
+            }
+        }
+
+        return chain.filter(cleanExchange.mutate().request(reqBuilder.build()).build());
+    }
 
     private Claims validateTokenAndGetClaims(String token) {
         return jwtParser

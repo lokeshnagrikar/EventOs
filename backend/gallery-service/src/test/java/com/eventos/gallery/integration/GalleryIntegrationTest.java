@@ -65,6 +65,8 @@ public class GalleryIntegrationTest {
         List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_OWNER"));
         ownerAuth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(principal, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(ownerAuth);
+
+        when(cloudinaryService.isValidCloudinaryUrl(any())).thenReturn(true);
     }
 
     @Test

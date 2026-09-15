@@ -1,150 +1,104 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
-import { Icon } from "@iconify/react";
-import { LiquidButton } from "@/components/ui/liquid-glass-button";
-import { BorderBeam } from "@/components/ui/border-beam";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, Sparkles, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
 
 export function FinalCta() {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-
   const openModal = useAuthModalStore((state) => state.openModal);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.trim()) {
-      analytics.trackCta("final_cta_submit", "Join Private Beta Email", "final_cta");
-      setSubmitted(true);
-      setTimeout(() => {
-        openModal("waitlist", email);
-        setSubmitted(false);
-        setEmail("");
-      }, 600);
-    }
+  const handleBookDemo = () => {
+    analytics.trackCta("final_cta_book_demo", "Book a Free Demo", "final_cta");
+    router.push("/demo");
   };
 
-  const trustItems = [
-    { icon: "solar:shield-check-bold-duotone", label: "SSL Encrypted", color: "text-emerald-400" },
-    { icon: "solar:server-bold-duotone", label: "SaaS Multi-Tenancy", color: "text-purple-400" },
-    { icon: "solar:lock-bold-duotone", label: "100% Isolated Data", color: "text-cyan-400" },
-    { icon: "solar:card-bold-duotone", label: "No Credit Card", color: "text-pink-400" },
-  ];
+  const handleStartTrial = () => {
+    analytics.trackCta("final_cta_start_trial", "Start 14-Day Free Trial", "final_cta");
+    openModal("register");
+  };
 
   return (
-    <section className="py-24 border-b border-[#E5E7EB] bg-[#FFFFFF] w-full relative z-10">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Large Gradient Card */}
+    <section
+      id="final-cta"
+      className="py-24 sm:py-32 bg-[#FAF9F6] relative overflow-hidden font-sans text-left"
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.55 }}
-          className="relative rounded-3xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-indigo-50/50 p-8 sm:p-16 overflow-hidden shadow-xl shadow-purple-500/5"
+          className="relative rounded-3xl bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 text-white p-8 sm:p-16 lg:p-20 overflow-hidden shadow-2xl shadow-purple-950/40 border border-purple-800/40 text-center"
         >
-          {/* BorderBeam decoration */}
-          {!shouldReduceMotion && (
-            <BorderBeam size={300} duration={14} borderWidth={1.5} colorFrom="#7C3AED" colorTo="#A855F7" />
-          )}
+          {/* Ambient Glows */}
+          <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-purple-600/20 blur-[150px] rounded-full pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-indigo-600/20 blur-[130px] rounded-full pointer-events-none" />
 
-          {/* Animated corner glows */}
-          <div className="absolute -right-20 -bottom-20 w-[350px] h-[350px] bg-purple-200/40 blur-[120px] rounded-full pointer-events-none" />
-          <div className="absolute -left-20 -top-20 w-[300px] h-[300px] bg-indigo-100/40 blur-[100px] rounded-full pointer-events-none" />
-
-          <div className="relative z-10 max-w-2xl mx-auto text-center space-y-8">
-            {/* Badge */}
-            <span className="inline-flex items-center gap-2 text-[11px] font-extrabold tracking-widest text-[#7C3AED] bg-purple-100 border border-purple-200 px-4 py-1.5 rounded-full uppercase">
-              <Icon icon="solar:gift-bold-duotone" className="text-sm" />
-              Private Beta Cohort • Limited to 25 Founding Agencies
-            </span>
+          <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+            {/* Top Pill */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-purple-200 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
+              <Sparkles size={13} className="text-purple-300" />
+              <span>Transform Your Event Operations</span>
+            </div>
 
             {/* Headline */}
             <div className="space-y-4">
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111827] leading-tight font-heading">
-                Be the first to run your agency
-                <br />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7]">
-                  on EventOS.
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.12] font-heading text-balance">
+                Ready to Run Your Events{" "}
+                <span className="bg-gradient-to-r from-purple-400 via-pink-300 to-indigo-300 bg-clip-text text-transparent">
+                  Without the Chaos?
                 </span>
               </h2>
-              <p className="text-[#4B5563] text-sm sm:text-base leading-relaxed max-w-xl mx-auto font-medium">
-                We're onboarding a select group of 25 founding agencies with lifetime perks, 1-on-1 founder support, and early access.
+
+              <p className="text-slate-300 text-base sm:text-lg lg:text-xl font-medium leading-relaxed max-w-2xl mx-auto">
+                Bring leads, quotes, payments, planning and client communication into one workspace.
               </p>
             </div>
 
-            {/* Email Capture Form */}
-            <AnimatePresence mode="wait">
-              {!submitted ? (
-                <motion.form
-                  key="form"
-                  onSubmit={handleSubmit}
-                  initial={{ opacity: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-                  suppressHydrationWarning
-                >
-                  <label htmlFor="cta-email" className="sr-only">
-                    Email address
-                  </label>
-                  <div className="relative flex-1">
-                    <Icon
-                      icon="solar:letter-bold-duotone"
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-base pointer-events-none"
-                    />
-                    <input
-                      id="cta-email"
-                      type="email"
-                      required
-                      placeholder="Enter your agency email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3.5 bg-white border border-[#E5E7EB] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 rounded-xl text-sm text-[#111827] font-semibold placeholder-[#6B7280] outline-none transition-all shadow-sm"
-                    />
-                  </div>
-                  <LiquidButton
-                    type="submit"
-                    variant="brand"
-                    className="rounded-xl font-bold px-6 active:scale-[0.98] flex items-center gap-2 whitespace-nowrap"
-                    size="lg"
-                  >
-                    Join Private Beta →
-                    <Icon icon="solar:arrow-right-bold" className="text-sm" />
-                  </LiquidButton>
-                </motion.form>
-              ) : (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-col items-center gap-3 p-5 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl max-w-sm mx-auto"
-                >
-                  <Icon icon="solar:check-circle-bold-duotone" className="text-emerald-400 text-3xl" />
-                  <span className="text-sm font-bold text-zinc-100">
-                    Preparing your workspace...
-                  </span>
-                  <span className="text-xs text-zinc-500">Redirecting you to registration</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Two-Button CTA Hierarchy */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              {/* Primary CTA: Book a Free Demo */}
+              <button
+                type="button"
+                onClick={handleBookDemo}
+                className="w-full sm:w-auto relative overflow-hidden px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm sm:text-base font-extrabold shadow-xl shadow-purple-500/30 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97] group"
+              >
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
+                <span>Book a Free Demo</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
 
-            {/* Trust Badges */}
-            <div className="flex flex-wrap justify-center items-center gap-5 text-[10px] text-zinc-500 font-bold tracking-wide uppercase">
-              {trustItems.map((t, i) => (
-                <React.Fragment key={t.label}>
-                  {i > 0 && <span className="text-zinc-800">•</span>}
-                  <span className="flex items-center gap-1.5">
-                    <Icon icon={t.icon} className={`${t.color} text-sm`} />
-                    {t.label}
-                  </span>
-                </React.Fragment>
-              ))}
+              {/* Secondary CTA: Start 14-Day Free Trial */}
+              <button
+                type="button"
+                onClick={handleStartTrial}
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 text-sm sm:text-base font-bold transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-[0.97]"
+              >
+                <span>Start 14-Day Free Trial</span>
+              </button>
+            </div>
+
+            {/* Reassurance Strip */}
+            <div className="pt-4 flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-xs text-slate-400 font-medium">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 size={13} className="text-emerald-400" />
+                <span>14-day free trial</span>
+              </span>
+              <span className="h-1 w-1 rounded-full bg-slate-700 hidden sm:inline-block" />
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 size={13} className="text-emerald-400" />
+                <span>No credit card required</span>
+              </span>
+              <span className="h-1 w-1 rounded-full bg-slate-700 hidden sm:inline-block" />
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 size={13} className="text-emerald-400" />
+                <span>Personalized founder onboarding</span>
+              </span>
             </div>
           </div>
         </motion.div>

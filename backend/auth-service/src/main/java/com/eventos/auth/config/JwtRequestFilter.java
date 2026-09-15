@@ -49,16 +49,20 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String userEmailHeader = request.getHeader("X-User-Email");
         final String gatewaySecretHeader = request.getHeader("X-Gateway-Secret");
 
-        if (tenantIdHeader != null && userIdHeader != null && gatewaySecretHeader != null) {
+        final boolean hasIdentityHeaders = tenantIdHeader != null || userIdHeader != null 
+                || userRolesHeader != null || userPermissionsHeader != null || userEmailHeader != null;
+
+        if (hasIdentityHeaders) {
             // Verify gateway secret to prevent header spoofing
-            if (gatewaySecret != null && !gatewaySecret.trim().isEmpty() && !gatewaySecret.equals(gatewaySecretHeader)) {
+            if (gatewaySecret == null || gatewaySecret.trim().isEmpty() || !gatewaySecret.equals(gatewaySecretHeader)) {
                 logger.warn("Blocked direct access attempt with spoofed user headers (missing or invalid gateway secret).");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Invalid Gateway Trust Secret\"}}");
                 return;
             }
-            try {
+            if (tenantIdHeader != null && userIdHeader != null) {
+                try {
                 UUID tenantId = UUID.fromString(tenantIdHeader);
                 UUID userId = UUID.fromString(userIdHeader);
                 String email = userEmailHeader != null ? userEmailHeader : "";
@@ -67,7 +71,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
                 if (!rolesStr.isEmpty()) {
                     for (String r : rolesStr.split(",")) {
-                        authorities.add(new SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()));
+                        String roleName = r.trim().toUpperCase();
+                        authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName));
+                        PlatformRole platformRole = PlatformRole.fromRoleName(roleName);
+                        if (platformRole != null) {
+                            for (String p : platformRole.getPermissions()) {
+                                authorities.add(new SimpleGrantedAuthority(p));
+                            }
+                        }
                     }
                 }
                 if (userPermissionsHeader != null && !userPermissionsHeader.trim().isEmpty()) {
@@ -79,15 +90,25 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     }
                 }
 
-                UserPrincipal principal = new UserPrincipal(userId, tenantId, email, rolesStr);
+                boolean isImpersonated = "true".equalsIgnoreCase(request.getHeader("X-Impersonated"));
+                UUID originalAdminId = null;
+                String adminUserIdHdr = request.getHeader("X-Admin-User-ID");
+                if (adminUserIdHdr != null && !adminUserIdHdr.trim().isEmpty()) {
+                    try {
+                        originalAdminId = UUID.fromString(adminUserIdHdr.trim());
+                    } catch (Exception ignored) {}
+                }
+
+                UserPrincipal principal = new UserPrincipal(userId, tenantId, email, rolesStr, isImpersonated, originalAdminId);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         principal, null, authorities);
                 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 TenantContext.setTenantId(tenantId);
-            } catch (Exception e) {
-                logger.warn("Failed to authenticate via Gateway headers: " + e.getMessage());
+                } catch (Exception e) {
+                    logger.warn("Failed to authenticate via Gateway headers: " + e.getMessage());
+                }
             }
             try {
                 filterChain.doFilter(request, response);
@@ -122,7 +143,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
                     if (rolesStr != null && !rolesStr.isEmpty()) {
                         for (String r : rolesStr.split(",")) {
-                            authorities.add(new SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()));
+                            String roleName = r.trim().toUpperCase();
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName));
+                            PlatformRole platformRole = PlatformRole.fromRoleName(roleName);
+                            if (platformRole != null) {
+                                for (String p : platformRole.getPermissions()) {
+                                    authorities.add(new SimpleGrantedAuthority(p));
+                                }
+                            }
                         }
                     }
                     if (permissionsObj != null) {
@@ -134,7 +162,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         }
                     }
 
-                    UserPrincipal principal = new UserPrincipal(userId, tenantId, email, rolesStr);
+                    Boolean isImpersonated = claims.get("impersonated", Boolean.class);
+                    boolean impersonated = Boolean.TRUE.equals(isImpersonated);
+                    UUID originalAdminId = null;
+                    String adminUserIdClaim = claims.get("adminUserId", String.class);
+                    if (adminUserIdClaim != null && !adminUserIdClaim.trim().isEmpty()) {
+                        try {
+                            originalAdminId = UUID.fromString(adminUserIdClaim.trim());
+                        } catch (Exception ignored) {}
+                    }
+
+                    UserPrincipal principal = new UserPrincipal(userId, tenantId, email, rolesStr, impersonated, originalAdminId);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             principal, null, authorities);
                     

@@ -1,249 +1,206 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import {
+  ShieldCheck,
+  Lock,
+  Users,
+  Server,
+  KeyRound,
+  FileCheck,
+  CheckCircle2,
+} from "lucide-react";
 import { Icon } from "@iconify/react";
-import { SpotlightCard } from "@/components/ui/spotlight-card";
-import { BorderBeam } from "@/components/ui/border-beam";
+import { cn } from "@/lib/utils";
+
+interface SecurityPoint {
+  title: string;
+  desc: string;
+  icon: string;
+  badge: string;
+}
+
+const securityPoints: SecurityPoint[] = [
+  {
+    title: "Tenant Data Isolation",
+    desc: "Every agency workspace is strictly segregated. Your client contacts, proposals, budgets and margins are never shared or accessible across accounts.",
+    icon: "solar:database-bold-duotone",
+    badge: "Strict Isolation",
+  },
+  {
+    title: "Role-Based Access Control",
+    desc: "Assign tailored permissions for Lead Planners, On-Site Coordinators, Vendors, and Clients. Team members only see what their role requires.",
+    icon: "solar:shield-user-bold-duotone",
+    badge: "Granular Roles",
+  },
+  {
+    title: "Secure Encrypted Connections",
+    desc: "All client portal sessions, quotation approvals, and invoices use modern TLS encryption in transit with secure, tamper-proof authentication.",
+    icon: "solar:lock-keyhole-bold-duotone",
+    badge: "TLS Encrypted",
+  },
+  {
+    title: "Team & Financial Permissions",
+    desc: "Safeguard your commercial margins. Lock vendor payouts, client invoices, and master contracts so only authorized agency directors can view or edit.",
+    icon: "solar:document-text-bold-duotone",
+    badge: "Financial Privacy",
+  },
+  {
+    title: "Reliable Cloud Infrastructure",
+    desc: "Redundant cloud infrastructure with regular backups ensures your run-of-show schedules and guest lists remain accessible on the day of the event.",
+    icon: "solar:server-square-bold-duotone",
+    badge: "High Availability",
+  },
+];
 
 export function MultiTenant() {
   const shouldReduceMotion = useReducedMotion();
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const securityFeatures = [
-    {
-      title: "Workspace Isolation",
-      desc: "Each tenant operates in a completely isolated container with separate DB schemas, avoiding any data leaks.",
-      icon: "solar:database-bold-duotone",
-      color: "#8B5CF6",
-    },
-    {
-      title: "Role-Based Access Control",
-      desc: "Granular permissions for Planners, Coordinators, Vendors, and Clients. Limit visibility to relevant documents.",
-      icon: "solar:shield-keyhole-bold-duotone",
-      color: "#06B6D4",
-    },
-    {
-      title: "Team Collaboration",
-      desc: "Coordinators and planners share tasks, quotes, and timelines in real-time, syncing status updates instantly.",
-      icon: "solar:users-group-two-rounded-bold-duotone",
-      color: "#EC4899",
-    },
-  ];
 
   return (
     <section
-      className="py-14 sm:py-24 border-b border-slate-200/80 bg-[#FAF9F6] relative overflow-hidden"
-      id="multi-tenant"
-      ref={containerRef}
+      id="security"
+      className="py-24 sm:py-32 border-b border-slate-200/80 bg-[#FAF9F6] relative overflow-hidden text-left font-sans"
     >
-      {/* Radial glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] sm:w-[500px] h-[320px] sm:h-[500px] bg-purple-100/30 blur-[100px] sm:blur-[130px] rounded-full pointer-events-none" />
+      {/* Background Radial Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-purple-100/25 blur-[140px] rounded-full pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-        
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto space-y-3 sm:space-y-4 mb-10 sm:mb-20"
+          className="text-center max-w-3xl mx-auto space-y-4 mb-14 sm:mb-20"
         >
-          <span className="inline-flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold tracking-widest text-[#8B5CF6] uppercase">
-            <Icon icon="solar:lock-keyhole-minimalistic-bold-duotone" className="text-sm" />
-            Security & Infrastructure
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-heading text-balance">
-            Enterprise-Grade{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-cyan-600">
-              Multi-Tenancy
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200/80 text-purple-700 text-xs font-bold uppercase tracking-widest">
+            <ShieldCheck size={14} className="text-purple-600" />
+            <span>Data Security & Privacy</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 font-heading text-balance leading-[1.12]">
+            Your Agency Data{" "}
+            <span className="bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 bg-clip-text text-transparent">
+              Stays Protected.
             </span>
           </h2>
-          <p className="text-slate-600 text-xs sm:text-base leading-relaxed font-medium">
-            Engineered to secure tenant environments, protect planner databases, and provide isolated guest spaces for client portal approvals.
+
+          <p className="text-slate-600 text-base sm:text-lg leading-relaxed font-medium max-w-2xl mx-auto">
+            Your quotations, client contracts, payment schedules and vendor agreements contain sensitive commercial details. EventOS is built to keep them completely isolated and secure.
           </p>
         </motion.div>
 
-        {/* Visual Diagram + Columns Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
-          
-        {/* Left Feature Column */}
-        <div className="lg:col-span-5 space-y-4 sm:space-y-6 order-2 lg:order-1">
-          {securityFeatures.map((feat, idx) => (
-            <motion.div
-              key={feat.title}
-              initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-            >
-              <SpotlightCard className="p-4 sm:p-5 bg-white/80 border border-slate-200/80 shadow-md backdrop-blur-md rounded-xl relative overflow-hidden group hover:border-purple-300">
-                <div className="flex gap-3 sm:gap-4">
-                  <div
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg flex items-center justify-center shrink-0 border"
-                    style={{
-                      borderColor: `${feat.color}25`,
-                      background: `${feat.color}10`,
-                    }}
-                  >
-                    <Icon icon={feat.icon} style={{ color: feat.color }} className="text-lg sm:text-xl" />
+        {/* Security Feature Cards & Visual Panel */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto">
+          {/* Left: 5 Concrete Security Capabilities */}
+          <div className="lg:col-span-7 space-y-3.5 flex flex-col justify-between">
+            {securityPoints.map((point, idx) => (
+              <motion.div
+                key={point.title}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
+                className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs hover:border-purple-200 hover:shadow-sm transition-all"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-purple-50 border border-purple-200/70 flex items-center justify-center text-purple-700 shrink-0">
+                    <Icon icon={point.icon} className="text-xl" />
                   </div>
-                  <div className="space-y-0.5 sm:space-y-1">
-                    <h3 className="text-xs sm:text-sm font-extrabold text-slate-900">{feat.title}</h3>
-                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-medium">{feat.desc}</p>
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+                        {point.title}
+                      </h3>
+                      <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-full shrink-0">
+                        {point.badge}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                      {point.desc}
+                    </p>
                   </div>
                 </div>
-              </SpotlightCard>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
 
-        {/* Right Diagram Column */}
-        <div className="lg:col-span-7 order-1 lg:order-2 flex justify-center w-full">
+          {/* Right: Security & Isolation Overview Panel */}
           <motion.div
-            initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.95 }}
+            initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.97 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="relative w-full max-w-lg min-h-[360px] sm:min-h-[400px] sm:aspect-[1.15] bg-white/95 border border-slate-200/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between overflow-hidden shadow-xl shadow-slate-200/50"
+            transition={{ duration: 0.5 }}
+            className="lg:col-span-5 rounded-3xl border border-purple-200/90 bg-white p-6 sm:p-8 flex flex-col justify-between shadow-xl shadow-purple-500/5 relative overflow-hidden"
           >
-            <BorderBeam size={220} duration={12} borderWidth={1.5} />
-              
-              {/* Header inside mockup */}
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 sm:pb-3">
-                <span className="text-[9px] sm:text-[10px] text-slate-500 font-mono tracking-wider">WORKSPACE_ROUTING_ROUTER</span>
-                <span className="text-[9px] sm:text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 sm:px-2.5 py-0.5 border border-emerald-200 rounded-full flex items-center gap-1">
-                  <span className="h-1 w-1 bg-emerald-500 rounded-full animate-pulse" />
-                  MFA Secure
+            <div className="space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <span className="text-xs font-black uppercase tracking-wider text-purple-700 font-mono">
+                  Agency Workspace Guard
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Isolation Active</span>
                 </span>
               </div>
 
-              {/* Graphical Network */}
-              <div className="relative flex-1 flex items-center justify-center my-3 sm:my-6 min-h-[200px] sm:min-h-[220px]">
-                
-                {/* Central Security Hub */}
-                <div className="relative z-20 h-13 w-13 sm:h-16 sm:w-16 p-2 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-400 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/10">
-                  <Icon icon="solar:shield-bold-duotone" className="text-purple-600 text-2xl sm:text-3xl" />
-                  <span className="absolute -bottom-5 sm:-bottom-6 text-[8px] sm:text-[9px] font-bold text-purple-700 tracking-wider font-mono">GATEWAY</span>
-                </div>
-
-                {/* Animated Connection Lines (SVG) */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 400 240" preserveAspectRatio="xMidYMid meet">
-                  {/* Left Workspace Link */}
-                  <path
-                    d="M 60,60 Q 200,60 200,120"
-                    fill="none"
-                    stroke="rgba(139, 92, 246, 0.2)"
-                    strokeWidth="2"
-                  />
-                  {/* Right Workspace Link */}
-                  <path
-                    d="M 340,60 Q 200,60 200,120"
-                    fill="none"
-                    stroke="rgba(6, 182, 212, 0.2)"
-                    strokeWidth="2"
-                  />
-                  {/* Bottom Database Link */}
-                  <path
-                    d="M 200,210 L 200,120"
-                    fill="none"
-                    stroke="rgba(236, 72, 153, 0.2)"
-                    strokeWidth="2"
-                  />
-
-                  {/* Flowing Pulses (only when reduced motion is disabled) */}
-                  {!shouldReduceMotion && (
-                    <>
-                      <path
-                        d="M 60,60 Q 200,60 200,120"
-                        fill="none"
-                        stroke="#8B5CF6"
-                        strokeWidth="2"
-                        strokeDasharray="10 50"
-                        className="animate-[dash_4s_linear_infinite]"
-                      />
-                      <path
-                        d="M 340,60 Q 200,60 200,120"
-                        fill="none"
-                        stroke="#06B6D4"
-                        strokeWidth="2"
-                        strokeDasharray="10 50"
-                        className="animate-[dash_4s_linear_infinite_reverse]"
-                      />
-                      <path
-                        d="M 200,120 L 200,210"
-                        fill="none"
-                        stroke="#EC4899"
-                        strokeWidth="2"
-                        strokeDasharray="10 40"
-                        className="animate-[dash_3s_linear_infinite]"
-                      />
-                    </>
-                  )}
-                </svg>
-
-                {/* Left Workspace Node */}
-                <div className="absolute top-1 sm:top-2 left-0 sm:left-4 z-20 p-2 sm:p-3 bg-white border border-slate-200/90 rounded-xl flex items-center gap-1.5 sm:gap-2 shadow-md max-w-[130px] sm:max-w-none">
-                  <div className="h-6 w-6 sm:h-7 sm:w-7 rounded bg-purple-50 flex items-center justify-center border border-purple-200 shrink-0">
-                    <Icon icon="solar:notebook-bold-duotone" className="text-purple-600 text-xs sm:text-sm" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-[9px] sm:text-[10px] font-extrabold text-slate-900 leading-tight truncate">Planner Tenant #1</h4>
-                    <span className="text-[7.5px] sm:text-[8px] text-slate-500 block font-mono truncate">elite.eventos.io</span>
-                  </div>
-                </div>
-
-                {/* Right Workspace Node */}
-                <div className="absolute top-1 sm:top-2 right-0 sm:right-4 z-20 p-2 sm:p-3 bg-white border border-slate-200/90 rounded-xl flex items-center gap-1.5 sm:gap-2 shadow-md max-w-[130px] sm:max-w-none">
-                  <div className="h-6 w-6 sm:h-7 sm:w-7 rounded bg-cyan-50 flex items-center justify-center border border-cyan-200 shrink-0">
-                    <Icon icon="solar:window-frame-bold-duotone" className="text-cyan-600 text-xs sm:text-sm" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-[9px] sm:text-[10px] font-extrabold text-slate-900 leading-tight truncate">Planner Tenant #2</h4>
-                    <span className="text-[7.5px] sm:text-[8px] text-slate-500 block font-mono truncate">stellar.eventos.io</span>
-                  </div>
-                </div>
-
-                {/* Bottom DB Node */}
-                <div className="absolute bottom-0 sm:bottom-1 z-20 px-2.5 sm:px-3.5 py-1.5 sm:py-2.5 bg-white border border-slate-200/90 rounded-xl flex items-center gap-2 sm:gap-3 shadow-md max-w-[95%] sm:max-w-none">
-                  <Icon icon="solar:server-square-bold-duotone" className="text-pink-600 text-base sm:text-lg shrink-0" />
-                  <div className="min-w-0 text-left">
-                    <h4 className="text-[9px] sm:text-[10px] font-extrabold text-slate-900 leading-tight truncate">Schema-Isolated Databases</h4>
-                    <span className="text-[7.5px] sm:text-[8px] text-slate-500 block font-medium truncate">Encrypted at rest · TLS 1.3</span>
-                  </div>
+              {/* Role Matrix Mockup */}
+              <div className="space-y-3 text-xs">
+                <h4 className="font-extrabold text-slate-900 text-sm">
+                  Role-Based Permission Matrix
+                </h4>
+                <div className="space-y-2">
+                  {[
+                    { role: "Agency Director", scope: "Full financial & team access", badge: "All Access", color: "text-purple-700 bg-purple-50 border-purple-200" },
+                    { role: "Lead Planner", scope: "Quotes, timelines & client portal", badge: "Management", color: "text-indigo-700 bg-indigo-50 border-indigo-200" },
+                    { role: "On-Site Coordinator", scope: "Day-of-event tasks & run-of-show", badge: "Execution", color: "text-emerald-700 bg-emerald-50 border-emerald-200" },
+                    { role: "Client Account", scope: "Single event view & quote sign-off", badge: "Client Portal", color: "text-amber-700 bg-amber-50 border-amber-200" },
+                  ].map((r, i) => (
+                    <div
+                      key={i}
+                      className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="font-extrabold text-slate-900 text-xs">{r.role}</p>
+                        <p className="text-[11px] text-slate-500">{r.scope}</p>
+                      </div>
+                      <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md border", r.color)}>
+                        {r.badge}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Node status indicators */}
-              <div className="grid grid-cols-3 gap-1 sm:gap-2 bg-slate-50 border border-slate-200/80 rounded-xl p-2 sm:p-2.5 text-[8px] min-[390px]:text-[8.5px] sm:text-[10px] text-slate-600 font-semibold">
-                <div className="flex items-center gap-1 sm:gap-1.5 justify-center min-w-0">
-                  <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full shrink-0" />
-                  <span className="truncate">Tenant A: isolated</span>
-                </div>
-                <div className="flex items-center gap-1 sm:gap-1.5 justify-center border-x border-slate-200 px-0.5 sm:px-1 min-w-0">
-                  <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full shrink-0" />
-                  <span className="truncate">Tenant B: isolated</span>
-                </div>
-                <div className="flex items-center gap-1 sm:gap-1.5 justify-center min-w-0">
-                  <span className="h-1.5 w-1.5 bg-purple-500 rounded-full shrink-0" />
-                  <span className="truncate">Active SSO session</span>
+              {/* Key Safeguards Checklist */}
+              <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-200/80 space-y-2 text-xs">
+                <span className="text-[11px] font-bold text-purple-900 uppercase tracking-wide block">
+                  Guaranteed Standards
+                </span>
+                <div className="space-y-1.5 text-slate-700 font-medium text-[11px]">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                    <span>Zero data crossover between agencies</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                    <span>PIN-protected client media galleries</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                    <span>Automated daily database backups</span>
+                  </div>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
 
+            <div className="pt-5 border-t border-slate-100 mt-4 text-[11px] text-slate-500 font-medium">
+              EventOS keeps technical complexities invisible so your team can focus on client hospitality and event execution with total peace of mind.
+            </div>
+          </motion.div>
         </div>
-
       </div>
-
-      <style jsx global>{`
-        @keyframes dash {
-          to {
-            stroke-dashoffset: -120;
-          }
-        }
-      `}</style>
     </section>
   );
 }

@@ -98,4 +98,30 @@ public class BookingControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void testUpdatePayment_Staff_Forbidden() throws Exception {
+        org.springframework.security.core.Authentication staffAuth = getMockAuth("STAFF");
+        UUID bookingId = UUID.randomUUID();
+
+        mockMvc.perform(patch("/bookings/" + bookingId + "/payment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amount\": 5000.0, \"paymentMethod\": \"BANK_TRANSFER\"}")
+                .with(authentication(staffAuth))
+                .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testUpdatePayment_Admin_Success() throws Exception {
+        org.springframework.security.core.Authentication adminAuth = getMockAuth("ADMIN");
+        UUID bookingId = UUID.randomUUID();
+
+        mockMvc.perform(patch("/bookings/" + bookingId + "/payment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amount\": 5000.0, \"paymentMethod\": \"BANK_TRANSFER\"}")
+                .with(authentication(adminAuth))
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
 }

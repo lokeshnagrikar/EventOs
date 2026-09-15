@@ -1,131 +1,210 @@
 "use client";
 
-import React from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import React, { useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { HelpCircle, ChevronDown, Sparkles } from "lucide-react";
 import { Icon } from "@iconify/react";
+import { cn } from "@/lib/utils";
 
-const faqs = [
+interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  icon: string;
+}
+
+const faqs: FaqItem[] = [
   {
-    value: "q1",
+    id: "q1",
+    question: "What is EventOS?",
+    answer:
+      "EventOS is an all-in-one event operations workspace that brings lead tracking, quotation drafting, client approvals, milestone payments, timelines, and client portals together in one unified platform.",
+    icon: "solar:star-fall-minimalistic-bold-duotone",
+  },
+  {
+    id: "q2",
+    question: "Who is EventOS built for?",
+    answer:
+      "EventOS is built specifically for Indian wedding planners, boutique event agencies, decor production houses, and independent event coordinators managing multi-step client workflows.",
+    icon: "solar:users-group-two-rounded-bold-duotone",
+  },
+  {
+    id: "q3",
+    question: "Can I try EventOS before paying?",
+    answer:
+      "Yes. Every plan includes a 14-day free trial with full access to quotations, timelines, and client portals so you can test it on an active event before committing. No credit card is required.",
+    icon: "solar:clock-circle-bold-duotone",
+  },
+  {
+    id: "q4",
+    question: "Does EventOS support wedding agencies?",
+    answer:
+      "Absolutely. EventOS was designed around wedding planning workflows — supporting multi-day itineraries (Mehendi, Sangeet, Wedding, Reception), vendor coordination, client approval sign-offs, and high-res media delivery.",
+    icon: "solar:heart-bold-duotone",
+  },
+  {
+    id: "q5",
+    question: "Can my team use EventOS?",
+    answer:
+      "Yes. Depending on your plan, you can invite team members and assign role-based permissions (Director, Lead Planner, On-Site Coordinator) so everyone stays aligned on tasks and schedules.",
+    icon: "solar:user-hand-up-bold-duotone",
+  },
+  {
+    id: "q6",
+    question: "Can clients access their own portal?",
+    answer:
+      "Yes. Every event has a dedicated, mobile-friendly client portal where clients can review and sign quotes, inspect payment schedules, track timeline milestones, and access approved deliverables.",
+    icon: "solar:laptop-minimalistic-bold-duotone",
+  },
+  {
+    id: "q7",
+    question: "Can I track payments and invoices?",
+    answer:
+      "Yes. You can structure advance milestone payments, generate GST-compliant tax invoices, record received payments via UPI or bank transfer, and send automated client reminders.",
+    icon: "solar:wallet-money-bold-duotone",
+  },
+  {
+    id: "q8",
+    question: "Can I use EventOS for corporate events?",
+    answer:
+      "Yes. While optimized for weddings and social celebrations, EventOS easily handles corporate conferences, product launches, and brand activations with stage timelines, vendor rosters, and deliverable tracking.",
+    icon: "solar:case-bold-duotone",
+  },
+  {
+    id: "q9",
+    question: "Is my data secure?",
+    answer:
+      "Yes. Each agency workspace has isolated tenant data, TLS-encrypted connections in transit, role-based document access, and regular cloud backups to protect your commercial contracts and client details.",
     icon: "solar:shield-check-bold-duotone",
-    question: "Is my customer and transaction data isolated?",
-    answer: "Yes, 100%. EventOS is engineered with a strict multi-tenant architecture. Every single table in our PostgreSQL database has a tenant_id column, and Hibernate enforces tenant isolation filters on every SQL query. A user from Tenant A can never view records from Tenant B.",
   },
   {
-    value: "q2",
-    icon: "solar:palette-bold-duotone",
-    question: "Can I use my own brand logo and custom domain?",
-    answer: "Absolutely. On our Professional and Agency plans, you can map your own domain (e.g., proposals.yourbrand.com) and customize email templates via SMTP, so your clients see a fully branded, professional portal — zero EventOS branding visible.",
-  },
-  {
-    value: "q3",
-    icon: "solar:gallery-bold-duotone",
-    question: "How secure are the client galleries?",
-    answer: "Galleries are cloud-hosted with unique, cryptographically signed share links. You can configure passcode protection, restrict image downloads (e.g., view-only vs high-res download), and set expiration dates on public access links. All assets are served over CDN with signed URLs.",
-  },
-  {
-    value: "q4",
-    icon: "solar:buildings-bold-duotone",
-    question: "Can I manage multiple event agencies or client workspaces?",
-    answer: "Yes. The premium workspace switcher lets you register and transition between different agency profiles or isolated tenant environments without having to log out and log back in.",
-  },
-  {
-    value: "q5",
-    icon: "solar:bell-bing-bold-duotone",
-    question: "Does EventOS support automatic payment reminders?",
-    answer: "Yes, our background workers monitor invoice due dates and automatically trigger payment reminders to clients via webhooks or RabbitMQ events, keeping your cash flow consistent and reducing late payments.",
-  },
-  {
-    value: "q6",
-    icon: "solar:users-group-bold-duotone",
-    question: "What team roles and permissions are available?",
-    answer: "EventOS supports Owner, Admin, Manager, Staff, and Client roles. Each role has scoped access — for example, Staff can only view events they're assigned to, while Owners have full workspace control. All role checks are enforced at the API level.",
+    id: "q10",
+    question: "What happens after my trial?",
+    answer:
+      "After your 14-day trial, you can choose to upgrade to Starter, Professional, or Agency. Your event data, quotes, and timeline templates are fully preserved so your workflow never gets interrupted.",
+    icon: "solar:restart-bold-duotone",
   },
 ];
 
 export function Faq() {
   const shouldReduceMotion = useReducedMotion();
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const toggleAccordion = (index: number) => {
+    setOpenIndex(openIndex === index ? null : index);
+  };
 
   return (
     <section
-      className="py-24 border-b border-[#E5E7EB] bg-[#FFFFFF] w-full relative z-10"
       id="faq"
+      className="py-24 sm:py-32 border-b border-slate-200/80 bg-[#FAF9F6] relative overflow-hidden font-sans text-left"
     >
-      <div className="max-w-4xl mx-auto px-6">
+      {/* Background ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-purple-100/25 blur-[140px] rounded-full pointer-events-none" />
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5 }}
-          className="text-center space-y-4 mb-16"
+          className="text-center space-y-4 mb-14 sm:mb-18"
         >
-          <span className="inline-flex items-center gap-2 text-xs font-bold tracking-widest text-[#7C3AED] uppercase">
-            <Icon icon="solar:question-circle-bold-duotone" className="text-[#7C3AED] text-sm" />
-            Got Questions?
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#111827] font-heading">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200/80 text-purple-700 text-xs font-bold uppercase tracking-widest">
+            <HelpCircle size={14} className="text-purple-600" />
+            <span>Got Questions?</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 font-heading text-balance leading-[1.12]">
             Frequently Asked{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#A855F7]">
-              Questions
+            <span className="bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 bg-clip-text text-transparent">
+              Questions.
             </span>
           </h2>
-          <p className="text-[#4B5563] text-sm leading-relaxed font-medium">
-            Everything you need to know about EventOS security, billing, white-label options, and team management.
+
+          <p className="text-slate-600 text-base sm:text-lg leading-relaxed font-medium max-w-2xl mx-auto">
+            Everything you need to know about getting started with EventOS for your event planning business.
           </p>
         </motion.div>
 
-        {/* Accordion */}
-        <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white border border-[#E5E7EB] shadow-md rounded-2xl p-4 sm:p-6"
-        >
-          <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, idx) => (
-              <AccordionItem
-                key={faq.value}
-                value={faq.value}
-                className="border-b border-slate-200/80 py-1 last:border-0 group/item"
+        {/* 10 Accordion Cards */}
+        <div className="space-y-3">
+          {faqs.map((faq, idx) => {
+            const isOpen = openIndex === idx;
+            return (
+              <div
+                key={faq.id}
+                className={cn(
+                  "rounded-2xl border transition-all duration-200 overflow-hidden bg-white",
+                  isOpen
+                    ? "border-purple-300 shadow-md shadow-purple-500/5 ring-1 ring-purple-400/30"
+                    : "border-slate-200/90 shadow-2xs hover:border-slate-300"
+                )}
               >
-                <AccordionTrigger className="text-sm sm:text-base font-bold text-slate-900 hover:text-purple-600 hover:no-underline focus:text-purple-600 py-4 flex items-center gap-3 [&>svg]:text-slate-500">
-                  <div className="flex items-center gap-3 text-left">
-                    <Icon
-                      icon={faq.icon}
-                      className="text-purple-600 text-xl shrink-0 group-data-[state=open]/item:text-purple-600 transition-colors"
-                    />
-                    {faq.question}
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  onClick={() => toggleAccordion(idx)}
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/70 transition-colors"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div
+                      className={cn(
+                        "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 border transition-colors",
+                        isOpen
+                          ? "bg-purple-100/70 border-purple-300 text-purple-700"
+                          : "bg-slate-100 border-slate-200 text-slate-600"
+                      )}
+                    >
+                      <Icon icon={faq.icon} className="text-base" />
+                    </div>
+                    <span className="text-sm sm:text-base font-extrabold text-slate-900">
+                      {faq.question}
+                    </span>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed pt-1 pb-5 pl-9 border-l-2 border-purple-500/30 ml-3 group-data-[state=open]/item:border-purple-500/60 transition-colors">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </motion.div>
 
-        {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mt-10 text-center"
-        >
-          <p className="text-slate-600 font-medium text-sm">
-            Still have questions?{" "}
+                  <ChevronDown
+                    size={16}
+                    className={cn(
+                      "text-slate-400 shrink-0 transition-transform duration-200",
+                      isOpen && "rotate-180 text-purple-600"
+                    )}
+                  />
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      key="content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-600 font-medium leading-relaxed pl-16 border-t border-slate-100">
+                        {faq.answer}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Support Note */}
+        <div className="mt-12 text-center">
+          <p className="text-xs sm:text-sm text-slate-500 font-medium">
+            Have a custom workflow question?{" "}
             <a
               href="mailto:support@eventosapp.in"
-              className="text-purple-400 font-bold hover:text-purple-300 transition-colors hover:underline"
+              className="text-purple-700 font-bold hover:underline"
             >
-              Chat with our team →
+              Contact our team directly →
             </a>
           </p>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -111,7 +111,7 @@ export function FloatingDock() {
   useEffect(() => {
     if (pathname !== "/") return;
 
-    const sections = ["hero", "features", "modules", "pricing", "contact"];
+    const sections = ["hero", "problem", "workflow", "showcase", "modules", "portal-preview", "ai-engine", "testimonials", "pricing", "security", "founder", "faq", "final-cta"];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -174,10 +174,11 @@ export function FloatingDock() {
 
   const dockItems: DockItemConfig[] = [
     { label: "Home", href: "#hero", id: "hero", icon: "solar:home-smile-bold-duotone" },
-    { label: "Features", href: "#features", id: "features", icon: "solar:widget-bold-duotone" },
-    { label: "Solutions", href: "#modules", id: "modules", icon: "solar:case-round-bold-duotone" },
+    { label: "Workflow", href: "#workflow", id: "workflow", icon: "solar:route-bold-duotone" },
+    { label: "Modules", href: "#modules", id: "modules", icon: "solar:case-round-bold-duotone" },
+    { label: "Portal", href: "#portal-preview", id: "portal-preview", icon: "solar:window-frame-bold-duotone" },
     { label: "Pricing", href: "#pricing", id: "pricing", icon: "solar:wallet-bold-duotone" },
-    { label: "Contact", href: "#contact", id: "contact", icon: "solar:letter-bold-duotone" },
+    { label: "Founder", href: "#founder", id: "founder", icon: "solar:shield-user-bold-duotone" },
   ];
 
   return (

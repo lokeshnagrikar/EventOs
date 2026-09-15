@@ -93,9 +93,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    volumes:
-      - ./jwt_private.pem:/app/jwt_private.pem:ro
-      - ./jwt_public.pem:/app/jwt_public.pem:ro
     networks:
       - eventos-net
     healthcheck:
@@ -255,9 +252,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./jwt_private.pem:/app/jwt_private.pem:ro
-      - ./jwt_public.pem:/app/jwt_public.pem:ro
     networks:
       - eventos-net
     healthcheck:

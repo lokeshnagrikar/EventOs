@@ -12,6 +12,11 @@ import java.util.UUID;
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<Booking> findAllByTenantIdOrderByCreatedAtDesc(UUID tenantId);
     Optional<Booking> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("SELECT b FROM Booking b WHERE b.id = :id AND b.tenantId = :tenantId")
+    Optional<Booking> findByIdAndTenantIdForUpdate(@org.springframework.data.repository.query.Param("id") UUID id, @org.springframework.data.repository.query.Param("tenantId") UUID tenantId);
+
     Optional<Booking> findByQuoteIdAndTenantId(UUID quoteId, UUID tenantId);
     long countByTenantId(UUID tenantId);
 

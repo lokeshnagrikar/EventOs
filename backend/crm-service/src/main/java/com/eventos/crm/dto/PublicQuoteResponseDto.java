@@ -17,6 +17,7 @@ import java.util.UUID;
 public class PublicQuoteResponseDto {
     private UUID id;
     private String quoteNumber;
+    private String shareToken;
     private String status;
     private String templateName;
     private BigDecimal subtotal;

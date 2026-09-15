@@ -131,16 +131,13 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const storedRefreshToken = useAuthStore.getState().refreshToken 
-          || (typeof window !== 'undefined' ? (sessionStorage.getItem('refreshToken') || localStorage.getItem('eventos_refresh_token')) : null);
-
         const refreshResponse = await axios.post(
           `${getBaseURL()}/auth/refresh`,
-          storedRefreshToken ? { refreshToken: storedRefreshToken } : {},
+          {},
           { withCredentials: true }
         );
         
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken, role, firstName, lastName, permissions } = refreshResponse.data.data;
+        const { accessToken: newAccessToken, role, firstName, lastName, permissions } = refreshResponse.data.data;
         
         // Update store with new access token and updated user metadata
         const currentState = useAuthStore.getState();
@@ -154,17 +151,12 @@ apiClient.interceptors.response.use(
 
         useAuthStore.setState({ 
           accessToken: newAccessToken,
-          refreshToken: newRefreshToken || storedRefreshToken,
           user: updatedUser
         });
 
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('accessToken', newAccessToken);
           localStorage.setItem('eventos_access_token', newAccessToken);
-          if (newRefreshToken) {
-            sessionStorage.setItem('refreshToken', newRefreshToken);
-            localStorage.setItem('eventos_refresh_token', newRefreshToken);
-          }
         }
         
         // IMPORTANT: After a Spring Boot trailing-slash redirect, Axios mutates

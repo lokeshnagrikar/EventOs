@@ -3,7 +3,7 @@
 ### Pre-Launch Private Beta: 25 Founding Agencies (Nagpur & Vidarbha → Maharashtra)
 
 **Founder outreach handle:** instagram.com/solo.founder.ai
-**Waitlist destination:** `/founder/waitlist` (internal key: `eventos2026`)
+**Waitlist destination:** `/founder/waitlist` (requires configured `FOUNDER_SECRET_KEY`)
 **Budget:** ₹0 paid ads — 100% founder-led organic outreach
 
 ---

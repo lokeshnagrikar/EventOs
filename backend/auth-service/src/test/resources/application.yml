@@ -36,7 +36,7 @@ app:
   gateway:
     secret: eventos_gateway_secure_shared_secret
   security:
-    log-tokens: true
+    log-tokens: false
   recaptcha:
     enabled: false
     secret-key: mock_secret

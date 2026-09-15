@@ -8,6 +8,7 @@ import { useAuthModalStore } from "@/store/authModalStore";
 import { useToastStore } from "@/lib/toastStore";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
+import { setClientCookie } from "@/lib/clientCookies";
 
 const DEMO_WORKSPACES: WorkspaceMembership[] = [
   { tenantId: "tenant_apex", companyId: "comp_1", companyName: "Apex Events & Production", role: "OWNER", status: "ACTIVE" },
@@ -41,24 +42,20 @@ export function WorkspaceSelectorPill() {
 
     setSwitchingId(target.tenantId);
     try {
-      const storedRefreshToken = useAuthStore.getState().refreshToken 
-        || (typeof window !== 'undefined' ? (sessionStorage.getItem('refreshToken') || localStorage.getItem('eventos_refresh_token')) : null);
-
       const res = await apiClient.post(`/auth/switch`, { 
-        tenantId: target.tenantId,
-        ...(storedRefreshToken ? { refreshToken: storedRefreshToken } : {})
+        tenantId: target.tenantId
       });
-      const { accessToken, refreshToken: newRefreshToken, role, permissions, firstName } = res.data.data;
+      const { accessToken, role, permissions, firstName } = res.data.data;
       
-      document.cookie = "hasSession=true; path=/; SameSite=Lax";
+      setClientCookie("hasSession", "true", 604800);
       if (firstName) {
-        document.cookie = `user_name=${encodeURIComponent(firstName)}; path=/; SameSite=Lax`;
+        setClientCookie("user_name", firstName, 604800);
         localStorage.setItem("user_name", firstName);
       }
-      document.cookie = `user_role=${role}; path=/; SameSite=Lax`;
+      setClientCookie("user_role", role, 604800);
       localStorage.setItem("user_role", role);
 
-      updateActiveTenant(target.tenantId, accessToken, role, permissions || [], newRefreshToken || storedRefreshToken);
+      updateActiveTenant(target.tenantId, accessToken, role, permissions || []);
       addToast(`Switched workspace to ${target.companyName}!`, "success");
       router.push("/dashboard");
     } catch (e: any) {

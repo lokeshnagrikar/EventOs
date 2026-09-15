@@ -22,9 +22,8 @@ public class TemplateController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
-    public ResponseEntity<?> getTemplates(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getTemplates() {
+        UUID tenantId = getTenantId();
         List<EmailTemplate> templates = templateService.getTemplates(tenantId);
         
         Map<String, Object> response = new HashMap<>();
@@ -36,9 +35,8 @@ public class TemplateController {
     @GetMapping("/{name}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> getTemplate(
-            @PathVariable String name,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @PathVariable String name) {
+        UUID tenantId = getTenantId();
         EmailTemplate template = templateService.getTemplateByName(tenantId, name)
                 .orElseThrow(() -> new IllegalArgumentException("Template not found"));
         
@@ -52,9 +50,8 @@ public class TemplateController {
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> updateTemplate(
             @PathVariable String name,
-            @RequestBody EmailTemplate details,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody EmailTemplate details) {
+        UUID tenantId = getTenantId();
         EmailTemplate saved = templateService.updateTemplate(tenantId, name, details);
         
         Map<String, Object> response = new HashMap<>();
@@ -67,8 +64,7 @@ public class TemplateController {
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> sendTestEmail(
             @PathVariable String name,
-            @RequestBody Map<String, String> request,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
+            @RequestBody Map<String, String> request) {
         String testEmail = request.getOrDefault("email", "admin@company.com");
         
         // Simulating test email sending
@@ -78,7 +74,7 @@ public class TemplateController {
         return ResponseEntity.ok(response);
     }
 
-    private UUID getTenantId(String header) {
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.event.config.UserPrincipal) {
@@ -87,10 +83,7 @@ public class TemplateController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 }

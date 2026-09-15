@@ -20,8 +20,11 @@ import com.eventos.auth.repository.SessionRepository;
 import com.eventos.auth.repository.InvitationRepository;
 import com.eventos.auth.repository.PasswordHistoryRepository;
 import com.eventos.auth.entity.PasswordHistory;
+import com.eventos.auth.entity.User2Fa;
+import com.eventos.auth.repository.User2FaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -73,6 +76,17 @@ public class AuthService {
     private final java.util.Map<String, String> localTokenStore = new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.Map<String, Long> localTokenExpiry = new java.util.concurrent.ConcurrentHashMap<>();
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    public static String generateSecureRefreshToken() {
+        byte[] randomBytes = new byte[32]; // 256 bits of cryptographic entropy
+        SECURE_RANDOM.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
+
+    // Pre-computed BCrypt cost-12 hash used for constant-time comparison when email is not found
+    private static final String DUMMY_BCRYPT_HASH = "$2a$12$e8YnN714q8u1wWjV97tF3.B8yF4p51E2b4aWb9e1d8g2k4m6n8p0q";
+
     private void storeTokenFallback(String key, String value, long minutes) {
         try {
             if (stringRedisTemplate != null) {
@@ -115,6 +129,50 @@ public class AuthService {
         }
         localTokenStore.remove(key);
         localTokenExpiry.remove(key);
+    }
+
+    @Autowired(required = false)
+    private RateLimiterService rateLimiterService;
+
+    public void setRateLimiterService(RateLimiterService rateLimiterService) {
+        this.rateLimiterService = rateLimiterService;
+    }
+
+    @Autowired(required = false)
+    private TotpService totpService;
+
+    public void setTotpService(TotpService totpService) {
+        this.totpService = totpService;
+    }
+
+    @Autowired(required = false)
+    private User2FaRepository user2FaRepository;
+
+    public void setUser2FaRepository(User2FaRepository user2FaRepository) {
+        this.user2FaRepository = user2FaRepository;
+    }
+
+    public void revokeAllUserSessions(UUID userId) {
+        if (userId == null) return;
+        if (stringRedisTemplate != null) {
+            try {
+                stringRedisTemplate.opsForValue().set("user:revoked_before:" + userId,
+                        String.valueOf(System.currentTimeMillis()), 7, TimeUnit.DAYS);
+            } catch (Exception e) {
+                log.warn("[REVOCATION] Failed to set user revocation in Redis: {}", e.getMessage());
+            }
+        }
+    }
+
+    public void revokeSingleSession(UUID sessionId) {
+        if (sessionId == null) return;
+        if (stringRedisTemplate != null) {
+            try {
+                stringRedisTemplate.opsForValue().set("session:revoked:" + sessionId, "revoked", 24, TimeUnit.HOURS);
+            } catch (Exception e) {
+                log.warn("[REVOCATION] Failed to set session revocation in Redis: {}", e.getMessage());
+            }
+        }
     }
 
     public AuthService(UserRepository userRepository, RoleRepository roleRepository,
@@ -214,11 +272,7 @@ public class AuthService {
         result.put("success", true);
         result.put("message", "Tenant and Owner User registered successfully");
 
-        if (logTokens && ("dev".equalsIgnoreCase(activeProfile) || "test".equalsIgnoreCase(activeProfile))) {
-            System.out.println("=================================================");
-            System.out.println("EMAIL VERIFICATION CREATED FOR: " + email);
-            System.out.println("VERIFICATION TOKEN: " + verificationToken);
-            System.out.println("=================================================");
+        if ("dev".equalsIgnoreCase(activeProfile) || "test".equalsIgnoreCase(activeProfile)) {
             result.put("verificationToken", verificationToken);
         }
 
@@ -235,7 +289,25 @@ public class AuthService {
     public Map<String, Object> login(String email, String password, UUID selectTenantId,
             String ipAddress, String deviceModel, String osName, String browser, String userAgent,
             String captchaId, String captchaValue) {
-        if (ipAddress != null) {
+        boolean isSuperAdmin = false;
+        if (email != null && !email.trim().isEmpty()) {
+            Optional<User> userCandidate = userRepository.findByEmail(email.trim().toLowerCase());
+            if (userCandidate.isPresent()) {
+                List<Membership> memberships = membershipRepository.findAllByUserId(userCandidate.get().getId());
+                isSuperAdmin = memberships.stream()
+                        .anyMatch(m -> m.getRole() != null &&
+                                ("SUPER_ADMIN".equalsIgnoreCase(m.getRole().getName())
+                                        || "OPERATIONS_LEAD".equalsIgnoreCase(m.getRole().getName())
+                                        || "SUPPORT_LEAD".equalsIgnoreCase(m.getRole().getName())
+                                        || "FINANCE_OFFICER".equalsIgnoreCase(m.getRole().getName())
+                                        || "DEVOPS_ENGINEER".equalsIgnoreCase(m.getRole().getName())
+                                        || "COMPLIANCE_AUDITOR".equalsIgnoreCase(m.getRole().getName())));
+            }
+        }
+
+        if (rateLimiterService != null) {
+            rateLimiterService.checkLoginRateLimit(ipAddress, email, isSuperAdmin);
+        } else if (ipAddress != null) {
             checkRateLimit(ipAddress);
         }
 
@@ -253,46 +325,12 @@ public class AuthService {
 
         Optional<User> userOpt = userRepository.findByEmail(email);
 
-        // Auto-provision and heal seeded superadmin & sub-role accounts if missing or password mismatch
-        if ((email.endsWith("@eventos.com") || email.endsWith("@eventos.co")) && "admin123".equals(password)) {
-            if (userOpt.isEmpty()) {
-                String namePart = email.split("@")[0].replace("_", " ");
-                String[] parts = namePart.split(" ");
-                String fName = parts[0].substring(0, 1).toUpperCase() + (parts[0].length() > 1 ? parts[0].substring(1) : "");
-                String lName = parts.length > 1 ? parts[1].substring(0, 1).toUpperCase() + (parts[1].length() > 1 ? parts[1].substring(1) : "") : "Admin";
-
-                User seededAdmin = User.builder()
-                        .firstName(fName)
-                        .lastName(lName)
-                        .email(email)
-                        .passwordHash(passwordEncoder.encode("admin123"))
-                        .status("ACTIVE")
-                        .isEmailVerified(true)
-                        .isDeleted(false)
-                        .build();
-                userOpt = Optional.of(userRepository.save(seededAdmin));
-            } else {
-                User user = userOpt.get();
-                boolean changed = false;
-                if (!"ACTIVE".equals(user.getStatus())) {
-                    user.setStatus("ACTIVE");
-                    changed = true;
-                }
-                if (!user.isEmailVerified()) {
-                    user.setEmailVerified(true);
-                    changed = true;
-                }
-                if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-                    user.setPasswordHash(passwordEncoder.encode("admin123"));
-                    changed = true;
-                }
-                if (changed) {
-                    userRepository.save(user);
-                }
-            }
-        }
 
         if (userOpt.isEmpty()) {
+            // Mitigate response timing differences by executing equivalent BCrypt verification
+            if (passwordEncoder != null) {
+                passwordEncoder.matches(password != null ? password : "", DUMMY_BCRYPT_HASH);
+            }
             handleFailedLoginAttempt(email);
             auditLogService.logEvent(null, null, "LOGIN_FAILURE", ipAddress, userAgent,
                     "Failed login. Email not found: " + email);
@@ -302,12 +340,16 @@ public class AuthService {
         User user = userOpt.get();
 
         if (!"ACTIVE".equals(user.getStatus())) {
+            if (passwordEncoder != null) {
+                passwordEncoder.matches(password != null ? password : "", user.getPasswordHash());
+            }
+            handleFailedLoginAttempt(email);
             auditLogService.logEvent(null, user.getId(), "LOGIN_FAILURE", ipAddress, userAgent,
                     "Failed login. Account inactive: " + email);
-            throw new IllegalArgumentException("User account is not active");
+            throw new IllegalArgumentException("Invalid email or password");
         }
 
-        boolean passwordMatches = passwordEncoder.matches(password, user.getPasswordHash());
+        boolean passwordMatches = passwordEncoder != null && passwordEncoder.matches(password, user.getPasswordHash());
 
         if (!passwordMatches) {
             handleFailedLoginAttempt(email);
@@ -320,30 +362,9 @@ public class AuthService {
 
         List<Membership> memberships = membershipRepository.findAllByUserId(user.getId());
         if (memberships.isEmpty()) {
-            if (email.endsWith("@eventos.com") || email.endsWith("@eventos.co")) {
-                UUID systemTenantId = UUID.fromString("e5afcc88-5c4b-4df8-bb6d-6bb9bd380111");
-                UUID systemCompanyId = UUID.fromString("e5afcc88-5c4b-4df8-bb6d-6bb9bd380222");
-                Role superAdminRole = roleRepository.findByName("SUPER_ADMIN")
-                        .orElseGet(() -> roleRepository.save(Role.builder()
-                                .name("SUPER_ADMIN")
-                                .description("Global Platform Super Administrator")
-                                .permissionsJson("[\"all\"]")
-                                .build()));
-
-                Membership superAdminMembership = Membership.builder()
-                        .user(user)
-                        .tenantId(systemTenantId)
-                        .companyId(systemCompanyId)
-                        .role(superAdminRole)
-                        .status("ACTIVE")
-                        .build();
-                superAdminMembership = membershipRepository.save(superAdminMembership);
-                memberships = List.of(superAdminMembership);
-            } else {
-                auditLogService.logEvent(null, user.getId(), "LOGIN_FAILURE", ipAddress, userAgent,
-                        "Failed login. User has no tenant memberships: " + email);
-                throw new IllegalArgumentException("User does not belong to any tenant workspace");
-            }
+            auditLogService.logEvent(null, user.getId(), "LOGIN_FAILURE", ipAddress, userAgent,
+                    "Failed login. User has no tenant memberships: " + email);
+            throw new IllegalArgumentException("User does not belong to any tenant workspace");
         }
 
         Membership selectedMembership = null;
@@ -356,7 +377,7 @@ public class AuthService {
             if (selectedMembership == null) {
                 auditLogService.logEvent(selectTenantId, user.getId(), "LOGIN_FAILURE", ipAddress, userAgent,
                         "Failed login. Not a member of requested tenant: " + selectTenantId);
-                throw new IllegalArgumentException("User is not a member of the requested tenant");
+                throw new IllegalArgumentException("Invalid email or password");
             }
         } else {
             selectedMembership = memberships.stream()
@@ -369,21 +390,15 @@ public class AuthService {
             auditLogService.logEvent(selectedMembership.getTenantId(), user.getId(), "LOGIN_FAILURE", ipAddress,
                     userAgent,
                     "Failed login. Tenant membership is inactive.");
-            throw new IllegalArgumentException("Membership is no longer active");
+            throw new IllegalArgumentException("Invalid email or password");
         }
 
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        // Email Verification Check (Auto-verify platform superadmin and system domain accounts)
+        // Email Verification Check
         if (!user.isEmailVerified()) {
-            if (email.endsWith("@eventos.co") || email.endsWith("@eventos.com") || email.endsWith("@eventosapp.in")
-                    || (selectedMembership.getRole() != null && "SUPER_ADMIN".equals(selectedMembership.getRole().getName()))) {
-                user.setEmailVerified(true);
-                userRepository.save(user);
-            } else {
-                throw new IllegalArgumentException("EMAIL_UNVERIFIED");
-            }
+            throw new IllegalArgumentException("EMAIL_UNVERIFIED");
         }
 
         // Password Expiration Check (90 days)
@@ -392,14 +407,36 @@ public class AuthService {
             throw new IllegalArgumentException("PASSWORD_EXPIRED");
         }
 
-        // Extract permissions
-        List<String> permissions = extractPermissionsFromRole(selectedMembership.getRole());
-        if (email.endsWith("@eventos.co") || email.endsWith("@eventos.com") || email.endsWith("@eventosapp.in")) {
-            String rolePrefix = email.split("@")[0];
-            if (!"admin".equals(rolePrefix)) {
-                permissions = List.of(rolePrefix);
+        // 2FA Enforcement Check (SEC-2N-E)
+        if (user2FaRepository != null) {
+            Optional<User2Fa> user2FaOpt = user2FaRepository.findById(user.getId());
+            if (user2FaOpt.isPresent() && user2FaOpt.get().isEnabled()) {
+                String challengeToken = UUID.randomUUID().toString();
+                String redisKey = "2fa:challenge:" + challengeToken;
+                String challengeVal = user.getId().toString() + ":::" + selectedMembership.getTenantId().toString();
+                storeTokenFallback(redisKey, challengeVal, 5);
+                if (stringRedisTemplate != null) {
+                    try {
+                        stringRedisTemplate.opsForValue().set("2fa:attempts:" + challengeToken, "0", 5, TimeUnit.MINUTES);
+                    } catch (Exception ignored) {}
+                }
+
+                Map<String, Object> challengeResponse = new HashMap<>();
+                challengeResponse.put("requires2fa", true);
+                challengeResponse.put("challengeToken", challengeToken);
+                challengeResponse.put("message", "Two-factor authentication required");
+                return challengeResponse;
             }
         }
+
+        return createAuthoritativeSession(user, selectedMembership, memberships, ipAddress, deviceModel, osName, browser, userAgent);
+    }
+
+    public Map<String, Object> createAuthoritativeSession(User user, Membership selectedMembership,
+            List<Membership> memberships, String ipAddress, String deviceModel, String osName,
+            String browser, String userAgent) {
+        // Extract permissions
+        List<String> permissions = extractPermissionsFromRole(selectedMembership.getRole());
 
         // Get company name
         String primaryCompanyName = companyRepository.findById(selectedMembership.getCompanyId())
@@ -421,7 +458,7 @@ public class AuthService {
                 sessionId.toString());
 
         // Refresh Token
-        String rawToken = UUID.randomUUID().toString();
+        String rawToken = generateSecureRefreshToken();
         String tokenHash = sha256(rawToken);
 
         RefreshToken refreshToken = RefreshToken.builder()
@@ -468,37 +505,131 @@ public class AuthService {
     }
 
     @Transactional
+    public Map<String, Object> verify2FaChallenge(String challengeToken, String code,
+            String ipAddress, String deviceModel, String osName, String browser, String userAgent) {
+        if (challengeToken == null || challengeToken.trim().isEmpty()) {
+            throw new IllegalArgumentException("Challenge token is required");
+        }
+        if (code == null || code.trim().isEmpty()) {
+            throw new IllegalArgumentException("Verification code is required");
+        }
+
+        String redisKey = "2fa:challenge:" + challengeToken.trim();
+        String challengeVal = getTokenFallback(redisKey);
+        if (challengeVal == null) {
+            throw new IllegalArgumentException("Invalid or expired 2FA challenge");
+        }
+
+        String attemptsKey = "2fa:attempts:" + challengeToken.trim();
+        long attempts = 1;
+        if (stringRedisTemplate != null) {
+            try {
+                attempts = stringRedisTemplate.opsForValue().increment(attemptsKey);
+            } catch (Exception ignored) {}
+        }
+        if (attempts > 5) {
+            deleteChallenge(challengeToken);
+            throw new SecurityException("Too many invalid 2FA attempts. Challenge invalidated.");
+        }
+
+        String[] parts = challengeVal.split(":::", 2);
+        UUID userId = UUID.fromString(parts[0]);
+        UUID tenantId = parts.length > 1 && !parts[1].isEmpty() ? UUID.fromString(parts[1]) : null;
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (user2FaRepository == null) {
+            throw new IllegalStateException("2FA repository unavailable");
+        }
+        User2Fa user2Fa = user2FaRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("2FA not configured for user"));
+
+        if (!user2Fa.isEnabled()) {
+            throw new IllegalArgumentException("2FA is not enabled for user");
+        }
+
+        boolean validCode = false;
+        if (totpService != null && totpService.verifyCode(user2Fa.getSecret(), code)) {
+            validCode = true;
+        } else if (user2Fa.getBackupCodes() != null) {
+            List<String> backupCodes = new ArrayList<>(Arrays.asList(user2Fa.getBackupCodes().split(",")));
+            if (backupCodes.contains(code.trim().toUpperCase())) {
+                validCode = true;
+                backupCodes.remove(code.trim().toUpperCase());
+                user2Fa.setBackupCodes(String.join(",", backupCodes));
+                user2FaRepository.save(user2Fa);
+            }
+        }
+
+        if (!validCode) {
+            throw new IllegalArgumentException("Invalid 2FA verification code");
+        }
+
+        // Challenge successfully consumed - delete to prevent replay
+        deleteChallenge(challengeToken);
+
+        List<Membership> memberships = membershipRepository.findAllByUserId(user.getId());
+        Membership selectedMembership = null;
+        if (tenantId != null) {
+            selectedMembership = memberships.stream()
+                    .filter(m -> m.getTenantId().equals(tenantId))
+                    .findFirst()
+                    .orElse(null);
+        }
+        if (selectedMembership == null) {
+            selectedMembership = memberships.stream()
+                    .filter(m -> "ACTIVE".equals(m.getStatus()))
+                    .findFirst()
+                    .orElse(memberships.get(0));
+        }
+
+        return createAuthoritativeSession(user, selectedMembership, memberships, ipAddress, deviceModel, osName, browser, userAgent);
+    }
+
+    private void deleteChallenge(String challengeToken) {
+        String redisKey = "2fa:challenge:" + challengeToken.trim();
+        String attemptsKey = "2fa:attempts:" + challengeToken.trim();
+        if (stringRedisTemplate != null) {
+            try {
+                stringRedisTemplate.delete(redisKey);
+                stringRedisTemplate.delete(attemptsKey);
+            } catch (Exception ignored) {}
+        }
+        deleteTokenFallback(redisKey);
+    }
+
+    @Transactional
     public Map<String, Object> refresh(String token, String ipAddress, String deviceModel, String osName,
             String browser, String userAgent) {
         String presentedHash = sha256(token);
+
+        // 1. Concurrent Refresh Safety / Idempotent Grace Window (30 seconds, SEC-2N-H)
+        String graceKey = "refresh:grace:" + presentedHash;
+        String graceValue = stringRedisTemplate != null ? stringRedisTemplate.opsForValue().get(graceKey) : null;
+        if (graceValue != null) {
+            String[] parts = graceValue.split(":::", 3);
+            if (parts.length >= 2) {
+                String cachedAccessToken = parts[0];
+                String cachedRawToken = parts[1];
+                Map<String, Object> response = new HashMap<>();
+                response.put("accessToken", cachedAccessToken);
+                response.put("refreshToken", cachedRawToken);
+                return response;
+            }
+        }
 
         Optional<RefreshToken> activeTokenOpt = refreshTokenRepository.findByToken(presentedHash);
         if (activeTokenOpt.isEmpty()) {
             // Replay Attack Detection: check Redis for breach history
             String redisKey = "rotated:token:" + presentedHash;
-            String redisValue = stringRedisTemplate.opsForValue().get(redisKey);
+            String redisValue = stringRedisTemplate != null ? stringRedisTemplate.opsForValue().get(redisKey) : null;
             if (redisValue != null) {
-                String[] parts = redisValue.split(":", 4);
-                if (parts.length == 4) {
-                    try {
-                        long rotationTime = Long.parseLong(parts[1]);
-                        long now = System.currentTimeMillis();
-                        if (now - rotationTime <= 5000L) { // 5-second grace period
-                            log.info(
-                                    "Token refresh race condition detected for user within grace period. Returning cached tokens.");
-                            Map<String, Object> response = new HashMap<>();
-                            response.put("accessToken", parts[3]);
-                            response.put("refreshToken", parts[2]);
-                            return response;
-                        }
-                    } catch (NumberFormatException e) {
-                        // fallback to replay attack handling
-                    }
-                }
-
+                String[] parts = redisValue.split(":", 2);
                 UUID userId = UUID.fromString(parts[0]);
                 sessionRepository.deleteAllByUserId(userId);
                 refreshTokenRepository.deleteByUser(User.builder().id(userId).build());
+                revokeAllUserSessions(userId);
                 auditLogService.logEvent(null, userId, "REPLAY_ATTACK_COMPROMISE", ipAddress, userAgent,
                         "Replay attack detected on rotated refresh token! All active sessions revoked for security.");
                 throw new SecurityException("Replay attack detected. All sessions invalidated.");
@@ -535,9 +666,9 @@ public class AuthService {
             if (membership.getRole().getPermissionsJson() != null) {
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                 permissions = mapper.readValue(
-                        membership.getRole().getPermissionsJson(),
-                        new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
-                        });
+                    membership.getRole().getPermissionsJson(),
+                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                    });
             }
         } catch (Exception e) {
             // fallback empty
@@ -560,15 +691,20 @@ public class AuthService {
                 sessionId.toString());
 
         // Rotate Refresh Token
-        String newRawToken = UUID.randomUUID().toString();
+        String newRawToken = generateSecureRefreshToken();
         String newHash = sha256(newRawToken);
 
-        // Store old hash in Redis for breach history with a 5-second grace period
-        // payload (1 hour TTL)
-        String redisKey = "rotated:token:" + presentedHash;
-        String redisValue = user.getId().toString() + ":" + System.currentTimeMillis() + ":" + newRawToken + ":"
-                + accessToken;
-        stringRedisTemplate.opsForValue().set(redisKey, redisValue, 1, TimeUnit.HOURS);
+        // Store old hash in Redis for grace window (30s) and breach history (1h)
+        if (stringRedisTemplate != null) {
+            try {
+                stringRedisTemplate.opsForValue().set(graceKey, accessToken + ":::" + newRawToken + ":::" + user.getId(), 30, TimeUnit.SECONDS);
+                String redisKey = "rotated:token:" + presentedHash;
+                String redisValue = user.getId().toString() + ":" + System.currentTimeMillis();
+                stringRedisTemplate.opsForValue().set(redisKey, redisValue, 1, TimeUnit.HOURS);
+            } catch (Exception e) {
+                log.warn("[REFRESH] Failed to update Redis rotation cache: {}", e.getMessage());
+            }
+        }
 
         refreshToken.setToken(newHash);
         refreshToken.setExpiryDate(LocalDateTime.now().plusNanos(refreshExpirationMs * 1_000_000));
@@ -594,6 +730,64 @@ public class AuthService {
     }
 
     @Transactional
+    public void logoutAuthenticatedUser(UUID userId, UUID tenantId, String rawRefreshToken, String accessToken) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID is required for logout");
+        }
+
+        // 1. Invalidate specific refresh token & associated session if provided
+        if (rawRefreshToken != null && !rawRefreshToken.trim().isEmpty()) {
+            String tokenHash = sha256(rawRefreshToken.trim());
+            refreshTokenRepository.findByToken(tokenHash).ifPresent(rt -> {
+                // Ensure the refresh token actually belongs to the authenticated user
+                if (rt.getUser().getId().equals(userId)) {
+                    sessionRepository.findByRefreshTokenId(rt.getId()).ifPresent(s -> {
+                        revokeSingleSession(s.getId());
+                        sessionRepository.delete(s);
+                    });
+                    refreshTokenRepository.delete(rt);
+                }
+            });
+            if (stringRedisTemplate != null) {
+                try {
+                    stringRedisTemplate.delete("rotated:token:" + tokenHash);
+                    stringRedisTemplate.delete("refresh:grace:" + tokenHash);
+                } catch (Exception ignored) {
+                }
+            }
+        } else if (accessToken != null && !accessToken.trim().isEmpty()) {
+            // 2. If no refresh token provided, look up session from JWT claims if present
+            try {
+                io.jsonwebtoken.Claims claims = jwtService.getClaims(accessToken);
+                String sessionIdStr = claims.get("sessionId", String.class);
+                if (sessionIdStr != null && !sessionIdStr.trim().isEmpty()) {
+                    UUID sessionId = UUID.fromString(sessionIdStr);
+                    revokeSingleSession(sessionId);
+                    sessionRepository.findById(sessionId).ifPresent(s -> {
+                        if (s.getUser().getId().equals(userId)) {
+                            if (s.getRefreshToken() != null) {
+                                refreshTokenRepository.delete(s.getRefreshToken());
+                            }
+                            sessionRepository.delete(s);
+                        }
+                    });
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        // 3. Blacklist the access token in Redis (if valid & unexpired)
+        if (accessToken != null && !accessToken.trim().isEmpty()) {
+            jwtService.blacklistToken(accessToken);
+        }
+
+        // 4. Audit Log (tenantId, userId, "LOGOUT")
+        auditLogService.logEvent(tenantId, userId, "LOGOUT", null, null,
+                "User logged out successfully");
+    }
+
+    @Deprecated
+    @Transactional
     public void logout(String email) {
         userRepository.findByEmail(email).ifPresent(user -> {
             sessionRepository.deleteAllByUserId(user.getId());
@@ -617,35 +811,44 @@ public class AuthService {
     private final SecureRandom secureRandom = new SecureRandom();
 
     public Map<String, Object> forgotPassword(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Email address not found"));
+        return forgotPassword(email, null);
+    }
 
-        byte[] tokenBytes = new byte[32];
-        secureRandom.nextBytes(tokenBytes);
-        String resetToken = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
-        String tokenHash = sha256(resetToken);
+    public Map<String, Object> forgotPassword(String email, String ipAddress) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
 
-        String redisKey = "reset:token:" + tokenHash;
-        storeTokenFallback(redisKey, user.getEmail(), 15);
+        String cleanEmail = email.trim().toLowerCase();
 
-        auditLogService.logEvent(null, user.getId(), "PASSWORD_RESET_REQUEST", null, null,
-                "Password reset token generated for user: " + email);
+        if (rateLimiterService != null) {
+            rateLimiterService.checkPasswordResetRateLimit(ipAddress, cleanEmail);
+        }
+        Optional<User> userOpt = userRepository.findByEmail(cleanEmail);
 
-        // Send Password Reset Email
-        emailService.sendPasswordResetEmail(email, resetToken);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            byte[] tokenBytes = new byte[32];
+            secureRandom.nextBytes(tokenBytes);
+            String resetToken = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
+            String tokenHash = sha256(resetToken);
+
+            String redisKey = "reset:token:" + tokenHash;
+            storeTokenFallback(redisKey, user.getEmail(), 15);
+
+            auditLogService.logEvent(null, user.getId(), "PASSWORD_RESET_REQUEST", null, null,
+                    "Password reset token generated for user: " + cleanEmail);
+
+            // Send Password Reset Email
+            emailService.sendPasswordResetEmail(cleanEmail, resetToken);
+        } else {
+            auditLogService.logEvent(null, null, "PASSWORD_RESET_REQUEST_UNREGISTERED", null, null,
+                    "Password reset requested for unregistered email: " + cleanEmail);
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Password reset request received. If the email is registered, you will receive instructions.");
-
-        if (logTokens && ("dev".equalsIgnoreCase(activeProfile) || "test".equalsIgnoreCase(activeProfile))) {
-            System.out.println("=================================================");
-            System.out.println("PASSWORD RESET REQUESTED FOR: " + email);
-            System.out.println("RESET TOKEN: " + resetToken);
-            System.out.println("=================================================");
-            response.put("debugResetToken", resetToken);
-        }
-
+        response.put("message", "If the email address is registered, password reset instructions will be sent.");
         return response;
     }
 
@@ -661,7 +864,13 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User associated with token not found"));
 
+        // Validate password history (SEC-2N-I)
+        checkPasswordHistory(user, newPassword);
+        savePasswordHistory(user, user.getPasswordHash());
+
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setStatus("ACTIVE");
+        user.setPasswordUpdatedAt(LocalDateTime.now());
         user.setEmailVerified(true);
         userRepository.save(user);
         deleteTokenFallback(redisKey);
@@ -669,6 +878,7 @@ public class AuthService {
         // Force logout on all active sessions on password change
         sessionRepository.deleteAllByUserId(user.getId());
         refreshTokenRepository.deleteByUser(user);
+        revokeAllUserSessions(user.getId());
 
         auditLogService.logEvent(null, user.getId(), "PASSWORD_RESET_SUCCESS", null, null,
                 "Password reset successfully. Active sessions revoked for user: " + email);
@@ -679,11 +889,136 @@ public class AuthService {
         return response;
     }
 
+    @Value("${app.bootstrap.secret:#{null}}")
+    private String configuredBootstrapSecret;
+
+    @Transactional
+    public Map<String, Object> bootstrapSuperAdmin(String email, String newPassword, String bootstrapSecret,
+            String ipAddress, String userAgent) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Target email is required");
+        }
+        if (newPassword == null || newPassword.length() < 12) {
+            throw new IllegalArgumentException("Password must be at least 12 characters long");
+        }
+
+        String envSecret = configuredBootstrapSecret;
+        if (envSecret == null || envSecret.trim().isEmpty()) {
+            envSecret = System.getenv("BOOTSTRAP_SECRET");
+        }
+        if (envSecret == null || envSecret.trim().isEmpty()) {
+            envSecret = System.getenv("APP_BOOTSTRAP_SECRET");
+        }
+        if (envSecret == null || envSecret.trim().isEmpty()) {
+            envSecret = System.getenv("ADMIN_BOOTSTRAP_SECRET");
+        }
+
+        if (envSecret == null || envSecret.trim().length() < 32) {
+            auditLogService.logEvent(null, null, "ADMIN_BOOTSTRAP_DISABLED", ipAddress, userAgent,
+                    "Admin bootstrap invoked but BOOTSTRAP_SECRET environment variable is missing or insecure");
+            throw new SecurityException("Admin bootstrap is not enabled or BOOTSTRAP_SECRET is missing from environment");
+        }
+
+        if (bootstrapSecret == null || bootstrapSecret.trim().isEmpty()) {
+            auditLogService.logEvent(null, null, "ADMIN_BOOTSTRAP_FAILURE", ipAddress, userAgent,
+                    "Bootstrap attempt missing secret for target: " + email);
+            throw new SecurityException("Invalid bootstrap credentials");
+        }
+
+        byte[] envBytes = envSecret.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] suppliedBytes = bootstrapSecret.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        if (!java.security.MessageDigest.isEqual(envBytes, suppliedBytes)) {
+            auditLogService.logEvent(null, null, "ADMIN_BOOTSTRAP_FAILURE", ipAddress, userAgent,
+                    "Failed bootstrap attempt with incorrect secret for target: " + email);
+            throw new SecurityException("Invalid bootstrap credentials");
+        }
+
+        String cleanEmail = email.trim().toLowerCase();
+        User user = userRepository.findByEmail(cleanEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Target administrative account not found: " + cleanEmail));
+
+        // Enforce that target identity must have an administrative/platform role
+        List<Membership> memberships = membershipRepository.findAllByUserId(user.getId());
+        boolean hasAdminRole = memberships.stream()
+                .anyMatch(m -> m.getRole() != null &&
+                        ("SUPER_ADMIN".equalsIgnoreCase(m.getRole().getName())
+                                || com.eventos.auth.config.PlatformRole.isPlatformRole(m.getRole().getName())));
+        if (!hasAdminRole) {
+            auditLogService.logEvent(null, user.getId(), "ADMIN_BOOTSTRAP_REJECTED", ipAddress, userAgent,
+                    "Bootstrap rejected: Target user is not an administrative identity: " + cleanEmail);
+            throw new SecurityException("Target user is not an administrative identity");
+        }
+
+        // Single-use guarantee: if the account is already ACTIVE and not in locked setup state, refuse re-bootstrap
+        if ("ACTIVE".equalsIgnoreCase(user.getStatus()) && (user.getPasswordHash() == null || !user.getPasswordHash().startsWith("!LOCKED_PENDING_BOOTSTRAP_"))) {
+            auditLogService.logEvent(null, user.getId(), "ADMIN_BOOTSTRAP_REJECTED", ipAddress, userAgent,
+                    "Bootstrap rejected: account is already bootstrapped and active: " + cleanEmail);
+            throw new IllegalStateException("Administrative account has already been bootstrapped. Use standard password reset flow.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setStatus("ACTIVE");
+        user.setEmailVerified(true);
+        user.setPasswordUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        savePasswordHistory(user, user.getPasswordHash());
+
+        // Revoke all existing sessions and refresh tokens
+        sessionRepository.deleteAllByUserId(user.getId());
+        refreshTokenRepository.deleteByUser(user);
+        revokeAllUserSessions(user.getId());
+
+        auditLogService.logEvent(null, user.getId(), "ADMIN_BOOTSTRAP_SUCCESS", ipAddress, userAgent,
+                "Administrative account successfully bootstrapped: " + cleanEmail);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Administrative account bootstrapped successfully. Please login with your new credentials.");
+        return response;
+    }
+
+    public static int getRoleTier(String roleName) {
+        if (roleName == null) return -1;
+        switch (roleName.toUpperCase()) {
+            case "SUPER_ADMIN": return 100;
+            case "OWNER": return 4;
+            case "ADMIN": return 3;
+            case "MANAGER": return 2;
+            case "STAFF": return 1;
+            case "CLIENT": return 0;
+            default:
+                return 1;
+        }
+    }
+
     @Transactional
     public Map<String, Object> inviteTeamMember(UUID tenantId, String email, String firstName, String lastName,
             String roleName, String phone, UUID senderId) {
-        Role role = roleRepository.findByName(roleName.toUpperCase())
-                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName));
+        String targetRoleUpper = roleName != null ? roleName.trim().toUpperCase() : "STAFF";
+
+        // Prohibit assigning SUPER_ADMIN or any platform role
+        if ("SUPER_ADMIN".equals(targetRoleUpper) || com.eventos.auth.config.PlatformRole.isPlatformRole(targetRoleUpper)) {
+            throw new SecurityException("Platform roles cannot be assigned through tenant team invitations: " + targetRoleUpper);
+        }
+
+        // Authoritative role hierarchy validation: caller may only assign roles strictly below their own effective role
+        if (senderId != null) {
+            Optional<Membership> senderMemOpt = membershipRepository.findByUserIdAndTenantId(senderId, tenantId);
+            if (senderMemOpt.isPresent()) {
+                String senderRole = senderMemOpt.get().getRole() != null ? senderMemOpt.get().getRole().getName().toUpperCase() : "STAFF";
+                int senderTier = getRoleTier(senderRole);
+                int targetTier = getRoleTier(targetRoleUpper);
+                if (targetTier >= senderTier) {
+                    throw new SecurityException("Privilege escalation denied: You cannot invite or assign a role ('"
+                            + targetRoleUpper + "') equal to or higher than your own effective role ('" + senderRole + "')");
+                }
+            }
+        }
+
+        Role role = roleRepository.findByNameIgnoreCaseAndTenantId(targetRoleUpper, tenantId)
+                .or(() -> roleRepository.findByName(targetRoleUpper))
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + targetRoleUpper));
 
         List<Company> companies = companyRepository.findByTenantId(tenantId);
         UUID companyId = companies.isEmpty() ? tenantId : companies.get(0).getId();
@@ -735,7 +1070,7 @@ public class AuthService {
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("message", "Invitation sent to existing user");
-            result.put("inviteToken", rawToken);
+            // SEC-2N-B: Never return inviteToken in response payload
             return result;
         } else {
             User pendingUser = User.builder()
@@ -771,7 +1106,7 @@ public class AuthService {
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("message", "New user invited in PENDING status");
-            result.put("inviteToken", rawToken);
+            // SEC-2N-B: Never return inviteToken in response payload
             return result;
         }
     }
@@ -797,9 +1132,14 @@ public class AuthService {
         User user = userRepository.findByEmail(invitation.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User associated with invitation not found"));
 
-        user.setStatus("ACTIVE");
-        user.setPasswordHash(passwordEncoder.encode(password));
-        userRepository.save(user);
+        // SEC-2N-B: Distinguish existing user from brand new pending user
+        boolean isExistingUser = !"PENDING".equalsIgnoreCase(user.getStatus());
+        if (!isExistingUser) {
+            user.setStatus("ACTIVE");
+            user.setPasswordHash(passwordEncoder.encode(password));
+            user.setEmailVerified(true);
+            userRepository.save(user);
+        }
 
         Membership membership = membershipRepository.findByUserIdAndTenantId(user.getId(), invitation.getTenantId())
                 .orElseThrow(() -> new IllegalStateException("Membership associated with invitation not found"));
@@ -844,13 +1184,6 @@ public class AuthService {
             userRepository.findById(senderId).ifPresent(invitation::setInvitedBy);
         }
         invitationRepository.save(invitation);
-
-        if (logTokens) {
-            System.out.println("=================================================");
-            System.out.println("TEAM INVITATION CREATED FOR: " + email);
-            System.out.println("INVITATION TOKEN: " + rawToken);
-            System.out.println("=================================================");
-        }
 
         return rawToken;
     }
@@ -924,8 +1257,11 @@ public class AuthService {
             throw new SecurityException("Unauthorized session access");
         }
 
+        revokeSingleSession(sessionId);
         sessionRepository.delete(session);
-        refreshTokenRepository.delete(session.getRefreshToken());
+        if (session.getRefreshToken() != null) {
+            refreshTokenRepository.delete(session.getRefreshToken());
+        }
         auditLogService.logEvent(tenantId, userId, "SESSION_REVOKED", null, null,
                 "Active session revoked manually: " + sessionId);
     }
@@ -998,7 +1334,7 @@ public class AuthService {
                 deviceId,
                 sessionId.toString());
 
-        String newRawToken = UUID.randomUUID().toString();
+        String newRawToken = generateSecureRefreshToken();
         String newHash = sha256(newRawToken);
 
         RefreshToken newToken = RefreshToken.builder()
@@ -1054,7 +1390,7 @@ public class AuthService {
         return response;
     }
 
-    private String sha256(String data) {
+    public static String sha256(String data) {
         try {
             java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(data.getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -1072,18 +1408,22 @@ public class AuthService {
     }
 
     public void checkRateLimit(String ipAddress) {
-        String key = "rate:limit:ip:" + ipAddress;
-        String countStr = stringRedisTemplate.opsForValue().get(key);
-        int count = countStr != null ? Integer.parseInt(countStr) : 0;
-
-        if (count >= 100) {
-            throw new IllegalStateException("Too many requests from this IP. Please try again later.");
+        if (ipAddress == null || ipAddress.trim().isEmpty()) {
+            return;
         }
-
-        if (count == 0) {
-            stringRedisTemplate.opsForValue().set(key, "1", 1, TimeUnit.MINUTES);
-        } else {
-            stringRedisTemplate.opsForValue().increment(key);
+        if (rateLimiterService != null) {
+            rateLimiterService.checkRateLimit("rate:limit:auth:ip:" + ipAddress.trim(), 100, 60, "IP_RATE_LIMIT");
+            return;
+        }
+        if (stringRedisTemplate != null) {
+            String key = "rate:limit:ip:" + ipAddress.trim();
+            Long count = stringRedisTemplate.opsForValue().increment(key);
+            if (count != null && count == 1L) {
+                stringRedisTemplate.expire(key, 1, TimeUnit.MINUTES);
+            }
+            if (count != null && count > 100) {
+                throw new com.eventos.auth.exception.RateLimitExceededException(60, "Too many requests from this IP. Please try again later.");
+            }
         }
     }
 
@@ -1180,6 +1520,9 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> verifyOtp(String email, String otp) {
+        if (email != null && rateLimiterService != null) {
+            rateLimiterService.checkOtpVerifyRateLimit(email.trim().toLowerCase());
+        }
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User with this email does not exist"));
 
@@ -1226,33 +1569,30 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> resendVerification(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User with this email does not exist"));
-
-        if (user.isEmailVerified()) {
-            throw new IllegalArgumentException("Email is already verified");
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
         }
+        String cleanEmail = email.trim().toLowerCase();
 
-        String verificationToken = String.format("%06d", secureRandom.nextInt(1000000));
-        user.setEmailVerificationToken(verificationToken);
-        user.setEmailVerificationTokenExpiry(LocalDateTime.now().plusMinutes(15));
-        userRepository.save(user);
+        Optional<User> userOpt = userRepository.findByEmail(cleanEmail);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (!user.isEmailVerified()) {
+                String verificationToken = String.format("%06d", secureRandom.nextInt(1000000));
+                user.setEmailVerificationToken(verificationToken);
+                user.setEmailVerificationTokenExpiry(LocalDateTime.now().plusMinutes(15));
+                userRepository.save(user);
 
-        // Send Email Verification
-        emailService.sendVerificationEmail(email, verificationToken);
+                // Send Email Verification
+                if (emailService != null) {
+                    emailService.sendVerificationEmail(cleanEmail, verificationToken);
+                }
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Verification token resent successfully");
-
-        if (logTokens && ("dev".equalsIgnoreCase(activeProfile) || "test".equalsIgnoreCase(activeProfile))) {
-            System.out.println("=================================================");
-            System.out.println("RESENT EMAIL VERIFICATION FOR: " + email);
-            System.out.println("NEW VERIFICATION TOKEN: " + verificationToken);
-            System.out.println("=================================================");
-            response.put("verificationToken", verificationToken);
-        }
-
+        response.put("message", "If the account exists and is unverified, a verification email has been sent.");
         return response;
     }
 
@@ -1280,6 +1620,7 @@ public class AuthService {
         // Revoke active sessions (force re-login on all devices)
         sessionRepository.deleteAllByUserId(user.getId());
         refreshTokenRepository.deleteByUser(user);
+        revokeAllUserSessions(user.getId());
 
         auditLogService.logEvent(null, user.getId(), "PASSWORD_CHANGE_SUCCESS", null, null,
                 "Password changed successfully. Active sessions revoked for user: " + user.getEmail());
@@ -1298,6 +1639,7 @@ public class AuthService {
         // Revoke all active sessions and tokens
         sessionRepository.deleteAllByUserId(userId);
         refreshTokenRepository.deleteByUser(user);
+        revokeAllUserSessions(userId);
 
         // Soft delete user or hard delete depending on microservice policy
         user.setDeleted(true);
@@ -1502,7 +1844,7 @@ public class AuthService {
                     sessionId.toString());
 
             // Generate Refresh Token
-            String rawToken = UUID.randomUUID().toString();
+            String rawToken = generateSecureRefreshToken();
             String tokenHash = sha256(rawToken);
 
             RefreshToken refreshToken = RefreshToken.builder()
@@ -1564,30 +1906,31 @@ public class AuthService {
 
         String cleanEmail = email.trim().toLowerCase();
 
-        // Ensure user exists before sending magic link
-        if (!userRepository.existsByEmail(cleanEmail)) {
-            throw new IllegalArgumentException("No registered account found with email: " + cleanEmail);
+        if (rateLimiterService != null) {
+            rateLimiterService.checkMagicLinkRateLimit(cleanEmail);
         }
 
-        String magicToken = UUID.randomUUID().toString();
-        String redisKey = "MAGIC_LINK:" + magicToken;
-        storeTokenFallback(redisKey, cleanEmail, 15);
+        // Only send if account exists, but do not leak existence in response (SEC-2N-A / SEC-2N-G)
+        if (userRepository.existsByEmail(cleanEmail)) {
+            String magicToken = UUID.randomUUID().toString();
+            String redisKey = "MAGIC_LINK:" + magicToken;
+            storeTokenFallback(redisKey, cleanEmail, 15);
 
-        String magicUrl = frontendUrl + "/login?magicToken=" + magicToken;
-        log.info("[MAGIC_LINK_GENERATED] Email: {} | Direct Link: {}", cleanEmail, magicUrl);
+            log.info("[MAGIC_LINK_GENERATED] 1-Click Magic Link dispatched for email: {}", cleanEmail);
 
-        try {
-            if (emailService != null) {
-                emailService.sendMagicLinkEmail(cleanEmail, magicToken);
+            try {
+                if (emailService != null) {
+                    emailService.sendMagicLinkEmail(cleanEmail, magicToken);
+                }
+            } catch (Exception e) {
+                log.error("[MAGIC_LINK] SMTP email dispatch failed for {}: {}", cleanEmail, e.getMessage());
             }
-        } catch (Exception e) {
-            log.error("[MAGIC_LINK] SMTP email dispatch failed for {}: {}", cleanEmail, e.getMessage());
         }
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "1-Click Magic Link dispatched to " + cleanEmail);
-        response.put("magicLinkUrl", magicUrl);
+        response.put("message", "If the account exists, a sign-in link has been sent.");
+        // SEC-2N-A: Never return magicToken or magicLinkUrl in HTTP response
         return response;
     }
 
@@ -1619,7 +1962,7 @@ public class AuthService {
                 stringRedisTemplate.expire(redisKey, 60, TimeUnit.SECONDS);
             }
         } catch (Exception e) {
-            log.warn("[MAGIC_LINK] Failed to set expiry on used token {}: {}", token, e.getMessage());
+            log.warn("[MAGIC_LINK] Failed to set expiry on used token: {}", e.getMessage());
         }
         localTokenExpiry.put(redisKey, System.currentTimeMillis() + 60000L);
 
@@ -1629,7 +1972,7 @@ public class AuthService {
         }
         Membership selectedMembership = allMemberships.get(0);
 
-        String rawToken = UUID.randomUUID().toString();
+        String rawToken = generateSecureRefreshToken();
         String tokenHash = sha256(rawToken);
 
         RefreshToken refreshToken = RefreshToken.builder()
@@ -1692,6 +2035,9 @@ public class AuthService {
         }
 
         String cleanPhone = phone.replaceAll("[^0-9+]", "");
+        if (rateLimiterService != null) {
+            rateLimiterService.checkOtpDispatchRateLimit(cleanPhone);
+        }
         SecureRandom random = new SecureRandom();
         String otp = String.format("%06d", random.nextInt(1000000));
         String redisKey = "WA_OTP:" + cleanPhone;
@@ -1704,7 +2050,7 @@ public class AuthService {
             log.warn("[WHATSAPP_OTP] Redis unavailable for phone {}", cleanPhone);
         }
 
-        log.info("[WHATSAPP_OTP] Dispatched 6-digit OTP [{}] to WhatsApp number {}", otp, cleanPhone);
+        log.info("[WHATSAPP_OTP] Dispatched 6-digit OTP challenge to WhatsApp number: {}", cleanPhone);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -1719,6 +2065,9 @@ public class AuthService {
         }
 
         String cleanPhone = phone.replaceAll("[^0-9+]", "");
+        if (rateLimiterService != null) {
+            rateLimiterService.checkOtpVerifyRateLimit(cleanPhone);
+        }
         String redisKey = "WA_OTP:" + cleanPhone;
         String cachedOtp = null;
 
@@ -1748,21 +2097,51 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("No registered user found for phone number: " + cleanPhone));
 
         Membership selectedMembership = membershipRepository.findAllByUserId(user.getId())
-                .stream().findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("User has no active workspace membership"));
+                .stream()
+                .filter(m -> "ACTIVE".equals(m.getStatus()))
+                .findFirst()
+                .orElse(membershipRepository.findAllByUserId(user.getId()).stream().findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("User has no active workspace membership")));
 
-        String rawToken = UUID.randomUUID().toString();
+        // SEC-2N-D: Complete session lifecycle persistence matching standard login
+        String rawToken = generateSecureRefreshToken();
+        String tokenHash = sha256(rawToken);
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .user(user)
+                .token(tokenHash)
+                .tenantId(selectedMembership.getTenantId())
+                .expiryDate(LocalDateTime.now().plusNanos(refreshExpirationMs * 1_000_000))
+                .build();
+        refreshToken = refreshTokenRepository.save(refreshToken);
+
+        UUID sessionId = UUID.randomUUID();
+        enforceSessionLimit(user, selectedMembership.getTenantId(), refreshToken, null, null, null, null, sessionId);
+
         List<String> permissions = extractPermissionsFromRole(selectedMembership.getRole());
+        String primaryCompanyName = companyRepository.findById(selectedMembership.getCompanyId())
+                .map(Company::getName)
+                .orElse("Unknown Company");
 
         String accessToken = jwtService.generateToken(
                 user,
                 selectedMembership.getTenantId(),
                 selectedMembership.getRole().getName(),
                 permissions,
-                "",
+                primaryCompanyName,
                 selectedMembership.getTenantId(),
                 "",
-                "");
+                sessionId.toString());
+
+        List<Map<String, Object>> membershipList = new ArrayList<>();
+        for (Membership m : membershipRepository.findAllByUserId(user.getId())) {
+            Map<String, Object> mInfo = new HashMap<>();
+            mInfo.put("tenantId", m.getTenantId().toString());
+            mInfo.put("companyId", m.getCompanyId().toString());
+            mInfo.put("role", m.getRole().getName());
+            mInfo.put("status", m.getStatus());
+            membershipList.add(mInfo);
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", accessToken);
@@ -1773,6 +2152,8 @@ public class AuthService {
         response.put("role", selectedMembership.getRole().getName());
         response.put("firstName", user.getFirstName());
         response.put("lastName", user.getLastName());
+        response.put("memberships", membershipList);
+        response.put("permissions", permissions);
 
         return response;
     }

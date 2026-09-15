@@ -21,9 +21,8 @@ public class WorkspaceController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
-    public ResponseEntity<?> getWorkspaceSettings(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getWorkspaceSettings() {
+        UUID tenantId = getTenantId();
         Company company = workspaceService.getWorkspaceSettings(tenantId);
         
         Map<String, Object> response = new HashMap<>();
@@ -35,9 +34,8 @@ public class WorkspaceController {
     @PutMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> updateWorkspaceSettings(
-            @RequestBody Company updatedCompany,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Company updatedCompany) {
+        UUID tenantId = getTenantId();
         Company company = workspaceService.updateWorkspaceSettings(tenantId, updatedCompany);
         
         Map<String, Object> response = new HashMap<>();
@@ -48,9 +46,8 @@ public class WorkspaceController {
 
     @GetMapping("/whatsapp")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
-    public ResponseEntity<?> getWhatsAppSettings(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getWhatsAppSettings() {
+        UUID tenantId = getTenantId();
         Company company = workspaceService.getWorkspaceSettings(tenantId);
         
         Map<String, Object> response = new HashMap<>();
@@ -62,9 +59,8 @@ public class WorkspaceController {
     @PostMapping("/whatsapp")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> updateWhatsAppSettings(
-            @RequestBody Map<String, Object> payload,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+            @RequestBody Map<String, Object> payload) {
+        UUID tenantId = getTenantId();
         Company company = workspaceService.getWorkspaceSettings(tenantId);
         
         try {
@@ -82,7 +78,7 @@ public class WorkspaceController {
         return ResponseEntity.ok(response);
     }
 
-    private UUID getTenantId(String header) {
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
@@ -91,10 +87,7 @@ public class WorkspaceController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 }

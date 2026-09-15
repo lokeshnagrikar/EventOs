@@ -30,9 +30,8 @@ public class SecurityController {
 
     @GetMapping("/sessions")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
-    public ResponseEntity<?> getActiveSessions(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getActiveSessions() {
+        UUID tenantId = getTenantId();
         UUID userId = getCurrentUserId();
 
         List<Map<String, Object>> sessions = authService.getActiveSessions(userId, tenantId, null);
@@ -45,9 +44,8 @@ public class SecurityController {
     @DeleteMapping("/sessions/{sessionId}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
     public ResponseEntity<?> revokeSession(
-            @PathVariable UUID sessionId,
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        authService.revokeSession(sessionId, getCurrentUserId(), getTenantId(tenantIdHeader));
+            @PathVariable UUID sessionId) {
+        authService.revokeSession(sessionId, getCurrentUserId(), getTenantId());
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("message", "Session revoked successfully");
@@ -66,11 +64,14 @@ public class SecurityController {
         return ResponseEntity.ok(response);
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.eventos.auth.service.TotpService totpService;
+
     @PostMapping("/2fa/setup")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
     public ResponseEntity<?> setup2FA() {
         UUID userId = getCurrentUserId();
-        String secret = Base64.getEncoder().encodeToString(UUID.randomUUID().toString().substring(0, 10).getBytes());
+        String secret = totpService != null ? totpService.generateSecret() : Base64.getEncoder().encodeToString(UUID.randomUUID().toString().substring(0, 10).getBytes());
 
         User2Fa user2Fa = user2FaRepository.findById(userId).orElse(new User2Fa());
         user2Fa.setUserId(userId);
@@ -94,13 +95,17 @@ public class SecurityController {
         User2Fa user2Fa = user2FaRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("2FA not set up yet"));
 
-        // Simple mock validation (accept any 6-digit code for this module's scope)
-        if (code == null || code.length() != 6) {
-            return ResponseEntity.badRequest().body(createErrorResponse("INVALID_CODE", "Invalid verification code"));
+        if (code == null || code.trim().length() != 6) {
+            return ResponseEntity.badRequest().body(createErrorResponse("INVALID_CODE", "Invalid verification code format"));
+        }
+
+        if (totpService != null && !totpService.verifyCode(user2Fa.getSecret(), code)) {
+            return ResponseEntity.badRequest().body(createErrorResponse("INVALID_CODE", "Invalid TOTP verification code"));
         }
 
         user2Fa.setEnabled(true);
-        user2Fa.setBackupCodes(String.join(",", Arrays.asList("123456", "234567", "345678", "456789", "567890")));
+        List<String> backupCodes = totpService != null ? totpService.generateBackupCodes() : Arrays.asList("12345678", "23456789", "34567890", "45678901", "56789012");
+        user2Fa.setBackupCodes(String.join(",", backupCodes));
         user2FaRepository.save(user2Fa);
 
         Map<String, Object> response = new HashMap<>();
@@ -162,9 +167,8 @@ public class SecurityController {
 
     @GetMapping("/logs")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public ResponseEntity<?> getSecurityLogs(
-            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
-        UUID tenantId = getTenantId(tenantIdHeader);
+    public ResponseEntity<?> getSecurityLogs() {
+        UUID tenantId = getTenantId();
         List<AuditLog> logs = auditLogRepository.findAllByTenantId(tenantId);
 
         // Filter logs related to security actions
@@ -180,7 +184,7 @@ public class SecurityController {
         return ResponseEntity.ok(response);
     }
 
-    private UUID getTenantId(String header) {
+    private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
@@ -189,11 +193,8 @@ public class SecurityController {
                 return tenantId;
             }
         }
-        if (header != null && !header.isEmpty()) {
-            return UUID.fromString(header);
-        }
         throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Tenant ID context is missing");
+                org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
 
     private UUID getCurrentUserId() {

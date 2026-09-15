@@ -74,6 +74,7 @@ import {
 } from "recharts";
 import { useToastStore } from "@/lib/toastStore";
 import { useAuthStore } from "@/store/authStore";
+import { setClientCookie } from "@/lib/clientCookies";
 import { useSocket } from "@/context/SocketContext";
 import { AuroraText } from "@/components/ui/aurora-text";
 import PageShell from "@/components/ui/PageShell";
@@ -135,7 +136,7 @@ const INITIAL_ANNOUNCEMENT_HISTORY = [
 export default function SuperAdminDashboard() {
   const router = useRouter();
   const { addToast } = useToastStore();
-  const { user, clearAuth } = useAuthStore();
+  const { user, clearAuth, logout } = useAuthStore();
   const { status: socketStatus, subscribe: socketSubscribe } = useSocket();
 
   const [tenants, setTenants] = useState<any[]>([]);
@@ -423,9 +424,9 @@ export default function SuperAdminDashboard() {
             memberships
           );
 
-          document.cookie = "hasSession=true; path=/; SameSite=Lax";
-          document.cookie = `user_name=${encodeURIComponent(payload.firstName)}; path=/; SameSite=Lax`;
-          document.cookie = `user_role=${payload.roles}; path=/; SameSite=Lax`;
+          setClientCookie("hasSession", "true", 604800);
+          setClientCookie("user_name", payload.firstName, 604800);
+          setClientCookie("user_role", payload.roles, 604800);
           localStorage.setItem("user_name", payload.firstName);
           localStorage.setItem("user_role", payload.roles);
 
@@ -491,7 +492,7 @@ export default function SuperAdminDashboard() {
       try {
         const { apiClient } = require("@/lib/api-client");
         await apiClient.post(`/auth/billing/superadmin/users/reset-password`, { email });
-        addToast(`🔑 Safe password reset executed for: ${email}. Temporary password set to 'admin123'.`, "success");
+        addToast(`🔑 Safe password reset dispatched for: ${email}. One-time reset link sent to user email.`, "success");
       } catch (err) {
         addToast(`🔑 Password reset link dispatched to: ${email}`, "success");
       }
@@ -606,7 +607,13 @@ export default function SuperAdminDashboard() {
             </button>
 
             <button
-              onClick={clearAuth}
+              onClick={async () => {
+                try {
+                  await logout();
+                } finally {
+                  router.push("/superadmin/login");
+                }
+              }}
               className="flex items-center gap-1.5 px-3.5 py-1.8 border border-white/[0.06] hover:bg-red-500/10 hover:border-red-500/20 text-zinc-400 hover:text-red-400 rounded-xl text-xs font-bold transition cursor-pointer"
             >
               <LogOut size={13} /> Exit Console

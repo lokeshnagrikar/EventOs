@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": "wtl_mu2dsr22bw03",
+    "name": "Legitimate Lead",
+    "agencyName": "Legit Events LLP",
+    "email": "legit@eventosapp.in",
+    "whatsapp": "+919876543210",
+    "eventType": "Corporate",
+    "currentTools": "Not specified",
+    "joinedAt": "2026-09-15T07:59:48.986Z",
+    "isFoundingMember": true,
+    "status": "WAITLIST"
+  },
+  {
+    "id": "wtl_mu2dsr0fgyvn",
+    "name": "Security Audit Lead",
+    "agencyName": "Audit Agency",
+    "email": "audit-test@eventosapp.in",
+    "whatsapp": "+919999988888",
+    "eventType": "Weddings",
+    "currentTools": "Not specified",
+    "joinedAt": "2026-09-15T07:59:48.927Z",
+    "isFoundingMember": true,
+    "status": "WAITLIST"
+  }
+]

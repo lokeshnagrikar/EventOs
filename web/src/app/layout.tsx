@@ -33,38 +33,56 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "EventOS | The Operating System for Event Businesses",
-  description: "Centralize your leads, events, quotes, and invoice payments on the premium operating system designed specifically for event agencies, planners, and coordinators.",
+  title: "EventOS | Event Management & Wedding Planner Software for Agencies",
+  description: "EventOS is the all-in-one event management software and CRM built for Indian wedding planners and boutique event agencies. Manage leads, quotations, milestone payments, timelines, and client portals from one workspace.",
   keywords: [
-    "event management saas",
-    "event planner CRM",
-    "wedding planners dashboard",
-    "event coordinator software",
-    "multi-tenant event app",
-    "client portal event billing"
+    "event management software",
+    "event management software India",
+    "wedding planner software",
+    "wedding management software",
+    "event agency management software",
+    "wedding agency CRM",
+    "event planning CRM",
+    "event management CRM India",
+    "Indian wedding planning software",
+    "client portal for event planners"
   ],
   authors: [{ name: "EventOS Team" }],
   metadataBase: new URL("https://eventos.io"),
+  alternates: {
+    canonical: "https://eventos.io",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
-    title: "EventOS | The Operating System for Event Businesses",
-    description: "Centralize client proposals, contracts, timelines, payments, and high-res media galleries in one premium, secure tenant workspace.",
+    title: "EventOS | Event Management & Wedding Planner Software for Agencies",
+    description: "Centralize leads, proposals, milestone payments, event timelines, and client portals in one premium workspace designed for wedding planners and event agencies in India.",
     url: "https://eventos.io",
     siteName: "EventOS",
-    locale: "en_US",
+    locale: "en_IN",
     type: "website",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "EventOS Command Center Preview",
+        alt: "EventOS Event Management & Wedding Planner Software",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "EventOS | The Operating System for Event Businesses",
-    description: "Manage client contracts, invoices, timelines, and galleries within a modern, unified SaaS platform.",
+    title: "EventOS | Event Management & Wedding Planner Software for Agencies",
+    description: "Manage client contracts, invoices, timelines, and client portals within a unified SaaS platform built for event agencies.",
     images: ["/og-image.jpg"],
     creator: "@eventos_hq",
   },
@@ -90,16 +108,37 @@ export default async function RootLayout({
   // Structured Data (JSON-LD)
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "EventOS",
-    "applicationCategory": "BusinessApplication",
-    "operatingSystem": "All",
-    "description": "Multi-tenant Event Management SaaS operating system featuring client portals, invoicing, task workflows, and photo galleries.",
-    "offers": {
-      "@type": "Offer",
-      "price": "1999.00",
-      "priceCurrency": "INR"
-    }
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://eventos.io/#software",
+        "name": "EventOS",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web, iOS, Android (PWA)",
+        "description": "Event management software and CRM for Indian wedding planners and event agencies. Manages lead pipelines, proposal generation, milestone payments, timelines, and client portals.",
+        "offers": {
+          "@type": "AggregateOffer",
+          "priceCurrency": "INR",
+          "lowPrice": "1599.00",
+          "highPrice": "9999.00",
+          "offerCount": "3"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://eventos.io/#organization",
+        "name": "EventOS",
+        "url": "https://eventos.io",
+        "logo": "https://eventos.io/logo/logo.png",
+        "founder": {
+          "@type": "Person",
+          "name": "Lokesh Nagrikar"
+        },
+        "sameAs": [
+          "https://www.instagram.com/solo.founder.ai/"
+        ]
+      }
+    ]
   };
 
   return (

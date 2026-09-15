@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class JwtService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JwtService.class);
+
     @Autowired(required = false)
     private StringRedisTemplate redisTemplate;
 
@@ -45,49 +47,86 @@ public class JwtService {
 
     private javax.crypto.SecretKey symmetricKey;
     private boolean useSymmetric = false;
+    private boolean isEphemeral = false;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.core.env.Environment env;
+
+    public boolean isRs256Configured() {
+        return !useSymmetric && privateKey != null && publicKey != null && !isEphemeral;
+    }
+
+    public boolean isSymmetric() {
+        return useSymmetric;
+    }
+
+    public boolean isEphemeral() {
+        return isEphemeral;
+    }
+
+    private boolean isProductionProfile() {
+        if (env != null) {
+            for (String profile : env.getActiveProfiles()) {
+                if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
+                    return true;
+                }
+            }
+        }
+        String sysProfile = System.getProperty("spring.profiles.active");
+        if (sysProfile != null && ("prod".equalsIgnoreCase(sysProfile) || "production".equalsIgnoreCase(sysProfile))) {
+            return true;
+        }
+        String envProfile = System.getenv("SPRING_PROFILES_ACTIVE");
+        return envProfile != null && ("prod".equalsIgnoreCase(envProfile) || "production".equalsIgnoreCase(envProfile));
+    }
 
     @jakarta.annotation.PostConstruct
     public void init() {
+        boolean isProd = isProductionProfile();
         try {
-            if (rawPrivateKey == null || rawPrivateKey.isEmpty() || rawPublicKey == null || rawPublicKey.isEmpty()) {
-                String keyPath = System.getenv().getOrDefault("JWT_KEY_PATH", ".");
-                java.io.File privateKeyFile = new java.io.File(keyPath, "jwt_private.pem");
-                java.io.File publicKeyFile = new java.io.File(keyPath, "jwt_public.pem");
+            if (isProd) {
+                if (rawPrivateKey != null && !rawPrivateKey.trim().isEmpty() && rawPublicKey != null && !rawPublicKey.trim().isEmpty()) {
+                    this.privateKey = parsePrivateKey(rawPrivateKey);
+                    this.publicKey = parsePublicKey(rawPublicKey);
+                } else if (System.getenv("JWT_KEY_PATH") != null) {
+                    String keyPath = System.getenv("JWT_KEY_PATH");
+                    java.io.File privateKeyFile = new java.io.File(keyPath, "jwt_private.pem");
+                    java.io.File publicKeyFile = new java.io.File(keyPath, "jwt_public.pem");
+                    if (privateKeyFile.exists() && publicKeyFile.exists()) {
+                        String privatePem = java.nio.file.Files.readString(privateKeyFile.toPath());
+                        String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
+                        this.privateKey = parsePrivateKey(privatePem);
+                        this.publicKey = parsePublicKey(publicPem);
+                    } else {
+                        throw new IllegalStateException("CRITICAL SECURITY VIOLATION: Production requires explicit RS256 key configuration (JWT_PRIVATE_KEY and JWT_PUBLIC_KEY). Key files not found in JWT_KEY_PATH: " + keyPath);
+                    }
+                } else {
+                    throw new IllegalStateException("CRITICAL SECURITY VIOLATION: Production requires explicit RS256 key configuration (JWT_PRIVATE_KEY and JWT_PUBLIC_KEY). Insecure fallbacks and ephemeral keys are prohibited.");
+                }
+            } else {
+                if (rawPrivateKey != null && !rawPrivateKey.isEmpty() && rawPublicKey != null && !rawPublicKey.isEmpty()) {
+                    this.privateKey = parsePrivateKey(rawPrivateKey);
+                    this.publicKey = parsePublicKey(rawPublicKey);
+                } else if (System.getenv("JWT_KEY_PATH") != null) {
+                    String keyPath = System.getenv("JWT_KEY_PATH");
+                    java.io.File privateKeyFile = new java.io.File(keyPath, "jwt_private.pem");
+                    java.io.File publicKeyFile = new java.io.File(keyPath, "jwt_public.pem");
 
-                if (!privateKeyFile.exists()) {
-                    java.io.File parentTry = new java.io.File("../jwt_private.pem");
-                    if (parentTry.exists()) {
-                        privateKeyFile = parentTry;
-                        publicKeyFile = new java.io.File("../jwt_public.pem");
+                    if (privateKeyFile.exists() && publicKeyFile.exists()) {
+                        String privatePem = java.nio.file.Files.readString(privateKeyFile.toPath());
+                        String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
+                        this.privateKey = parsePrivateKey(privatePem);
+                        this.publicKey = parsePublicKey(publicPem);
+                    } else {
+                        log.warn("JWT_KEY_PATH configured but PEM files missing in: {}. Generating ephemeral keypair.", keyPath);
+                        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+                        keyGen.initialize(2048);
+                        KeyPair keyPair = keyGen.generateKeyPair();
+                        this.privateKey = (RSAPrivateKey) keyPair.getPrivate();
+                        this.publicKey = (RSAPublicKey) keyPair.getPublic();
+                        this.isEphemeral = true;
                     }
-                }
-                if (!privateKeyFile.exists()) {
-                    java.io.File doubleParentTry = new java.io.File("../../jwt_private.pem");
-                    if (doubleParentTry.exists()) {
-                        privateKeyFile = doubleParentTry;
-                        publicKeyFile = new java.io.File("../../jwt_public.pem");
-                    }
-                }
-                if (!privateKeyFile.exists()) {
-                    java.io.File absoluteTry = new java.io.File("d:/EventOs/jwt_private.pem");
-                    if (absoluteTry.exists()) {
-                        privateKeyFile = absoluteTry;
-                        publicKeyFile = new java.io.File("d:/EventOs/jwt_public.pem");
-                    }
-                }
-
-                if (privateKeyFile.exists() && publicKeyFile.exists()) {
-                    String privatePem = java.nio.file.Files.readString(privateKeyFile.toPath());
-                    String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
-                    this.privateKey = parsePrivateKey(privatePem);
-                    this.publicKey = parsePublicKey(publicPem);
                 } else if (jwtSecret != null && !jwtSecret.trim().isEmpty() && jwtSecret.length() >= 32) {
-                    if ("9a4f2c8d7e6b5a3f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d".equals(jwtSecret.trim())) {
-                        String profile = System.getenv("SPRING_PROFILES_ACTIVE");
-                        if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
-                            System.err.println("[JWT_SECURITY_WARN] Default development JWT secret detected in production environment. Please configure a unique JWT_SECRET_KEY.");
-                        }
-                    }
                     byte[] secretBytes = jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
                     this.symmetricKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretBytes);
                     this.useSymmetric = true;
@@ -97,11 +136,10 @@ public class JwtService {
                     KeyPair keyPair = keyGen.generateKeyPair();
                     this.privateKey = (RSAPrivateKey) keyPair.getPrivate();
                     this.publicKey = (RSAPublicKey) keyPair.getPublic();
+                    this.isEphemeral = true;
                 }
-            } else {
-                this.privateKey = parsePrivateKey(rawPrivateKey);
-                this.publicKey = parsePublicKey(rawPublicKey);
             }
+
             io.jsonwebtoken.JwtParserBuilder parserBuilder = Jwts.parser();
             if (useSymmetric) {
                 parserBuilder.verifyWith(symmetricKey);
@@ -110,6 +148,9 @@ public class JwtService {
             }
             this.jwtParser = parserBuilder.build();
         } catch (Exception e) {
+            if (e instanceof IllegalStateException) {
+                throw (IllegalStateException) e;
+            }
             throw new RuntimeException("Failed to initialize JWT Cryptographic Keys", e);
         }
     }
@@ -128,6 +169,13 @@ public class JwtService {
                                  java.util.List<String> permissions, String companyName, 
                                  java.util.UUID workspaceId, String deviceId, String sessionId,
                                  boolean impersonated) {
+        return generateToken(user, tenantId, role, permissions, companyName, workspaceId, deviceId, sessionId, impersonated, null);
+    }
+
+    public String generateToken(User user, java.util.UUID tenantId, String role, 
+                                 java.util.List<String> permissions, String companyName, 
+                                 java.util.UUID workspaceId, String deviceId, String sessionId,
+                                 boolean impersonated, java.util.UUID adminUserId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenantId", tenantId.toString());
         claims.put("userId", user.getId().toString());
@@ -141,11 +189,16 @@ public class JwtService {
         claims.put("lastName", user.getLastName());
         claims.put("email", user.getEmail());
         claims.put("impersonated", impersonated);
+        if (impersonated && adminUserId != null) {
+            claims.put("adminUserId", adminUserId.toString());
+        }
 
         if (useSymmetric) {
             return Jwts.builder()
                     .claims(claims)
                     .subject(user.getEmail())
+                    .issuer("eventos-auth-service")
+                    .audience().add("eventos-platform").and()
                     .issuedAt(new Date())
                     .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                     .signWith(symmetricKey, Jwts.SIG.HS256)
@@ -154,6 +207,8 @@ public class JwtService {
             return Jwts.builder()
                     .claims(claims)
                     .subject(user.getEmail())
+                    .issuer("eventos-auth-service")
+                    .audience().add("eventos-platform").and()
                     .issuedAt(new Date())
                     .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                     .signWith(privateKey, Jwts.SIG.RS256)

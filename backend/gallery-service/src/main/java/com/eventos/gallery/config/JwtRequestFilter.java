@@ -28,21 +28,62 @@ import java.util.stream.Stream;
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
-    @Value("${app.jwt.secret}")
+    @Value("${app.jwt.secret:}")
     private String jwtSecret;
+
+    @Value("${app.jwt.public-key:}")
+    private String rawPublicKey;
 
     @Value("${app.gateway.secret:}")
     private String gatewaySecret;
 
+    private java.security.interfaces.RSAPublicKey publicKey;
     private SecretKey signingKey;
     private io.jsonwebtoken.JwtParser jwtParser;
 
     @jakarta.annotation.PostConstruct
     public void init() {
-        this.signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-        this.jwtParser = Jwts.parser()
-                .verifyWith(signingKey)
-                .build();
+        try {
+            if (rawPublicKey != null && !rawPublicKey.trim().isEmpty()) {
+                this.publicKey = parsePublicKey(rawPublicKey);
+                this.jwtParser = Jwts.parser().verifyWith(this.publicKey).build();
+                logger.info("Gallery-Service: Loaded RS256 public key from environment.");
+                return;
+            }
+
+            if (System.getenv("JWT_KEY_PATH") != null) {
+                String keyPath = System.getenv("JWT_KEY_PATH");
+                java.io.File publicKeyFile = new java.io.File(keyPath, "jwt_public.pem");
+                if (publicKeyFile.exists()) {
+                    String publicPem = java.nio.file.Files.readString(publicKeyFile.toPath());
+                    this.publicKey = parsePublicKey(publicPem);
+                    this.jwtParser = Jwts.parser().verifyWith(this.publicKey).build();
+                    logger.info("Gallery-Service: RSA public key loaded for RS256 JWT validation from " + publicKeyFile.getAbsolutePath());
+                    return;
+                } else {
+                    logger.warn("Gallery-Service: JWT_KEY_PATH configured but jwt_public.pem missing in: " + keyPath);
+                }
+            }
+            if (jwtSecret != null && !jwtSecret.trim().isEmpty() && jwtSecret.length() >= 32) {
+                this.signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+                this.jwtParser = Jwts.parser().verifyWith(signingKey).build();
+                logger.info("Gallery-Service: Fallback HS256 JWT validation enabled for development.");
+            } else {
+                logger.warn("Gallery-Service: Neither RSA public key nor dev JWT secret configured. Direct Bearer token validation will be unavailable.");
+            }
+        } catch (Exception e) {
+            logger.error("Gallery-Service: Failed to initialise JWT parser", e);
+        }
+    }
+
+    private java.security.interfaces.RSAPublicKey parsePublicKey(String pem) throws Exception {
+        String key = pem
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replaceAll("\\s+", "");
+        byte[] keyBytes = java.util.Base64.getDecoder().decode(key);
+        java.security.spec.X509EncodedKeySpec spec = new java.security.spec.X509EncodedKeySpec(keyBytes);
+        return (java.security.interfaces.RSAPublicKey) java.security.KeyFactory.getInstance("RSA").generatePublic(spec);
     }
 
     @Override
@@ -59,7 +100,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String userEmailHeader = request.getHeader("X-User-Email");
         final String gatewaySecretHeader = request.getHeader("X-Gateway-Secret");
 
-        if (tenantIdHeader != null && userIdHeader != null) {
+        final boolean hasIdentityHeaders = tenantIdHeader != null || userIdHeader != null 
+                || userRolesHeader != null || userPermissionsHeader != null || userEmailHeader != null;
+
+        if (hasIdentityHeaders) {
             // Verify gateway secret to prevent header spoofing
             if (gatewaySecret == null || gatewaySecret.trim().isEmpty() || !gatewaySecret.equals(gatewaySecretHeader)) {
                 logger.warn("Blocked direct access attempt with spoofed user headers (missing or invalid gateway secret).");
@@ -68,36 +112,38 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Invalid Gateway Trust Secret\"}}");
                 return;
             }
-            try {
-                UUID tenantId = UUID.fromString(tenantIdHeader);
-                UUID userId = UUID.fromString(userIdHeader);
-                String email = userEmailHeader != null ? userEmailHeader : "";
-                String rolesStr = userRolesHeader != null ? userRolesHeader : "";
+            if (tenantIdHeader != null && userIdHeader != null) {
+                try {
+                    UUID tenantId = UUID.fromString(tenantIdHeader);
+                    UUID userId = UUID.fromString(userIdHeader);
+                    String email = userEmailHeader != null ? userEmailHeader : "";
+                    String rolesStr = userRolesHeader != null ? userRolesHeader : "";
 
-                List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
-                if (!rolesStr.isEmpty()) {
-                    for (String r : rolesStr.split(",")) {
-                        authorities.add(new SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()));
-                    }
-                }
-                if (userPermissionsHeader != null && !userPermissionsHeader.trim().isEmpty()) {
-                    String cleaned = userPermissionsHeader.replace("[", "").replace("]", "");
-                    for (String p : cleaned.split(",")) {
-                        if (!p.trim().isEmpty()) {
-                            authorities.add(new SimpleGrantedAuthority(p.trim()));
+                    List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
+                    if (!rolesStr.isEmpty()) {
+                        for (String r : rolesStr.split(",")) {
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + r.trim().toUpperCase()));
                         }
                     }
-                }
+                    if (userPermissionsHeader != null && !userPermissionsHeader.trim().isEmpty()) {
+                        String cleaned = userPermissionsHeader.replace("[", "").replace("]", "");
+                        for (String p : cleaned.split(",")) {
+                            if (!p.trim().isEmpty()) {
+                                authorities.add(new SimpleGrantedAuthority(p.trim()));
+                            }
+                        }
+                    }
 
-                UserPrincipal principal = new UserPrincipal(userId, tenantId, email, rolesStr);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        principal, null, authorities);
-                
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                TenantContext.setTenantId(tenantId);
-            } catch (Exception e) {
-                logger.warn("Failed to authenticate via Gateway headers: " + e.getMessage());
+                    UserPrincipal principal = new UserPrincipal(userId, tenantId, email, rolesStr);
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            principal, null, authorities);
+                    
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    TenantContext.setTenantId(tenantId);
+                } catch (Exception e) {
+                    logger.warn("Failed to authenticate via Gateway headers: " + e.getMessage());
+                }
             }
             try {
                 filterChain.doFilter(request, response);

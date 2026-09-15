@@ -51,11 +51,10 @@ public class BookingCreatedConsumer {
                     null,
                     null);
 
-            if (result != null && result.containsKey("inviteToken")) {
-                String token = (String) result.get("inviteToken");
-                log.info("Successfully generated client invitation. Token: {}", token);
+            if (result != null && Boolean.TRUE.equals(result.get("success"))) {
+                log.info("Successfully generated client invitation for email: {}", event.getClientEmail());
             } else {
-                log.warn("Invitation generated but no token returned for email: {}", event.getClientEmail());
+                log.warn("Invitation generation failed for email: {}", event.getClientEmail());
             }
         } catch (IllegalArgumentException e) {
             log.info("User already invited or member of tenant: {} - {}", event.getClientEmail(), e.getMessage());

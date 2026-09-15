@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-eventos_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eventos_secure_pass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in production}
       POSTGRES_DB: eventos_root
     ports:
       - "5432:5432"
@@ -44,7 +44,7 @@ services:
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-eventos_guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-eventos_guest_pass}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -67,13 +67,14 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=auth_db
       - POSTGRES_USER=${POSTGRES_USER:-eventos_admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in production}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - SPRING_PROFILES_ACTIVE=prod
       - MANAGEMENT_HEALTH_MAIL_ENABLED=false
       - SMTP_HOST=${SMTP_HOST:-smtp.resend.com}
@@ -82,10 +83,13 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - APP_MAIL_FROM=${APP_MAIL_FROM:-support@eventosapp.in}
       - FRONTEND_URL=${FRONTEND_URL:-https://eventosapp.in}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-e7f9a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:?JWT_PRIVATE_KEY must be set in production}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in production}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-171503360314-e51mor0dee5v5f5jqi3gincelrhuva4l.apps.googleusercontent.com}
       - COOKIE_SECURE=true
-      - COOKIE_SAMESITE=None
+      - COOKIE_SAMESITE=Lax
     depends_on:
       postgres:
         condition: service_healthy
@@ -105,15 +109,17 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=crm_db
       - POSTGRES_USER=${POSTGRES_USER:-eventos_admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in production}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:-eventos_guest_pass}
-      - SPRING_PROFILES_ACTIVE=dev
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
+      - SPRING_PROFILES_ACTIVE=prod
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
     depends_on:
       postgres:
         condition: service_healthy
@@ -133,15 +139,17 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=event_db
       - POSTGRES_USER=${POSTGRES_USER:-eventos_admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in production}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:-eventos_guest_pass}
-      - SPRING_PROFILES_ACTIVE=dev
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
+      - SPRING_PROFILES_ACTIVE=prod
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
     depends_on:
       postgres:
         condition: service_healthy
@@ -161,15 +169,17 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=gallery_db
       - POSTGRES_USER=${POSTGRES_USER:-eventos_admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eventos_secure_pass}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in production}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:-eventos_guest_pass}
-      - SPRING_PROFILES_ACTIVE=dev
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
+      - SPRING_PROFILES_ACTIVE=prod
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
     depends_on:
       postgres:
         condition: service_healthy
@@ -192,12 +202,13 @@ services:
       - CRM_SERVICE_URL=http://crm-service:8082
       - EVENT_SERVICE_URL=http://event-service:8083
       - GALLERY_SERVICE_URL=http://gallery-service:8084
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=prod
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_URL=redis://redis:6379
-      - CORS_ALLOWED_ORIGINS=https://eventosapp.in,https://www.eventosapp.in,https://event-os-woad.vercel.app,http://localhost:3000
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-e7f9a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9}
+      - CORS_ALLOWED_ORIGINS=https://eventosapp.in,https://www.eventosapp.in,https://event-os-woad.vercel.app
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
     depends_on:
       - auth-service
       - crm-service

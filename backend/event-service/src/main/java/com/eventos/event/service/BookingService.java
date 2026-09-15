@@ -79,6 +79,9 @@ public class BookingService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private RestTemplate restTemplate = new RestTemplate();
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.eventos.event.repository.PaymentRepository paymentRepository;
+
     @Value("${service.crm.base-url:http://localhost:8082/api/v1}")
     private String crmServiceBaseUrl;
 
@@ -608,22 +611,59 @@ public class BookingService {
         return saved;
     }
 
-    public Booking updatePaidAmount(UUID id, BigDecimal amount, UUID tenantId) {
-        Booking booking = getBookingById(id, tenantId);
-        BigDecimal oldPaid = booking.getPaidAmount();
-        booking.setPaidAmount(amount);
+    public Booking updatePaidAmount(UUID id, BigDecimal incrementalAmount, UUID tenantId) {
+        if (incrementalAmount == null || incrementalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment amount must be greater than zero");
+        }
 
-        // Auto-promote to CONFIRMED only when:
-        // - current status is PENDING
-        // - paidAmount > 0
-        if (booking.getStatus() == BookingStatus.PENDING && booking.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+        Booking booking = bookingRepository.findByIdAndTenantIdForUpdate(id, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found with ID: " + id));
+
+        if (booking.getStatus() == BookingStatus.CANCELLED || booking.getStatus() == BookingStatus.COMPLETED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot add payment to booking in final status: " + booking.getStatus());
+        }
+
+        BigDecimal totalAmount = booking.getTotalAmount() != null ? booking.getTotalAmount() : BigDecimal.ZERO;
+        BigDecimal alreadyPaid = booking.getPaidAmount() != null ? booking.getPaidAmount() : BigDecimal.ZERO;
+        BigDecimal remaining = totalAmount.subtract(alreadyPaid);
+
+        if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking is already fully settled (Total: " + totalAmount + ", Already Paid: " + alreadyPaid + ")");
+        }
+
+        if (incrementalAmount.compareTo(remaining) > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment amount (" + incrementalAmount + ") exceeds remaining booking balance of " + remaining);
+        }
+
+        BigDecimal newPaid = alreadyPaid.add(incrementalAmount);
+        booking.setPaidAmount(newPaid);
+
+        // Auto-promote to CONFIRMED if pending and payment is made
+        if (booking.getStatus() == BookingStatus.PENDING && newPaid.compareTo(BigDecimal.ZERO) > 0) {
             booking.setStatus(BookingStatus.CONFIRMED);
             logAudit(booking.getId(), booking.getTenantId(), "STATUS_CHANGE", "Booking status auto-promoted from PENDING to CONFIRMED due to payment", "SYSTEM");
         }
 
         Booking saved = bookingRepository.save(booking);
+
+        if (paymentRepository != null) {
+            try {
+                com.eventos.event.entity.Payment payment = com.eventos.event.entity.Payment.builder()
+                        .bookingId(booking.getId())
+                        .amount(incrementalAmount)
+                        .paymentMethod("Manual Adjustment")
+                        .status("COMPLETED")
+                        .paymentDate(LocalDateTime.now())
+                        .notes("Manual payment collected by " + getRequestingUserEmail())
+                        .build();
+                payment.setTenantId(tenantId);
+                paymentRepository.save(payment);
+            } catch (Exception e) {
+                log.warn("Could not save audit payment record: {}", e.getMessage());
+            }
+        }
         
-        logAudit(saved.getId(), saved.getTenantId(), "PAYMENT_COLLECTED", "Payment logged. Paid sum updated from INR " + oldPaid + " to INR " + amount, getRequestingUserEmail());
+        logAudit(saved.getId(), saved.getTenantId(), "PAYMENT_COLLECTED", "Payment logged. Paid sum updated from INR " + alreadyPaid + " to INR " + newPaid + " (+INR " + incrementalAmount + ")", getRequestingUserEmail());
         
         invalidateDashboardCache(tenantId);
         return saved;

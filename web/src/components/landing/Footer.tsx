@@ -69,10 +69,10 @@ export function Footer() {
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400 opacity-90" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[180px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-6 gap-8 relative z-10" suppressHydrationWarning>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-6 gap-6 sm:gap-8 relative z-10" suppressHydrationWarning>
 
         {/* Brand Column */}
-        <div className="md:col-span-2 space-y-5">
+        <div className="col-span-2 md:col-span-2 space-y-5">
           <div
             className="group flex items-center gap-3 cursor-pointer select-none focus:outline-none rounded-lg p-1 w-fit transition-all duration-300"
             onClick={() => router.push("/")}

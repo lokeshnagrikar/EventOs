@@ -12,6 +12,8 @@ import java.util.*;
 @Service
 public class BillingService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BillingService.class);
+
     private final PlanRepository planRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final PaymentMethodRepository paymentMethodRepository;
@@ -134,6 +136,139 @@ public class BillingService {
         auditLogService.logEvent(tenantId, null, "SUBSCRIPTION_INITIALIZED", "127.0.0.1", "System", "Initialized default Free Trial subscription.");
 
         return subscription;
+    }
+
+    public boolean isPaidPlan(String planCode) {
+        if (planCode == null || planCode.trim().isEmpty()) return false;
+        String clean = planCode.trim().toLowerCase();
+        if ("free".equals(clean) || "community".equals(clean) || "trial".equals(clean)) {
+            return false;
+        }
+        Optional<Plan> planOpt = planRepository.findByCode(clean);
+        return planOpt.map(p -> p.getPrice() != null && p.getPrice().compareTo(BigDecimal.ZERO) > 0).orElse(true);
+    }
+
+    public void setStringRedisTemplate(org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate) {
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
+
+    public void createCheckoutBinding(String sessionId, UUID tenantId, String planCode, long expectedAmount, String expectedCurrency, String customerId) {
+        if (sessionId == null) return;
+        Map<String, Object> map = new HashMap<>();
+        map.put("sessionId", sessionId);
+        map.put("tenantId", tenantId.toString());
+        map.put("planCode", planCode);
+        map.put("expectedAmount", expectedAmount);
+        map.put("expectedCurrency", expectedCurrency != null ? expectedCurrency.toLowerCase() : "inr");
+        map.put("customerId", customerId != null ? customerId : "");
+
+        try {
+            String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(map);
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.opsForValue().set("stripe:checkout_binding:" + sessionId, json, java.time.Duration.ofHours(24));
+            }
+        } catch (Exception e) {
+            log.error("[STRIPE BINDING] Failed to serialize checkout binding for session: {}", sessionId, e);
+        }
+    }
+
+    @Transactional
+    public Subscription processStripeCheckoutSession(com.stripe.model.checkout.Session session) {
+        if (session == null) {
+            throw new IllegalArgumentException("Stripe Checkout Session cannot be null");
+        }
+
+        String sessionId = session.getId();
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Stripe Checkout Session ID cannot be missing");
+        }
+
+        // 1. Session-level Idempotency Check
+        if (stringRedisTemplate != null) {
+            String sessionProcessedKey = "stripe:session_processed:" + sessionId;
+            Boolean isNew = stringRedisTemplate.opsForValue().setIfAbsent(sessionProcessedKey, "processed", java.time.Duration.ofDays(7));
+            if (Boolean.FALSE.equals(isNew)) {
+                log.info("[STRIPE WEBHOOK] Duplicate Checkout Session ignored: {}", sessionId);
+                String metaTenant = session.getMetadata() != null ? session.getMetadata().get("tenantId") : null;
+                if (metaTenant != null) {
+                    try {
+                        return getSubscription(UUID.fromString(metaTenant));
+                    } catch (Exception ignored) {}
+                }
+                return null;
+            }
+        }
+
+        // 2. Authoritative Payment Status Verification
+        String paymentStatus = session.getPaymentStatus();
+        if (!"paid".equalsIgnoreCase(paymentStatus) && !"no_payment_required".equalsIgnoreCase(paymentStatus)) {
+            throw new IllegalStateException("Payment status is not paid: " + paymentStatus);
+        }
+
+        // 3. Server-side Binding Lookup (authoritative source of truth, not metadata)
+        String bindingJson = null;
+        if (stringRedisTemplate != null) {
+            bindingJson = stringRedisTemplate.opsForValue().get("stripe:checkout_binding:" + sessionId);
+        }
+
+        if (bindingJson == null || bindingJson.trim().isEmpty()) {
+            throw new IllegalStateException("No authoritative server-side checkout binding found for session: " + sessionId + " (expired, nonexistent, or untrusted session)");
+        }
+
+        Map<String, Object> binding;
+        try {
+            binding = new com.fasterxml.jackson.databind.ObjectMapper().readValue(bindingJson, Map.class);
+        } catch (Exception e) {
+            throw new IllegalStateException("Corrupted checkout binding record for session: " + sessionId, e);
+        }
+
+        UUID boundTenantId = UUID.fromString((String) binding.get("tenantId"));
+        String boundPlanCode = (String) binding.get("planCode");
+        long boundAmount = Long.parseLong(binding.get("expectedAmount").toString());
+        String boundCurrency = (String) binding.get("expectedCurrency");
+        String boundCustomerId = (String) binding.getOrDefault("customerId", "");
+
+        // 4. Adversarial Metadata Consistency Verification (metadata must not contradict server-side binding)
+        Map<String, String> metadata = session.getMetadata();
+        if (metadata != null) {
+            String metaTenantId = metadata.get("tenantId");
+            if (metaTenantId != null && !boundTenantId.toString().equalsIgnoreCase(metaTenantId)) {
+                throw new SecurityException("Adversarial check failed: metadata tenantId does not match server-side bound tenantId");
+            }
+            String metaPlanCode = metadata.get("planCode");
+            if (metaPlanCode != null && !boundPlanCode.equalsIgnoreCase(metaPlanCode)) {
+                throw new SecurityException("Adversarial check failed: metadata planCode does not match server-side bound planCode");
+            }
+        }
+
+        // 5. Customer Verification
+        if (boundCustomerId != null && !boundCustomerId.isEmpty() && session.getCustomer() != null) {
+            if (!boundCustomerId.equalsIgnoreCase(session.getCustomer())) {
+                throw new SecurityException("Stripe customer (" + session.getCustomer() + ") does not match bound customer (" + boundCustomerId + ")");
+            }
+        }
+
+        // 6. Authoritative Amount Verification (rejects both underpayment and overpayment)
+        if (session.getAmountTotal() != null) {
+            long actualAmount = session.getAmountTotal();
+            if (actualAmount != boundAmount) {
+                throw new IllegalStateException("Stripe paid amount (" + actualAmount + ") does not match expected bound amount (" + boundAmount + ")");
+            }
+        }
+
+        // 7. Authoritative Currency Verification
+        if (session.getCurrency() != null) {
+            if (!boundCurrency.equalsIgnoreCase(session.getCurrency())) {
+                throw new IllegalStateException("Stripe currency (" + session.getCurrency() + ") does not match expected bound currency (" + boundCurrency + ")");
+            }
+        }
+
+        // 8. Tenant existence verification in authoritative database
+        tenantRepository.findById(boundTenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found for ID: " + boundTenantId));
+
+        // 9. Authoritative Plan Activation for the Bound Tenant and Plan
+        return upgradeSubscription(boundTenantId, boundPlanCode);
     }
 
     @Transactional
@@ -532,6 +667,10 @@ public class BillingService {
     }
 
     public String impersonateTenant(UUID tenantId) {
+        return impersonateTenant(tenantId, null, null);
+    }
+
+    public String impersonateTenant(UUID tenantId, UUID adminUserId, String ipAddress) {
         List<Membership> memberships = membershipRepository.findAllByTenantId(tenantId);
         if (memberships.isEmpty()) {
             throw new IllegalArgumentException("No members found in target tenant workspace");
@@ -560,6 +699,9 @@ public class BillingService {
             // fallback empty list
         }
 
+        auditLogService.logEvent(tenantId, adminUserId, "SUPERADMIN_IMPERSONATION", ipAddress, null,
+                "SuperAdmin impersonation of tenant: " + tenantId + ", user: " + user.getId());
+
         return jwtService.generateToken(
                 user,
                 tenantId,
@@ -569,7 +711,8 @@ public class BillingService {
                 tenantId,
                 "Impersonated-Session",
                 UUID.randomUUID().toString(),
-                true // impersonated = true
+                true, // impersonated = true
+                adminUserId
         );
     }
 
@@ -676,7 +819,39 @@ public class BillingService {
     }
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
+
+    private final java.security.SecureRandom secureRandom = new java.security.SecureRandom();
+    private final java.util.Map<String, String> localResetTokenStore = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<String, Long> localResetTokenExpiry = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private String sha256(String input) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("SHA-256 hashing algorithm not found", e);
+        }
+    }
+
+    private void storeResetToken(String key, String value, long minutes) {
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.opsForValue().set(key, value, minutes, java.util.concurrent.TimeUnit.MINUTES);
+            }
+        } catch (Exception e) {
+            // Local fallback if Redis is unavailable
+        }
+        localResetTokenStore.put(key, value);
+        localResetTokenExpiry.put(key, System.currentTimeMillis() + (minutes * 60 * 1000));
+    }
 
     @Transactional
     public Map<String, Object> updateTenantStatus(UUID tenantId, String status) {
@@ -718,23 +893,33 @@ public class BillingService {
 
     @Transactional
     public Map<String, Object> resetUserPassword(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
-
-        if (passwordEncoder != null) {
-            user.setPasswordHash(passwordEncoder.encode("admin123"));
-        } else {
-            user.setPasswordHash("$2a$12$K5PbXeTkRuCkmLqtlXmZQegsXWQIghasY/iNKXY4kyEsEe3dpdr5O");
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required for password reset");
         }
-        user.setPasswordUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
+        String cleanEmail = email.trim().toLowerCase();
+        User user = userRepository.findByEmail(cleanEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + cleanEmail));
 
-        auditLogService.logEvent(null, user.getId(), "USER_PASSWORD_RESET", "127.0.0.1", "SuperAdmin",
-                "SuperAdmin reset password to default credential for user: " + email);
+        // Generate 256-bit cryptographically secure one-time reset token
+        byte[] tokenBytes = new byte[32];
+        secureRandom.nextBytes(tokenBytes);
+        String resetToken = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
+        String tokenHash = sha256(resetToken);
+
+        // Standard Redis key recognized by AuthService.resetPassword
+        String redisKey = "reset:token:" + tokenHash;
+        storeResetToken(redisKey, user.getEmail(), 15);
+
+        // Dispatch secure email link to user - raw token is never exposed in logs or API response
+        emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+
+        auditLogService.logEvent(null, user.getId(), "ADMIN_USER_PASSWORD_RESET_INITIATED", null, null,
+                "Administrative one-time password reset dispatched to user email: " + cleanEmail);
 
         Map<String, Object> res = new HashMap<>();
-        res.put("email", email);
-        res.put("message", "Password reset to default credential (admin123)");
+        res.put("success", true);
+        res.put("email", cleanEmail);
+        res.put("message", "Password reset instructions dispatched to user email");
         return res;
     }
 }
