@@ -83,6 +83,7 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - APP_MAIL_FROM=${APP_MAIL_FROM:-support@eventosapp.in}
       - FRONTEND_URL=${FRONTEND_URL:-https://eventosapp.in}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://eventosapp.in}
       - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:?JWT_PRIVATE_KEY must be set in production}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
       - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
