@@ -97,6 +97,8 @@ app:
     public-key: ${JWT_PUBLIC_KEY:}
   gateway:
     secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
+  bootstrap:
+    secret: ${BOOTSTRAP_SECRET:${APP_BOOTSTRAP_SECRET:superadmin_secure_bootstrap_key_2026!}}
   security:
     encryption:
       key: ${ENCRYPTION_KEY:${APP_SECURITY_ENCRYPTION_KEY:}}
