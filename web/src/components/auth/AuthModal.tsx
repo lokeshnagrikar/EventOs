@@ -63,7 +63,7 @@ export function AuthModal() {
           transition={{ duration: 0.2, ease: "easeOut" }}
           onClick={handleBackdropClick}
           className={cn(
-            "fixed inset-0 z-50 flex",
+            "fixed inset-0 z-[100] flex",
             isMobile ? "w-full h-full bg-[#0A0A0C] overflow-y-auto" : "items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md"
           )}
         >

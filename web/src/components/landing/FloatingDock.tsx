@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useSpring, Motio
 import { Icon } from "@iconify/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuthModalStore } from "@/store/authModalStore";
 
 // Interface for Dock item configuration
 interface DockItemConfig {
@@ -20,6 +21,7 @@ export function FloatingDock() {
   const [activeSection, setActiveSection] = useState("hero");
   const lastScrollYRef = useRef(0);
   const pathname = usePathname();
+  const isAnyModalOpen = useAuthModalStore((s) => s.isOpen || s.isLogoutOpen);
   
   // Motion value to track mouse position for real-time magnification
   const mouseX = useMotionValue(Infinity);
@@ -183,7 +185,7 @@ export function FloatingDock() {
 
   return (
     <AnimatePresence>
-      {visible && (
+      {visible && !isAnyModalOpen && (
         <motion.div
           initial={{ y: 80, x: "-50%", opacity: 0, filter: "blur(10px)" }}
           animate={{ y: 0, x: "-50%", opacity: 1, filter: "blur(0px)" }}
@@ -191,7 +193,7 @@ export function FloatingDock() {
           transition={{ type: "spring", stiffness: 220, damping: 28 }}
           onMouseMove={(e) => mouseX.set(e.clientX)}
           onMouseLeave={() => mouseX.set(Infinity)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] pointer-events-auto flex items-end h-[60px] gap-2.5 sm:gap-3 px-3.5 pb-2 rounded-[22px] border border-white/70 bg-white/80 backdrop-blur-[35px] backdrop-saturate-[2.0] shadow-[0_20px_45px_rgba(15,23,42,0.12),0_0_0_1px_rgba(255,255,255,0.9),inset_0_1px_2px_rgba(255,255,255,1)]"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-auto flex items-end h-[60px] gap-2.5 sm:gap-3 px-3.5 pb-2 rounded-[22px] border border-white/70 bg-white/80 backdrop-blur-[35px] backdrop-saturate-[2.0] shadow-[0_20px_45px_rgba(15,23,42,0.12),0_0_0_1px_rgba(255,255,255,0.9),inset_0_1px_2px_rgba(255,255,255,1)]"
         >
           {/* Top reflection line simulating macOS 3D glass shelf highlight */}
           <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
