@@ -16,3 +16,5 @@
 570c30d0b009418289f2890069cc4796f044631d:docs/launch/env_variables_master_guide.md:generic-api-key:135
 570c30d0b009418289f2890069cc4796f044631d:docs/launch/env_variables_master_guide.md:generic-api-key:141
 df5283bbe1c77dead9dc9a76da04ac83f134d541:web/src/app/superadmin/login/page.tsx:generic-api-key:250
+8d641cfdf0d28d3b8a64b96b75245a1948e75bba:backend/auth-service/src/test/java/com/eventos/auth/security/GatewayTrustSecurityTest.java:generic-api-key:88
+8d641cfdf0d28d3b8a64b96b75245a1948e75bba:web/tests/middleware.spec.ts:generic-api-key:17
