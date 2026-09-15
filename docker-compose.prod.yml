@@ -88,6 +88,7 @@ services:
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
       - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in production}
+      - BOOTSTRAP_SECRET=${BOOTSTRAP_SECRET:-superadmin_secure_bootstrap_key_2026!}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-171503360314-e51mor0dee5v5f5jqi3gincelrhuva4l.apps.googleusercontent.com}
       - COOKIE_SECURE=true
       - COOKIE_SAMESITE=Lax
