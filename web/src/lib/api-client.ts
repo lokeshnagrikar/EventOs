@@ -131,13 +131,22 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
+        const storedRefreshToken = typeof window !== 'undefined' 
+          ? (localStorage.getItem('eventos_refresh_token') || sessionStorage.getItem('refreshToken')) 
+          : null;
+
         const refreshResponse = await axios.post(
           `${getBaseURL()}/auth/refresh`,
-          {},
+          storedRefreshToken ? { refreshToken: storedRefreshToken } : {},
           { withCredentials: true }
         );
         
-        const { accessToken: newAccessToken, role, firstName, lastName, permissions } = refreshResponse.data.data;
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken, role, firstName, lastName, permissions } = refreshResponse.data.data;
+
+        if (newRefreshToken && typeof window !== 'undefined') {
+          localStorage.setItem('eventos_refresh_token', newRefreshToken);
+          sessionStorage.setItem('refreshToken', newRefreshToken);
+        }
         
         // Update store with new access token and updated user metadata
         const currentState = useAuthStore.getState();
@@ -184,8 +193,21 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
         
         // Only clear auth and redirect if refresh endpoint explicitly rejected the token (401 or 403)
+        // AND the user's current token is actually expired or missing
         const isAuthRejection = refreshError?.response?.status === 401 || refreshError?.response?.status === 403;
-        if (isAuthRejection) {
+        
+        let tokenActuallyExpired = true;
+        const currentToken = useAuthStore.getState().accessToken;
+        if (currentToken) {
+          try {
+            const payload = JSON.parse(atob(currentToken.split('.')[1]));
+            tokenActuallyExpired = (payload.exp * 1000) < Date.now();
+          } catch {
+            tokenActuallyExpired = true;
+          }
+        }
+
+        if (isAuthRejection && tokenActuallyExpired) {
           useAuthStore.getState().clearAuth();
           if (typeof window !== 'undefined') {
             const path = window.location.pathname;

@@ -51,8 +51,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       if (activeTenant && !accessToken && !storedAccessToken) {
         try {
           const { apiClient } = require("@/lib/api-client");
-          const response = await apiClient.post("/auth/refresh", {});
-          const { accessToken: newAccessToken } = response.data.data;
+          const storedRefreshToken = typeof window !== 'undefined' 
+            ? (localStorage.getItem('eventos_refresh_token') || sessionStorage.getItem('refreshToken')) 
+            : null;
+          const response = await apiClient.post("/auth/refresh", storedRefreshToken ? { refreshToken: storedRefreshToken } : {});
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
           
           useAuthStore.setState({ 
             accessToken: newAccessToken
@@ -60,6 +63,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           if (typeof window !== 'undefined') {
             sessionStorage.setItem('accessToken', newAccessToken);
             localStorage.setItem('eventos_access_token', newAccessToken);
+            if (newRefreshToken) {
+              localStorage.setItem('eventos_refresh_token', newRefreshToken);
+              sessionStorage.setItem('refreshToken', newRefreshToken);
+            }
           }
         } catch (err) {
           console.error("Failed to restore session.");

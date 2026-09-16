@@ -48,10 +48,17 @@ public class EventController {
 
     private UUID getTenantId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
-            UUID tenantId = principal.getTenantId();
-            if (tenantId != null)
-                return tenantId;
+        if (auth != null) {
+            if (auth.getPrincipal() instanceof UserPrincipal principal) {
+                UUID tenantId = principal.getTenantId();
+                if (tenantId != null)
+                    return tenantId;
+            }
+            boolean isSuperAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()) || "SUPER_ADMIN".equals(a.getAuthority()));
+            if (isSuperAdmin) {
+                return UUID.fromString("e5afcc88-5c4b-4df8-bb6d-6bb9bd380111");
+            }
         }
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tenant context is missing");
     }
@@ -78,7 +85,7 @@ public class EventController {
 
     @Operation(summary = "List events", description = "Returns paginated events. Filter by status (PLANNING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED), type (WEDDING, BIRTHDAY, CORPORATE, ANNIVERSARY, GRADUATION, SOCIAL, OTHER), or date range.")
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF','CLIENT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','OWNER','ADMIN','MANAGER','STAFF','CLIENT')")
     public ResponseEntity<?> getEvents(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String type,

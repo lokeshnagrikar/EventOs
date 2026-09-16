@@ -79,7 +79,8 @@ export default function WorkspaceSelectPage() {
         accessToken,
         { id: userId, email: user?.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        newMemberships
+        newMemberships,
+        response.data?.data?.refreshToken
       );
 
       addToast("Workspace connected.", "success");

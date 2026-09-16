@@ -21,7 +21,7 @@ public class DashboardController {
     }
 
     @GetMapping("/metrics")
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','OWNER','ADMIN','MANAGER','STAFF')")
     public ResponseEntity<?> getMetrics() {
         UUID tenantId = getTenantId();
         String roles = getRoles();
@@ -36,7 +36,7 @@ public class DashboardController {
     }
 
     @DeleteMapping("/metrics/cache")
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','OWNER','ADMIN')")
     public ResponseEntity<?> invalidateMetrics() {
         UUID tenantId = getTenantId();
 
@@ -52,10 +52,17 @@ public class DashboardController {
     private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = 
             org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof com.eventos.crm.config.UserPrincipal) {
-            UUID tenantId = ((com.eventos.crm.config.UserPrincipal) auth.getPrincipal()).getTenantId();
-            if (tenantId != null) {
-                return tenantId;
+        if (auth != null) {
+            if (auth.getPrincipal() instanceof com.eventos.crm.config.UserPrincipal) {
+                UUID tenantId = ((com.eventos.crm.config.UserPrincipal) auth.getPrincipal()).getTenantId();
+                if (tenantId != null) {
+                    return tenantId;
+                }
+            }
+            boolean isSuperAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()) || "SUPER_ADMIN".equals(a.getAuthority()));
+            if (isSuperAdmin) {
+                return UUID.fromString("e5afcc88-5c4b-4df8-bb6d-6bb9bd380111");
             }
         }
         throw new org.springframework.web.server.ResponseStatusException(

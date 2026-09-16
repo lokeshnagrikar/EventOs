@@ -103,7 +103,8 @@ export default function SuperAdminLoginPage() {
             permissions: permissions && permissions.length > 0 ? permissions : ["all"],
           },
           tenantId,
-          memberships
+          memberships,
+          response.data?.data?.refreshToken
         );
 
         addToast(`Welcome, ${firstName || "Admin"}.`, "success");

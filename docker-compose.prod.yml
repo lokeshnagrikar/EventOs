@@ -91,7 +91,8 @@ services:
       - BOOTSTRAP_SECRET=${BOOTSTRAP_SECRET:-superadmin_secure_bootstrap_key_2026!}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-171503360314-e51mor0dee5v5f5jqi3gincelrhuva4l.apps.googleusercontent.com}
       - COOKIE_SECURE=true
-      - COOKIE_SAMESITE=Lax
+      - COOKIE_SAMESITE=${COOKIE_SAMESITE:-None}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN:-eventosapp.in}
     depends_on:
       postgres:
         condition: service_healthy

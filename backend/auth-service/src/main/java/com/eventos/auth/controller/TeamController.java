@@ -32,7 +32,7 @@ public class TeamController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
     public ResponseEntity<?> getTeamMembers() {
         UUID tenantId = getTenantId();
         List<Membership> memberships = membershipRepository.findAllByTenantId(tenantId);
@@ -200,10 +200,17 @@ public class TeamController {
     private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
-            UUID tenantId = ((com.eventos.auth.config.UserPrincipal) auth.getPrincipal()).getTenantId();
-            if (tenantId != null) {
-                return tenantId;
+        if (auth != null) {
+            if (auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
+                UUID tenantId = ((com.eventos.auth.config.UserPrincipal) auth.getPrincipal()).getTenantId();
+                if (tenantId != null) {
+                    return tenantId;
+                }
+            }
+            boolean isSuperAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()) || "SUPER_ADMIN".equals(a.getAuthority()));
+            if (isSuperAdmin) {
+                return UUID.fromString("e5afcc88-5c4b-4df8-bb6d-6bb9bd380111");
             }
         }
         throw new org.springframework.web.server.ResponseStatusException(

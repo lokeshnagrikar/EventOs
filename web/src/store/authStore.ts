@@ -26,7 +26,7 @@ interface AuthState {
   isAuthenticated: boolean;
   
   initializeAuth: () => void;
-  setAuth: (accessToken: string, user: UserProfile, activeTenantId: string, memberships: WorkspaceMembership[]) => void;
+  setAuth: (accessToken: string, user: UserProfile, activeTenantId: string, memberships: WorkspaceMembership[], refreshToken?: string) => void;
   updateActiveTenant: (tenantId: string, accessToken: string, role: string, permissions: string[]) => void;
   clearAuth: () => void;
   logout: () => Promise<void>;
@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  setAuth: (accessToken, user, activeTenantId, memberships) => {
+  setAuth: (accessToken, user, activeTenantId, memberships, refreshToken) => {
     set({
       accessToken,
       user,
@@ -86,6 +86,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('eventos_user_profile', JSON.stringify(user));
       sessionStorage.setItem('memberships', JSON.stringify(memberships));
       localStorage.setItem('eventos_memberships', JSON.stringify(memberships));
+
+      if (refreshToken) {
+        sessionStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('eventos_refresh_token', refreshToken);
+      }
       
       // Cookie for SSR / Middleware
       setClientCookie("hasSession", "true", 604800);

@@ -195,7 +195,7 @@ public class AuthController {
                 return ResponseEntity.ok(challengeResponse);
             }
 
-            String refreshToken = (String) authData.remove("refreshToken");
+            String refreshToken = (String) authData.get("refreshToken");
 
             ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
 
@@ -322,7 +322,7 @@ public class AuthController {
 
             Map<String, Object> authData = authService.loginOrRegisterWithGoogle(
                     idToken, accessToken, selectTenantId, ipAddress, deviceModel, osName, browser, userAgent);
-            String refreshToken = (String) authData.remove("refreshToken");
+            String refreshToken = (String) authData.get("refreshToken");
 
             ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
 
@@ -456,7 +456,7 @@ public class AuthController {
             }
 
             Map<String, Object> result = authService.refresh(token, ipAddress, deviceModel, osName, browser, userAgent);
-            String newRefreshToken = (String) result.remove("refreshToken");
+            String newRefreshToken = (String) result.get("refreshToken");
 
             // Set rotated refresh token cookie
             ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, 7 * 24 * 60 * 60);
@@ -813,7 +813,7 @@ public class AuthController {
 
             Map<String, Object> result = authService.switchWorkspace(token, targetTenantId, ipAddress, deviceModel,
                     osName, browser, userAgent);
-            String newRefreshToken = (String) result.remove("refreshToken");
+            String newRefreshToken = (String) result.get("refreshToken");
 
             // Set new refresh token cookie
             ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, 7 * 24 * 60 * 60);

@@ -106,6 +106,7 @@ app:
     cookie:
       secure: ${COOKIE_SECURE:}
       samesite: ${COOKIE_SAMESITE:}
+      domain: ${COOKIE_DOMAIN:}
   recaptcha:
     enabled: ${RECAPTCHA_ENABLED:false}
     secret-key: ${RECAPTCHA_SECRET_KEY:}

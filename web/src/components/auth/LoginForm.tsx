@@ -203,7 +203,8 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         accessToken,
         { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        memberships
+        memberships,
+        response.data.data.refreshToken
       );
       addToast(`Welcome back, ${firstName}! Verified via Magic Link.`, "success");
       if (isModal) closeModal();
@@ -492,7 +493,8 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         accessToken,
         { id: userId, email: data.email, firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        memberships
+        memberships,
+        response.data?.data?.refreshToken
       );
 
       analytics.trackAuth("login", data.email);
@@ -569,7 +571,8 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         jwtToken,
         { id: userId, email: response.data.data.email || "", firstName, lastName, role, permissions: permissions || [] },
         tenantId,
-        memberships
+        memberships,
+        response.data?.data?.refreshToken
       );
 
       addToast("Successfully authenticated via Google!", "success");
