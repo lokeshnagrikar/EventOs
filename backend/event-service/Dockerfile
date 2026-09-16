@@ -4,9 +4,9 @@ WORKDIR /app
 COPY pom.xml .
 RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY event-service/pom.xml ./event-service/
-RUN mvn -f event-service/pom.xml dependency:go-offline -B -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.count=10 -Dmaven.wagon.rto=60000
+RUN --mount=type=cache,target=/root/.m2 mvn -f event-service/pom.xml dependency:go-offline -B
 COPY event-service/src ./event-service/src
-RUN mvn -f event-service/pom.xml package -DskipTests -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.count=10 -Dmaven.wagon.rto=60000
+RUN --mount=type=cache,target=/root/.m2 mvn -f event-service/pom.xml package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine
