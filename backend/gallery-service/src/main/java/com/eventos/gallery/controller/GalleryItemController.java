@@ -126,7 +126,7 @@ public class GalleryItemController {
      * without needing an albumId. Returns the secure CDN URL for use in user profiles.
      */
     @PostMapping(value = "/upload-avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'OWNER', 'ADMIN', 'MANAGER', 'STAFF', 'CLIENT')")
     public ResponseEntity<?> uploadAvatar(
             @RequestParam("file") MultipartFile file,
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {

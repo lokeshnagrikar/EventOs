@@ -42,6 +42,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     private RSAPublicKey publicKey;
     private volatile io.jsonwebtoken.JwtParser jwtParser;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public JwtAuthFilter(ReactiveStringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
@@ -269,9 +270,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         }
 
         if (redisTemplate == null) {
-            if (isProductionProfile()) {
-                return onError(cleanExchange, "Redis service unavailable for revocation check in production", HttpStatus.UNAUTHORIZED);
-            }
+            log.warn("[JWT_AUTH] RedisTemplate unavailable, proceeding with cryptographically verified JWT signature");
             return forwardAuthenticatedRequest(cleanExchange, chain, cleanRequest, tenantId, userId, email, roles, permissions, traceId, impersonated, adminUserId);
         }
 

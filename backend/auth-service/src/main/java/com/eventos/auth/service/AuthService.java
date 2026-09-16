@@ -1809,6 +1809,10 @@ public class AuthService {
                 if (!"ACTIVE".equals(user.getStatus())) {
                     throw new IllegalArgumentException("User account is not active");
                 }
+                if (picture != null && !picture.isEmpty() && (user.getProfileImage() == null || user.getProfileImage().isEmpty())) {
+                    user.setProfileImage(picture);
+                    user = userRepository.save(user);
+                }
             }
 
             // Standard login steps
