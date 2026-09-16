@@ -136,7 +136,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
-  const { clearAuth, user } = useAuthStore();
+  const { clearAuth, user, updateUserProfile } = useAuthStore();
   const { completeStep } = useOnboardingStore();
   const [mounted, setMounted] = useState(false);
 
@@ -510,6 +510,11 @@ export default function SettingsPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["userProfileSettings"] });
+      updateUserProfile({
+        firstName: profileFirstName,
+        lastName: profileLastName,
+        profileImage: profileImage
+      });
       addToast("Profile settings updated successfully!", "success");
     },
     onError: (err: any) => {
@@ -1498,7 +1503,14 @@ export default function SettingsPage() {
                             const cdnUrl = res.data?.data?.url;
                             if (cdnUrl) {
                               setProfileImage(cdnUrl);
+                              updateUserProfile({ profileImage: cdnUrl });
                               URL.revokeObjectURL(localPreviewUrl);
+                              api.put("/auth/settings/profile", {
+                                firstName: profileFirstName,
+                                lastName: profileLastName,
+                                phone: profilePhone,
+                                profileImage: cdnUrl
+                              }).catch(() => {});
                               addToast("Profile picture uploaded successfully!", "success");
                             }
                           } catch (err: any) {
@@ -1539,6 +1551,13 @@ export default function SettingsPage() {
                               const googlePic = res.data?.data?.profileImage;
                               if (googlePic && googlePic.startsWith("http")) {
                                 setProfileImage(googlePic);
+                                updateUserProfile({ profileImage: googlePic });
+                                api.put("/auth/settings/profile", {
+                                  firstName: profileFirstName,
+                                  lastName: profileLastName,
+                                  phone: profilePhone,
+                                  profileImage: googlePic
+                                }).catch(() => {});
                                 addToast("Google profile picture restored successfully!", "success");
                               } else {
                                 // Fallback: generate avatar from user email using UI Avatars
@@ -1546,6 +1565,13 @@ export default function SettingsPage() {
                                 const name = encodeURIComponent(`${user?.firstName || ""} ${user?.lastName || ""}`);
                                 const fallbackUrl = `https://ui-avatars.com/api/?name=${name}&background=7c3aed&color=fff&size=150&bold=true&format=png`;
                                 setProfileImage(fallbackUrl);
+                                updateUserProfile({ profileImage: fallbackUrl });
+                                api.put("/auth/settings/profile", {
+                                  firstName: profileFirstName,
+                                  lastName: profileLastName,
+                                  phone: profilePhone,
+                                  profileImage: fallbackUrl
+                                }).catch(() => {});
                                 addToast("Generated avatar from your profile name.", "info");
                               }
                             } catch {

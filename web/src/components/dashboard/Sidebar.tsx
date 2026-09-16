@@ -40,6 +40,7 @@ interface SidebarProps {
   setIsCollapsed: (collapsed: boolean) => void;
   onLogout: () => void;
   userName: string;
+  userAvatar?: string;
   className?: string;
   onClose?: () => void;
 }
@@ -318,8 +319,14 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
           )}
         >
           <div className="relative shrink-0">
-            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-violet-700 flex items-center justify-center text-[10px] font-black text-white shadow-md shadow-purple-900/20">
-              {userName ? userName.charAt(0).toUpperCase() : <User size={12} />}
+            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-violet-700 flex items-center justify-center text-[10px] font-black text-white shadow-md shadow-purple-900/20 overflow-hidden">
+              {user?.profileImage ? (
+                <img src={user.profileImage} alt={userName} className="h-full w-full object-cover" />
+              ) : userName ? (
+                userName.charAt(0).toUpperCase()
+              ) : (
+                <User size={12} />
+              )}
             </div>
             <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-[1.5px] ring-white dark:ring-[#09090b] shadow-sm shadow-emerald-500/50" />
           </div>
@@ -333,8 +340,12 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
                 transition={{ duration: 0.15 }}
                 className="flex-1 min-w-0"
               >
-                <p className="text-[11px] font-bold text-slate-900 dark:text-zinc-200 truncate leading-none">{userName}</p>
-                <p className="text-[9px] text-slate-500 dark:text-zinc-500 font-semibold mt-[3px]">Admin Console</p>
+                <p className="text-[11px] font-bold text-slate-900 dark:text-zinc-200 truncate leading-none">
+                  {user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : userName}
+                </p>
+                <p className="text-[9px] text-slate-500 dark:text-zinc-500 font-semibold mt-[3px]">
+                  {user?.role === "SUPER_ADMIN" ? "Super Admin" : user?.role ? `${user.role} Console` : "Admin Console"}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>

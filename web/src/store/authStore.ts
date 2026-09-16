@@ -8,6 +8,7 @@ export interface UserProfile {
   lastName?: string;
   role: string;
   permissions: string[];
+  profileImage?: string;
 }
 
 export interface WorkspaceMembership {
@@ -28,6 +29,7 @@ interface AuthState {
   initializeAuth: () => void;
   setAuth: (accessToken: string, user: UserProfile, activeTenantId: string, memberships: WorkspaceMembership[], refreshToken?: string) => void;
   updateActiveTenant: (tenantId: string, accessToken: string, role: string, permissions: string[]) => void;
+  updateUserProfile: (profile: Partial<UserProfile>) => void;
   clearAuth: () => void;
   logout: () => Promise<void>;
 }
@@ -122,6 +124,21 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: updatedUser,
         isAuthenticated: true,
       };
+    });
+  },
+
+  updateUserProfile: (profile) => {
+    set((state) => {
+      if (!state.user) return state;
+      const updated = { ...state.user, ...profile };
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('user', JSON.stringify(updated));
+        localStorage.setItem('eventos_user_profile', JSON.stringify(updated));
+        if (updated.firstName) {
+          localStorage.setItem('user_name', `${updated.firstName} ${updated.lastName || ''}`.trim());
+        }
+      }
+      return { user: updated };
     });
   },
 
