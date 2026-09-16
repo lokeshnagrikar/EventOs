@@ -88,8 +88,11 @@ export default function SuperAdminLoginPage() {
         document.cookie = `hasSession=true; ${cookieFlags}`;
         document.cookie = `user_name=${encodeURIComponent(firstName || "Admin")}; ${cookieFlags}`;
         document.cookie = `user_role=${role}; ${cookieFlags}`;
+        document.cookie = `accessToken=${accessToken}; ${cookieFlags}`;
         localStorage.setItem("user_name", firstName || "Admin");
         localStorage.setItem("user_role", role);
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("eventos_access_token", accessToken);
 
         // 4. Update Zustand state with verified JWT & claims
         setAuth(
