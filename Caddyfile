@@ -1,3 +1,20 @@
 api.eventosapp.in {
-    reverse_proxy api-gateway:8080
+    @cors_preflight method OPTIONS
+    @cors_origin header Origin https://eventosapp.in https://www.eventosapp.in https://event-os-woad.vercel.app
+
+    handle @cors_preflight {
+        header Access-Control-Allow-Origin "{header.Origin}"
+        header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        header Access-Control-Allow-Headers "*"
+        header Access-Control-Allow-Credentials "true"
+        header Access-Control-Max-Age "86400"
+        respond "" 204
+    }
+
+    handle {
+        header @cors_origin ?Access-Control-Allow-Origin "{header.Origin}"
+        header @cors_origin ?Access-Control-Allow-Credentials "true"
+        reverse_proxy api-gateway:8080
+    }
 }
+
