@@ -112,8 +112,6 @@ public class AuthController {
 
         if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
             cookieBuilder.domain(cookieDomain.trim());
-        } else if (isProd) {
-            cookieBuilder.domain("eventosapp.in");
         }
 
         return cookieBuilder.build();
