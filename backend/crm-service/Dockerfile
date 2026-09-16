@@ -4,9 +4,9 @@ WORKDIR /app
 COPY pom.xml .
 RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY crm-service/pom.xml ./crm-service/
-RUN mvn -f crm-service/pom.xml dependency:go-offline -B
+RUN mvn -f crm-service/pom.xml dependency:go-offline -B -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.count=10 -Dmaven.wagon.rto=60000
 COPY crm-service/src ./crm-service/src
-RUN mvn -f crm-service/pom.xml package -DskipTests
+RUN mvn -f crm-service/pom.xml package -DskipTests -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.count=10 -Dmaven.wagon.rto=60000
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine

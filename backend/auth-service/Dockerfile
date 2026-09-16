@@ -4,9 +4,9 @@ WORKDIR /app
 COPY pom.xml .
 RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY auth-service/pom.xml ./auth-service/
-RUN mvn -f auth-service/pom.xml dependency:go-offline -B -Dhttp.keepAlive=false -Dmaven.wagon.http.retryHandler.count=5
+RUN mvn -f auth-service/pom.xml dependency:go-offline -B -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.count=10 -Dmaven.wagon.rto=60000
 COPY auth-service/src ./auth-service/src
-RUN mvn -f auth-service/pom.xml package -DskipTests -Dhttp.keepAlive=false -Dmaven.wagon.http.retryHandler.count=5
+RUN mvn -f auth-service/pom.xml package -DskipTests -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.count=10 -Dmaven.wagon.rto=60000
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine
