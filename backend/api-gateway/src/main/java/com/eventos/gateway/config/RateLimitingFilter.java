@@ -214,10 +214,17 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
                 })
                 .onErrorResume(e -> {
                     // Outage policy:
-                    // Fail open with warning so Redis outages or reconnect blips never take down user authentication
-                    log.warn("[RATE_LIMIT_OUTAGE_FAIL_OPEN] Request allowed downstream during Redis outage: Category={}, Client={}, Error={}",
-                            finalCategory, finalIdentifierKey, e.getMessage());
-                    return chain.filter(exchange);
+                    // Production + Sensitive Endpoint -> Fail Closed (HTTP 503 with generic body, no Redis internals)
+                    // General endpoints or non-production -> Fail Open
+                    if (isProductionProfile() && isSensitiveEndpoint(finalCategory)) {
+                        log.error("[RATE_LIMIT_OUTAGE_FAIL_CLOSED] Sensitive route blocked during Redis outage in production: Category={}, Client={}, Error={}",
+                                finalCategory, finalIdentifierKey, e.getMessage());
+                        return buildServiceUnavailableResponse(exchange, 60);
+                    } else {
+                        log.warn("[RATE_LIMIT_OUTAGE_FAIL_OPEN] Request allowed downstream during Redis outage: Category={}, Client={}, Error={}",
+                                finalCategory, finalIdentifierKey, e.getMessage());
+                        return chain.filter(exchange);
+                    }
                 });
     }
 
