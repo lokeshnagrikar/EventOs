@@ -189,8 +189,9 @@ apiClient.interceptors.response.use(
           useAuthStore.getState().clearAuth();
           if (typeof window !== 'undefined') {
             const path = window.location.pathname;
-            const isProtectedRoute = path.startsWith('/dashboard') || path.startsWith('/superadmin');
-            if (isProtectedRoute) {
+            if (path.startsWith('/superadmin') && !path.startsWith('/superadmin/login')) {
+              window.location.href = '/superadmin/login?expired=true';
+            } else if (path.startsWith('/dashboard') || path.startsWith('/portal')) {
               window.location.href = '/?login=true&expired=true';
             }
           }

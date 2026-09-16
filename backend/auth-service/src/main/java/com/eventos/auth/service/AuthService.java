@@ -359,6 +359,9 @@ public class AuthService {
         }
 
         clearFailedAttempts(email);
+        if (rateLimiterService != null) {
+            rateLimiterService.resetLoginRateLimit(ipAddress, email);
+        }
 
         List<Membership> memberships = membershipRepository.findAllByUserId(user.getId());
         if (memberships.isEmpty()) {

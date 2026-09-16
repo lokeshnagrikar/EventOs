@@ -139,6 +139,24 @@ public class RateLimiterService {
         }
     }
 
+    public void resetLoginRateLimit(String ipAddress, String email) {
+        if (!enabled || stringRedisTemplate == null) {
+            return;
+        }
+        try {
+            if (ipAddress != null && !ipAddress.trim().isEmpty()) {
+                String ipKey = "rate:limit:auth:login:ip:" + ipAddress.trim();
+                stringRedisTemplate.delete(ipKey);
+            }
+            if (email != null && !email.trim().isEmpty()) {
+                String accountKey = "rate:limit:auth:login:account:" + hashIdentifier(email.trim().toLowerCase());
+                stringRedisTemplate.delete(accountKey);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to reset login rate limit: {}", e.getMessage());
+        }
+    }
+
     public void checkPasswordResetRateLimit(String ipAddress, String email) {
         if (!enabled || stringRedisTemplate == null) {
             return;

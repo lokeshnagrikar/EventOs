@@ -45,6 +45,9 @@ public class AuthController {
     @org.springframework.beans.factory.annotation.Value("${app.security.cookie.samesite:#{null}}")
     private String sameSitePolicyOverride;
 
+    @org.springframework.beans.factory.annotation.Value("${app.security.cookie.domain:#{null}}")
+    private String cookieDomain;
+
     @Autowired
     private org.springframework.core.env.Environment environment;
 
@@ -100,13 +103,20 @@ public class AuthController {
             }
         }
 
-        return ResponseCookie.from("refreshToken", token)
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
                 .secure(secure)
                 .path("/")
                 .maxAge(maxAge)
-                .sameSite(sameSite)
-                .build();
+                .sameSite(sameSite);
+
+        if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
+            cookieBuilder.domain(cookieDomain.trim());
+        } else if (isProd) {
+            cookieBuilder.domain("eventosapp.in");
+        }
+
+        return cookieBuilder.build();
     }
 
     public AuthController(AuthService authService, RecaptchaService recaptchaService) {

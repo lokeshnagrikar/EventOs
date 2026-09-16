@@ -49,7 +49,7 @@ public class BillingController {
     }
 
     @GetMapping("/subscription")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
     public ResponseEntity<?> getSubscription() {
         UUID tenantId = getTenantId();
         Subscription subscription = billingService.getSubscription(tenantId);
@@ -121,7 +121,7 @@ public class BillingController {
     }
 
     @GetMapping("/usage")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'OWNER', 'ADMIN', 'MANAGER', 'STAFF')")
     public ResponseEntity<?> getUsage() {
         UUID tenantId = getTenantId();
         TenantUsage usage = billingService.getUsage(tenantId);
@@ -213,7 +213,7 @@ public class BillingController {
     }
 
     @GetMapping("/settings")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> getSettings() {
         UUID tenantId = getTenantId();
         WorkspaceSettings settings = billingService.getWorkspaceSettings(tenantId);
@@ -569,10 +569,18 @@ public class BillingController {
     private UUID getTenantId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
-            UUID tenantId = ((com.eventos.auth.config.UserPrincipal) auth.getPrincipal()).getTenantId();
-            if (tenantId != null) {
-                return tenantId;
+        if (auth != null) {
+            if (auth.getPrincipal() instanceof com.eventos.auth.config.UserPrincipal) {
+                UUID tenantId = ((com.eventos.auth.config.UserPrincipal) auth.getPrincipal()).getTenantId();
+                if (tenantId != null) {
+                    return tenantId;
+                }
+            }
+            // Graceful fallback for Platform SuperAdmin without a customer tenant binding
+            boolean isSuperAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()) || "SUPER_ADMIN".equals(a.getAuthority()));
+            if (isSuperAdmin) {
+                return UUID.fromString("e5afcc88-5c4b-4df8-bb6d-6bb9bd380111");
             }
         }
         throw new org.springframework.web.server.ResponseStatusException(

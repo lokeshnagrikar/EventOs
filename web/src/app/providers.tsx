@@ -77,8 +77,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, [mounted, accessToken]);
 
   useEffect(() => {
-    const isDashboardRoute = pathname?.startsWith('/dashboard') || pathname?.startsWith('/superadmin') || pathname?.startsWith('/portal');
-    if (activeTenantId && accessToken && isDashboardRoute) {
+    const isCustomerWorkspaceRoute = (pathname?.startsWith('/dashboard') || pathname?.startsWith('/portal')) && !pathname?.startsWith('/superadmin');
+    if (activeTenantId && accessToken && isCustomerWorkspaceRoute) {
       fetchPlans();
       fetchSubscription();
       fetchUsage();
