@@ -3,14 +3,19 @@ api.eventosapp.in {
     handle @cors_preflight {
         header Access-Control-Allow-Origin "{header.Origin}"
         header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin, X-Gateway-Trust, x-founder-key, traceparent, baggage"
+        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin, X-Gateway-Trust, x-founder-key, traceparent, baggage, X-Tenant-ID, X-Tenant-Id, x-tenant-id, X-Company-ID, X-Company-Id, x-company-id, X-Workspace-ID, X-Workspace-Id, x-workspace-id, X-User-ID, X-User-Id, x-user-id, X-CSRF-Token, x-csrf-token, {header.Access-Control-Request-Headers}"
         header Access-Control-Allow-Credentials "true"
         header Access-Control-Max-Age "86400"
         respond "" 204
     }
 
     handle {
-        reverse_proxy api-gateway:8080
+        header Access-Control-Allow-Origin "{header.Origin}"
+        header Access-Control-Allow-Credentials "true"
+        reverse_proxy api-gateway:8080 {
+            header_down -Access-Control-Allow-Origin
+            header_down -Access-Control-Allow-Credentials
+        }
     }
 }
 
