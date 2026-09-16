@@ -314,9 +314,16 @@ public class AuthService {
         checkLockoutStatus(email);
 
         // CAPTCHA check after 3 failed attempts
-        String attemptKey = "lockout:failed_attempts:" + email;
-        String countStr = stringRedisTemplate.opsForValue().get(attemptKey);
-        int count = countStr != null ? Integer.parseInt(countStr) : 0;
+        int count = 0;
+        try {
+            String attemptKey = "lockout:failed_attempts:" + email;
+            if (stringRedisTemplate != null) {
+                String countStr = stringRedisTemplate.opsForValue().get(attemptKey);
+                count = countStr != null ? Integer.parseInt(countStr) : 0;
+            }
+        } catch (Exception e) {
+            log.warn("[CAPTCHA_CHECK] Redis failed attempt count lookup failed for {}: {}", email, e.getMessage());
+        }
         if (count >= 3) {
             if (!recaptchaService.verifyToken(captchaValue, ipAddress)) {
                 throw new IllegalArgumentException("CAPTCHA_REQUIRED");
@@ -1446,27 +1453,41 @@ public class AuthService {
             }
         });
 
-        String attemptKey = "lockout:failed_attempts:" + email;
-        String countStr = stringRedisTemplate.opsForValue().get(attemptKey);
-        int count = countStr != null ? Integer.parseInt(countStr) : 0;
-        count++;
+        try {
+            String attemptKey = "lockout:failed_attempts:" + email;
+            if (stringRedisTemplate != null) {
+                String countStr = stringRedisTemplate.opsForValue().get(attemptKey);
+                int count = countStr != null ? Integer.parseInt(countStr) : 0;
+                count++;
 
-        if (count >= 5) {
-            String lockKey = "lockout:locked:" + email;
-            stringRedisTemplate.opsForValue().set(lockKey, "locked", 15, TimeUnit.MINUTES);
-            stringRedisTemplate.delete(attemptKey);
-            throw new IllegalArgumentException(
-                    "Account is locked due to too many failed login attempts. Please try again after 15 minutes.");
-        } else {
-            stringRedisTemplate.opsForValue().set(attemptKey, String.valueOf(count), 15, TimeUnit.MINUTES);
+                if (count >= 5) {
+                    String lockKey = "lockout:locked:" + email;
+                    stringRedisTemplate.opsForValue().set(lockKey, "locked", 15, TimeUnit.MINUTES);
+                    stringRedisTemplate.delete(attemptKey);
+                    throw new IllegalArgumentException(
+                            "Account is locked due to too many failed login attempts. Please try again after 15 minutes.");
+                } else {
+                    stringRedisTemplate.opsForValue().set(attemptKey, String.valueOf(count), 15, TimeUnit.MINUTES);
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("[LOCKOUT] Redis failed attempts tracking failed for {}: {}", email, e.getMessage());
         }
     }
 
     private void checkLockoutStatus(String email) {
-        String lockKey = "lockout:locked:" + email;
-        if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(lockKey))) {
-            throw new IllegalArgumentException(
-                    "Account is locked due to too many failed login attempts. Please try again after 15 minutes.");
+        try {
+            String lockKey = "lockout:locked:" + email;
+            if (stringRedisTemplate != null && Boolean.TRUE.equals(stringRedisTemplate.hasKey(lockKey))) {
+                throw new IllegalArgumentException(
+                        "Account is locked due to too many failed login attempts. Please try again after 15 minutes.");
+            }
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("[LOCKOUT] Redis check failed for {}: {}", email, e.getMessage());
         }
 
         userRepository.findByEmail(email).ifPresent(user -> {
@@ -1478,8 +1499,14 @@ public class AuthService {
     }
 
     private void clearFailedAttempts(String email) {
-        stringRedisTemplate.delete("lockout:failed_attempts:" + email);
-        stringRedisTemplate.delete("lockout:locked:" + email);
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.delete("lockout:failed_attempts:" + email);
+                stringRedisTemplate.delete("lockout:locked:" + email);
+            }
+        } catch (Exception e) {
+            log.warn("[LOCKOUT] Redis clear failed for {}: {}", email, e.getMessage());
+        }
         userRepository.findByEmail(email).ifPresent(user -> {
             user.setFailedLoginAttempts(0);
             user.setLockedUntil(null);

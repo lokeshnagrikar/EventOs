@@ -229,16 +229,9 @@ public class RateLimiterService {
             throw e;
         } catch (Exception e) {
             // Outage policy:
-            // In production, sensitive auth operations fail closed to prevent brute force during outages.
-            // In dev/test, fail open so developers and test mocks without Redis proceed smoothly.
-            if (isProductionProfile()) {
-                log.error("[RATE_LIMIT_OUTAGE_FAIL_CLOSED] Sensitive authentication action blocked during Redis outage in production: Action={}, Key={}, Error={}",
-                        actionDescription, key, e.getMessage());
-                throw new RateLimitExceededException(60, "SERVICE_UNAVAILABLE", "Authentication service temporarily unavailable. Please try again later.");
-            } else {
-                log.warn("[RATE_LIMIT_OUTAGE_FAIL_OPEN] Request allowed in non-production environment despite Redis error: Action={}, Error={}",
-                        actionDescription, e.getMessage());
-            }
+            // Fail open with warning so Redis blips or reconnects never take down user authentication
+            log.warn("[RATE_LIMIT_OUTAGE_FAIL_OPEN] Request allowed despite Redis error: Action={}, Key={}, Error={}",
+                    actionDescription, key, e.getMessage());
         }
     }
 
