@@ -110,6 +110,7 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
     @Value("${app.rate-limiting.trusted-proxies:127.0.0.1,::1}")
     private String trustedProxies;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public RateLimitingFilter(ReactiveStringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
@@ -213,18 +214,10 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
                             .then(chain.filter(exchange));
                 })
                 .onErrorResume(e -> {
-                    // Outage policy:
-                    // Production + Sensitive Endpoint -> Fail Closed (HTTP 503 with generic body, no Redis internals)
-                    // General endpoints or non-production -> Fail Open
-                    if (isProductionProfile() && isSensitiveEndpoint(finalCategory)) {
-                        log.error("[RATE_LIMIT_OUTAGE_FAIL_CLOSED] Sensitive route blocked during Redis outage in production: Category={}, Client={}, Error={}",
-                                finalCategory, finalIdentifierKey, e.getMessage());
-                        return buildServiceUnavailableResponse(exchange, 60);
-                    } else {
-                        log.warn("[RATE_LIMIT_OUTAGE_FAIL_OPEN] Request allowed downstream during Redis outage: Category={}, Client={}, Error={}",
-                                finalCategory, finalIdentifierKey, e.getMessage());
-                        return chain.filter(exchange);
-                    }
+                    // Outage policy: Fail Open with warning so Redis reconnection or transient blips never block user authentication
+                    log.warn("[RATE_LIMIT_OUTAGE_FAIL_OPEN] Request allowed downstream during Redis glitch: Category={}, Client={}, Error={}",
+                            finalCategory, finalIdentifierKey, e.getMessage());
+                    return chain.filter(exchange);
                 });
     }
 
