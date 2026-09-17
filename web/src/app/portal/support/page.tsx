@@ -19,6 +19,7 @@ import {
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 
 const FAQS = [
   {
@@ -31,7 +32,7 @@ const FAQS = [
   },
   {
     q: "Can I edit the guest count after booking?",
-    a: "Yes, modifications to guest counts can be logged up to 14 days before the event by raising a support ticket below or calling coordinator Sneha Rao."
+    a: "Yes, modifications to guest counts can be logged up to 14 days before the event by raising a support ticket below or contacting your designated coordinator."
   },
   {
     q: "How do I access and download my photos?",
@@ -46,6 +47,8 @@ const GUIDES = [
 ];
 
 export default function PortalSupportPage() {
+  const { user, memberships } = useAuthStore();
+  const workspaceName = memberships[0]?.companyName || "Event Operations";
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   
@@ -99,16 +102,14 @@ export default function PortalSupportPage() {
             </div>
           </div>
           <div>
-            <p className="font-extrabold text-xs text-zinc-200">Sneha Rao</p>
-            <p className="text-[10px] text-zinc-500 mt-0.5">Design lead & Wedding planner</p>
+            <p className="font-extrabold text-xs text-zinc-200">{workspaceName} Concierge</p>
+            <p className="text-[10px] text-zinc-500 mt-0.5">Design Lead & Event Coordinator</p>
           </div>
           <a
-            href="https://wa.me/919999999999"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="mailto:support@eventosapp.in?subject=Event%20Assistance%20Request"
             className="flex items-center gap-1 text-[10px] font-bold text-purple-400 hover:text-purple-300 group hover:underline"
           >
-            Chat on WhatsApp <ExternalLink size={10} className="group-hover:translate-x-0.5 transition-transform" />
+            Contact Coordinator <ExternalLink size={10} className="group-hover:translate-x-0.5 transition-transform" />
           </a>
         </div>
 

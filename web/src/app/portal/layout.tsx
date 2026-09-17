@@ -98,25 +98,18 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       });
   }, []);
 
-  // Notification lists (State)
-  const [notifications, setNotifications] = useState([
-    { id: "1", type: "PAYMENT", text: "Advance Payment Receipt Generated", time: "1 hour ago", unread: true },
-    { id: "2", type: "TIMELINE", text: "Event Coordinator updated Florals schedule", time: "3 hours ago", unread: true },
-    { id: "3", type: "GALLERY", text: "Initial Mood Board Album published", time: "1 day ago", unread: false },
-    { id: "4", type: "DOCUMENT", text: "Contract Proposal v2 ready for signature", time: "2 days ago", unread: false }
-  ]);
+  // Notification lists (Dynamic State)
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
   // Chat conversation logs (State)
   const [chatMessages, setChatMessages] = useState([
-    { id: "1", sender: "planner", text: "Hi! I've uploaded the updated decor proposals in the document vault. Let me know your thoughts.", time: "10:15 AM", read: true },
-    { id: "2", sender: "client", text: "Awesome! The color choices look perfect. Let's proceed with the pastel shades.", time: "10:20 AM", read: true },
-    { id: "3", sender: "planner", text: "Perfect. I'll lock that in and update the timeline milestones.", time: "10:25 AM", read: true }
+    { id: "1", sender: "planner", text: "Welcome to your event workspace! You can communicate directly with our coordination desk here.", time: "Just now", read: true }
   ]);
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [pinnedNotes, setPinnedNotes] = useState<string>("Meeting scheduled: July 5th at 3:00 PM.");
+  const [pinnedNotes, setPinnedNotes] = useState<string>("");
 
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -697,12 +690,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               <div className="p-4 border-b border-zinc-850 bg-zinc-950/30 flex justify-between items-center">
                 <div className="flex items-center gap-2.5">
                   <div className="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-extrabold border border-purple-500/20 shadow">
-                    SR
+                    ED
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-zinc-200 leading-none">Sneha Rao</h4>
+                    <h4 className="font-extrabold text-zinc-200 leading-none">{branding.brandName} Desk</h4>
                     <span className="text-[8.5px] text-emerald-400 font-bold flex items-center gap-0.5 mt-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" /> Active planner
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" /> Active Concierge
                     </span>
                   </div>
                 </div>

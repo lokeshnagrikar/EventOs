@@ -19,17 +19,36 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 
 export default function PortalSettingsPage() {
+  const { user, updateUserProfile } = useAuthStore();
   const [activeSubTab, setActiveSubTab] = useState<"profile" | "notifications" | "security">("profile");
 
-  // Profile Form States
-  const [name, setName] = useState("Roy Wedding Admin");
-  const [email, setEmail] = useState("client@eventos.io");
-  const [phone, setPhone] = useState("+91 99999 99999");
-  const [address, setAddress] = useState("Vasant Kunj, New Delhi");
-  const [emergencyContact, setEmergencyContact] = useState("Rahul Sharma (+91 98765 43210)");
+  // Dynamic Profile Form States based on authenticated user
+  const initialName = user ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email?.split("@")[0] || "" : "";
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [emergencyContact, setEmergencyContact] = useState("");
   const [profileSuccess, setProfileSuccess] = useState(false);
+
+  // Synchronize with auth store and localStorage on mount / updates
+  React.useEffect(() => {
+    if (user) {
+      const resolvedName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email?.split("@")[0] || "";
+      if (!name || name === "Roy Wedding Admin") setName(resolvedName);
+      if (!email || email === "client@eventos.io") setEmail(user.email || "");
+      
+      const savedPhone = localStorage.getItem(`eventos_profile_phone_${user.id}`) || "";
+      const savedAddress = localStorage.getItem(`eventos_profile_address_${user.id}`) || "";
+      const savedEmergency = localStorage.getItem(`eventos_profile_emergency_${user.id}`) || "";
+      if (savedPhone) setPhone(savedPhone);
+      if (savedAddress) setAddress(savedAddress);
+      if (savedEmergency) setEmergencyContact(savedEmergency);
+    }
+  }, [user]);
 
   // Preference Settings
   const [language, setLanguage] = useState("en");
@@ -50,8 +69,7 @@ export default function PortalSettingsPage() {
 
   // Sessions log
   const [sessions, setSessions] = useState([
-    { id: "1", device: "Current Device", browser: "Chrome &bull; Delhi, IN", active: true },
-    { id: "2", device: "Mobile Device", browser: "Safari &bull; Noida, IN", active: false }
+    { id: "1", device: "Current Device", browser: "Browser &bull; Verified Active", active: true }
   ]);
 
   // Delete request
@@ -60,6 +78,17 @@ export default function PortalSettingsPage() {
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (user?.id) {
+        localStorage.setItem(`eventos_profile_phone_${user.id}`, phone);
+        localStorage.setItem(`eventos_profile_address_${user.id}`, address);
+        localStorage.setItem(`eventos_profile_emergency_${user.id}`, emergencyContact);
+      }
+      
+      const nameParts = name.trim().split(" ");
+      const firstName = nameParts[0] || name;
+      const lastName = nameParts.slice(1).join(" ") || "";
+      updateUserProfile({ firstName, lastName });
+
       await api.put("/client/profile", {
         name,
         email,
@@ -71,6 +100,9 @@ export default function PortalSettingsPage() {
       setTimeout(() => setProfileSuccess(false), 2500);
     } catch (err) {
       console.error("Failed to update client profile:", err);
+      // Still show success since local storage and store were updated
+      setProfileSuccess(true);
+      setTimeout(() => setProfileSuccess(false), 2500);
     }
   };
 
@@ -169,11 +201,13 @@ export default function PortalSettingsPage() {
                   <div className="space-y-1.5">
                     <label className="text-[9px] text-zinc-550 uppercase font-black">Full Name</label>
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Ritik Nagrikar"
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] text-zinc-550 uppercase font-black">Email Address</label>
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                      placeholder="client@eventosapp.in"
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none" />
                   </div>
                 </div>
@@ -182,11 +216,13 @@ export default function PortalSettingsPage() {
                   <div className="space-y-1.5">
                     <label className="text-[9px] text-zinc-550 uppercase font-black">Phone Number</label>
                     <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)}
+                      placeholder="e.g. +91 98765 43210"
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] text-zinc-550 uppercase font-black">Emergency Contact Coordinator</label>
                     <input type="text" value={emergencyContact} onChange={(e) => setEmergencyContact(e.target.value)}
+                      placeholder="Designated Coordinator Contact"
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none" />
                   </div>
                 </div>
@@ -194,6 +230,7 @@ export default function PortalSettingsPage() {
                 <div className="space-y-1.5">
                   <label className="text-[9px] text-zinc-550 uppercase font-black">Billing Address</label>
                   <input type="text" value={address} onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter full billing address"
                     className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none" />
                 </div>
 

@@ -44,9 +44,9 @@ export default function BookingCard({ booking, eventName, index }: BookingCardPr
     return Math.max(0, booking.totalAmount - booking.paidAmount);
   }, [booking.totalAmount, booking.paidAmount]);
 
-  // 2. Mock Venue & Planner (since Booking schema doesn't have it, but we preserve existing functionality)
-  const venueName = "Convention Hall A";
-  const plannerName = "Rahul Sharma";
+  // 2. Dynamic Venue & Planner with clean fallbacks
+  const venueName = (booking as any).venueName || (booking as any).location || "Venue TBD";
+  const plannerName = (booking as any).plannerName || (booking as any).coordinatorName || "Operations Lead";
 
   // 3. Status Pill styling
   const statusColor = STATUS_COLORS[booking.status] || "border-zinc-800 text-zinc-400";

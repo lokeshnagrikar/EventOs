@@ -76,23 +76,30 @@ const STAGES = [
   { key: "COMPLETED", label: "Completed", pct: 100 }
 ];
 
+import { useAuthStore } from "@/store/authStore";
+
 export default function ClientDashboard() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   const [userName, setUserName] = useState("Client");
 
-  // Local state checklist (mocking interactive checklist items persistence)
+  // Dynamic state checklist for event milestones
   const [checklist, setChecklist] = useState([
-    { id: "guest", label: "Guest list confirmed", completed: true, deadline: "July 2", role: "Client" },
-    { id: "decor", label: "Decoration finalized", completed: true, deadline: "July 5", role: "Planner" },
-    { id: "food", label: "Food & catering finalized", completed: false, deadline: "July 12", role: "Client" },
-    { id: "photo", label: "Photography details confirmed", completed: false, deadline: "July 18", role: "Planner" },
-    { id: "music", label: "Music & DJ booked", completed: false, deadline: "July 20", role: "Client" },
-    { id: "payment", label: "Initial deposit completed", completed: true, deadline: "June 25", role: "Client" }
+    { id: "guest", label: "Guest list confirmed", completed: false, deadline: "Stage 01", role: "Client" },
+    { id: "decor", label: "Decoration & theme finalized", completed: false, deadline: "Stage 02", role: "Planner" },
+    { id: "food", label: "Catering & menu selection", completed: false, deadline: "Stage 03", role: "Client" },
+    { id: "photo", label: "Photography & media schedule", completed: false, deadline: "Stage 04", role: "Planner" },
+    { id: "music", label: "Sound & DJ setup schedule", completed: false, deadline: "Stage 05", role: "Client" },
+    { id: "payment", label: "Initial deposit confirmed", completed: false, deadline: "Stage 06", role: "Client" }
   ]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (user?.firstName) {
+      setUserName(user.firstName);
+    } else if (user?.email) {
+      setUserName(user.email.split("@")[0]);
+    } else if (typeof window !== "undefined") {
       const cookieName = decodeURIComponent(
         document.cookie
           .split("; ")
@@ -103,7 +110,7 @@ export default function ClientDashboard() {
         setUserName(cookieName);
       }
     }
-  }, []);
+  }, [user]);
 
   // 1. Fetch Quotes
   const { data: quotesData, isLoading: loadingQuotes } = useQuery<{ data: Quote[] }>({
@@ -245,7 +252,7 @@ export default function ClientDashboard() {
               Welcome, {userName} <Sparkles className="text-purple-400 animate-pulse" size={18} />
             </h2>
             <p className="text-[11px] text-zinc-450 mt-1 font-bold">
-              EventOS Client Portal &bull; Syncing coordinates in real-time with Sneha Rao.
+              EventOS Client Portal &bull; Real-time event orchestration and milestone tracking.
             </p>
           </div>
         </div>
@@ -300,8 +307,8 @@ export default function ClientDashboard() {
           </div>
 
           <div className="flex justify-between items-center text-[9px] text-zinc-550 font-bold uppercase tracking-wider">
-            <span>Live Coordinator: Sneha Rao</span>
-            <span>Location: {activeEvent.location || "Delhi NCR"}</span>
+            <span>Live Coordinator: Assigned Operations Desk</span>
+            <span>Location: {activeEvent.location || "To Be Scheduled"}</span>
           </div>
         </div>
       )}

@@ -228,9 +228,7 @@ export default function PortalGalleryPage() {
 
   const activeComments = useMemo(() => {
     if (!activePhotoId) return [];
-    return commentsList[activePhotoId] || [
-      { id: "1", author: "Sneha Rao", text: "Decorator selection for floral layout.", createdAt: "Just now" }
-    ];
+    return commentsList[activePhotoId] || [];
   }, [activePhotoId, commentsList]);
 
   const toggleFavoriteMutation = useMutation({
