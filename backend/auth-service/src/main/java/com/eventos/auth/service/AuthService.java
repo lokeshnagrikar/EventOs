@@ -1171,8 +1171,29 @@ public class AuthService {
         emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), wsName);
 
         Map<String, Object> result = new HashMap<>();
+        try {
+            List<Membership> allUserMemberships = membershipRepository.findAllByUserId(user.getId());
+            Map<String, Object> session = createAuthoritativeSession(
+                    user,
+                    membership,
+                    allUserMemberships.isEmpty() ? List.of(membership) : allUserMemberships,
+                    "127.0.0.1",
+                    "Web Client",
+                    "Web",
+                    "Browser",
+                    "AcceptInvite");
+            result.putAll(session);
+        } catch (Exception e) {
+            log.warn("[ACCEPT_INVITE] Session generation fallback: {}", e.getMessage());
+        }
+
         result.put("success", true);
         result.put("message", "Invitation accepted and account activated");
+        result.put("role", membership.getRole().getName());
+        result.put("tenantId", membership.getTenantId().toString());
+        result.put("email", user.getEmail());
+        result.put("firstName", user.getFirstName());
+        result.put("lastName", user.getLastName());
         return result;
     }
 

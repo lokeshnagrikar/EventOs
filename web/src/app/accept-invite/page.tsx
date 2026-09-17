@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, CheckCircle, XCircle, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { useAuthStore } from "@/store/authStore";
 
 function AcceptInviteContent() {
   const router = useRouter();
@@ -19,6 +20,8 @@ function AcceptInviteContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [destinationPath, setDestinationPath] = useState("/dashboard");
+  const [destinationLabel, setDestinationLabel] = useState("Workspace Dashboard");
 
   // Password strength check
   const hasMinLength = password.length >= 8;
@@ -52,11 +55,37 @@ function AcceptInviteContent() {
 
     setIsLoading(true);
     try {
-      await api.post("/auth/accept-invite", { token, password });
+      const res = await api.post("/auth/accept-invite", { token, password });
+      const data = res.data;
+      const role = data?.role;
+      const isClient = role === "CLIENT";
+      const targetPath = isClient ? "/portal" : "/dashboard";
+      const targetLabel = isClient ? "Client Portal" : "Workspace Dashboard";
+
+      setDestinationPath(targetPath);
+      setDestinationLabel(targetLabel);
+
+      if (data?.accessToken) {
+        useAuthStore.getState().setAuth(
+          data.accessToken,
+          {
+            id: data.userId,
+            email: data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            role: data.role,
+            permissions: data.permissions || [],
+          },
+          data.tenantId,
+          data.memberships || [],
+          data.refreshToken
+        );
+      }
+
       setSuccess(true);
       setTimeout(() => {
-        router.replace("/?login=true");
-      }, 3000);
+        router.replace(targetPath);
+      }, 1500);
     } catch (err: any) {
       setError(
         err.response?.data?.error?.message ||
@@ -108,9 +137,11 @@ function AcceptInviteContent() {
           </motion.div>
           <h1 className="text-2xl font-black text-white mb-2">Account Activated! 🎉</h1>
           <p className="text-zinc-400 text-sm mb-2">
-            Your password has been set and your account is now active.
+            Your password has been set and your secure session is ready.
           </p>
-          <p className="text-zinc-500 text-xs">Redirecting you to login...</p>
+          <p className="text-purple-400 text-xs font-semibold animate-pulse">
+            Opening your {destinationLabel}...
+          </p>
         </motion.div>
       </div>
     );

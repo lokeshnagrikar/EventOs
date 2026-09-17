@@ -26,7 +26,9 @@ import {
   Clock,
   Trash2,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Shield,
+  Lock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -49,7 +51,9 @@ export interface NotificationItem {
   unread: boolean;
   type: "info" | "success" | "warning" | "error";
   href: string;
-  category: "lead" | "quote" | "event" | "payment" | "system";
+  category: "lead" | "quote" | "event" | "payment" | "system" | "security" | "superadmin";
+  actorType?: "SUPER_ADMIN" | "TEAM" | "CLIENT" | "SYSTEM";
+  actorName?: string;
 }
 
 function formatRelativeTime(dateStrOrTs?: string | number | Date): string {
@@ -117,17 +121,94 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
       const readIds = new Set<string>(JSON.parse(localStorage.getItem(storageKeyRead) || "[]"));
       const dismissedIds = new Set<string>(JSON.parse(localStorage.getItem(storageKeyDismissed) || "[]"));
 
-      // Fetch CRM Leads, Quotes, Events, and Invoices in parallel
-      const [leadsRes, quotesRes, eventsRes, invoicesRes] = await Promise.allSettled([
+      // Fetch CRM Leads, Quotes, Events, Invoices, and Audit Logs in parallel
+      const [leadsRes, quotesRes, eventsRes, invoicesRes, auditRes, securityRes] = await Promise.allSettled([
         api.get("/crm/leads"),
         api.get("/crm/quotes"),
         api.get("/events"),
         api.get("/events/invoices"),
+        api.get("/audit-logs?size=10"),
+        api.get("/security/logs"),
       ]);
 
       const dynamicList: NotificationItem[] = [];
 
-      // 1. Process Live Leads
+      // 1. Process Live Audit Logs (SuperAdmin vs Team vs System actions)
+      if (auditRes.status === "fulfilled" && Array.isArray(auditRes.value.data?.data)) {
+        auditRes.value.data.data.slice(0, 6).forEach((logItem: any) => {
+          const id = `audit-${logItem.id}`;
+          if (dismissedIds.has(id)) return;
+          const ts = logItem.createdAt ? new Date(logItem.createdAt).getTime() : Date.now();
+          const actionStr = String(logItem.action || "").toUpperCase();
+          const isSuperAdminAction = actionStr.includes("SUPERADMIN") || actionStr.includes("SUBSCRIPTION") || actionStr.includes("TENANT_STATUS") || actionStr.includes("ANNOUNCEMENT");
+          const isSecurityAction = actionStr.includes("LOGIN") || actionStr.includes("PASSWORD") || actionStr.includes("2FA");
+
+          let actorType: "SUPER_ADMIN" | "TEAM" | "CLIENT" | "SYSTEM" = "TEAM";
+          let actorName = "Team Member";
+          let title = "Workspace Activity";
+          let type: "info" | "success" | "warning" | "error" = "info";
+          let category: any = "system";
+
+          if (isSuperAdminAction) {
+            actorType = "SUPER_ADMIN";
+            actorName = "SuperAdmin";
+            title = `Platform Update: ${logItem.action.replace(/_/g, " ")}`;
+            type = "warning";
+            category = "superadmin";
+          } else if (isSecurityAction) {
+            actorType = "TEAM";
+            actorName = "Security Guard";
+            title = `Security Event: ${logItem.action.replace(/_/g, " ")}`;
+            type = actionStr.includes("FAILURE") ? "error" : "info";
+            category = "security";
+          } else {
+            actorType = "TEAM";
+            actorName = logItem.entityName ? `${logItem.entityName} Team` : "Team Member";
+            title = `${logItem.action ? logItem.action.replace(/_/g, " ") : "Entity Update"}: ${logItem.entityName || "Record"}`;
+            type = "info";
+            category = "event";
+          }
+
+          dynamicList.push({
+            id,
+            title,
+            desc: logItem.payloadDiff || logItem.details || `Operation logged for ${logItem.entityName || "Workspace"}.`,
+            time: formatRelativeTime(ts),
+            timestamp: ts,
+            unread: !readIds.has(id),
+            type,
+            href: isSuperAdminAction ? "/settings" : "/activity",
+            category,
+            actorType,
+            actorName,
+          });
+        });
+      }
+
+      // 2. Process Live Security Logs from auth-service
+      if (securityRes.status === "fulfilled" && Array.isArray(securityRes.value.data?.data)) {
+        securityRes.value.data.data.slice(0, 4).forEach((secItem: any) => {
+          const id = `sec-${secItem.id}`;
+          if (dismissedIds.has(id)) return;
+          const ts = secItem.createdAt ? new Date(secItem.createdAt).getTime() : Date.now() - 1000 * 60 * 15;
+          const isSuper = secItem.userAgent === "SuperAdmin" || (secItem.action && secItem.action.includes("SUPERADMIN"));
+          dynamicList.push({
+            id,
+            title: isSuper ? `SuperAdmin Action: ${secItem.action}` : `Security Audit: ${secItem.action}`,
+            desc: secItem.details || `Audit event from IP: ${secItem.ipAddress || "system"}`,
+            time: formatRelativeTime(ts),
+            timestamp: ts,
+            unread: !readIds.has(id),
+            type: isSuper ? "warning" : "info",
+            href: "/settings",
+            category: isSuper ? "superadmin" : "security",
+            actorType: isSuper ? "SUPER_ADMIN" : "SYSTEM",
+            actorName: isSuper ? "SuperAdmin" : "Security Service",
+          });
+        });
+      }
+
+      // 3. Process Live Leads
       if (leadsRes.status === "fulfilled" && Array.isArray(leadsRes.value.data?.data)) {
         leadsRes.value.data.data.slice(0, 4).forEach((lead: any) => {
           const id = `lead-${lead.id}`;
@@ -144,11 +225,13 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
             type: "info",
             href: "/crm",
             category: "lead",
+            actorType: "CLIENT",
+            actorName: lead.name ? `Client: ${lead.name}` : "Client Portal",
           });
         });
       }
 
-      // 2. Process Live Quotes
+      // 4. Process Live Quotes
       if (quotesRes.status === "fulfilled" && Array.isArray(quotesRes.value.data?.data)) {
         quotesRes.value.data.data.slice(0, 4).forEach((quote: any) => {
           const id = `quote-${quote.id}`;
@@ -165,11 +248,13 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
             type: isApproved ? "success" : "warning",
             href: "/quotes",
             category: "quote",
+            actorType: isApproved ? "CLIENT" : "TEAM",
+            actorName: isApproved ? (quote.clientName || "Client") : "Sales Desk",
           });
         });
       }
 
-      // 3. Process Live Events
+      // 5. Process Live Events
       if (eventsRes.status === "fulfilled" && Array.isArray(eventsRes.value.data?.data)) {
         eventsRes.value.data.data.slice(0, 4).forEach((evt: any) => {
           const id = `event-${evt.id}`;
@@ -185,11 +270,13 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
             type: "info",
             href: "/events",
             category: "event",
+            actorType: "TEAM",
+            actorName: "Operations Team",
           });
         });
       }
 
-      // 4. Process Live Invoices
+      // 6. Process Live Invoices
       if (invoicesRes.status === "fulfilled" && Array.isArray(invoicesRes.value.data?.data)) {
         invoicesRes.value.data.data.slice(0, 3).forEach((inv: any) => {
           const id = `inv-${inv.id}`;
@@ -206,6 +293,8 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
             type: isPaid ? "success" : "warning",
             href: "/finance",
             category: "payment",
+            actorType: isPaid ? "CLIENT" : "TEAM",
+            actorName: isPaid ? "Client Payment" : "Finance Desk",
           });
         });
       }
@@ -647,6 +736,8 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                             item.category === "payment" && "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
                             item.category === "quote" && "bg-purple-500/10 text-purple-400 border-purple-500/20",
                             item.category === "event" && "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                            item.category === "superadmin" && "bg-gradient-to-br from-purple-600/20 to-pink-600/20 text-purple-300 border-purple-500/40 shadow-sm shadow-purple-500/20",
+                            item.category === "security" && "bg-amber-500/15 text-amber-300 border-amber-500/30",
                             item.category === "system" && "bg-zinc-800 text-zinc-300 border-zinc-700"
                           )}
                         >
@@ -654,6 +745,8 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                           {item.category === "payment" && <CreditCard size={14} />}
                           {item.category === "quote" && <FileText size={14} />}
                           {item.category === "event" && <Calendar size={14} />}
+                          {item.category === "superadmin" && <Shield size={14} />}
+                          {item.category === "security" && <Lock size={14} />}
                           {item.category === "system" && <Zap size={14} />}
                         </div>
 
@@ -670,8 +763,26 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                               {item.time}
                             </span>
                           </div>
+
+                          {/* Dynamic Actor Attribution Badge */}
+                          {item.actorType && (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span
+                                className={cn(
+                                  "text-[9px] font-black px-1.5 py-0.5 rounded-md border tracking-wider uppercase inline-flex items-center gap-1",
+                                  item.actorType === "SUPER_ADMIN" && "bg-purple-950/80 text-purple-300 border-purple-500/40 shadow-sm shadow-purple-500/20",
+                                  item.actorType === "TEAM" && "bg-blue-950/60 text-blue-300 border-blue-500/30",
+                                  item.actorType === "CLIENT" && "bg-emerald-950/60 text-emerald-300 border-emerald-500/30",
+                                  item.actorType === "SYSTEM" && "bg-zinc-800 text-zinc-300 border-zinc-700"
+                                )}
+                              >
+                                {item.actorType === "SUPER_ADMIN" && <Shield size={8} className="text-purple-400" />}
+                                {item.actorName || item.actorType}
+                              </span>
+                            </div>
+                          )}
                           
-                          <p className="text-zinc-400 text-[11px] leading-relaxed mt-0.5 line-clamp-2">
+                          <p className="text-zinc-400 text-[11px] leading-relaxed mt-1 line-clamp-2">
                             {item.desc}
                           </p>
 
