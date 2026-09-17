@@ -74,10 +74,23 @@ apiClient.interceptors.request.use(
       }
     }
     
-    if (token && config.headers) {
+    const isPublicAuthEndpoint = config.url?.includes('/auth/login')
+      || config.url?.includes('/auth/register')
+      || config.url?.includes('/auth/magic-link')
+      || config.url?.includes('/auth/verify-magic-token')
+      || config.url?.includes('/auth/forgot-password')
+      || config.url?.includes('/auth/reset-password')
+      || config.url?.includes('/auth/captcha')
+      || config.url?.includes('/auth/verify-email')
+      || config.url?.includes('/auth/verify-otp')
+      || config.url?.includes('/auth/resend-verification')
+      || config.url?.includes('/auth/send-whatsapp-otp')
+      || config.url?.includes('/auth/verify-whatsapp-otp');
+
+    if (token && config.headers && !isPublicAuthEndpoint) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    if (activeTenantId && config.headers) {
+    if (activeTenantId && config.headers && !isPublicAuthEndpoint) {
       config.headers['X-Tenant-ID'] = activeTenantId;
     }
     return config;
@@ -104,12 +117,22 @@ apiClient.interceptors.response.use(
 
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
-    // Check if error is 401 and request hasn't been retried yet, skipping auth endpoints
+    // Check if error is 401 and request hasn't been retried yet, skipping all auth endpoints
     const isAuthRequest = originalRequest.url?.includes('/auth/login') 
       || originalRequest.url?.includes('/auth/register')
       || originalRequest.url?.includes('/auth/refresh')
       || originalRequest.url?.includes('/auth/switch')
-      || originalRequest.url?.includes('/auth/logout');
+      || originalRequest.url?.includes('/auth/logout')
+      || originalRequest.url?.includes('/auth/magic-link')
+      || originalRequest.url?.includes('/auth/verify-magic-token')
+      || originalRequest.url?.includes('/auth/forgot-password')
+      || originalRequest.url?.includes('/auth/reset-password')
+      || originalRequest.url?.includes('/auth/captcha')
+      || originalRequest.url?.includes('/auth/verify-email')
+      || originalRequest.url?.includes('/auth/verify-otp')
+      || originalRequest.url?.includes('/auth/resend-verification')
+      || originalRequest.url?.includes('/auth/send-whatsapp-otp')
+      || originalRequest.url?.includes('/auth/verify-whatsapp-otp');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       if (isRefreshing) {
