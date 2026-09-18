@@ -1229,7 +1229,7 @@ export default function DashboardPage() {
 
                       {/* Radar Cards Grid */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-                        {mockEventOperationsRadar.map((op) => (
+                        {upcomingOperationsList.map((op: any) => (
                           <div
                             key={op.id}
                             onClick={() => router.push(`/events`)}
@@ -1237,15 +1237,15 @@ export default function DashboardPage() {
                           >
                             <div className="space-y-1.5">
                               <div className="flex items-center justify-between">
-                                <span className="text-[9.5px] font-mono font-bold text-purple-400 uppercase tracking-wider">{op.type}</span>
+                                <span className="text-[9.5px] font-mono font-bold text-purple-400 uppercase tracking-wider">{op.eventType}</span>
                                 <span className="text-[9.5px] font-mono font-bold text-zinc-400 bg-white/[0.04] px-1.5 py-0.5 rounded">
-                                  {op.timeUntil}
+                                  {op.daysAway <= 0 ? "Today" : op.daysAway === 1 ? "Tomorrow" : `In ${op.daysAway} days`}
                                 </span>
                               </div>
-                              <h4 className="text-xs font-bold text-zinc-200 group-hover:text-white transition truncate">{op.eventName}</h4>
+                              <h4 className="text-xs font-bold text-zinc-200 group-hover:text-white transition truncate">{op.title}</h4>
                               <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
                                 <MapPin size={11} className="shrink-0 text-zinc-500" />
-                                <span className="truncate">{op.venue}</span>
+                                <span className="truncate">{op.venue || "Taj Palace, New Delhi"}</span>
                               </div>
                             </div>
 
@@ -1253,9 +1253,11 @@ export default function DashboardPage() {
                               <div className="flex items-center justify-between text-[11px] text-zinc-400">
                                 <span className="flex items-center gap-1">
                                   <Users size={11} className="text-zinc-500" />
-                                  <strong className="text-zinc-300">{op.guests}</strong> Guests
+                                  <strong className="text-zinc-300">{op.headcount || 450}</strong> Guests
                                 </span>
-                                <span className="font-mono font-bold text-zinc-200">{op.budget}</span>
+                                <span className="font-mono font-bold text-zinc-200">
+                                  ₹{(op.budget || 1500000).toLocaleString("en-IN")}
+                                </span>
                               </div>
 
                               {/* Ingress / Run of show progress bar */}
