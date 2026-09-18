@@ -139,7 +139,7 @@ export interface TimelineCue {
   notes?: string;
 }
 
-const DEFAULT_TIMELINE_CUES: TimelineCue[] = [
+export const TEMPLATE_TIMELINE_CUES: TimelineCue[] = [
   {
     id: "cue-1",
     time: "06:00 PM",
@@ -304,9 +304,9 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
   const [noteSearch, setNoteSearch] = useState("");
 
   // Run of Show / Timeline Cues
-  const [timelineCues, setTimelineCues] = useState<TimelineCue[]>(DEFAULT_TIMELINE_CUES);
+  const [timelineCues, setTimelineCues] = useState<TimelineCue[]>([]);
   const [showAddCue, setShowAddCue] = useState(false);
-  const [newCueTime, setNewCueTime] = useState("10:00 PM");
+  const [newCueTime, setNewCueTime] = useState("06:00 PM");
   const [newCueTitle, setNewCueTitle] = useState("");
   const [newCueDept, setNewCueDept] = useState("Hospitality / Hostess");
   const [newCueNotes, setNewCueNotes] = useState("");
@@ -363,10 +363,10 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
           setRichNotes(meta.richNotes || []);
           setGuestListText(meta.guestList || "");
 
-          if (meta.timelineCues && Array.isArray(meta.timelineCues) && meta.timelineCues.length > 0) {
+          if (meta.timelineCues && Array.isArray(meta.timelineCues)) {
             setTimelineCues(meta.timelineCues);
           } else {
-            setTimelineCues(DEFAULT_TIMELINE_CUES);
+            setTimelineCues([]);
           }
 
           setPlannerName(meta.planner || "Lokesh Nagrikar");
@@ -617,10 +617,16 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     triggerAutoSave({ timelineCuesList: updated });
   };
 
-  const handleResetDefaultCues = () => {
-    setTimelineCues(DEFAULT_TIMELINE_CUES);
-    triggerAutoSave({ timelineCuesList: DEFAULT_TIMELINE_CUES });
-    addToast("Run-of-Show cues reset to wedding template", "info");
+  const handleLoadTemplate = () => {
+    setTimelineCues(TEMPLATE_TIMELINE_CUES);
+    triggerAutoSave({ timelineCuesList: TEMPLATE_TIMELINE_CUES });
+    addToast("Standard 4 Wedding Cues loaded", "success");
+  };
+
+  const handleClearAllCues = () => {
+    setTimelineCues([]);
+    triggerAutoSave({ timelineCuesList: [] });
+    addToast("All timeline cues cleared", "info");
   };
 
   if (eventLoading || !event) {
@@ -827,12 +833,23 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     </span>
                   </div>
 
+                  {timelineCues.length > 0 && (
+                    <button
+                      onClick={handleClearAllCues}
+                      className="px-2.5 py-1.5 rounded-xl border border-rose-500/20 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 text-[10px] font-bold transition cursor-pointer"
+                      title="Clear all cues to start fresh"
+                    >
+                      Clear All
+                    </button>
+                  )}
+
                   <button
-                    onClick={handleResetDefaultCues}
-                    className="px-2.5 py-1.5 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 text-[10px] font-bold transition cursor-pointer"
-                    title="Reload default 4 wedding cues"
+                    onClick={handleLoadTemplate}
+                    className="px-2.5 py-1.5 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
+                    title="Load 4 wedding cues template"
                   >
-                    Reset Template
+                    <Sparkles size={11} className="text-purple-400" />
+                    Load Template
                   </button>
 
                   <button
@@ -918,8 +935,32 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               {/* Cue Sheet Items */}
               <div className="space-y-3">
                 {timelineCues.length === 0 ? (
-                  <div className="text-center py-8 text-zinc-500 text-xs">
-                    No timeline cues logged. Click &quot;Add Timeline Cue&quot; or &quot;Reset Template&quot;.
+                  <div className="text-center py-12 px-4 border border-dashed border-zinc-800 rounded-2xl bg-zinc-950/30 space-y-4">
+                    <div className="w-12 h-12 mx-auto rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                      <Clock size={24} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-zinc-200">No Timeline Cues Logged Yet</h4>
+                      <p className="text-xs text-zinc-500 max-w-md mx-auto mt-1">
+                        Build your live minute-by-minute cue sheet manually for your video demonstration, or insert the 4 wedding template cues.
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-center gap-3 pt-2">
+                      <button
+                        onClick={() => setShowAddCue(true)}
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-lg shadow-purple-900/30"
+                      >
+                        <Plus size={14} strokeWidth={3} />
+                        Add First Timeline Cue
+                      </button>
+                      <button
+                        onClick={handleLoadTemplate}
+                        className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
+                      >
+                        <Sparkles size={14} className="text-purple-400" />
+                        Quick-Load 4 Wedding Cues
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   timelineCues.map((cue) => (
