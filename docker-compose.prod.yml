@@ -75,6 +75,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - SPRING_PROFILES_ACTIVE=prod
       - MANAGEMENT_HEALTH_MAIL_ENABLED=false
@@ -122,6 +123,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - SPRING_PROFILES_ACTIVE=prod
       - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
@@ -153,6 +155,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - SPRING_PROFILES_ACTIVE=prod
       - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
@@ -184,6 +187,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER:-eventos_guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - SPRING_PROFILES_ACTIVE=prod
       - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
