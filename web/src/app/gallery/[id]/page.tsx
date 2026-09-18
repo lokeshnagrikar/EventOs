@@ -231,6 +231,10 @@ export default function AlbumDetailPage() {
     onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
       addToast(variables.favorite ? "Item added to favorites" : "Item removed from favorites", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to toggle favorite";
+      addToast(msg, "error");
     }
   });
 
@@ -245,6 +249,10 @@ export default function AlbumDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
       addToast("Item moved to Recycle Bin", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to move item to Recycle Bin";
+      addToast(msg, "error");
     }
   });
 
@@ -259,6 +267,10 @@ export default function AlbumDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
       addToast("Item restored to album", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to restore item";
+      addToast(msg, "error");
     }
   });
 
@@ -271,6 +283,10 @@ export default function AlbumDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albumItems", id] });
       addToast("Item permanently deleted", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to delete item";
+      addToast(msg, "error");
     }
   });
 
@@ -282,6 +298,10 @@ export default function AlbumDetailPage() {
     onSuccess: () => {
       router.push("/gallery");
       addToast("Album deleted", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to delete album";
+      addToast(msg, "error");
     }
   });
 
@@ -294,6 +314,10 @@ export default function AlbumDetailPage() {
       setShareSuccessToken(res.data.token);
       refetchShareLinks();
       addToast("Secure share link generated", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to generate share link";
+      addToast(msg, "error");
     }
   });
 
@@ -305,6 +329,10 @@ export default function AlbumDetailPage() {
     onSuccess: () => {
       refetchShareLinks();
       addToast("Share link revoked", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to revoke share link";
+      addToast(msg, "error");
     }
   });
 

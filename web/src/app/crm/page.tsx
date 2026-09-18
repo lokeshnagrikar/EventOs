@@ -225,7 +225,12 @@ export default function CrmPage() {
     enabled: mounted
   });
 
-  const leads = useMemo(() => leadsResponse?.data || [], [leadsResponse]);
+  const leads = useMemo<Lead[]>(() => {
+    if (Array.isArray(leadsResponse?.data)) return leadsResponse.data;
+    if (Array.isArray((leadsResponse as any)?.content)) return (leadsResponse as any).content;
+    if (Array.isArray(leadsResponse)) return leadsResponse as any;
+    return [];
+  }, [leadsResponse]);
   const pagination = leadsResponse?.pagination;
 
   // Calculate duplicate leads (sharing email or phone)
@@ -322,6 +327,10 @@ export default function CrmPage() {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       addToast("Lead stage updated successfully ✓", "success");
       if (selectedLeadId) refetchActivities();
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to update lead status";
+      addToast(msg, "error");
     }
   });
 
@@ -333,6 +342,11 @@ export default function CrmPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       refetchActivities();
+      addToast("Lead updated successfully ✓", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to update lead";
+      addToast(msg, "error");
     }
   });
 
@@ -350,6 +364,10 @@ export default function CrmPage() {
       setSelectedLeadId(null);
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       addToast("Lead moved to Recycle Bin", "info");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to delete lead";
+      addToast(msg, "error");
     }
   });
 
@@ -364,8 +382,16 @@ export default function CrmPage() {
       setQuickAddPhone("");
       setQuickAddEmail("");
       setQuickAddBudget("");
-      addToast("Lead proposal logged successfully", "success");
+      addToast("Lead proposal logged successfully ✓", "success");
       completeStep("add_lead");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message 
+        || err.response?.data?.message 
+        || err.response?.data?.detail 
+        || err.message 
+        || "Failed to create lead. Please verify server connection.";
+      addToast(msg, "error");
     }
   });
 
@@ -376,6 +402,11 @@ export default function CrmPage() {
     },
     onSuccess: () => {
       refetchActivities();
+      addToast("Activity logged ✓", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to log activity";
+      addToast(msg, "error");
     }
   });
 
@@ -849,7 +880,7 @@ export default function CrmPage() {
                             <div key={l.id} onClick={() => setSelectedLeadId(l.id)} className="py-3 flex justify-between items-center hover:bg-zinc-900/10 px-2 rounded-lg cursor-pointer transition">
                               <div>
                                 <span className="font-extrabold text-zinc-200 block">{l.name}</span>
-                                <span className="text-[10px] text-zinc-500">{l.eventType} • {l.phone || "No phone"}</span>
+                                <span className="text-[10px] text-zinc-550">{l.eventType} • {l.contact?.phone || l.phone || "No phone"}</span>
                               </div>
                               <span className="font-mono text-emerald-450 text-xs font-bold">₹{l.budget?.toLocaleString()}</span>
                             </div>
@@ -1079,10 +1110,23 @@ export default function CrmPage() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  const trimmedName = quickAddName.trim();
+                  const trimmedPhone = quickAddPhone.trim();
+                  const trimmedEmail = quickAddEmail.trim();
+
+                  if (!trimmedName) {
+                    addToast("Client name is required", "error");
+                    return;
+                  }
+                  if (!trimmedPhone) {
+                    addToast("Phone number is required", "error");
+                    return;
+                  }
+
                   quickAddLeadMutation.mutate({
-                    name: quickAddName,
-                    phone: quickAddPhone,
-                    email: quickAddEmail || null,
+                    name: trimmedName,
+                    phone: trimmedPhone,
+                    email: trimmedEmail ? trimmedEmail : null,
                     eventType: quickAddType,
                     eventDate: new Date().toISOString().split("T")[0],
                     budget: Number(quickAddBudget) || 100000,
@@ -1097,9 +1141,11 @@ export default function CrmPage() {
                   <input
                     type="text"
                     required
+                    disabled={quickAddLeadMutation.isPending}
                     value={quickAddName}
                     onChange={(e) => setQuickAddName(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -1108,18 +1154,22 @@ export default function CrmPage() {
                     <input
                       type="text"
                       required
+                      disabled={quickAddLeadMutation.isPending}
                       value={quickAddPhone}
                       onChange={(e) => setQuickAddPhone(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                      placeholder="e.g. 9876543210"
+                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-zinc-500">Email Address</label>
                     <input
                       type="email"
+                      disabled={quickAddLeadMutation.isPending}
                       value={quickAddEmail}
                       onChange={(e) => setQuickAddEmail(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                      placeholder="e.g. rahul@example.com"
+                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
                     />
                   </div>
                 </div>
@@ -1127,9 +1177,10 @@ export default function CrmPage() {
                   <div className="space-y-1.5">
                     <label className="text-zinc-500">Event Class</label>
                     <select
+                      disabled={quickAddLeadMutation.isPending}
                       value={quickAddType}
                       onChange={(e) => setQuickAddType(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
                     >
                       <option value="WEDDING">Wedding</option>
                       <option value="BIRTHDAY">Birthday</option>
@@ -1142,17 +1193,28 @@ export default function CrmPage() {
                     <input
                       type="number"
                       required
+                      min={0}
+                      disabled={quickAddLeadMutation.isPending}
                       value={quickAddBudget}
                       onChange={(e) => setQuickAddBudget(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white"
+                      placeholder="e.g. 250000"
+                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold transition cursor-pointer"
+                  disabled={quickAddLeadMutation.isPending}
+                  className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Log Proposal
+                  {quickAddLeadMutation.isPending ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Saving Lead Proposal...</span>
+                    </>
+                  ) : (
+                    "Log Proposal"
+                  )}
                 </button>
               </form>
             </motion.div>

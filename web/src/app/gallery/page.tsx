@@ -135,9 +135,7 @@ export default function GalleryPage() {
   const events = useMemo(() => eventsResponse?.data || [], [eventsResponse]);
 
   useEffect(() => {
-    if (albums.length > 0) {
-      setLocalAlbums(albums);
-    }
+    setLocalAlbums(albums);
   }, [albums]);
 
   const getEventName = (eventId?: string) => {
@@ -214,7 +212,11 @@ export default function GalleryPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albums"] });
       setRenamingAlbumId(null);
-      addToast("Album details saved", "success");
+      addToast("Album details saved ✓", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to update album";
+      addToast(msg, "error");
     }
   });
 
@@ -226,6 +228,10 @@ export default function GalleryPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albums"] });
       addToast("Album moved to archive", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to archive album";
+      addToast(msg, "error");
     }
   });
 
@@ -237,6 +243,10 @@ export default function GalleryPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albums"] });
       addToast("Album and linked files permanently deleted", "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to delete album";
+      addToast(msg, "error");
     }
   });
 

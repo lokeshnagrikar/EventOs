@@ -30,6 +30,13 @@ interface Lead {
   status: string;
   notes?: string;
   assignedUserId?: string;
+  contact?: {
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    email?: string;
+  };
 }
 
 interface TeamMember {
@@ -110,8 +117,8 @@ export default function AdvancedTable({
     const headers = ["Name", "Phone", "Email", "Event Type", "Event Date", "Budget", "Source", "Status"];
     const rows = sortedLeads.map((l) => [
       l.name,
-      l.phone || "",
-      l.email || "",
+      l.contact?.phone || l.phone || "",
+      l.contact?.email || l.email || "",
       l.eventType,
       l.eventDate || "",
       l.budget,
@@ -257,10 +264,10 @@ export default function AdvancedTable({
                   {/* Contact */}
                   <td className="p-4 text-zinc-450 space-y-0.5">
                     <div className="text-zinc-300">
-                      <Highlight text={lead.phone || ""} search={searchQuery} />
+                      <Highlight text={lead.contact?.phone || lead.phone || ""} search={searchQuery} />
                     </div>
                     <div className="text-[10px] text-zinc-550">
-                      <Highlight text={lead.email || ""} search={searchQuery} />
+                      <Highlight text={lead.contact?.email || lead.email || ""} search={searchQuery} />
                     </div>
                   </td>
                   

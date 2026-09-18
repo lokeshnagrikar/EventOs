@@ -15,6 +15,13 @@ interface Lead {
   leadSource: string;
   status: string;
   assignedUserId?: string;
+  contact?: {
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    email?: string;
+  };
 }
 
 interface TeamMember {
@@ -112,7 +119,7 @@ export default function ListView({
                 </span>
                 {!isCompact && (
                   <span className="text-[10px] text-zinc-550 block pt-0.5">
-                    {lead.phone || "No phone"} • {lead.email || "No email"}
+                    {(lead.contact?.phone || lead.phone) || "No phone"} • {(lead.contact?.email || lead.email) || "No email"}
                   </span>
                 )}
               </div>

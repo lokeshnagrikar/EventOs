@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
-import axios from "axios";
+import { api } from "@/lib/api";
 import {
   Folder,
   Image as ImageIcon,
@@ -77,12 +77,12 @@ export default function PublicSharePage() {
     setPasscodeError("");
     
     try {
-      const url = `/api/v1/gallery/share/public/view/${token}`;
+      const url = `/gallery/share/public/view/${token}`;
       const config = currentPasscode
           ? { params: { passcode: currentPasscode } }
           : {};
 
-      const response = await axios.get(url, config);
+      const response = await api.get(url, config);
 
       if (response.data?.success) {
         setAlbum(response.data.data);

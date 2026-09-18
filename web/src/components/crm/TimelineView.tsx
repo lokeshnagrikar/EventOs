@@ -15,6 +15,13 @@ interface Lead {
   leadSource: string;
   status: string;
   assignedUserId?: string;
+  contact?: {
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    email?: string;
+  };
 }
 
 interface TeamMember {

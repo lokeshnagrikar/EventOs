@@ -184,6 +184,9 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-demo}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-demo_key}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-demo_secret}
     depends_on:
       postgres:
         condition: service_healthy

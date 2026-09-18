@@ -31,6 +31,13 @@ interface Lead {
   status: string;
   notes?: string;
   assignedUserId?: string;
+  contact?: {
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    email?: string;
+  };
 }
 
 interface TeamMember {

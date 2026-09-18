@@ -85,7 +85,8 @@ apiClient.interceptors.request.use(
       || config.url?.includes('/auth/verify-otp')
       || config.url?.includes('/auth/resend-verification')
       || config.url?.includes('/auth/send-whatsapp-otp')
-      || config.url?.includes('/auth/verify-whatsapp-otp');
+      || config.url?.includes('/auth/verify-whatsapp-otp')
+      || config.url?.includes('/public/');
 
     if (token && config.headers && !isPublicAuthEndpoint) {
       config.headers.Authorization = `Bearer ${token}`;

@@ -79,4 +79,14 @@ public class Lead extends AbstractTenantAwareEntity {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("phone")
+    public String getPhone() {
+        return contact != null ? contact.getPhone() : null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("email")
+    public String getEmail() {
+        return contact != null ? contact.getEmail() : null;
+    }
 }
