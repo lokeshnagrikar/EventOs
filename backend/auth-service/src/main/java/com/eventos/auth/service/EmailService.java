@@ -204,14 +204,24 @@ public class EmailService {
                     +
                     "    </td></tr>" +
                     "    <tr><td style=\"padding:36px; text-align:center;\">" +
-                    "      <p style=\"color:#A1A1AA; font-size:14px; line-height:1.7; margin-bottom:28px;\">We received a request to reset your password. Click below to choose a new password:</p>"
+                    "      <p style=\"color:#A1A1AA; font-size:14px; line-height:1.7; margin-bottom:24px;\">We received a request to reset your password. Click the button below to choose a new password:</p>"
                     +
-                    "      <div style=\"margin-bottom:28px;\">" +
+                    "      <div style=\"margin-bottom:24px;\">" +
                     "        <a href=\"" + resetUrl
                     + "\" style=\"display:inline-block; padding:16px 36px; border-radius:16px; background:linear-gradient(135deg,#DC2626,#F59E0B); color:white; font-size:15px; font-weight:800; text-decoration:none; box-shadow:0 10px 20px rgba(220,38,38,0.3);\">🔑 Reset Password</a>"
                     +
                     "      </div>" +
-                    "      <p style=\"color:#71717A; font-size:12px; margin-bottom:0;\">This link expires in 15 minutes. If you did not request this change, please ignore this email.</p>"
+                    "      <div style=\"background:#18181B; border:1px solid #27272A; border-radius:14px; padding:16px; margin-bottom:24px; text-align:left;\">"
+                    +
+                    "        <div style=\"font-size:10px; font-weight:800; color:#A1A1AA; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;\">Security Token (if entering manually):</div>"
+                    +
+                    "        <div style=\"font-family:monospace; font-size:13px; color:#C084FC; word-break:break-all; background:#09090B; padding:10px; border-radius:8px; border:1px solid #3F3F46;\">"
+                    + token + "</div>"
+                    +
+                    "        <div style=\"font-size:10px; color:#71717A; margin-top:8px;\">Direct Link: <a href=\"" + resetUrl + "\" style=\"color:#818CF8; word-break:break-all;\">" + resetUrl + "</a></div>"
+                    +
+                    "      </div>" +
+                    "      <p style=\"color:#71717A; font-size:12px; margin-bottom:0;\">This recovery link expires in 30 minutes. If you did not request this change, please ignore this email.</p>"
                     +
                     "    </td></tr>" +
                     "    <tr><td align=\"center\" style=\"padding:20px; background:#08080A; border-top:1px solid #27272A; font-size:11px; color:#52525B;\">"

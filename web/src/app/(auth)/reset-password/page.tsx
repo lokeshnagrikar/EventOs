@@ -74,16 +74,29 @@ function ResetPasswordForm() {
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
-      setValue("token", token);
+      setValue("token", token.trim());
     }
   }, [searchParams, setValue]);
 
   const onSubmit = async (data: ResetInputs) => {
     setError(null);
     setLoading(true);
+
+    // Smart token sanitization: Extract pure token if user pasted the full URL or parameter string
+    let cleanToken = data.token.trim();
+    if (cleanToken.includes("token=")) {
+      const match = cleanToken.match(/token=([A-Za-z0-9_-]+)/);
+      if (match && match[1]) {
+        cleanToken = match[1];
+      }
+    } else if (cleanToken.includes("/")) {
+      const parts = cleanToken.split("/");
+      cleanToken = parts[parts.length - 1].split("?")[0];
+    }
+
     try {
       await apiClient.post("/auth/reset-password", {
-        token: data.token,
+        token: cleanToken,
         password: data.password,
       });
 

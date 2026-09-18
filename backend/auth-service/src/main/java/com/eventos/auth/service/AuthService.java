@@ -844,7 +844,7 @@ public class AuthService {
             String tokenHash = sha256(resetToken);
 
             String redisKey = "reset:token:" + tokenHash;
-            storeTokenFallback(redisKey, user.getEmail(), 15);
+            storeTokenFallback(redisKey, user.getEmail(), 30);
 
             auditLogService.logEvent(null, user.getId(), "PASSWORD_RESET_REQUEST", null, null,
                     "Password reset token generated for user: " + cleanEmail);
@@ -864,10 +864,19 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> resetPassword(String token, String newPassword) {
-        String tokenHash = sha256(token);
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid or expired password reset token");
+        }
+        String cleanToken = token.trim();
+        if (cleanToken.startsWith("token=")) {
+            cleanToken = cleanToken.substring(6).trim();
+        }
+        String tokenHash = sha256(cleanToken);
         String redisKey = "reset:token:" + tokenHash;
         String email = getTokenFallback(redisKey);
         if (email == null) {
+            log.warn("[PASSWORD_RESET] Token lookup failed. tokenLength={}, hashPrefix={}",
+                    cleanToken.length(), tokenHash.substring(0, Math.min(8, tokenHash.length())));
             throw new IllegalArgumentException("Invalid or expired password reset token");
         }
 
