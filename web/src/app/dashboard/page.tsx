@@ -132,21 +132,21 @@ interface WidgetConfig {
 
 // ─── DEFAULT WIDGET CONFIGS ──────────────────────────────────────────────────────
 const DEFAULT_WIDGET_CONFIGS: WidgetConfig[] = [
+  { id: "kpi", title: "Executive KPI Indicators", category: "finance", colSpan: "col-span-3", isPinned: true, visible: true },
   { id: "radar", title: "Event Operations Radar", category: "operations", colSpan: "col-span-3", isPinned: true, visible: true },
+  { id: "priority", title: "Action Required & Priority Tasks", category: "operations", colSpan: "col-span-2", isPinned: false, visible: true },
   { id: "control", title: "Control Center", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "health", title: "Workspace Health Score", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "priority", title: "Action Required & Priority Tasks", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "kpi", title: "Executive KPI Indicators", category: "finance", colSpan: "col-span-3", isPinned: false, visible: true },
-  { id: "advisor", title: "Operational Intelligence Advisor", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "sales", title: "Sales Analytics Funnel", category: "analytics", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "finance", title: "Finance Flow & Ledger Cashflow", category: "finance", colSpan: "col-span-2", isPinned: false, visible: true },
+  { id: "sales", title: "Sales Analytics Funnel", category: "analytics", colSpan: "col-span-1", isPinned: false, visible: true },
+  { id: "advisor", title: "Operational Intelligence Advisor", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "events", title: "Package & Ingress Tracker", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
+  { id: "health", title: "Workspace Health Score", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
+  { id: "forecasting", title: "Predictive Business Growth", category: "finance", colSpan: "col-span-2", isPinned: false, visible: true },
+  { id: "goals", title: "Corporate Goals Progress", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "team", title: "Crew Roster & Bandwidth", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "clients", title: "Client Insights & NPS", category: "analytics", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "media", title: "Media Storage Analytics", category: "analytics", colSpan: "col-span-1", isPinned: false, visible: true },
   { id: "activity", title: "Workspace Timeline Logs", category: "operations", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "goals", title: "Corporate Goals Progress", category: "growth", colSpan: "col-span-1", isPinned: false, visible: true },
-  { id: "forecasting", title: "Predictive Business Growth", category: "finance", colSpan: "col-span-2", isPinned: false, visible: true },
+  { id: "clients", title: "Client Insights & NPS", category: "analytics", colSpan: "col-span-3", isPinned: false, visible: true },
 ];
 
 // ─── ANIMATED COUNT LOADER ───────────────────────────────────────────────────────
@@ -533,23 +533,31 @@ export default function DashboardPage() {
     else if (hr < 17) setGreeting("Good Afternoon");
     else setGreeting("Good Evening");
 
+    const layoutVersion = localStorage.getItem("eventos_layout_version");
     const savedOrder = localStorage.getItem("eventos_executive_widgets_order");
-    if (savedOrder) {
+    if (layoutVersion === "v3" && savedOrder) {
       try {
         const parsed = JSON.parse(savedOrder);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (!parsed.some((w: any) => w.id === "kpi")) {
+            parsed.unshift({ id: "kpi", title: "Executive KPI Indicators", category: "finance", colSpan: "col-span-3", isPinned: true, visible: true });
+          }
           if (!parsed.some((w: any) => w.id === "radar")) {
-            parsed.unshift({ id: "radar", title: "Event Operations Radar", category: "operations", colSpan: "col-span-3", isPinned: true, visible: true });
+            parsed.splice(1, 0, { id: "radar", title: "Event Operations Radar", category: "operations", colSpan: "col-span-3", isPinned: true, visible: true });
           }
           setWidgetOrder(parsed);
         } else {
           setWidgetOrder(DEFAULT_WIDGET_CONFIGS);
+          localStorage.setItem("eventos_executive_widgets_order", JSON.stringify(DEFAULT_WIDGET_CONFIGS));
         }
       } catch {
         setWidgetOrder(DEFAULT_WIDGET_CONFIGS);
+        localStorage.setItem("eventos_executive_widgets_order", JSON.stringify(DEFAULT_WIDGET_CONFIGS));
       }
     } else {
       setWidgetOrder(DEFAULT_WIDGET_CONFIGS);
+      localStorage.setItem("eventos_executive_widgets_order", JSON.stringify(DEFAULT_WIDGET_CONFIGS));
+      localStorage.setItem("eventos_layout_version", "v3");
     }
   }, []);
 
@@ -640,46 +648,68 @@ export default function DashboardPage() {
   const saveLayoutOrder = (updated: WidgetConfig[]) => {
     setWidgetOrder(updated);
     localStorage.setItem("eventos_executive_widgets_order", JSON.stringify(updated));
+    localStorage.setItem("eventos_layout_version", "v3");
   };
 
   // Re-apply Layout Preset
   const applyLayoutPreset = (presetName: string) => {
     setLayoutPreset(presetName);
-    let updatedConfigs = [...widgetOrder];
+    let updatedConfigs: WidgetConfig[] = [];
 
     if (presetName === "Operations") {
-      updatedConfigs = widgetOrder.map((w) => {
-        if (["priority", "events", "team", "activity"].includes(w.id)) {
-          return { ...w, visible: true, isPinned: true };
-        }
-        if (["health", "kpi", "sales", "finance", "advisor", "clients", "media", "goals", "forecasting"].includes(w.id)) {
-          return { ...w, visible: false };
-        }
-        return w;
+      // Balanced 3-column rows for Operations View (3 + 3 + 3 = 9 cols)
+      const opWidgetMap: Record<string, Partial<WidgetConfig>> = {
+        radar: { visible: true, isPinned: true, colSpan: "col-span-3" },
+        priority: { visible: true, isPinned: false, colSpan: "col-span-2" },
+        control: { visible: true, isPinned: false, colSpan: "col-span-1" },
+        events: { visible: true, isPinned: false, colSpan: "col-span-1" },
+        team: { visible: true, isPinned: false, colSpan: "col-span-1" },
+        activity: { visible: true, isPinned: false, colSpan: "col-span-1" },
+      };
+      const opOrder = ["radar", "priority", "control", "events", "team", "activity"];
+      const activeConfigs = opOrder.map((id) => {
+        const base = DEFAULT_WIDGET_CONFIGS.find((w) => w.id === id) || widgetOrder.find((w) => w.id === id)!;
+        return { ...base, ...opWidgetMap[id] };
       });
+      const hiddenConfigs = DEFAULT_WIDGET_CONFIGS.filter((w) => !opOrder.includes(w.id)).map((w) => ({ ...w, visible: false }));
+      updatedConfigs = [...activeConfigs, ...hiddenConfigs];
     } else if (presetName === "Financial") {
-      updatedConfigs = widgetOrder.map((w) => {
-        if (["kpi", "finance", "goals", "forecasting"].includes(w.id)) {
-          return { ...w, visible: true, isPinned: true };
-        }
-        if (["health", "priority", "sales", "events", "team", "advisor", "clients", "media", "activity"].includes(w.id)) {
-          return { ...w, visible: false };
-        }
-        return w;
+      // Balanced 3-column rows for Financial View (3 + 3 + 3 = 9 cols)
+      const finWidgetMap: Record<string, Partial<WidgetConfig>> = {
+        kpi: { visible: true, isPinned: true, colSpan: "col-span-3" },
+        finance: { visible: true, isPinned: false, colSpan: "col-span-2" },
+        goals: { visible: true, isPinned: false, colSpan: "col-span-1" },
+        forecasting: { visible: true, isPinned: false, colSpan: "col-span-2" },
+        control: { visible: true, isPinned: false, colSpan: "col-span-1" },
+      };
+      const finOrder = ["kpi", "finance", "goals", "forecasting", "control"];
+      const activeConfigs = finOrder.map((id) => {
+        const base = DEFAULT_WIDGET_CONFIGS.find((w) => w.id === id) || widgetOrder.find((w) => w.id === id)!;
+        return { ...base, ...finWidgetMap[id] };
       });
+      const hiddenConfigs = DEFAULT_WIDGET_CONFIGS.filter((w) => !finOrder.includes(w.id)).map((w) => ({ ...w, visible: false }));
+      updatedConfigs = [...activeConfigs, ...hiddenConfigs];
     } else if (presetName === "Growth & CRM") {
-      updatedConfigs = widgetOrder.map((w) => {
-        if (["health", "advisor", "sales", "clients", "forecasting"].includes(w.id)) {
-          return { ...w, visible: true, isPinned: true };
-        }
-        if (["kpi", "priority", "finance", "events", "team", "media", "activity", "goals"].includes(w.id)) {
-          return { ...w, visible: false };
-        }
-        return w;
+      // Balanced 3-column rows for Growth & CRM View (3 + 3 + 3 + 3 = 12 cols)
+      const growthWidgetMap: Record<string, Partial<WidgetConfig>> = {
+        kpi: { visible: true, isPinned: true, colSpan: "col-span-3" },
+        sales: { visible: true, isPinned: false, colSpan: "col-span-1" },
+        health: { visible: true, isPinned: false, colSpan: "col-span-1" },
+        advisor: { visible: true, isPinned: false, colSpan: "col-span-1" },
+        forecasting: { visible: true, isPinned: false, colSpan: "col-span-2" },
+        control: { visible: true, isPinned: false, colSpan: "col-span-1" },
+        clients: { visible: true, isPinned: false, colSpan: "col-span-3" },
+      };
+      const growthOrder = ["kpi", "sales", "health", "advisor", "forecasting", "control", "clients"];
+      const activeConfigs = growthOrder.map((id) => {
+        const base = DEFAULT_WIDGET_CONFIGS.find((w) => w.id === id) || widgetOrder.find((w) => w.id === id)!;
+        return { ...base, ...growthWidgetMap[id] };
       });
+      const hiddenConfigs = DEFAULT_WIDGET_CONFIGS.filter((w) => !growthOrder.includes(w.id)).map((w) => ({ ...w, visible: false }));
+      updatedConfigs = [...activeConfigs, ...hiddenConfigs];
     } else {
       // Default
-      updatedConfigs = widgetOrder.map((w) => ({ ...w, visible: true, isPinned: false }));
+      updatedConfigs = DEFAULT_WIDGET_CONFIGS.map((w) => ({ ...w, visible: true, isPinned: w.id === "kpi" || w.id === "radar" }));
     }
 
     saveLayoutOrder(updatedConfigs);
@@ -690,7 +720,7 @@ export default function DashboardPage() {
   const resetLayout = () => {
     setLayoutPreset("Default");
     saveLayoutOrder(DEFAULT_WIDGET_CONFIGS);
-    addToast("Dashboard layouts reset to original default state", "info");
+    addToast("Dashboard layout reset to balanced default grid", "info");
   };
 
   // Drag and Drop implementation
@@ -1110,7 +1140,7 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ─── WIDGET GRID LAYOUT ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
         {widgetOrder
           .filter((w) => w.visible)
           .map((widget) => {
@@ -1132,7 +1162,7 @@ export default function DashboardPage() {
                 whileHover={!isCustomizeMode ? { y: -4, scale: 1.012 } : undefined}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
                 className={cn(
-                  "transition-all duration-300 relative",
+                  "transition-all duration-300 relative h-full flex flex-col",
                   sizeClass,
                   draggedWidgetId === widget.id ? "opacity-30 border-2 border-dashed border-purple-500 rounded-2xl" : ""
                 )}
@@ -1171,7 +1201,7 @@ export default function DashboardPage() {
 
                 {/* RADAR: EVENT OPERATIONS RADAR (THIS WEEK) */}
                 {widget.id === "radar" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[300px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[300px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2.5">
@@ -1185,70 +1215,61 @@ export default function DashboardPage() {
                                 THIS WEEK'S PRODUCTIONS
                               </span>
                             </div>
-                            <p className="text-xs text-zinc-400">Live venue ingress, Run-of-Show milestones & crew readiness</p>
+                            <p className="text-[11px] text-zinc-400">Live venue ingress, Run-of-Show milestones & crew readiness</p>
                           </div>
                         </div>
                         <button
                           onClick={() => router.push("/events")}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-bold text-zinc-300 hover:text-white transition cursor-pointer self-start sm:self-center"
+                          className="flex items-center gap-1 text-xs font-bold text-zinc-400 hover:text-white transition group cursor-pointer self-start sm:self-auto"
                         >
                           <span>Full Schedule</span>
-                          <ChevronRight size={13} />
+                          <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                         </button>
                       </div>
 
-                      {/* Operations Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                        {upcomingOperationsList.map((op: any) => (
+                      {/* Radar Cards Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                        {mockEventOperationsRadar.map((op) => (
                           <div
                             key={op.id}
-                            onClick={() => router.push("/events")}
-                            className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-950/50 hover:border-purple-500/30 hover:bg-zinc-900/40 transition-all duration-200 cursor-pointer space-y-3 group"
+                            onClick={() => router.push(`/events`)}
+                            className="p-3.5 sm:p-4 rounded-xl border border-white/[0.04] bg-white/[0.015] hover:bg-white/[0.04] hover:border-purple-500/20 transition-all duration-200 cursor-pointer group flex flex-col justify-between gap-3"
                           >
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-purple-400 block">
-                                  {op.eventType}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[9.5px] font-mono font-bold text-purple-400 uppercase tracking-wider">{op.type}</span>
+                                <span className="text-[9.5px] font-mono font-bold text-zinc-400 bg-white/[0.04] px-1.5 py-0.5 rounded">
+                                  {op.timeUntil}
                                 </span>
-                                <h4 className="text-xs font-bold text-zinc-100 group-hover:text-purple-300 transition-colors line-clamp-1">
-                                  {op.title || op.name}
-                                </h4>
                               </div>
-                              <span className={cn(
-                                "text-[10px] font-mono font-bold px-2 py-0.5 rounded border whitespace-nowrap",
-                                op.daysAway <= 2 ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-zinc-800/60 border-zinc-700 text-zinc-300"
-                              )}>
-                                {op.daysAway === 0 ? "Today" : op.daysAway === 1 ? "Tomorrow" : `In ${op.daysAway} days`}
-                              </span>
-                            </div>
-
-                            <div className="space-y-1.5 text-xs text-zinc-400">
-                              <div className="flex items-center gap-1.5">
-                                <MapPin size={12} className="text-zinc-500 shrink-0" />
-                                <span className="truncate">{op.venue || op.location || "Taj Palace, New Delhi"}</span>
-                              </div>
-                              <div className="flex items-center justify-between text-[11px]">
-                                <span className="flex items-center gap-1 text-zinc-400">
-                                  <Users size={12} className="text-zinc-500" />
-                                  <strong className="text-zinc-200 font-mono tabular-nums">{op.headcount || 450}</strong> Guests
-                                </span>
-                                <span className="text-zinc-300 font-mono tabular-nums font-bold">
-                                  ₹{(op.budget || 1500000).toLocaleString("en-IN")}
-                                </span>
+                              <h4 className="text-xs font-bold text-zinc-200 group-hover:text-white transition truncate">{op.eventName}</h4>
+                              <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+                                <MapPin size={11} className="shrink-0 text-zinc-500" />
+                                <span className="truncate">{op.venue}</span>
                               </div>
                             </div>
 
-                            {/* Run-of-Show Ingress Progress */}
-                            <div className="space-y-1 pt-1 border-t border-zinc-900">
-                              <div className="flex justify-between items-center text-[10px] font-mono">
-                                <span className="text-zinc-400">Run-of-Show Ingress</span>
-                                <span className="text-purple-400 font-bold">{op.runOfShowProgress || 75}%</span>
+                            <div className="space-y-2 pt-2 border-t border-white/[0.04]">
+                              <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                                <span className="flex items-center gap-1">
+                                  <Users size={11} className="text-zinc-500" />
+                                  <strong className="text-zinc-300">{op.guests}</strong> Guests
+                                </span>
+                                <span className="font-mono font-bold text-zinc-200">{op.budget}</span>
                               </div>
-                              <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
-                                  style={{ width: `${op.runOfShowProgress || 75}%` }}
-                                />
+
+                              {/* Ingress / Run of show progress bar */}
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between text-[9px] font-mono text-zinc-500">
+                                  <span>Run-of-Show Ingress</span>
+                                  <span className="text-purple-400 font-bold">{op.runOfShowProgress || 75}%</span>
+                                </div>
+                                <div className="h-1 w-full bg-zinc-800/60 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
+                                    style={{ width: `${op.runOfShowProgress || 75}%` }}
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1260,7 +1281,7 @@ export default function DashboardPage() {
 
                 {/* 0. CONTROL CENTER WIDGET */}
                 {widget.id === "control" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between h-full">
                     <div>
                       <div className="flex justify-between items-start">
                         <div>
@@ -1395,7 +1416,7 @@ export default function DashboardPage() {
 
                 {/* 1. HEALTH SCORE WIDGET */}
                 {widget.id === "health" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between h-full">
                     <div>
                       <div className="flex justify-between items-start">
                         <div>
@@ -1461,7 +1482,7 @@ export default function DashboardPage() {
 
                 {/* 2. TODAY'S FOCUS PRIORITY CHECKS */}
                 {widget.id === "priority" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between h-full">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1477,17 +1498,17 @@ export default function DashboardPage() {
                         {priorityTasks.map((task) => (
                           <div
                             key={task.id}
-                            className="flex items-start justify-between p-3 border border-zinc-850 bg-zinc-955/25 hover:bg-zinc-900/20 hover:border-zinc-800 rounded-xl transition duration-200"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-zinc-850 bg-zinc-955/25 hover:bg-zinc-900/20 hover:border-zinc-800 rounded-xl transition duration-200 gap-2 sm:gap-4"
                           >
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
                               <button
                                 onClick={() => handleTogglePriority(task.id)}
-                                className="h-4.5 w-4.5 rounded border border-zinc-800 hover:border-purple-500 hover:bg-purple-500/10 flex items-center justify-center mt-0.5 shrink-0 transition-all cursor-pointer"
+                                className="h-5 w-5 rounded border border-zinc-800 hover:border-purple-500 hover:bg-purple-500/10 flex items-center justify-center shrink-0 transition-all cursor-pointer"
                               >
                                 <Check size={11} className="text-transparent hover:text-purple-400" />
                               </button>
-                              <div className="space-y-0.5">
-                                <p className="text-xs font-semibold text-zinc-200 leading-snug">{task.text}</p>
+                              <div className="space-y-0.5 min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-zinc-200 leading-snug truncate">{task.text}</p>
                                 <div className="flex items-center gap-2">
                                   <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded border bg-zinc-950 border-zinc-855 font-mono text-zinc-500">
                                     {task.type}
@@ -1503,7 +1524,7 @@ export default function DashboardPage() {
                                 else if (task.type === "EVENT" || task.type === "STAFF") setIsQuickActionOpen("booking");
                                 else if (task.type === "LEADS") setIsQuickActionOpen("lead");
                               }}
-                              className="text-[9.5px] font-extrabold text-purple-400 hover:text-white uppercase tracking-wider flex items-center gap-0.5 shrink-0 cursor-pointer pl-2 self-center"
+                              className="text-[9.5px] font-extrabold text-purple-400 hover:text-white uppercase tracking-wider flex items-center gap-0.5 shrink-0 cursor-pointer pl-8 sm:pl-2 self-end sm:self-center"
                             >
                               {task.actionText} <ChevronRight size={10} />
                             </button>
@@ -1524,7 +1545,7 @@ export default function DashboardPage() {
 
                 {/* 3. AI BUSINESS ADVISOR */}
                 {widget.id === "advisor" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[340px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1624,7 +1645,7 @@ export default function DashboardPage() {
 
                 {/* 5. SALES ANALYTICS FUNNEL */}
                 {widget.id === "sales" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">CRM Leads Funnel</span>
@@ -1675,7 +1696,7 @@ export default function DashboardPage() {
 
                 {/* 6. FINANCE DASHBOARD FLOW */}
                 {widget.id === "finance" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
@@ -1758,7 +1779,7 @@ export default function DashboardPage() {
 
                 {/* 7. EVENT & PACKAGE TRACKER */}
                 {widget.id === "events" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Operational Metrics</span>
@@ -1806,7 +1827,7 @@ export default function DashboardPage() {
 
                 {/* 8. TEAM PERFORMANCE & BURNOUT */}
                 {widget.id === "team" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between h-full">
                     <div className="space-y-3">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Resource roster metrics</span>
@@ -1862,7 +1883,7 @@ export default function DashboardPage() {
 
                 {/* 9. CLIENT INSIGHTS & NPS */}
                 {widget.id === "clients" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Client Satisfaction Index</span>
@@ -1913,7 +1934,7 @@ export default function DashboardPage() {
 
                 {/* 10. MEDIA STORAGE ANALYTICS */}
                 {widget.id === "media" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Photo Album Resources</span>
@@ -1969,7 +1990,7 @@ export default function DashboardPage() {
 
                 {/* 11. WORKSPACE TIMELINE LOGS */}
                 {widget.id === "activity" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">Audit Security Logs</span>
@@ -1994,7 +2015,7 @@ export default function DashboardPage() {
 
                 {/* 12. CORPORATE GOALS PROGRESS */}
                 {widget.id === "goals" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -2040,7 +2061,7 @@ export default function DashboardPage() {
 
                 {/* 13. PREDICTIVE BUSINESS GROWTH */}
                 {widget.id === "forecasting" && (
-                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between">
+                  <div className="p-4 sm:p-6 rounded-2xl border border-white/[0.06] bg-[#09090b]/40 backdrop-blur-xl min-h-0 sm:min-h-[380px] flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] text-zinc-555 uppercase font-black tracking-widest block">AI Business Forecasting</span>
