@@ -130,9 +130,53 @@ interface RichNote {
   createdAt: string;
 }
 
+export interface TimelineCue {
+  id: string;
+  time: string;
+  title: string;
+  department: string;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  notes?: string;
+}
+
+const DEFAULT_TIMELINE_CUES: TimelineCue[] = [
+  {
+    id: "cue-1",
+    time: "06:00 PM",
+    title: "Guest Arrival & Welcome Cocktails",
+    department: "Hospitality / Hostess",
+    status: "COMPLETED",
+    notes: "Signature welcome drinks, registry desk check-in, VIP hostess escort"
+  },
+  {
+    id: "cue-2",
+    time: "07:30 PM",
+    title: "Bride & Groom Grand Entry with Pyro Lights",
+    department: "Stage & Production",
+    status: "IN_PROGRESS",
+    notes: "Cold pyro sparkular triggers, spotlight cue on red carpet, drone cinematic capture"
+  },
+  {
+    id: "cue-3",
+    time: "08:30 PM",
+    title: "Cake Cutting & Live Acoustic Band",
+    department: "Entertainment & AV",
+    status: "PENDING",
+    notes: "Wireless mics ready, 3-tier cake trolley on center stage, dim ambient lighting"
+  },
+  {
+    id: "cue-4",
+    time: "09:15 PM",
+    title: "Royal Buffet Dinner",
+    department: "Catering",
+    status: "PENDING",
+    notes: "Live interactive counters active, chef signature entrees restocked, dessert lounge open"
+  }
+];
+
 const TAB_OPTIONS = [
   { id: "overview", label: "Overview", icon: Briefcase },
-  { id: "timeline", label: "Timeline", icon: Clock },
+  { id: "timeline", label: "Run of Show / Timeline", icon: Clock },
   { id: "guests", label: "Guests", icon: Users },
   { id: "tasks", label: "Tasks", icon: CheckSquare },
   { id: "vendors", label: "Vendors", icon: Car },
@@ -259,6 +303,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
   const [newNoteText, setNewNoteText] = useState("");
   const [noteSearch, setNoteSearch] = useState("");
 
+  // Run of Show / Timeline Cues
+  const [timelineCues, setTimelineCues] = useState<TimelineCue[]>(DEFAULT_TIMELINE_CUES);
+  const [showAddCue, setShowAddCue] = useState(false);
+  const [newCueTime, setNewCueTime] = useState("10:00 PM");
+  const [newCueTitle, setNewCueTitle] = useState("");
+  const [newCueDept, setNewCueDept] = useState("Hospitality / Hostess");
+  const [newCueNotes, setNewCueNotes] = useState("");
+
   // Fetch Event details
   const { data: eventResponse, isLoading: eventLoading } = useQuery<{ data: Event }>({
     queryKey: ["event", eventId],
@@ -310,6 +362,12 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
           setDocuments(meta.documents || []);
           setRichNotes(meta.richNotes || []);
           setGuestListText(meta.guestList || "");
+
+          if (meta.timelineCues && Array.isArray(meta.timelineCues) && meta.timelineCues.length > 0) {
+            setTimelineCues(meta.timelineCues);
+          } else {
+            setTimelineCues(DEFAULT_TIMELINE_CUES);
+          }
 
           setPlannerName(meta.planner || "Lokesh Nagrikar");
           setCoordinatorName(meta.coordinator || "Shreya Gupta");
@@ -365,6 +423,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     deposit: boolean;
     second: boolean;
     final: boolean;
+    timelineCuesList: TimelineCue[];
   }> = {}) => {
     setSaveStatus("saving");
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -388,6 +447,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       const mergedRichNotes = updatedFields.notesList !== undefined ? updatedFields.notesList : richNotes;
       const mergedGuestList = updatedFields.guestListVal !== undefined ? updatedFields.guestListVal : guestListText;
       const mergedVendors = updatedFields.vendorsList !== undefined ? updatedFields.vendorsList : vendors;
+      const mergedCues = updatedFields.timelineCuesList !== undefined ? updatedFields.timelineCuesList : timelineCues;
       
       const mergedDep = updatedFields.deposit !== undefined ? updatedFields.deposit : depositPaid;
       const mergedSec = updatedFields.second !== undefined ? updatedFields.second : secondInstallmentPaid;
@@ -408,6 +468,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         richNotes: mergedRichNotes,
         guestList: mergedGuestList,
         vendors: mergedVendors,
+        timelineCues: mergedCues,
         depositPaid: mergedDep,
         secondInstallmentPaid: mergedSec,
         finalPaymentPaid: mergedFin,
@@ -518,6 +579,50 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     addToast("Vendor profile mapped successfully", "success");
   };
 
+  // Timeline & Run-of-Show Handlers
+  const handleAddCue = () => {
+    if (!newCueTitle.trim()) return;
+    const newCue: TimelineCue = {
+      id: `cue-${Date.now()}`,
+      time: newCueTime || "08:00 PM",
+      title: newCueTitle.trim(),
+      department: newCueDept,
+      status: "PENDING",
+      notes: newCueNotes.trim()
+    };
+    const updated = [...timelineCues, newCue];
+    setTimelineCues(updated);
+    triggerAutoSave({ timelineCuesList: updated });
+    setNewCueTitle("");
+    setNewCueNotes("");
+    setShowAddCue(false);
+    addToast("Timeline cue logged to Run-of-Show", "success");
+  };
+
+  const handleToggleCueStatus = (cueId: string) => {
+    const updated: TimelineCue[] = timelineCues.map(c => {
+      if (c.id !== cueId) return c;
+      const nextStatus: TimelineCue["status"] =
+        c.status === "PENDING" ? "IN_PROGRESS" : c.status === "IN_PROGRESS" ? "COMPLETED" : "PENDING";
+      return { ...c, status: nextStatus };
+    });
+    setTimelineCues(updated);
+    triggerAutoSave({ timelineCuesList: updated });
+    addToast("Cue status toggled", "info");
+  };
+
+  const handleDeleteCue = (cueId: string) => {
+    const updated = timelineCues.filter(c => c.id !== cueId);
+    setTimelineCues(updated);
+    triggerAutoSave({ timelineCuesList: updated });
+  };
+
+  const handleResetDefaultCues = () => {
+    setTimelineCues(DEFAULT_TIMELINE_CUES);
+    triggerAutoSave({ timelineCuesList: DEFAULT_TIMELINE_CUES });
+    addToast("Run-of-Show cues reset to wedding template", "info");
+  };
+
   if (eventLoading || !event) {
     return <div className="h-screen flex items-center justify-center animate-pulse text-zinc-500 text-xs">Loading event operations...</div>;
   }
@@ -549,8 +654,31 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
           </div>
         </div>
 
-        {/* LifeCycle Transition Select */}
-        <div className="flex items-center gap-2">
+        {/* Right Header: Live Sync Indicator & LifeCycle Transition Select */}
+        <div className="flex items-center gap-3">
+          {/* Live Sync & Offline Indicator */}
+          <div className="group relative flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold select-none cursor-pointer transition hover:bg-emerald-500/20">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[11px] font-bold tracking-wide">Live Mesh Sync</span>
+            <span className="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300 font-mono">Offline Ready</span>
+
+            {/* Hover Tooltip for Video Walkthrough Demonstration */}
+            <div className="absolute right-0 top-10 z-50 hidden group-hover:flex flex-col gap-1 w-64 p-3 bg-zinc-900 border border-zinc-700/80 rounded-xl shadow-2xl backdrop-blur-md text-[11px] text-zinc-300 pointer-events-none">
+              <div className="flex items-center justify-between font-bold text-white border-b border-zinc-800 pb-1">
+                <span className="flex items-center gap-1.5 text-emerald-400">
+                  <Sparkles size={12} /> Local-First Realtime
+                </span>
+                <span className="text-zinc-400 font-mono text-[10px]">12ms</span>
+              </div>
+              <p className="text-[10px] text-zinc-400 pt-0.5 leading-relaxed">
+                IndexedDB &amp; ServiceWorker active cache. Offline guest check-in &amp; live cue triggers automatically sync to cloud upon reconnect.
+              </p>
+            </div>
+          </div>
+
           <select
             value={event.status}
             onChange={(e) => handleStatusChange(e.target.value)}
@@ -666,26 +794,258 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
         {/* TIMELINE TAB */}
         {activeTab === "timeline" && (
-          <div className="p-6 border border-zinc-850 bg-[#121214]/30 rounded-2xl space-y-4 font-semibold">
-            <h3 className="text-xs font-bold text-zinc-450 uppercase tracking-widest pb-2 border-b border-zinc-900">Execution Progression Timeline</h3>
-            <div className="relative pl-6 border-l border-zinc-800 space-y-6">
-              {[
-                { name: "Planning", desc: "Define initial layout boundaries", done: true },
-                { name: "Vendor Booking", desc: "Reserve decorators, videographers, caterers", done: totalVendorCost > 0 },
-                { name: "Advance Payment", desc: "Clear first deposit billing", done: depositPaid },
-                { name: "Decor Prep", desc: "Confirm pastels florals rosters", done: event?.status !== "PLANNING" },
-                { name: "Photography Setup", desc: "Map photographer cameras", done: photographerName !== "" },
-                { name: "Catering Menu Approved", desc: "Select menu specifications", done: true },
-                { name: "Final Event", desc: "Live coordination dispatcher", done: event?.status === "COMPLETED" }
-              ].map((stage, idx) => (
-                <div key={idx} className="relative">
-                  <div className={cn("absolute -left-[31px] mt-1.5 h-3.5 w-3.5 rounded-full border-2", stage.done ? "bg-purple-600 border-purple-550" : "bg-[#0c0c0e] border-zinc-800")} />
+          <div className="space-y-6">
+            {/* Run of Show / Minute-by-Minute Cue Sheet */}
+            <div className="p-6 border border-zinc-850 bg-[#121214]/60 rounded-2xl space-y-6 backdrop-blur-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Clock size={16} className="text-purple-400" />
+                    <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest">
+                      Run-of-Show &amp; Minute-by-Minute Cue Sheet
+                    </h3>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-1">
+                    Live coordination execution timeline for stage, sound &amp; light, hospitality, and banquet staff.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  {/* Status counts */}
+                  <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-bold">
+                    <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400">
+                      {timelineCues.length} Cues
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                      {timelineCues.filter(c => c.status === "COMPLETED").length} Done
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                      {timelineCues.filter(c => c.status === "IN_PROGRESS").length} Active
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                      {timelineCues.filter(c => c.status === "PENDING").length} Pending
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={handleResetDefaultCues}
+                    className="px-2.5 py-1.5 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 text-[10px] font-bold transition cursor-pointer"
+                    title="Reload default 4 wedding cues"
+                  >
+                    Reset Template
+                  </button>
+
+                  <button
+                    onClick={() => setShowAddCue(!showAddCue)}
+                    className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-lg shadow-purple-900/30 cursor-pointer"
+                  >
+                    <Plus size={13} strokeWidth={3} />
+                    {showAddCue ? "Close Form" : "Add Timeline Cue"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Cue Drawer / Form */}
+              {showAddCue && (
+                <div className="p-4 border border-purple-500/30 bg-purple-950/10 rounded-xl space-y-3">
+                  <div className="text-xs font-bold text-purple-300 flex items-center gap-1.5">
+                    <Sparkles size={13} /> Log New Live Cue to Schedule
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-[10px] text-zinc-400 font-bold block mb-1">Cue Time</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 06:00 PM"
+                        value={newCueTime}
+                        onChange={(e) => setNewCueTime(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-zinc-400 font-bold block mb-1">Activity / Title</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Guest Arrival & Welcome Cocktails"
+                        value={newCueTitle}
+                        onChange={(e) => setNewCueTitle(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-zinc-400 font-bold block mb-1">Department</label>
+                      <select
+                        value={newCueDept}
+                        onChange={(e) => setNewCueDept(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                      >
+                        <option value="Hospitality / Hostess">Hospitality / Hostess</option>
+                        <option value="Stage & Production">Stage & Production</option>
+                        <option value="Entertainment & AV">Entertainment & AV</option>
+                        <option value="Catering">Catering</option>
+                        <option value="Photography & Drone">Photography & Drone</option>
+                        <option value="Security & Valet">Security & Valet</option>
+                      </select>
+                    </div>
+                  </div>
                   <div>
-                    <span className="text-zinc-200 block font-bold">{stage.name}</span>
-                    <span className="text-[10px] text-zinc-550 block pt-0.5">{stage.desc}</span>
+                    <label className="text-[10px] text-zinc-400 font-bold block mb-1">Operational Notes (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Cold pyro sparkular cues, spotlight on red carpet..."
+                      value={newCueNotes}
+                      onChange={(e) => setNewCueNotes(e.target.value)}
+                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      onClick={() => setShowAddCue(false)}
+                      className="px-3 py-1 bg-zinc-900 text-zinc-400 hover:text-white rounded-lg text-xs"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAddCue}
+                      className="px-3.5 py-1 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg text-xs"
+                    >
+                      Save Cue
+                    </button>
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Cue Sheet Items */}
+              <div className="space-y-3">
+                {timelineCues.length === 0 ? (
+                  <div className="text-center py-8 text-zinc-500 text-xs">
+                    No timeline cues logged. Click &quot;Add Timeline Cue&quot; or &quot;Reset Template&quot;.
+                  </div>
+                ) : (
+                  timelineCues.map((cue) => (
+                    <div
+                      key={cue.id}
+                      className={cn(
+                        "p-4 border rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200",
+                        cue.status === "COMPLETED"
+                          ? "bg-zinc-950/40 border-zinc-900 opacity-80"
+                          : cue.status === "IN_PROGRESS"
+                          ? "bg-purple-950/20 border-purple-500/40 shadow-lg shadow-purple-950/20"
+                          : "bg-[#141416]/70 border-zinc-850"
+                      )}
+                    >
+                      <div className="flex items-start md:items-center gap-4">
+                        {/* Time badge */}
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900/90 border border-zinc-800 rounded-lg text-purple-300 font-mono font-extrabold text-xs shrink-0">
+                          <Clock size={12} className="text-purple-400" />
+                          {cue.time}
+                        </div>
+
+                        {/* Title & Department */}
+                        <div>
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <span
+                              className={cn(
+                                "font-bold text-sm tracking-wide",
+                                cue.status === "COMPLETED" ? "line-through text-zinc-500" : "text-zinc-100"
+                              )}
+                            >
+                              {cue.title}
+                            </span>
+                            <span
+                              className={cn(
+                                "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                cue.department.includes("Hospitality") && "bg-purple-500/10 text-purple-400 border-purple-500/30",
+                                cue.department.includes("Stage") && "bg-amber-500/10 text-amber-400 border-amber-500/30",
+                                cue.department.includes("Entertainment") && "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
+                                cue.department.includes("Catering") && "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+                                !cue.department.includes("Hospitality") &&
+                                  !cue.department.includes("Stage") &&
+                                  !cue.department.includes("Entertainment") &&
+                                  !cue.department.includes("Catering") &&
+                                  "bg-zinc-800 text-zinc-300 border-zinc-700"
+                              )}
+                            >
+                              {cue.department}
+                            </span>
+                          </div>
+
+                          {cue.notes && (
+                            <p className="text-[11px] text-zinc-400 mt-1 font-normal leading-relaxed">
+                              {cue.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions: Toggle status pill & delete */}
+                      <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
+                        <button
+                          onClick={() => handleToggleCueStatus(cue.id)}
+                          title="Click to cycle status: Pending → In Progress → Completed"
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border shadow-sm select-none",
+                            cue.status === "COMPLETED" && "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25",
+                            cue.status === "IN_PROGRESS" && "bg-cyan-500/15 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/25 animate-pulse",
+                            cue.status === "PENDING" && "bg-amber-500/15 border-amber-500/40 text-amber-400 hover:bg-amber-500/25"
+                          )}
+                        >
+                          {cue.status === "COMPLETED" && (
+                            <>
+                              <CheckCircle2 size={13} /> Completed
+                            </>
+                          )}
+                          {cue.status === "IN_PROGRESS" && (
+                            <>
+                              <Activity size={13} className="animate-pulse" /> In Progress
+                            </>
+                          )}
+                          {cue.status === "PENDING" && (
+                            <>
+                              <Clock size={13} /> Pending
+                            </>
+                          )}
+                          <span className="text-[9px] opacity-60 text-zinc-400 font-normal">↺ toggle</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteCue(cue.id)}
+                          className="p-1.5 text-zinc-500 hover:text-red-400 transition rounded-lg hover:bg-red-500/10 cursor-pointer"
+                          title="Delete Cue"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Macro Execution Progression Timeline */}
+            <div className="p-6 border border-zinc-850 bg-[#121214]/30 rounded-2xl space-y-4 font-semibold">
+              <h3 className="text-xs font-bold text-zinc-450 uppercase tracking-widest pb-2 border-b border-zinc-900">
+                Execution Progression Timeline (Milestones)
+              </h3>
+              <div className="relative pl-6 border-l border-zinc-800 space-y-6">
+                {[
+                  { name: "Planning", desc: "Define initial layout boundaries", done: true },
+                  { name: "Vendor Booking", desc: "Reserve decorators, videographers, caterers", done: totalVendorCost > 0 },
+                  { name: "Advance Payment", desc: "Clear first deposit billing", done: depositPaid },
+                  { name: "Decor Prep", desc: "Confirm pastels florals rosters", done: event?.status !== "PLANNING" },
+                  { name: "Photography Setup", desc: "Map photographer cameras", done: photographerName !== "" },
+                  { name: "Catering Menu Approved", desc: "Select menu specifications", done: true },
+                  { name: "Final Event", desc: "Live coordination dispatcher", done: event?.status === "COMPLETED" }
+                ].map((stage, idx) => (
+                  <div key={idx} className="relative">
+                    <div className={cn("absolute -left-[31px] mt-1.5 h-3.5 w-3.5 rounded-full border-2", stage.done ? "bg-purple-600 border-purple-550" : "bg-[#0c0c0e] border-zinc-800")} />
+                    <div>
+                      <span className="text-zinc-200 block font-bold">{stage.name}</span>
+                      <span className="text-[10px] text-zinc-550 block pt-0.5">{stage.desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

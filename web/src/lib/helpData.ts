@@ -32,6 +32,7 @@ export interface Tutorial {
   difficulty: "Beginner" | "Intermediate" | "Advanced";
   thumbnail: string; // gradient CSS or image URL
   description: string;
+  videoSrc?: string; // path to video file e.g. /videos/tutorials/crm-pipeline.mp4
 }
 
 export interface FAQ {
@@ -466,15 +467,15 @@ export const ARTICLES: Article[] = [
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const TUTORIALS: Tutorial[] = [
-  { id: "t1", title: "Getting Started with EventOS", category: "Getting Started", duration: "6:30", difficulty: "Beginner", thumbnail: "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)", description: "Complete walkthrough of setting up your workspace." },
-  { id: "t2", title: "Mastering the CRM Pipeline", category: "CRM", duration: "8:15", difficulty: "Intermediate", thumbnail: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)", description: "Advanced lead management and pipeline optimization." },
-  { id: "t3", title: "Creating Your First Event", category: "Events", duration: "5:45", difficulty: "Beginner", thumbnail: "linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)", description: "Step-by-step event workspace creation." },
-  { id: "t4", title: "Building Professional Quotes", category: "Finance", duration: "7:00", difficulty: "Intermediate", thumbnail: "linear-gradient(135deg, #10B981 0%, #3B82F6 100%)", description: "Quote builder with sections, line items, and tax." },
-  { id: "t5", title: "Invoice & Payment Workflows", category: "Finance", duration: "6:20", difficulty: "Intermediate", thumbnail: "linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)", description: "End-to-end invoicing and payment recording." },
+  { id: "t1", title: "Getting Started with EventOS", category: "Getting Started", duration: "6:30", difficulty: "Beginner", thumbnail: "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)", description: "Complete walkthrough of setting up your workspace.", videoSrc: "/videos/tutorials/getting-started.mp4" },
+  { id: "t2", title: "Mastering the CRM Pipeline", category: "CRM", duration: "3:15", difficulty: "Intermediate", thumbnail: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)", description: "Advanced lead management, drag-and-drop kanban, and instant quote generation.", videoSrc: "/videos/tutorials/crm-pipeline.mp4" },
+  { id: "t3", title: "Creating Your First Event & Run-of-Show", category: "Events", duration: "2:30", difficulty: "Beginner", thumbnail: "linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)", description: "Step-by-step event workspace creation, timelines, and stage cue sheets.", videoSrc: "/videos/tutorials/first-event.mp4" },
+  { id: "t4", title: "Building Professional Quotes", category: "Finance", duration: "7:00", difficulty: "Intermediate", thumbnail: "linear-gradient(135deg, #10B981 0%, #3B82F6 100%)", description: "Quote builder with sections, line items, and tax.", videoSrc: "/videos/tutorials/quote-builder.mp4" },
+  { id: "t5", title: "Invoice & Milestone Payment Workflows", category: "Finance", duration: "2:30", difficulty: "Intermediate", thumbnail: "linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)", description: "End-to-end milestone invoicing and payment recording with instant receipts.", videoSrc: "/videos/tutorials/invoice-payments.mp4" },
   { id: "t6", title: "Gallery & Media Management", category: "Gallery", duration: "4:50", difficulty: "Beginner", thumbnail: "linear-gradient(135deg, #EC4899 0%, #F97316 100%)", description: "Album creation, uploads, and client sharing." },
   { id: "t7", title: "Configuring the AI Center", category: "AI", duration: "5:10", difficulty: "Intermediate", thumbnail: "linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)", description: "Set up AI providers and prompt templates." },
   { id: "t8", title: "Advanced Settings & Security", category: "Settings", duration: "9:30", difficulty: "Advanced", thumbnail: "linear-gradient(135deg, #1E293B 0%, #475569 100%)", description: "2FA, API keys, integrations, and audit logs." },
-  { id: "t9", title: "Client Portal Walkthrough", category: "Getting Started", duration: "4:20", difficulty: "Beginner", thumbnail: "linear-gradient(135deg, #7C3AED 0%, #DB2777 100%)", description: "How clients experience your portal." },
+  { id: "t9", title: "Client Portal Walkthrough", category: "Getting Started", duration: "1:45", difficulty: "Beginner", thumbnail: "linear-gradient(135deg, #7C3AED 0%, #DB2777 100%)", description: "How clients experience your portal, approve quotes, and view galleries.", videoSrc: "/videos/portal/client-overview.mp4" },
   { id: "t10", title: "Reports & Analytics Deep Dive", category: "Finance", duration: "7:45", difficulty: "Advanced", thumbnail: "linear-gradient(135deg, #0EA5E9 0%, #22D3EE 100%)", description: "Revenue dashboards, trends, and data exports." },
   { id: "t11", title: "Smart Automation Rules", category: "Settings", duration: "6:00", difficulty: "Advanced", thumbnail: "linear-gradient(135deg, #A78BFA 0%, #C084FC 100%)", description: "Set up automated workflows and triggers." },
   { id: "t12", title: "Budget Calculator & Estimation", category: "Finance", duration: "3:40", difficulty: "Beginner", thumbnail: "linear-gradient(135deg, #34D399 0%, #6EE7B7 100%)", description: "Use the budget calculator for quick estimates." },

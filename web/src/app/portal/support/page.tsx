@@ -41,9 +41,9 @@ const FAQS = [
 ];
 
 const GUIDES = [
-  { title: "Reviewing and Signing Contracts", duration: "2 min", category: "Documentation" },
-  { title: "Logging Deposit References", duration: "1 min", category: "Billing" },
-  { title: "Collaborating on Media Assets", duration: "3 min", category: "Gallery" }
+  { title: "Reviewing and Signing Contracts", duration: "2 min", category: "Documentation", videoSrc: "/videos/portal/client-overview.mp4" },
+  { title: "Logging Deposit References", duration: "1 min", category: "Billing", videoSrc: "/videos/portal/client-overview.mp4" },
+  { title: "Collaborating on Media Assets", duration: "3 min", category: "Gallery", videoSrc: "/videos/portal/client-overview.mp4" }
 ];
 
 export default function PortalSupportPage() {
@@ -308,18 +308,41 @@ export default function PortalSupportPage() {
       {/* Video Guide Playback Modal */}
       <AnimatePresence>
         {activeVideo && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg bg-[#111113] border border-zinc-850 rounded-2xl p-6 relative">
-              <div className="flex justify-between items-center border-b border-zinc-800 pb-3 mb-4">
-                <span className="text-xs font-black text-white uppercase tracking-wider">Video Guide: {activeVideo}</span>
-                <button onClick={() => setActiveVideo(null)} className="text-zinc-500 hover:text-white">
-                  <X size={16} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+            <div className="w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 relative shadow-2xl">
+              <div className="flex justify-between items-center border-b border-zinc-850 pb-3 mb-4">
+                <span className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <Video size={15} className="text-purple-400" /> Guide: {activeVideo}
+                </span>
+                <button onClick={() => setActiveVideo(null)} className="h-7 w-7 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+                  <X size={15} />
                 </button>
               </div>
 
-              <div className="aspect-video bg-zinc-950 border border-zinc-850 rounded-xl flex flex-col items-center justify-center gap-2 text-zinc-650">
-                <Video size={36} />
-                <span className="text-[10px] font-bold">Simulated Video Tutorial Playback</span>
+              <div className="aspect-video bg-black border border-zinc-850 rounded-2xl flex flex-col items-center justify-center overflow-hidden relative">
+                <video
+                  src="/videos/portal/client-overview.mp4"
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const fallback = e.currentTarget.parentElement?.querySelector('.video-portal-fallback') as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div className="video-portal-fallback hidden flex-col items-center justify-center gap-3 p-6 text-center text-zinc-400">
+                  <div className="h-12 w-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
+                    <Video size={24} />
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold text-white block">Client Portal Video Walkthrough</span>
+                    <span className="text-[10px] text-zinc-500 block max-w-sm">
+                      Record with OBS and place as <span className="text-purple-400 font-mono font-bold">client-overview.mp4</span> in <span className="text-zinc-300 font-mono">web/public/videos/portal/</span> to stream here.
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
