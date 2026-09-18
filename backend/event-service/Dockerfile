@@ -24,5 +24,5 @@ USER appuser
 HEALTHCHECK --interval=30s --timeout=10s --start-period=240s --retries=10 \
   CMD wget -q -O - http://127.0.0.1:8083/api/v1/events/actuator/health || exit 1
 
-# Development-optimized JVM execution to speed up container startup on local hosts
-ENTRYPOINT ["java", "-XX:+UseSerialGC", "-Xms64m", "-Xmx192m", "-XX:TieredStopAtLevel=1", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]
+# Production-hardened JVM execution with 512M heap
+ENTRYPOINT ["java", "-XX:+UseSerialGC", "-Xms128m", "-Xmx512m", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]
