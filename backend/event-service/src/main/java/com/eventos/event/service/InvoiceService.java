@@ -239,8 +239,53 @@ public class InvoiceService {
     }
 
     public Invoice createInvoice(CreateInvoiceDto dto, UUID tenantId) {
-        bookingRepository.findByIdAndTenantId(dto.getBookingId(), tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking not found or access denied"));
+        Booking booking = null;
+        if (dto.getBookingId() != null) {
+            booking = bookingRepository.findByIdAndTenantId(dto.getBookingId(), tenantId)
+                    .orElse(null);
+
+            if (booking == null) {
+                // Check if bookingId is an eventId
+                Event event = eventRepository.findByIdAndTenantId(dto.getBookingId(), tenantId).orElse(null);
+                if (event != null) {
+                    if (event.getBookingId() != null) {
+                        booking = bookingRepository.findByIdAndTenantId(event.getBookingId(), tenantId).orElse(null);
+                    }
+                    if (booking == null) {
+                        String bookingNum = "EVT-" + LocalDateTime.now().getYear() + "-" + String.format("%06d", (System.currentTimeMillis() / 1000) % 1000000);
+                        booking = Booking.builder()
+                                .eventId(event.getId())
+                                .bookingNumber(bookingNum)
+                                .clientName(dto.getClientName() != null && !dto.getClientName().isBlank() ? dto.getClientName() : event.getName())
+                                .clientEmail(dto.getClientEmail())
+                                .totalAmount(dto.getSubtotal().add(dto.getTax()).subtract(dto.getDiscount()))
+                                .paidAmount(BigDecimal.ZERO)
+                                .status(com.eventos.event.entity.BookingStatus.CONFIRMED)
+                                .build();
+                        booking.setTenantId(tenantId);
+                        booking = bookingRepository.save(booking);
+                        event.setBookingId(booking.getId());
+                        eventRepository.save(event);
+                    }
+                }
+            }
+        }
+
+        if (booking == null) {
+            // Standalone booking for this client
+            String bookingNum = "EVT-" + LocalDateTime.now().getYear() + "-" + String.format("%06d", (System.currentTimeMillis() / 1000) % 1000000);
+            booking = Booking.builder()
+                    .bookingNumber(bookingNum)
+                    .clientName(dto.getClientName() != null && !dto.getClientName().isBlank() ? dto.getClientName() : "General Client")
+                    .clientEmail(dto.getClientEmail())
+                    .totalAmount(dto.getSubtotal().add(dto.getTax()).subtract(dto.getDiscount()))
+                    .paidAmount(BigDecimal.ZERO)
+                    .status(com.eventos.event.entity.BookingStatus.CONFIRMED)
+                    .build();
+            booking.setTenantId(tenantId);
+            booking = bookingRepository.save(booking);
+        }
+        UUID effectiveBookingId = booking.getId();
 
         // Generate sequential invoice number: INV-YYYY-XXXXXX using pessimistic write lock
         TenantSequence seq = tenantSequenceRepository
@@ -284,7 +329,7 @@ public class InvoiceService {
         BigDecimal totalAmount = dto.getSubtotal().add(tax).subtract(dto.getDiscount());
 
         Invoice invoice = Invoice.builder()
-                .bookingId(dto.getBookingId())
+                .bookingId(effectiveBookingId)
                 .invoiceNumber(invoiceNumber)
                 .subtotal(dto.getSubtotal())
                 .tax(tax)

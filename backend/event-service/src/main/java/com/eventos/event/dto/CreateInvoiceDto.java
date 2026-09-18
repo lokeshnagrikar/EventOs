@@ -18,7 +18,6 @@ import java.util.UUID;
 @Builder
 public class CreateInvoiceDto {
 
-    @NotNull(message = "Booking ID is required")
     private UUID bookingId;
 
     @NotNull(message = "Subtotal is required")

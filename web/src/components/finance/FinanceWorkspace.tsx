@@ -115,6 +115,15 @@ interface Booking {
   clientName?: string;
 }
 
+interface EventItem {
+  id: string;
+  name: string;
+  budget?: number;
+  clientName?: string;
+  clientEmail?: string;
+  bookingId?: string;
+}
+
 interface Expense {
   id: string;
   bookingId: string;
@@ -238,6 +247,22 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
     return [];
   }, [bookingsResponse]);
 
+  // 3b. Fetch Events
+  const { data: eventsResponse } = useQuery<{ data: EventItem[] | { content: EventItem[] } }>({
+    queryKey: ["events-for-finance"],
+    queryFn: async () => {
+      const res = await api.get("/events", { params: { size: 100 } });
+      return res.data;
+    }
+  });
+  const eventsList = useMemo<EventItem[]>(() => {
+    if (Array.isArray(eventsResponse?.data)) return eventsResponse.data;
+    if (Array.isArray((eventsResponse as any)?.data?.content)) return (eventsResponse as any).data.content;
+    if (Array.isArray((eventsResponse as any)?.content)) return (eventsResponse as any).content;
+    if (Array.isArray(eventsResponse)) return eventsResponse as any;
+    return [];
+  }, [eventsResponse]);
+
   // 4. Fetch Selected Booking Expenses
   const { data: expensesResponse, isLoading: expensesLoading } = useQuery<{ data: Expense[] }>({
     queryKey: ["expenses", selectedBookingId],
@@ -339,13 +364,28 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
   const handleInvoiceBookingChange = (id: string) => {
     setInvBookingId(id);
-    const selected = bookings.find((b) => b.id === id);
-    if (selected) {
-      const total = Number(selected.totalAmount) || 0;
-      const paid = Number(selected.paidAmount) || 0;
+    if (!id || id === "custom") {
+      return;
+    }
+    const selectedBooking = bookings.find((b) => b.id === id);
+    if (selectedBooking) {
+      const total = Number(selectedBooking.totalAmount) || 0;
+      const paid = Number(selectedBooking.paidAmount) || 0;
       const remaining = Math.max(0, total - paid);
-      setInvSubtotal(remaining.toString());
-      setInvClientName(selected.clientName || `Client for Booking ${selected.bookingNumber}`);
+      setInvSubtotal(remaining > 0 ? remaining.toString() : (total || 100000).toString());
+      setInvClientName(selectedBooking.clientName || `Client for ${selectedBooking.bookingNumber}`);
+      return;
+    }
+    const selectedEvent = eventsList.find((e) => e.id === id);
+    if (selectedEvent) {
+      const budget = Number(selectedEvent.budget) || 250000;
+      setInvSubtotal(budget.toString());
+      setInvClientName(selectedEvent.clientName || selectedEvent.name || "Client Event");
+      if (selectedEvent.clientEmail) {
+        setInvClientEmail(selectedEvent.clientEmail);
+      } else {
+        setInvClientEmail("client@eventosapp.in");
+      }
     }
   };
 
@@ -853,7 +893,9 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               <tbody className="divide-y divide-zinc-850/40 text-zinc-350">
                 {filteredInvoices.map((inv) => {
                   const statusClass = STATUS_PILLS[inv.status] || "border-zinc-800 text-zinc-400";
-                  const bookingNum = bookings.find((b) => b.id === inv.bookingId)?.bookingNumber || "Unassigned";
+                  const bookingNum = bookings.find((b) => b.id === inv.bookingId)?.bookingNumber ||
+                                     eventsList.find((e) => e.id === inv.bookingId || e.bookingId === inv.bookingId)?.name ||
+                                     "Direct Client";
                   return (
                     <tr key={inv.id} className="hover:bg-zinc-900/10 transition-colors">
                       <td className="p-4 font-mono font-bold text-zinc-400">{inv.invoiceNumber || "DRAFT"}</td>
@@ -1381,18 +1423,41 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
             <form onSubmit={(e) => {
               e.preventDefault(); setErrorText("");
-              if (!invBookingId) { setErrorText("Please link the invoice to an active booking."); return; }
+              if (!invClientName.trim()) { setErrorText("Please enter a client name."); return; }
+              const subtotalNum = parseFloat(invSubtotal) || 0;
+              if (subtotalNum <= 0) { setErrorText("Please specify a valid subtotal amount."); return; }
+              const effectiveBookingId = (invBookingId && invBookingId !== "custom") ? invBookingId : undefined;
               createInvoiceMutation.mutate({
-                bookingId: invBookingId, subtotal: parseFloat(invSubtotal) || 0, tax: parseFloat(invTax) || 0, discount: parseFloat(invDiscount) || 0,
+                bookingId: effectiveBookingId, subtotal: subtotalNum, tax: parseFloat(invTax) || 0, discount: parseFloat(invDiscount) || 0,
                 dueDate: new Date(invDueDate).toISOString(), clientName: invClientName, clientEmail: invClientEmail || undefined, billingAddress: invBilling || undefined, notes: invNotes || undefined
               });
             }} className="space-y-4 text-xs z-10 relative">
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-550 uppercase font-black">Associated Booking</label>
-                <select required value={invBookingId} onChange={(e) => handleInvoiceBookingChange(e.target.value)}
+                <label className="text-[9px] text-zinc-550 uppercase font-black">Associated Event or Booking</label>
+                <select value={invBookingId} onChange={(e) => handleInvoiceBookingChange(e.target.value)}
                   className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white">
-                  <option value="">-- Choose Booking --</option>
-                  {bookings.map((b) => <option key={b.id} value={b.id}>{b.bookingNumber} (₹{(Number(b.totalAmount) || 0).toLocaleString()})</option>)}
+                  <option value="">-- Choose Event or Booking --</option>
+                  {eventsList.length > 0 && (
+                    <optgroup label="Active Events">
+                      {eventsList.map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.name} {e.budget ? `(Budget: ₹${Number(e.budget).toLocaleString()})` : ""}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {bookings.length > 0 && (
+                    <optgroup label="Active Bookings">
+                      {bookings.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.bookingNumber} {b.clientName ? `— ${b.clientName}` : ""} (₹{(Number(b.totalAmount) || 0).toLocaleString()})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <optgroup label="Custom / Direct">
+                    <option value="custom">Direct Client Invoice (No prior booking)</option>
+                  </optgroup>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -1453,25 +1518,50 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
             <form onSubmit={(e) => {
               e.preventDefault(); setErrorText("");
-              if (!payBookingId) { setErrorText("Please link the payment to an active booking."); return; }
+              const effectiveBookingId = (payBookingId && payBookingId !== "custom") ? payBookingId : (eventsList[0]?.id || bookings[0]?.id || undefined);
+              if (!effectiveBookingId) { setErrorText("Please link the payment to an active event or booking."); return; }
               const amt = parseFloat(payAmount);
               if (isNaN(amt) || amt <= 0) { setErrorText("Please specify a valid payment amount."); return; }
               recordPaymentMutation.mutate({
-                bookingId: payBookingId, amount: amt, paymentMethod: payMethod,
+                bookingId: effectiveBookingId, amount: amt, paymentMethod: payMethod,
                 transactionReference: payRef || undefined, notes: payNotes || undefined, paymentDate: new Date(payDate).toISOString()
               });
             }} className="space-y-4 text-xs z-10 relative">
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-550 uppercase font-black">Associated Booking</label>
-                <select required value={payBookingId} onChange={(e) => setPayBookingId(e.target.value)}
+                <label className="text-[9px] text-zinc-550 uppercase font-black">Associated Event or Booking</label>
+                <select required value={payBookingId} onChange={(e) => {
+                  setPayBookingId(e.target.value);
+                  const evt = eventsList.find(x => x.id === e.target.value);
+                  if (evt && (!payAmount || payAmount === "0")) {
+                    setPayAmount((evt.budget ? Math.round(evt.budget * 0.5) : 100000).toString());
+                  }
+                  const bkg = bookings.find(x => x.id === e.target.value);
+                  if (bkg && (!payAmount || payAmount === "0")) {
+                    const rem = Math.max(0, (Number(bkg.totalAmount) || 0) - (Number(bkg.paidAmount) || 0));
+                    setPayAmount(rem > 0 ? rem.toString() : "50000");
+                  }
+                }}
                   className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white">
-                  <option value="">-- Choose Booking --</option>
-                  {bookings.map((b) => {
-                    const total = Number(b.totalAmount) || 0;
-                    const paid = Number(b.paidAmount) || 0;
-                    const diff = Math.max(0, total - paid);
-                    return <option key={b.id} value={b.id}>{b.bookingNumber} (Outstanding: ₹{diff.toLocaleString()})</option>;
-                  })}
+                  <option value="">-- Choose Event or Booking --</option>
+                  {eventsList.length > 0 && (
+                    <optgroup label="Active Events">
+                      {eventsList.map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.name} {e.budget ? `(Budget: ₹${Number(e.budget).toLocaleString()})` : ""}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {bookings.length > 0 && (
+                    <optgroup label="Active Bookings">
+                      {bookings.map((b) => {
+                        const total = Number(b.totalAmount) || 0;
+                        const paid = Number(b.paidAmount) || 0;
+                        const diff = Math.max(0, total - paid);
+                        return <option key={b.id} value={b.id}>{b.bookingNumber} {b.clientName ? `— ${b.clientName}` : ""} (Outstanding: ₹{diff.toLocaleString()})</option>;
+                      })}
+                    </optgroup>
+                  )}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-4">

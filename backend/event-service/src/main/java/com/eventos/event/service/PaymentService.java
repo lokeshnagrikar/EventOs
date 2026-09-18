@@ -234,11 +234,37 @@ public class PaymentService {
         return payment;
     }
     public Payment savePayment(CreatePaymentDto dto, UUID tenantId) {
-        com.eventos.event.config.UserPrincipal principal = getCurrentPrincipal();
-        validateBookingAccess(dto.getBookingId(), principal);
-
         Booking booking = bookingRepository.findByIdAndTenantId(dto.getBookingId(), tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking not found or access denied"));
+                .orElse(null);
+        if (booking == null) {
+            Event event = eventRepository.findByIdAndTenantId(dto.getBookingId(), tenantId).orElse(null);
+            if (event != null) {
+                if (event.getBookingId() != null) {
+                    booking = bookingRepository.findByIdAndTenantId(event.getBookingId(), tenantId).orElse(null);
+                }
+                if (booking == null) {
+                    String bookingNum = "EVT-" + LocalDateTime.now().getYear() + "-" + String.format("%06d", (System.currentTimeMillis() / 1000) % 1000000);
+                    booking = Booking.builder()
+                            .eventId(event.getId())
+                            .bookingNumber(bookingNum)
+                            .clientName(event.getName())
+                            .totalAmount(dto.getAmount())
+                            .paidAmount(BigDecimal.ZERO)
+                            .status(com.eventos.event.entity.BookingStatus.CONFIRMED)
+                            .build();
+                    booking.setTenantId(tenantId);
+                    booking = bookingRepository.save(booking);
+                    event.setBookingId(booking.getId());
+                    eventRepository.save(event);
+                }
+            }
+        }
+        if (booking == null) {
+            throw new IllegalArgumentException("Booking not found or access denied");
+        }
+
+        com.eventos.event.config.UserPrincipal principal = getCurrentPrincipal();
+        validateBookingAccess(booking.getId(), principal);
 
         // Enforce state transition check on Booking
         String bookingStatus = booking.getStatus().toString().toUpperCase();
@@ -319,7 +345,7 @@ public class PaymentService {
         }
 
         Payment payment = Payment.builder()
-                .bookingId(dto.getBookingId())
+                .bookingId(booking.getId())
                 .invoiceId(dto.getInvoiceId())
                 .amount(dto.getAmount())
                 .paymentMethod(matchedMethod)
@@ -335,7 +361,7 @@ public class PaymentService {
         // Record financial ledger transaction
         if ("COMPLETED".equals(status)) {
             Transaction tx = Transaction.builder()
-                    .bookingId(dto.getBookingId())
+                    .bookingId(booking.getId())
                     .invoiceId(dto.getInvoiceId())
                     .paymentId(saved.getId())
                     .amount(dto.getAmount())
@@ -347,7 +373,7 @@ public class PaymentService {
             transactionRepository.save(tx);
         } else if ("REFUNDED".equals(status)) {
             Transaction tx = Transaction.builder()
-                    .bookingId(dto.getBookingId())
+                    .bookingId(booking.getId())
                     .invoiceId(dto.getInvoiceId())
                     .paymentId(saved.getId())
                     .amount(dto.getAmount())
