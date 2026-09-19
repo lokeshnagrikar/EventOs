@@ -39,6 +39,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LoadingScreen } from "@/components/ui/skeletons";
+import { EventOsLogo } from "@/components/ui/EventOsLogo";
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -329,12 +330,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                         className="h-8 w-8 rounded-xl object-cover border border-white/10 shadow-md"
                       />
                     ) : (
-                      <div
-                        style={{ background: `linear-gradient(135deg, ${branding.accentColor}, #EC4899)` }}
-                        className="h-8 w-8 rounded-xl flex items-center justify-center text-white font-extrabold text-sm shadow-md"
-                      >
-                        {branding.brandName ? branding.brandName.charAt(0).toUpperCase() : "E"}
-                      </div>
+                      <EventOsLogo size={32} animated={true} interactive={true} />
                     )}
                     <div>
                       <h2 className="font-extrabold text-xs text-white truncate max-w-[140px]">{branding.brandName}</h2>
@@ -445,12 +441,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 className="h-9 w-9 rounded-xl object-cover border border-white/10 shadow-md shadow-purple-500/10"
               />
             ) : (
-              <div
-                style={{ background: `linear-gradient(135deg, ${branding.accentColor}, #EC4899)` }}
-                className="h-9 w-9 rounded-xl flex items-center justify-center text-white font-extrabold text-base shadow-lg shadow-purple-500/10"
-              >
-                {branding.brandName ? branding.brandName.charAt(0).toUpperCase() : "E"}
-              </div>
+              <EventOsLogo size={36} animated={true} interactive={true} />
             )}
             <div>
               <h1 className="font-extrabold text-xs leading-none tracking-wide text-zinc-150 truncate max-w-[150px]">
@@ -545,8 +536,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </div>
 
           {!branding.hidePoweredBy && (
-            <div className="pt-2 text-center border-t border-white/[0.04]">
-              <span className="text-[9px] text-zinc-600 font-mono uppercase tracking-wider">
+            <div className="pt-2 flex items-center justify-center gap-1.5 border-t border-white/[0.04]">
+              <EventOsLogo size={14} animated={true} />
+              <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-wider">
                 Powered by EventOS
               </span>
             </div>

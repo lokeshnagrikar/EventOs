@@ -1,104 +1,220 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 interface EventOsLogoProps {
   className?: string;
   size?: number;
   animated?: boolean;
+  interactive?: boolean;
+  showGlow?: boolean;
+  priority?: boolean;
 }
 
-export function EventOsLogo({ className, size = 48, animated = true }: EventOsLogoProps) {
+export function EventOsLogo({
+  className,
+  size = 48,
+  animated = true,
+  interactive = true,
+  showGlow = true,
+}: EventOsLogoProps) {
+  // 3D Tilt Spring Physics on mouse move
+  const ref = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 25 });
+  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 25 });
+
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["14deg", "-14deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-14deg", "14deg"]);
+  const brightness = useTransform(mouseYSpring, [-0.5, 0.5], [1.15, 0.95]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!interactive || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const xPct = mouseX / width - 0.5;
+    const yPct = mouseY / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    if (!interactive) return;
+    x.set(0);
+    y.set(0);
+  };
+
   return (
-    <div className={cn("relative inline-flex items-center justify-center select-none", className)}>
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 200 200"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="overflow-visible"
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        width: size,
+        height: size,
+        perspective: 600,
+      }}
+      className={cn(
+        "relative inline-flex items-center justify-center select-none shrink-0 group cursor-pointer",
+        className
+      )}
+    >
+      {/* ── AMBIENT NEON GLOW BACKDROP ── */}
+      {showGlow && animated && (
+        <motion.div
+          className="absolute inset-0 -z-10 rounded-full pointer-events-none filter blur-lg"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(168,85,247,0.45) 0%, rgba(236,72,153,0.3) 50%, transparent 75%)",
+            transform: "scale(1.25)",
+          }}
+          animate={{
+            opacity: [0.45, 0.85, 0.45],
+            scale: [1.15, 1.35, 1.15],
+          }}
+          transition={{
+            duration: 3.2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      )}
+
+      {/* ── 3D TILT CONTAINER ── */}
+      <motion.div
+        style={{
+          width: "100%",
+          height: "100%",
+          rotateX: interactive ? rotateX : 0,
+          rotateY: interactive ? rotateY : 0,
+          filter: interactive ? brightness : undefined,
+          transformStyle: "preserve-3d",
+        }}
+        whileHover={interactive ? { scale: 1.06 } : undefined}
+        whileTap={interactive ? { scale: 0.96 } : undefined}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        className="relative w-full h-full flex items-center justify-center"
       >
-        <defs>
-          {/* Main Metallic Brand Gradient */}
-          <linearGradient id="eo_clean_grad" x1="20" y1="30" x2="180" y2="170" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#7C3AED" />
-            <stop offset="45%" stopColor="#A855F7" />
-            <stop offset="75%" stopColor="#EC4899" />
-            <stop offset="100%" stopColor="#06B6D4" />
-          </linearGradient>
-
-          {/* Spark Center Radiant Gradient */}
-          <linearGradient id="eo_clean_spark" x1="120" y1="80" x2="150" y2="120" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#F472B6" />
-            <stop offset="100%" stopColor="#C084FC" />
-          </linearGradient>
-
-          {/* Soft Ambient Glow Filter */}
-          <filter id="eo_clean_glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
-
-        {/* ── LETTER 'E' ── */}
-        <motion.path
-          d="M 30 50 L 95 50 L 85 68 L 52 68 L 52 88 L 82 88 L 76 104 L 52 104 L 52 132 L 95 132 L 95 150 L 30 150 Z"
-          fill="url(#eo_clean_grad)"
-          animate={animated ? { opacity: [0.92, 1, 0.92] } : {}}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        {/* ── BASE HIGH-RES LOGO IMAGE ── */}
+        <img
+          src="/logo/logo.png"
+          alt="EventOS Logo"
+          width={size}
+          height={size}
+          className="w-full h-full object-contain pointer-events-none drop-shadow-[0_4px_12px_rgba(124,58,237,0.25)]"
         />
 
-        {/* ── LETTER 'O' ── */}
-        <motion.path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M 135 48 C 163.165 48 186 70.835 186 99 C 186 127.165 163.165 150 135 150 C 106.835 150 84 127.165 84 99 C 84 70.835 106.835 48 135 48 Z M 135 72 C 149.912 72 162 84.088 162 99 C 162 113.912 149.912 126 135 126 C 120.088 126 108 113.912 108 99 C 108 84.088 120.088 72 135 72 Z"
-          fill="url(#eo_clean_grad)"
-          animate={animated ? { opacity: [0.92, 1, 0.92] } : {}}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
+        {/* ── METALLIC SHIMMER LIGHT-SWEEP OVERLAY ── */}
+        {animated && (
+          <div
+            className="absolute inset-0 pointer-events-none rounded-full overflow-hidden"
+            style={{ mixBlendMode: "color-dodge" }}
+          >
+            <motion.div
+              className="w-[65%] h-[240%] absolute -top-[70%]"
+              style={{
+                background:
+                  "linear-gradient(115deg, transparent 15%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.75) 50%, rgba(244,114,182,0.4) 58%, transparent 75%)",
+                transform: "rotate(30deg)",
+              }}
+              animate={{
+                left: ["-120%", "220%"],
+              }}
+              transition={{
+                duration: 2.8,
+                repeat: Infinity,
+                repeatDelay: 2.4,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            />
+          </div>
+        )}
 
-        {/* ── RADIANT 4-POINTED SPARK IN 'O' ── */}
-        <motion.path
-          d="M 135 76 Q 135 99 155 99 Q 135 99 135 122 Q 135 99 115 99 Q 135 99 135 76 Z"
-          fill="url(#eo_clean_spark)"
-          animate={animated ? { rotate: [0, 180, 360], scale: [0.9, 1.15, 0.9] } : {}}
-          transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
-          style={{ transformOrigin: "135px 99px" }}
-          filter="url(#eo_clean_glow)"
-        />
+        {/* ── ANIMATED 4-POINTED RADIANT DIAMOND STAR IN 'O' ── */}
+        {animated && (
+          <motion.div
+            className="absolute pointer-events-none z-10 flex items-center justify-center"
+            style={{
+              left: "63%",
+              top: "48.2%",
+              width: "25%",
+              height: "25%",
+              transform: "translate(-50%, -50%)",
+            }}
+            animate={{
+              rotate: [0, 360],
+              scale: [0.92, 1.18, 0.92],
+              opacity: [0.9, 1, 0.9],
+            }}
+            transition={{
+              rotate: { duration: 6.5, repeat: Infinity, ease: "linear" },
+              scale: { duration: 2.4, repeat: Infinity, ease: "easeInOut" },
+              opacity: { duration: 2.4, repeat: Infinity, ease: "easeInOut" },
+            }}
+          >
+            <svg
+              viewBox="0 0 100 100"
+              className="w-full h-full overflow-visible drop-shadow-[0_0_8px_rgba(244,114,182,0.95)]"
+            >
+              <defs>
+                <radialGradient id="spark_core_glow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="35%" stopColor="#F472B6" />
+                  <stop offset="70%" stopColor="#C084FC" />
+                  <stop offset="100%" stopColor="rgba(192,132,252,0)" />
+                </radialGradient>
+              </defs>
+              {/* Primary 4-pointed radiant diamond star */}
+              <path
+                d="M 50 8 Q 50 50 92 50 Q 50 50 50 92 Q 50 50 8 50 Q 50 50 50 8 Z"
+                fill="url(#spark_core_glow)"
+              />
+              {/* Secondary white diamond glint */}
+              <path
+                d="M 50 25 Q 50 50 75 50 Q 50 50 50 75 Q 50 50 25 50 Q 50 50 50 25 Z"
+                fill="#FFFFFF"
+                opacity="0.9"
+                transform="rotate(45 50 50)"
+              />
+            </svg>
+          </motion.div>
+        )}
 
-        {/* ── SWIRLING ORBITAL SWOOSH RING ── */}
-        <motion.path
-          d="M 20 140 C 25 175, 120 185, 180 90 C 190 75, 194 58, 192 48"
-          stroke="url(#eo_clean_grad)"
-          strokeWidth="5"
-          strokeLinecap="round"
-          fill="none"
-          animate={animated ? { strokeWidth: [4.5, 6, 4.5] } : {}}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        {/* ── ORBITAL SATELLITE NODE ── */}
-        <motion.circle
-          cx="188"
-          cy="52"
-          r="7"
-          fill="#EC4899"
-          animate={animated ? { scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] } : {}}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <circle
-          cx="188"
-          cy="52"
-          r="5.5"
-          fill="url(#eo_clean_spark)"
-        />
-      </svg>
-    </div>
+        {/* ── ANIMATED ORBITAL SATELLITE NODE (Tip of Swoosh) ── */}
+        {animated && (
+          <motion.div
+            className="absolute pointer-events-none rounded-full z-10"
+            style={{
+              left: "83.6%",
+              top: "32.2%",
+              width: "9.5%",
+              height: "9.5%",
+              transform: "translate(-50%, -50%)",
+              background:
+                "radial-gradient(circle, #FFFFFF 0%, #F472B6 40%, #EC4899 80%, transparent 100%)",
+              boxShadow:
+                "0 0 10px 2px rgba(244,114,182,0.9), 0 0 18px 4px rgba(192,132,252,0.6)",
+            }}
+            animate={{
+              scale: [1, 1.45, 1],
+              opacity: [0.75, 1, 0.75],
+            }}
+            transition={{
+              duration: 2.1,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        )}
+      </motion.div>
+    </motion.div>
   );
 }
 

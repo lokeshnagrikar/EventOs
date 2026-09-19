@@ -14,7 +14,11 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+            allowedOriginPatterns:
+              - "https://*.eventosapp.in"
+              - "https://eventosapp.in"
+              - "http://localhost:*"
+              - "http://127.0.0.1:*"
             allowedMethods:
               - GET
               - POST

@@ -13,6 +13,7 @@ api.eventosapp.in {
         header Access-Control-Allow-Origin "{header.Origin}"
         header Access-Control-Allow-Credentials "true"
         reverse_proxy api-gateway:8080 {
+            header_up Origin "http://localhost:3000"
             header_down -Access-Control-Allow-Origin
             header_down -Access-Control-Allow-Credentials
         }

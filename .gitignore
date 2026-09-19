@@ -53,3 +53,10 @@ pnpm-debug.log*
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Large media files
+*.mp4
+*.mov
+*.avi
+*.mkv
+web/public/videos/

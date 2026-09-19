@@ -52,7 +52,7 @@ export default function ProcessingLoader({
 
               {/* Center Logo */}
               <div className="relative z-10 flex items-center justify-center">
-                <EventOsLogo size={36} animated={false} />
+                <EventOsLogo size={36} animated={true} />
               </div>
             </div>
           </div>

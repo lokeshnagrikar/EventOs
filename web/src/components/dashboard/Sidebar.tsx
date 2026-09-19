@@ -144,7 +144,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
           >
             {/* Logo mark */}
             <div className="h-9 w-9 rounded-xl bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-sm">
-              <EventOsLogo size={30} animated={false} />
+              <EventOsLogo size={30} animated={true} interactive={true} />
             </div>
             <AnimatePresence>
               {!isCollapsed && (

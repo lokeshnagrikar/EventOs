@@ -172,27 +172,31 @@ export default function AICenterPage() {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
 
       {/* Header Navbar */}
-      <nav className="h-16 border-b border-zinc-800 bg-[#111113]/60 backdrop-blur-md px-6 flex items-center justify-between z-20 shrink-0">
-        <div className="flex items-center gap-3">
+      <nav className="h-14 sm:h-16 border-b border-zinc-800 bg-[#111113]/60 backdrop-blur-md px-3.5 sm:px-6 flex items-center justify-between z-20 shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <button
             onClick={() => router.push("/dashboard")}
-            className="h-8 w-8 rounded-xl bg-zinc-850 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-800"
+            className="h-8 w-8 rounded-xl bg-zinc-850 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-800 shrink-0"
             aria-label="Back to dashboard"
           >
             <ArrowLeft size={15} />
           </button>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-sm tracking-tight bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">AI Command Center</span>
-            <span className="text-[10px] px-2 py-0.5 bg-zinc-850 border border-zinc-800 rounded text-zinc-400 font-bold uppercase font-mono tracking-wider">Einstein</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-bold text-xs sm:text-sm tracking-tight bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent truncate">
+              AI Command Center
+            </span>
+            <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 bg-zinc-850 border border-zinc-800 rounded text-zinc-400 font-bold uppercase font-mono tracking-wider shrink-0">
+              Einstein
+            </span>
           </div>
         </div>
       </nav>
 
       {/* Content Container */}
-      <div className="flex-1 flex overflow-hidden z-10">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden z-10 min-h-0">
         
-        {/* Sidebar Nav */}
-        <aside className="w-60 border-r border-zinc-850 bg-[#111113]/30 backdrop-blur-md p-3 flex flex-col gap-2 shrink-0">
+        {/* Sidebar Nav: Horizontal scroll tabs on mobile, vertical sidebar on desktop */}
+        <aside className="w-full md:w-60 border-b md:border-b-0 md:border-r border-zinc-850 bg-[#111113]/60 md:bg-[#111113]/30 backdrop-blur-md p-2 sm:p-3 flex flex-row md:flex-col gap-1.5 sm:gap-2 overflow-x-auto md:overflow-y-auto shrink-0 scrollbar-none">
           {[
             { id: "dashboard", label: "Overview Metrics", icon: Cpu },
             { id: "playground", label: "AI Playground", icon: Sparkles },
@@ -204,20 +208,20 @@ export default function AICenterPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
-                "w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left border",
+                "whitespace-nowrap flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-left border shrink-0",
                 activeTab === tab.id
-                  ? "bg-purple-950/20 text-purple-400 border-purple-900/40 shadow-sm"
-                  : "text-zinc-450 hover:text-zinc-200 hover:bg-zinc-850/40 border-transparent"
+                  ? "bg-purple-950/30 text-purple-300 border-purple-800/50 shadow-sm"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-850/40 border-transparent"
               )}
             >
-              <tab.icon size={13} />
-              {tab.label}
+              <tab.icon size={13} className="shrink-0" />
+              <span>{tab.label}</span>
             </button>
           ))}
         </aside>
 
         {/* Content main */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -225,44 +229,44 @@ export default function AICenterPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.15 }}
-              className="max-w-4xl mx-auto space-y-8"
+              className="max-w-4xl mx-auto space-y-6 sm:space-y-8"
             >
               
               {/* TAB 1: OVERVIEW METRICS */}
               {activeTab === "dashboard" && (
-                <div className="space-y-6">
-                  <div className="border-b border-zinc-850 pb-4">
-                    <h3 className="text-sm font-extrabold uppercase text-white flex items-center gap-2">
-                      <Cpu size={16} className="text-purple-500" />
-                      Usage & Productivity Telemetry
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="border-b border-zinc-850 pb-3 sm:pb-4">
+                    <h3 className="text-xs sm:text-sm font-extrabold uppercase text-white flex items-center gap-2">
+                      <Cpu size={15} className="text-purple-500 shrink-0" />
+                      <span>Usage & Productivity Telemetry</span>
                     </h3>
-                    <p className="text-[11px] text-zinc-450 mt-1">Real-time metrics profiling automation runs, tokens consumed and billing saved hours.</p>
+                    <p className="text-[10px] sm:text-[11px] text-zinc-400 mt-1">Real-time metrics profiling automation runs, tokens consumed and billing saved hours.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="p-4 border border-zinc-800 bg-[#111113]/40 rounded-2xl">
-                      <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Tokens Consumed</span>
-                      <span className="text-xl font-bold font-mono block mt-1">{totalTokens.toLocaleString()}</span>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                    <div className="p-3 sm:p-4 border border-zinc-800 bg-[#111113]/40 rounded-xl sm:rounded-2xl">
+                      <span className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest block truncate">Tokens Consumed</span>
+                      <span className="text-base sm:text-xl font-bold font-mono block mt-1 truncate">{totalTokens.toLocaleString()}</span>
                     </div>
-                    <div className="p-4 border border-zinc-800 bg-[#111113]/40 rounded-2xl">
-                      <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Saved Business Hours</span>
-                      <span className="text-xl font-bold font-mono block mt-1 flex items-center gap-1">
-                        <Clock size={14} className="text-purple-400" /> {savedHours} hrs
+                    <div className="p-3 sm:p-4 border border-zinc-800 bg-[#111113]/40 rounded-xl sm:rounded-2xl">
+                      <span className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest block truncate">Saved Business Hours</span>
+                      <span className="text-base sm:text-xl font-bold font-mono block mt-1 flex items-center gap-1 truncate">
+                        <Clock size={13} className="text-purple-400 shrink-0" /> {savedHours} hrs
                       </span>
                     </div>
-                    <div className="p-4 border border-zinc-800 bg-[#111113]/40 rounded-2xl">
-                      <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Automation Runs</span>
-                      <span className="text-xl font-bold font-mono block mt-1">{totalRuns} tasks</span>
+                    <div className="p-3 sm:p-4 border border-zinc-800 bg-[#111113]/40 rounded-xl sm:rounded-2xl">
+                      <span className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest block truncate">Automation Runs</span>
+                      <span className="text-base sm:text-xl font-bold font-mono block mt-1 truncate">{totalRuns} tasks</span>
                     </div>
-                    <div className="p-4 border border-zinc-800 bg-[#111113]/40 rounded-2xl">
-                      <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">AI Cost Saved</span>
-                      <span className="text-xl font-bold font-mono block mt-1 text-emerald-450">₹{totalCostSavedInr.toLocaleString()}</span>
+                    <div className="p-3 sm:p-4 border border-zinc-800 bg-[#111113]/40 rounded-xl sm:rounded-2xl">
+                      <span className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest block truncate">AI Cost Saved</span>
+                      <span className="text-base sm:text-xl font-bold font-mono block mt-1 text-emerald-450 truncate">₹{totalCostSavedInr.toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* Token consumption chart */}
-                  <div className="p-5 border border-zinc-850 bg-[#111113]/30 rounded-2xl space-y-4">
-                    <span className="text-[10px] text-zinc-550 font-black uppercase tracking-wider block">Token Consumption Trends</span>
+                  <div className="p-3.5 sm:p-5 border border-zinc-850 bg-[#111113]/30 rounded-xl sm:rounded-2xl space-y-3 sm:space-y-4 min-w-0">
+                    <span className="text-[9px] sm:text-[10px] text-zinc-500 font-black uppercase tracking-wider block">Token Consumption Trends</span>
                     {totalTokens === 0 ? (
                       <div className="h-44 w-full flex flex-col items-center justify-center border border-dashed border-zinc-850 rounded-xl text-zinc-550 text-xs gap-2">
                         <Cpu size={24} className="opacity-40 text-purple-400" />
@@ -406,14 +410,14 @@ export default function AICenterPage() {
                   <form onSubmit={handleAddPrompt} className="p-5 border border-zinc-800 bg-[#111113]/30 rounded-2xl space-y-4 text-xs font-semibold">
                     <span className="text-[9px] text-zinc-550 uppercase tracking-widest block font-black">Register New Prompt Preset</span>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[9px] text-zinc-550 uppercase font-black block">Preset Label Name</label>
-                        <input type="text" required placeholder="E.g. Follow-up SMS template" value={newPromptName} onChange={(e) => setNewPromptName(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white" />
+                        <label className="text-[9px] text-zinc-500 uppercase font-black block">Preset Label Name</label>
+                        <input type="text" required placeholder="E.g. Follow-up SMS template" value={newPromptName} onChange={(e) => setNewPromptName(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-white text-xs" />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[9px] text-zinc-550 uppercase font-black block">Target Module</label>
-                        <select value={newPromptModule} onChange={(e) => setNewPromptModule(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-350">
+                        <label className="text-[9px] text-zinc-500 uppercase font-black block">Target Module</label>
+                        <select value={newPromptModule} onChange={(e) => setNewPromptModule(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-zinc-300 text-xs">
                           <option value="CRM">CRM Leads</option>
                           <option value="Finance">Finance / Invoices</option>
                           <option value="Gallery">Gallery Tags</option>
@@ -541,9 +545,9 @@ export default function AICenterPage() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[9px] text-zinc-555 uppercase font-black">Temperature ({temp})</label>
+                        <label className="text-[9px] text-zinc-500 uppercase font-black">Temperature ({temp})</label>
                         <input
                           type="range"
                           min="0.1"
@@ -551,16 +555,16 @@ export default function AICenterPage() {
                           step="0.1"
                           value={temp}
                           onChange={(e) => setTemp(parseFloat(e.target.value))}
-                          className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                          className="w-full h-1.5 bg-zinc-850 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[9px] text-zinc-555 uppercase font-black">Max Generation Tokens</label>
+                        <label className="text-[9px] text-zinc-500 uppercase font-black">Max Generation Tokens</label>
                         <input
                           type="number"
                           value={maxTokens}
                           onChange={(e) => setMaxTokens(parseInt(e.target.value) || 1024)}
-                          className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white font-mono"
+                          className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-white font-mono text-xs"
                         />
                       </div>
                     </div>

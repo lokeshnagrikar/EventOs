@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { WorkspaceSelectorPill } from "./WorkspaceSelectorPill";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
+import { EventOsLogo } from "@/components/ui/EventOsLogo";
 
 interface NavbarProps {
   activeSection?: string;
@@ -142,13 +143,7 @@ export function Navbar({ activeSection }: NavbarProps) {
               onKeyDown={(e) => e.key === "Enter" && router.push("/")}
               aria-label="EventOS Home"
             >
-              <img
-                src="/logo/logo.png"
-                alt="EventOS Logo"
-                width={38}
-                height={38}
-                className="h-8 w-8 sm:h-9 sm:w-9 object-contain transition-transform duration-300 group-hover:scale-105"
-              />
+              <EventOsLogo size={36} animated={true} interactive={true} />
               <span className="text-base sm:text-lg font-black tracking-tight text-white font-heading">
                 Event<span className="text-purple-400">OS</span>
               </span>
