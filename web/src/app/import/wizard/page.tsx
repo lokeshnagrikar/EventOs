@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
 import { useToastStore } from "@/lib/toastStore";
+import { useAuthStore } from "@/store/authStore";
 import {
   IMPORT_SOURCES,
   DATA_TYPES,
@@ -43,9 +44,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   FileText,
   FileSpreadsheet,
   Globe,
-  BookOpen,
-  Compass,
-  Shield,
+  Database,
   Layers,
   Sparkles,
 };
@@ -53,6 +52,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
 export default function ImportWizard() {
   const router = useRouter();
   const { addToast } = useToastStore();
+  const { user: authUser } = useAuthStore();
+  const userName = authUser?.firstName ? `${authUser.firstName} ${authUser.lastName || ""}`.trim() : (authUser?.email?.split("@")[0] || "Administrator");
 
   // Wizard state machine
   const [step, setStep] = useState(1);
@@ -247,7 +248,7 @@ export default function ImportWizard() {
             errorCount: activeDemo ? activeDemo.validationReport.errorCount : 1,
             durationSeconds: 4,
             status: "completed",
-            user: "Roy Wedding Admin",
+            user: userName,
             impactSummary: {
               leadsCreated: selectedType?.id === "leads" ? currentRows.length - 1 : 0,
               eventsCreated: selectedType?.id === "events" ? currentRows.length - 1 : 0,

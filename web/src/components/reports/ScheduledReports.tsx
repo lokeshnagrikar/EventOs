@@ -36,13 +36,20 @@ export default function ScheduledReports() {
     const stored = localStorage.getItem("eventos_scheduled_reports");
     if (stored) {
       try {
-        setSchedules(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        const cleaned = Array.isArray(parsed)
+          ? parsed.filter((item: any) => !item.recipients?.some((r: string) => r.includes("eventos.dev")) && item.id !== "SCH-001")
+          : [];
+        setSchedules(cleaned);
+        if (cleaned.length !== (parsed?.length || 0)) {
+          localStorage.setItem("eventos_scheduled_reports", JSON.stringify(cleaned));
+        }
       } catch {
-        setSchedules(SCHEDULED_REPORTS_INITIAL);
+        setSchedules([]);
       }
     } else {
-      setSchedules(SCHEDULED_REPORTS_INITIAL);
-      localStorage.setItem("eventos_scheduled_reports", JSON.stringify(SCHEDULED_REPORTS_INITIAL));
+      setSchedules([]);
+      localStorage.setItem("eventos_scheduled_reports", JSON.stringify([]));
     }
   }, []);
 

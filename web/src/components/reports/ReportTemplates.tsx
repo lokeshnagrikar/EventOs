@@ -116,7 +116,8 @@ export default function ReportTemplates() {
   const generateShareUrl = () => {
     if (!shareItem) return "";
     const token = Math.random().toString(36).substring(7).toUpperCase();
-    return `https://eventos.dev/share/template-${token}`;
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://eventosapp.in";
+    return `${origin}/share/template-${token}`;
   };
 
   if (!mounted) return null;

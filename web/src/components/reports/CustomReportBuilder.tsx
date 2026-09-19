@@ -239,7 +239,8 @@ export default function CustomReportBuilder() {
 
   const generateShareLink = () => {
     const token = Math.random().toString(36).substring(7).toUpperCase();
-    setGeneratedShareLink(`https://eventos.dev/share/rep-${token}`);
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://eventosapp.in";
+    setGeneratedShareLink(`${origin}/share/rep-${token}`);
     addToast("Secure report share link generated!", "success");
   };
 

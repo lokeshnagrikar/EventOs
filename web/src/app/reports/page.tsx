@@ -241,6 +241,22 @@ export default function ReportsPage() {
       link.click();
       document.body.removeChild(link);
     }
+
+    // Persist real export to historical export ledger
+    try {
+      const stored = localStorage.getItem("eventos_exports_history");
+      const currentHistory = stored ? JSON.parse(stored) : [];
+      const newEntry = {
+        id: `EXP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        generatedBy: actorName || "Workspace Admin",
+        date: new Date().toISOString(),
+        module: `${activeTab.toUpperCase()} Report`,
+        format: type === "csv" ? "CSV" : type === "excel" ? "Excel" : "PDF",
+        size: `${Math.max(1, Math.round(content.length / 1024))} KB`,
+        status: "ready"
+      };
+      localStorage.setItem("eventos_exports_history", JSON.stringify([newEntry, ...currentHistory]));
+    } catch {}
   };
 
   if (isLoading) {

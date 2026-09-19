@@ -25,51 +25,8 @@ import EmptyState from "@/components/ui/EmptyState";
 import { useToastStore } from "@/lib/toastStore";
 import { IMPORT_SOURCES, DEMO_DATASETS, ImportHistoryItem } from "@/lib/importData";
 
-// Initial default history ledger
-const INITIAL_HISTORY: ImportHistoryItem[] = [
-  {
-    id: "MIG-9B2F7X1C",
-    date: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-    fileName: "HoneyBook_Leads_Export_June.csv",
-    source: "HoneyBook",
-    dataType: "CRM Leads",
-    recordsCount: 45,
-    skippedCount: 3,
-    errorCount: 2,
-    durationSeconds: 8,
-    status: "completed",
-    user: "Roy Wedding Admin",
-    impactSummary: { leadsCreated: 45, eventsCreated: 10 },
-  },
-  {
-    id: "MIG-4J7K2L8P",
-    date: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
-    fileName: "Old_Events_Ledger_2025.xlsx",
-    source: "Excel Spreadsheet",
-    dataType: "Events Planner",
-    recordsCount: 112,
-    skippedCount: 12,
-    errorCount: 8,
-    durationSeconds: 15,
-    status: "completed",
-    user: "Roy Wedding Admin",
-    impactSummary: { eventsCreated: 112, invoicesCreated: 35 },
-  },
-  {
-    id: "MIG-2H8M3N9Y",
-    date: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
-    fileName: "Workspace_Contacts_Notion.json",
-    source: "Notion Database",
-    dataType: "CRM Leads",
-    recordsCount: 30,
-    skippedCount: 0,
-    errorCount: 0,
-    durationSeconds: 4,
-    status: "rolled_back",
-    user: "Roy Wedding Admin",
-    impactSummary: { leadsCreated: 30 },
-  },
-];
+// Initial default history ledger (empty by default for clean empty states)
+const INITIAL_HISTORY: ImportHistoryItem[] = [];
 
 export default function ImportDashboard() {
   const router = useRouter();
@@ -86,13 +43,20 @@ export default function ImportDashboard() {
     const stored = localStorage.getItem("eventos_imports_history");
     if (stored) {
       try {
-        setHistory(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        const cleaned = Array.isArray(parsed)
+          ? parsed.filter((item: any) => item.user !== "Roy Wedding Admin" && item.id !== "MIG-9B2F7X1C")
+          : [];
+        setHistory(cleaned);
+        if (cleaned.length !== (parsed?.length || 0)) {
+          localStorage.setItem("eventos_imports_history", JSON.stringify(cleaned));
+        }
       } catch {
-        setHistory(INITIAL_HISTORY);
+        setHistory([]);
       }
     } else {
-      setHistory(INITIAL_HISTORY);
-      localStorage.setItem("eventos_imports_history", JSON.stringify(INITIAL_HISTORY));
+      setHistory([]);
+      localStorage.setItem("eventos_imports_history", JSON.stringify([]));
     }
   }, []);
 

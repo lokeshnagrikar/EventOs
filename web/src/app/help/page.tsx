@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
 import { useToastStore } from "@/lib/toastStore";
+import { useAuthStore } from "@/store/authStore";
 import { ARTICLES, TUTORIALS, CHANGELOG, FAQS, buildSearchIndex, fuzzySearch } from "@/lib/helpData";
 
 const QUICK_ACTIONS = [
@@ -45,6 +46,8 @@ const POPULAR_TAGS = ["create lead", "invite team", "invoices", "quotes", "galle
 export default function HelpCenterHome() {
   const router = useRouter();
   const { addToast } = useToastStore();
+  const { user } = useAuthStore();
+  const userName = user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : (user?.email?.split("@")[0] || "Team Member");
   const [searchQuery, setSearchQuery] = useState("");
 
   // NPS states
@@ -69,7 +72,7 @@ export default function HelpCenterHome() {
 
       const newFeedback = {
         id: `nps-${Date.now().toString(36)}`,
-        user: "Roy Wedding Admin",
+        user: userName,
         score: npsScore,
         emoji: npsEmoji,
         suggestion: npsSuggestion,

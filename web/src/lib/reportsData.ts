@@ -104,39 +104,13 @@ export const REPORT_TEMPLATES: ReportTemplate[] = [
 // EXPORT HISTORY LEDGER
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export const EXPORT_HISTORY_INITIAL: ExportHistoryLogItem[] = [
-  { id: "EXP-98A7B6", generatedBy: "Roy Wedding Admin", date: new Date(Date.now() - 1 * 3600 * 1000).toISOString(), module: "Finance Invoices", format: "PDF", size: "2.4 MB", status: "ready" },
-  { id: "EXP-54C3D2", generatedBy: "Roy Wedding Admin", date: new Date(Date.now() - 24 * 3600 * 1000).toISOString(), module: "CRM Leads & Pipeline", format: "CSV", size: "480 KB", status: "ready" },
-  { id: "EXP-12E5F9", generatedBy: "Roy Wedding Admin", date: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(), module: "Events Planner", format: "Excel", size: "1.2 MB", status: "ready" },
-  { id: "EXP-88F4A1", generatedBy: "Roy Wedding Admin", date: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(), module: "Security Audit Logs", format: "JSON", size: "850 KB", status: "ready" },
-];
+export const EXPORT_HISTORY_INITIAL: ExportHistoryLogItem[] = [];
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ACTIVE SCHEDULES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export const SCHEDULED_REPORTS_INITIAL: ScheduledReportItem[] = [
-  {
-    id: "SCH-001",
-    name: "Weekly Sales & Lead Pipeline Summary",
-    frequency: "Weekly",
-    format: "PDF",
-    recipients: ["ceo@eventos.dev", "sales@eventos.dev"],
-    lastSent: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-    nextSent: new Date(Date.now() + 4 * 24 * 3600 * 1000).toISOString(),
-    active: true,
-  },
-  {
-    id: "SCH-002",
-    name: "Monthly Tax & GST Invoice Ledger",
-    frequency: "Monthly",
-    format: "Excel",
-    recipients: ["billing@eventos.dev", "finance-team@eventos.dev"],
-    lastSent: new Date(Date.now() - 12 * 24 * 3600 * 1000).toISOString(),
-    nextSent: new Date(Date.now() + 18 * 24 * 3600 * 1000).toISOString(),
-    active: true,
-  },
-];
+export const SCHEDULED_REPORTS_INITIAL: ScheduledReportItem[] = [];
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // FORMAT GENERATORS (Simulates data format conversion)

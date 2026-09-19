@@ -132,12 +132,12 @@ export default function BudgetCalculatorPage() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // Inputs State
-  const [eventName, setEventName] = useState("Annual Gala");
-  const [eventType, setEventType] = useState("WEDDING");
-  const [guestCount, setGuestCount] = useState(150);
-  const [venueType, setVenueType] = useState("HOTEL");
-  const [decorStyle, setDecorStyle] = useState("PREMIUM");
-  const [selectedEffects, setSelectedEffects] = useState<string[]>(["COLD_PYRO", "DRY_ICE"]);
+  const [eventName, setEventName] = useState("");
+  const [eventType, setEventType] = useState("");
+  const [guestCount, setGuestCount] = useState(0);
+  const [venueType, setVenueType] = useState("");
+  const [decorStyle, setDecorStyle] = useState("");
+  const [selectedEffects, setSelectedEffects] = useState<string[]>([]);
   
   // Client Contact Details
   const [clientName, setClientName] = useState("");
@@ -190,11 +190,11 @@ export default function BudgetCalculatorPage() {
 
   // Live calculation hook
   useEffect(() => {
-    const plateCost = getPrice("EVENT_TYPE", eventType, getPlateCostFallback(eventType));
-    const catTotal = plateCost * guestCount;
+    const plateCost = eventType ? getPrice("EVENT_TYPE", eventType, getPlateCostFallback(eventType)) : 0;
+    const catTotal = plateCost * (guestCount || 0);
 
-    const venCost = getPrice("VENUE_TYPE", venueType, getVenueCostFallback(venueType));
-    const decTotal = getPrice("DECOR_STYLE", decorStyle, getDecorCostFallback(decorStyle));
+    const venCost = venueType ? getPrice("VENUE_TYPE", venueType, getVenueCostFallback(venueType)) : 0;
+    const decTotal = decorStyle ? getPrice("DECOR_STYLE", decorStyle, getDecorCostFallback(decorStyle)) : 0;
 
     const effTotal = selectedEffects.reduce((sum, key) => {
       const cost = getPrice("ADD_ON", key, getEffectFeeFallback(key));
@@ -273,6 +273,14 @@ export default function BudgetCalculatorPage() {
   });
 
   const handleNext = () => {
+    if (currentStep === 1 && !eventType) {
+      setErrorText("Please select an event category to proceed.");
+      return;
+    }
+    if (currentStep === 2 && guestCount <= 0) {
+      setGuestCount(100);
+    }
+    setErrorText("");
     if (currentStep < 6) {
       setDirection(1);
       setCurrentStep(currentStep + 1);
@@ -280,6 +288,7 @@ export default function BudgetCalculatorPage() {
   };
 
   const handleBack = () => {
+    setErrorText("");
     if (currentStep > 1) {
       setDirection(-1);
       setCurrentStep(currentStep - 1);
@@ -483,10 +492,11 @@ export default function BudgetCalculatorPage() {
                         <Users size={18} className="text-zinc-500" />
                         <input
                           type="number"
-                          value={guestCount}
+                          value={guestCount || ""}
                           min="10"
                           max="2000"
-                          onChange={(e) => setGuestCount(Math.max(10, parseInt(e.target.value) || 10))}
+                          placeholder="0"
+                          onChange={(e) => setGuestCount(Math.max(0, parseInt(e.target.value) || 0))}
                           className="bg-transparent text-center focus:outline-none w-20"
                         />
                         <span className="text-xs text-zinc-500">Plates</span>
@@ -818,87 +828,97 @@ export default function BudgetCalculatorPage() {
               Live Calculations
             </h3>
 
-            <div className="space-y-4 text-xs">
-              {/* Catering */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-zinc-400">
-                  <span className="flex items-center gap-1">
-                    <Utensils size={12} className="text-zinc-500" />
-                    Catering ({guestCount} guests)
-                  </span>
-                  <span className="font-mono font-bold text-zinc-250">
-                    INR {formatCurrency(cateringSum)}
+            {!eventType && guestCount === 0 && !venueType && !decorStyle && selectedEffects.length === 0 ? (
+              <div className="py-8 px-3 border border-dashed border-zinc-850 rounded-xl text-center space-y-2">
+                <Sparkles size={22} className="mx-auto text-purple-400 opacity-60 animate-pulse" />
+                <p className="text-xs text-zinc-300 font-bold">Configure Event Details</p>
+                <p className="text-[11px] text-zinc-500 leading-relaxed">
+                  Select your event category, guest capacity, venue, and decor on the left to calculate live estimates in real-time.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4 text-xs">
+                {/* Catering */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Utensils size={12} className="text-zinc-500" />
+                      Catering ({guestCount} guests)
+                    </span>
+                    <span className="font-mono font-bold text-zinc-250">
+                      INR {formatCurrency(cateringSum)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Venue */}
+                <div className="space-y-1 border-t border-zinc-900/60 pt-2.5">
+                  <div className="flex justify-between items-center text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Building size={12} className="text-zinc-500" />
+                      Venue ({venueType || "Not Selected"})
+                    </span>
+                    <span className="font-mono font-bold text-zinc-250">
+                      INR {formatCurrency(venueSum)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Decor */}
+                <div className="space-y-1 border-t border-zinc-900/60 pt-2.5">
+                  <div className="flex justify-between items-center text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Flower2 size={12} className="text-zinc-500" />
+                      Decor ({decorStyle || "Not Selected"})
+                    </span>
+                    <span className="font-mono font-bold text-zinc-250">
+                      INR {formatCurrency(decorSum)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Special Effects */}
+                <div className="space-y-1 border-t border-zinc-900/60 pt-2.5">
+                  <div className="flex justify-between items-center text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Tv size={12} className="text-zinc-500" />
+                      Effects ({selectedEffects.length} items)
+                    </span>
+                    <span className="font-mono font-bold text-zinc-250">
+                      INR {formatCurrency(effectsSum)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Subtotal */}
+                <div className="space-y-1 border-t border-zinc-800/40 pt-2.5">
+                  <div className="flex justify-between items-center text-zinc-400 font-semibold">
+                    <span>Subtotal</span>
+                    <span className="font-mono font-bold text-zinc-250">
+                      INR {formatCurrency(cateringSum + venueSum + decorSum + effectsSum)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* GST */}
+                <div className="space-y-1 border-t border-zinc-900/60 pt-2.5">
+                  <div className="flex justify-between items-center text-zinc-400">
+                    <span className="text-zinc-500">GST (18%)</span>
+                    <span className="font-mono font-bold text-zinc-300">
+                      INR {formatCurrency(Math.round((cateringSum + venueSum + decorSum + effectsSum) * 0.18))}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Estimated Budget */}
+                <div className="flex justify-between items-center border-t border-zinc-800/80 pt-4 text-xs font-extrabold">
+                  <span className="text-zinc-300">Grand Total (Incl. GST)</span>
+                  <span className="font-mono text-emerald-400 text-sm tracking-tight">
+                    INR {formatCurrency(totalSum)}
                   </span>
                 </div>
               </div>
-
-              {/* Venue */}
-              <div className="space-y-1 border-t border-zinc-900/60 pt-2.5">
-                <div className="flex justify-between items-center text-zinc-400">
-                  <span className="flex items-center gap-1">
-                    <Building size={12} className="text-zinc-500" />
-                    Venue ({venueType})
-                  </span>
-                  <span className="font-mono font-bold text-zinc-250">
-                    INR {formatCurrency(venueSum)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Decor */}
-              <div className="space-y-1 border-t border-zinc-900/60 pt-2.5">
-                <div className="flex justify-between items-center text-zinc-400">
-                  <span className="flex items-center gap-1">
-                    <Flower2 size={12} className="text-zinc-500" />
-                    Decor ({decorStyle})
-                  </span>
-                  <span className="font-mono font-bold text-zinc-250">
-                    INR {formatCurrency(decorSum)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Special Effects */}
-              <div className="space-y-1 border-t border-zinc-900/60 pt-2.5">
-                <div className="flex justify-between items-center text-zinc-400">
-                  <span className="flex items-center gap-1">
-                    <Tv size={12} className="text-zinc-500" />
-                    Effects ({selectedEffects.length} items)
-                  </span>
-                  <span className="font-mono font-bold text-zinc-250">
-                    INR {formatCurrency(effectsSum)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Subtotal */}
-              <div className="space-y-1 border-t border-zinc-800/40 pt-2.5">
-                <div className="flex justify-between items-center text-zinc-400 font-semibold">
-                  <span>Subtotal</span>
-                  <span className="font-mono font-bold text-zinc-250">
-                    INR {formatCurrency(cateringSum + venueSum + decorSum + effectsSum)}
-                  </span>
-                </div>
-              </div>
-
-              {/* GST */}
-              <div className="space-y-1 border-t border-zinc-900/60 pt-2.5">
-                <div className="flex justify-between items-center text-zinc-400">
-                  <span className="text-zinc-500">GST (18%)</span>
-                  <span className="font-mono font-bold text-zinc-300">
-                    INR {formatCurrency(Math.round((cateringSum + venueSum + decorSum + effectsSum) * 0.18))}
-                  </span>
-                </div>
-              </div>
-
-              {/* Estimated Budget */}
-              <div className="flex justify-between items-center border-t border-zinc-800/80 pt-4 text-xs font-extrabold">
-                <span className="text-zinc-300">Grand Total (Incl. GST)</span>
-                <span className="font-mono text-emerald-400 text-sm tracking-tight">
-                  INR {formatCurrency(totalSum)}
-                </span>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Saved Plans List */}

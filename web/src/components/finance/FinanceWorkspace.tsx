@@ -630,15 +630,18 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {activeTab === "dashboard" && (
         <div className="space-y-6">
           {/* Live Financial Analytics & Profit Margins Component */}
-          <EventFinancialAnalytics />
-
-          {/* Top KPI Grid: 4 primary metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <FinanceKpiCard title="Monthly Revenue" value={kpis.revenueMonth} icon={Coins} trend={{ value: 14, isPositive: true }} accent="from-purple-500 to-indigo-500" sparkData={[40, 50, 48, 65, kpis.revenueMonth / 1000]} />
-            <FinanceKpiCard title="Outstanding Balance" value={kpis.outstanding} icon={DollarSign} trend={{ value: 2.4, isPositive: false }} accent="from-amber-500 to-yellow-500" sparkData={[30, 28, 32, 29, kpis.outstanding / 1000]} />
-            <FinanceKpiCard title="Net Profit" value={kpis.netProfit} icon={TrendingUp} trend={{ value: kpis.profitMargin, isPositive: kpis.netProfit > 0 }} accent="from-emerald-500 to-teal-500" sparkData={[20, 25, 22, 30, kpis.netProfit / 1000]} />
-            <FinanceKpiCard title="Overdue Invoices" value={kpis.overdueCount} icon={AlertCircle} trend={{ value: 0, isPositive: true }} accent="from-red-500 to-orange-500" sparkData={[1, 0, 2, 0, kpis.overdueCount]} isCount />
-          </div>
+          <EventFinancialAnalytics
+            invoices={invoices}
+            payments={payments}
+            bookings={bookings}
+            expenses={expenses}
+            eventsList={eventsList}
+            kpis={kpis}
+            revenueTrendData={revenueTrendData}
+            expenseCategoryData={expenseCategoryData}
+            onCreateInvoice={() => setIsInvoiceModalOpen(true)}
+            onRecordPayment={() => setIsPaymentModalOpen(true)}
+          />
 
           {/* Secondary KPI strip */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -661,71 +664,6 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 </div>
               );
             })}
-          </div>
-
-          {/* Charts Grid: Revenue + Expense Pie */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 p-5 border border-zinc-850 bg-[#121214]/30 backdrop-blur rounded-2xl space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">Income & Revenue Trend</h3>
-                <span className="text-[10px] text-zinc-500 font-bold">Past 6 Months</span>
-              </div>
-              <div className="h-56 w-full text-xs">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#a855f7" stopOpacity={0.2}/>
-                        <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                    <XAxis dataKey="month" stroke="#71717a" tick={{ fontSize: 10 }} />
-                    <YAxis stroke="#71717a" tick={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", color: "#f4f4f5", fontSize: 11 }} />
-                    <Area type="monotone" dataKey="Revenue" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#revenueGrad)" />
-                    <Area type="monotone" dataKey="Profit" stroke="#10b981" strokeWidth={1.5} fillOpacity={1} fill="url(#profitGrad)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="lg:col-span-1 p-5 border border-zinc-850 bg-[#121214]/30 backdrop-blur rounded-2xl space-y-4 flex flex-col justify-between">
-              <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">Expenses by Category</h3>
-              {expenseCategoryData.length === 0 ? (
-                <div className="h-44 w-full flex flex-col items-center justify-center border border-dashed border-zinc-850 rounded-xl text-zinc-550 text-xs gap-2">
-                  <PieChartIcon size={24} className="opacity-40 text-purple-400" />
-                  <span>No expenses recorded for this booking.</span>
-                </div>
-              ) : (
-                <>
-                  <div className="h-44 w-full text-xs">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={expenseCategoryData} cx="50%" cy="50%" innerRadius={48} outerRadius={68} paddingAngle={4} dataKey="value">
-                          {expenseCategoryData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", fontSize: 11 }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                    {expenseCategoryData.slice(0, 5).map((entry) => (
-                      <div key={entry.name} className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-                        <span className="text-zinc-400 truncate">{entry.name} (₹{Math.round(entry.value/1000)}k)</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
           </div>
 
           {/* Recent Payments + Outstanding Invoices */}

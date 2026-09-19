@@ -23,13 +23,20 @@ export default function ExportHistory() {
     const stored = localStorage.getItem("eventos_exports_history");
     if (stored) {
       try {
-        setHistory(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        const cleaned = Array.isArray(parsed)
+          ? parsed.filter((item: any) => item.generatedBy !== "Roy Wedding Admin" && item.id !== "EXP-98A7B6")
+          : [];
+        setHistory(cleaned);
+        if (cleaned.length !== (parsed?.length || 0)) {
+          localStorage.setItem("eventos_exports_history", JSON.stringify(cleaned));
+        }
       } catch {
-        setHistory(EXPORT_HISTORY_INITIAL);
+        setHistory([]);
       }
     } else {
-      setHistory(EXPORT_HISTORY_INITIAL);
-      localStorage.setItem("eventos_exports_history", JSON.stringify(EXPORT_HISTORY_INITIAL));
+      setHistory([]);
+      localStorage.setItem("eventos_exports_history", JSON.stringify([]));
     }
   }, []);
 

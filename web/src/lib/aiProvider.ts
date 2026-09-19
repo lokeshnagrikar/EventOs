@@ -79,6 +79,17 @@ export const logAIActivity = (module: string, prompt: string, response: string, 
   const config = getAIConfig();
   const costPerToken = config.provider === "CLAUDE" ? 0.00003 : 0.00002;
   
+  let currentActor = "Workspace Admin";
+  try {
+    const authData = localStorage.getItem("auth-storage");
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      const u = parsed?.state?.user;
+      if (u?.firstName) currentActor = `${u.firstName} ${u.lastName || ""}`.trim();
+      else if (u?.email) currentActor = u.email.split("@")[0];
+    }
+  } catch {}
+
   const newLog: AIHistoryLog = {
     id: Math.random().toString(36).substring(7),
     module,
@@ -88,7 +99,7 @@ export const logAIActivity = (module: string, prompt: string, response: string, 
     tokensConsumed: tokens,
     costEstimate: parseFloat((tokens * costPerToken).toFixed(6)),
     timestamp: new Date().toISOString(),
-    actor: "Roy Wedding Admin"
+    actor: currentActor
   };
   
   localStorage.setItem(HISTORY_KEY, JSON.stringify([newLog, ...history]));

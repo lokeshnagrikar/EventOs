@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
 import { useToastStore } from "@/lib/toastStore";
+import { useAuthStore } from "@/store/authStore";
 import { ROADMAP_ITEMS_INITIAL, RoadmapCard } from "@/lib/successData";
 
 const STAGE_CONFIG = {
@@ -34,6 +35,8 @@ const STAGE_CONFIG = {
 export default function RoadmapPage() {
   const router = useRouter();
   const { addToast } = useToastStore();
+  const { user } = useAuthStore();
+  const userName = user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : (user?.email?.split("@")[0] || "Team Member");
   const [items, setItems] = useState<RoadmapCard[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -130,7 +133,7 @@ export default function RoadmapPage() {
     if (!commentInput.trim() || !activeItem) return;
 
     const newComment = {
-      user: "Roy Wedding Admin",
+      user: userName,
       text: commentInput,
       date: new Date().toISOString(),
     };

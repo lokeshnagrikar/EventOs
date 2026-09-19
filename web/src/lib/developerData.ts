@@ -142,7 +142,7 @@ export const PLAYGROUND_ENDPOINTS: PlaygroundEndpoint[] = [
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function generateSnippet(lang: "curl" | "js" | "python" | "go", method: string, path: string, body?: string): string {
-  const url = `https://api.eventos.dev${path}`;
+  const url = `https://api.eventosapp.in${path}`;
   
   if (lang === "curl") {
     let base = `curl -X ${method} "${url}" \\\n  -H "Authorization: Bearer YOUR_API_KEY"`;
