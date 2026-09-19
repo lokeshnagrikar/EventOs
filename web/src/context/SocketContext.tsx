@@ -52,6 +52,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [user]);
 
   useEffect(() => {
+    // Only establish WebSocket connection when authenticated
+    if (!isAuthenticated || !accessToken) {
+      disconnect();
+      return;
+    }
+
     // Attempt real WebSocket connection
     connect();
 
