@@ -112,18 +112,26 @@ export default function PortalInvoicesPage() {
   // Totals calculations
   const totalBalanceDue = useMemo(() => {
     return clientInvoices
-      .filter(i => i.status !== "PAID" && i.status !== "CANCELLED")
-      .reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
+      .filter(i => i.status !== "CANCELLED")
+      .reduce((sum, i) => {
+        const total = Number(i.totalAmount) || 0;
+        const paid = Number(i.paidAmount) || 0;
+        return sum + Math.max(0, total - paid);
+      }, 0);
   }, [clientInvoices]);
 
   const totalPaid = useMemo(() => {
-    return clientInvoices
-      .filter(i => i.status === "PAID")
-      .reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
-  }, [clientInvoices]);
+    const fromInvoices = clientInvoices
+      .filter(i => i.status !== "CANCELLED")
+      .reduce((sum, i) => sum + (Number(i.paidAmount) || (i.status === "PAID" ? Number(i.totalAmount) : 0)), 0);
+    const fromCompletedPayments = clientPayments
+      .filter(p => p.status === "COMPLETED" || p.status === "SUCCESSFUL")
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    return Math.max(fromInvoices, fromCompletedPayments);
+  }, [clientInvoices, clientPayments]);
 
   const totalInvoiceValue = totalPaid + totalBalanceDue;
-  const paidPercent = totalInvoiceValue > 0 ? Math.round((totalPaid / totalInvoiceValue) * 100) : 0;
+  const paidPercent = totalInvoiceValue > 0 ? Math.min(100, Math.round((totalPaid / totalInvoiceValue) * 100)) : 0;
 
   const handleOfflinePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,11 +207,13 @@ export default function PortalInvoicesPage() {
                       <span className={`text-[8.5px] px-1.5 py-0.5 font-black uppercase rounded-full border ${
                         invoice.status === "PAID"
                           ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20"
+                          : invoice.status === "PARTIAL" || invoice.status === "PARTIALLY_PAID"
+                          ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
                           : invoice.status === "OVERDUE"
                           ? "bg-red-500/10 text-red-400 border-red-500/20"
                           : "bg-white/[0.04] text-zinc-450 border-white/[0.05]"
                       }`}>
-                        {invoice.status}
+                        {invoice.status.replace("_", " ")}
                       </span>
                     </div>
                     <p className="text-[10px] text-zinc-500 font-mono mt-1 font-semibold">
@@ -214,13 +224,16 @@ export default function PortalInvoicesPage() {
                 <div className="flex items-center gap-3 self-end md:self-center">
                   <button
                     onClick={(e) => handleDownloadInvoicePDF(invoice, e)}
-                    className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.06] text-zinc-400 hover:text-white transition"
+                    className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.06] text-zinc-400 hover:text-white transition cursor-pointer"
                     title="Download Official Invoice PDF"
                   >
                     <Download size={13} />
                   </button>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-black font-mono text-zinc-150">₹{(Number(invoice.totalAmount) || 0).toLocaleString()}</p>
+                    {(Number(invoice.paidAmount) || 0) > 0 && (
+                      <p className="text-[9.5px] font-semibold text-emerald-400 font-mono">Paid: ₹{(Number(invoice.paidAmount) || 0).toLocaleString()}</p>
+                    )}
                     <span className="text-[9px] text-purple-400 font-black hover:underline">View invoice breakups</span>
                   </div>
                 </div>
@@ -452,7 +465,19 @@ export default function PortalInvoicesPage() {
                     )}
                     <div className="flex justify-between text-xs font-black text-zinc-100 pt-2 border-t border-zinc-850/40">
                       <span>Grand Total:</span>
-                      <span className="text-emerald-450">₹{(Number(selectedInvoice.totalAmount) || 0).toLocaleString()}</span>
+                      <span className="text-white">₹{(Number(selectedInvoice.totalAmount) || 0).toLocaleString()}</span>
+                    </div>
+                    {(Number(selectedInvoice.paidAmount) || 0) > 0 && (
+                      <div className="flex justify-between text-xs font-bold text-emerald-450">
+                        <span>Paid to Date:</span>
+                        <span>₹{(Number(selectedInvoice.paidAmount) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xs font-black pt-1 border-t border-dashed border-zinc-800">
+                      <span>Balance Outstanding:</span>
+                      <span className={(Number(selectedInvoice.totalAmount) || 0) - (Number(selectedInvoice.paidAmount) || 0) <= 0 ? "text-emerald-400" : "text-amber-400"}>
+                        ₹{Math.max(0, (Number(selectedInvoice.totalAmount) || 0) - (Number(selectedInvoice.paidAmount) || 0)).toLocaleString()}
+                      </span>
                     </div>
                   </div>
 
@@ -466,9 +491,15 @@ export default function PortalInvoicesPage() {
                     </button>
 
                     <span className={`px-2.5 py-1 rounded-full font-black uppercase border text-[9px] ${
-                      selectedInvoice.status === "PAID" ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+                      selectedInvoice.status === "PAID"
+                        ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20"
+                        : selectedInvoice.status === "PARTIAL" || selectedInvoice.status === "PARTIALLY_PAID"
+                        ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                        : selectedInvoice.status === "OVERDUE"
+                        ? "bg-red-500/10 text-red-400 border-red-500/20"
+                        : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                     }`}>
-                      {selectedInvoice.status}
+                      {selectedInvoice.status.replace("_", " ")}
                     </span>
                   </div>
                 </div>

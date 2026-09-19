@@ -135,12 +135,14 @@ interface Expense {
   status: string;
 }
 
-const INVOICE_STATUSES = ["ALL", "DRAFT", "SENT", "VIEWED", "PARTIAL", "PAID", "OVERDUE", "CANCELLED"];
+const INVOICE_STATUSES = ["ALL", "DRAFT", "SENT", "ISSUED", "VIEWED", "PARTIAL", "PARTIALLY_PAID", "PAID", "OVERDUE", "CANCELLED"];
 const STATUS_PILLS: Record<string, string> = {
   DRAFT: "border-zinc-800 bg-zinc-800/20 text-zinc-400",
   SENT: "border-blue-500/20 bg-blue-500/5 text-blue-400",
+  ISSUED: "border-blue-500/20 bg-blue-500/5 text-blue-400",
   VIEWED: "border-cyan-500/20 bg-cyan-500/5 text-cyan-400",
   PARTIAL: "border-indigo-500/20 bg-indigo-500/5 text-indigo-400",
+  PARTIALLY_PAID: "border-indigo-500/20 bg-indigo-500/5 text-indigo-400",
   PAID: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400",
   OVERDUE: "border-rose-500/20 bg-rose-500/5 text-rose-400",
   CANCELLED: "border-zinc-800 bg-zinc-900/10 text-zinc-600"
@@ -313,6 +315,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
       setIsPaymentModalOpen(false);
       setIsSuccessOpen(true);
       resetPaymentForm();
@@ -395,14 +398,30 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
   const kpis = useMemo(() => {
     const activeInvoices = invoices.filter((i) => i.status !== "CANCELLED");
     const totalInvoiced = activeInvoices.reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
-    const paidInvoicesVolume = invoices
-      .filter((i) => i.status === "PAID")
-      .reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
+    
+    // Dynamically calculate collections from invoices (including partial payments) and direct completed payments
+    const paidFromInvoices = activeInvoices.reduce((sum, i) => {
+      const paid = Number(i.paidAmount) || 0;
+      if (paid > 0) return sum + paid;
+      if (i.status === "PAID") return sum + (Number(i.totalAmount) || 0);
+      return sum;
+    }, 0);
 
-    const outstanding = Math.max(0, totalInvoiced - paidInvoicesVolume);
+    const paidFromPayments = payments
+      .filter((p) => p.status === "COMPLETED" || p.status === "SUCCESSFUL")
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    const paidInvoicesVolume = Math.max(paidFromInvoices, paidFromPayments);
+
+    const outstanding = activeInvoices.reduce((sum, i) => {
+      const total = Number(i.totalAmount) || 0;
+      const paid = Number(i.paidAmount) || (i.status === "PAID" ? total : 0);
+      return sum + Math.max(0, total - paid);
+    }, 0);
+
     const paidInvoicesCount = invoices.filter((i) => i.status === "PAID").length;
     const overdueCount = invoices.filter((i) => i.status === "OVERDUE").length;
-    const collectionRate = totalInvoiced > 0 ? Math.round((paidInvoicesVolume / totalInvoiced) * 100) : 100;
+    const collectionRate = totalInvoiced > 0 ? Math.min(100, Math.round((paidInvoicesVolume / totalInvoiced) * 100)) : 100;
 
     const now = new Date();
     const todayStr = now.toDateString();
@@ -902,8 +921,20 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                       <td className="p-4 font-extrabold text-zinc-200">{inv.clientName || "Client"}</td>
                       <td className="p-4 font-mono">{bookingNum}</td>
                       <td className="p-4">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "-"}</td>
-                      <td className="p-4"><span className={cn("px-2.5 py-0.5 border rounded-full text-[8.5px] font-black uppercase", statusClass)}>{inv.status}</span></td>
-                      <td className="p-4 font-mono font-black text-emerald-450">₹{(Number(inv.totalAmount) || 0).toLocaleString()}</td>
+                      <td className="p-4"><span className={cn("px-2.5 py-0.5 border rounded-full text-[8.5px] font-black uppercase", statusClass)}>{inv.status.replace("_", " ")}</span></td>
+                      <td className="p-4 font-mono">
+                        <div className="font-black text-zinc-100">₹{(Number(inv.totalAmount) || 0).toLocaleString()}</div>
+                        {(Number(inv.paidAmount) || 0) > 0 && inv.status !== "PAID" && (
+                          <div className="text-[10px] text-zinc-400 mt-0.5">
+                            Paid: <span className="text-emerald-450 font-bold">₹{(Number(inv.paidAmount) || 0).toLocaleString()}</span>
+                            <span className="text-zinc-600 mx-1">&bull;</span>
+                            Due: <span className="text-amber-400 font-bold">₹{Math.max(0, (Number(inv.totalAmount) || 0) - (Number(inv.paidAmount) || 0)).toLocaleString()}</span>
+                          </div>
+                        )}
+                        {inv.status === "PAID" && (
+                          <div className="text-[10px] text-emerald-450 font-bold mt-0.5">Fully Settled</div>
+                        )}
+                      </td>
                       <td className="p-4 text-right space-x-2">
                         <button
                           onClick={async () => {
@@ -1518,31 +1549,66 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
             <form onSubmit={(e) => {
               e.preventDefault(); setErrorText("");
-              const effectiveBookingId = (payBookingId && payBookingId !== "custom") ? payBookingId : (eventsList[0]?.id || bookings[0]?.id || undefined);
-              if (!effectiveBookingId) { setErrorText("Please link the payment to an active event or booking."); return; }
+              let targetBookingId = payBookingId;
+              let targetInvoiceId: string | undefined = undefined;
+              if (payBookingId && payBookingId.startsWith("inv:")) {
+                const parts = payBookingId.split(":");
+                targetInvoiceId = parts[1];
+                targetBookingId = parts[2];
+              }
+              const effectiveBookingId = (targetBookingId && targetBookingId !== "custom") ? targetBookingId : (eventsList[0]?.id || bookings[0]?.id || undefined);
+              if (!effectiveBookingId) { setErrorText("Please link the payment to an active event, booking, or invoice."); return; }
               const amt = parseFloat(payAmount);
               if (isNaN(amt) || amt <= 0) { setErrorText("Please specify a valid payment amount."); return; }
               recordPaymentMutation.mutate({
-                bookingId: effectiveBookingId, amount: amt, paymentMethod: payMethod,
-                transactionReference: payRef || undefined, notes: payNotes || undefined, paymentDate: new Date(payDate).toISOString()
+                bookingId: effectiveBookingId,
+                invoiceId: targetInvoiceId,
+                amount: amt,
+                paymentMethod: payMethod,
+                transactionReference: payRef || undefined,
+                notes: payNotes || undefined,
+                paymentDate: new Date(payDate).toISOString()
               });
             }} className="space-y-4 text-xs z-10 relative">
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-550 uppercase font-black">Associated Event or Booking</label>
+                <label className="text-[9px] text-zinc-550 uppercase font-black">Associated Event, Booking, or Invoice</label>
                 <select required value={payBookingId} onChange={(e) => {
-                  setPayBookingId(e.target.value);
-                  const evt = eventsList.find(x => x.id === e.target.value);
+                  const val = e.target.value;
+                  setPayBookingId(val);
+                  if (val.startsWith("inv:")) {
+                    const parts = val.split(":");
+                    const invId = parts[1];
+                    const inv = invoices.find(x => x.id === invId);
+                    if (inv) {
+                      const rem = Math.max(0, (Number(inv.totalAmount) || 0) - (Number(inv.paidAmount) || 0));
+                      setPayAmount(rem > 0 ? rem.toString() : (inv.totalAmount || 50000).toString());
+                    }
+                    return;
+                  }
+                  const evt = eventsList.find(x => x.id === val);
                   if (evt && (!payAmount || payAmount === "0")) {
                     setPayAmount((evt.budget ? Math.round(evt.budget * 0.5) : 100000).toString());
                   }
-                  const bkg = bookings.find(x => x.id === e.target.value);
+                  const bkg = bookings.find(x => x.id === val);
                   if (bkg && (!payAmount || payAmount === "0")) {
                     const rem = Math.max(0, (Number(bkg.totalAmount) || 0) - (Number(bkg.paidAmount) || 0));
                     setPayAmount(rem > 0 ? rem.toString() : "50000");
                   }
                 }}
                   className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white">
-                  <option value="">-- Choose Event or Booking --</option>
+                  <option value="">-- Choose Event, Booking or Invoice --</option>
+                  {invoices.filter(i => i.status !== "CANCELLED" && i.status !== "PAID").length > 0 && (
+                    <optgroup label="Pending / Unpaid Invoices">
+                      {invoices.filter(i => i.status !== "CANCELLED" && i.status !== "PAID").map((i) => {
+                        const rem = Math.max(0, (Number(i.totalAmount) || 0) - (Number(i.paidAmount) || 0));
+                        return (
+                          <option key={`inv-${i.id}`} value={`inv:${i.id}:${i.bookingId}`}>
+                            Invoice #{i.invoiceNumber || "DRAFT"} — {i.clientName || "Client"} (Due: ₹{rem.toLocaleString()})
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  )}
                   {eventsList.length > 0 && (
                     <optgroup label="Active Events">
                       {eventsList.map((e) => (

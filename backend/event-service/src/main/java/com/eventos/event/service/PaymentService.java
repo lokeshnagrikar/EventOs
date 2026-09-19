@@ -345,9 +345,20 @@ public class PaymentService {
             status = "PENDING_VERIFICATION";
         }
 
+        UUID effectiveInvoiceId = dto.getInvoiceId();
+        if (effectiveInvoiceId == null) {
+            List<Invoice> activeInvoices = invoiceRepository.findAllByBookingIdAndTenantIdOrderByCreatedAtDesc(booking.getId(), tenantId);
+            for (Invoice inv : activeInvoices) {
+                if (!"PAID".equalsIgnoreCase(inv.getStatus()) && !"CANCELLED".equalsIgnoreCase(inv.getStatus())) {
+                    effectiveInvoiceId = inv.getId();
+                    break;
+                }
+            }
+        }
+
         Payment payment = Payment.builder()
                 .bookingId(booking.getId())
-                .invoiceId(dto.getInvoiceId())
+                .invoiceId(effectiveInvoiceId)
                 .amount(dto.getAmount())
                 .paymentMethod(matchedMethod)
                 .transactionReference(dto.getTransactionReference())
@@ -363,7 +374,7 @@ public class PaymentService {
         if ("COMPLETED".equals(status)) {
             Transaction tx = Transaction.builder()
                     .bookingId(booking.getId())
-                    .invoiceId(dto.getInvoiceId())
+                    .invoiceId(effectiveInvoiceId)
                     .paymentId(saved.getId())
                     .amount(dto.getAmount())
                     .type("CREDIT")
@@ -375,7 +386,7 @@ public class PaymentService {
         } else if ("REFUNDED".equals(status)) {
             Transaction tx = Transaction.builder()
                     .bookingId(booking.getId())
-                    .invoiceId(dto.getInvoiceId())
+                    .invoiceId(effectiveInvoiceId)
                     .paymentId(saved.getId())
                     .amount(dto.getAmount())
                     .type("REFUND")
@@ -389,9 +400,9 @@ public class PaymentService {
         // Update Booking Paid Amount
         recalculateBookingPaidAmount(booking.getId(), tenantId);
 
-        // Update Invoice Paid Amount if invoiceId is set
-        if (dto.getInvoiceId() != null) {
-            recalculateInvoicePaidAmount(dto.getInvoiceId(), tenantId);
+        // Update Invoice Paid Amount if invoice is resolved
+        if (effectiveInvoiceId != null) {
+            recalculateInvoicePaidAmount(effectiveInvoiceId, tenantId);
         }
 
         if ("COMPLETED".equals(status)) {
@@ -490,7 +501,19 @@ public class PaymentService {
         Invoice invoice = invoiceRepository.findByIdAndTenantId(invoiceId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Invoice not found"));
 
-        List<Payment> payments = paymentRepository.findAllByInvoiceIdAndStatusIn(invoiceId, List.of("SUCCESSFUL", "COMPLETED"));
+        List<Payment> payments = new java.util.ArrayList<>(
+                paymentRepository.findAllByInvoiceIdAndStatusIn(invoiceId, List.of("SUCCESSFUL", "COMPLETED"))
+        );
+        if (payments.isEmpty() && invoice.getBookingId() != null) {
+            List<Payment> bookingPayments = paymentRepository.findAllByBookingIdAndStatusIn(invoice.getBookingId(), List.of("SUCCESSFUL", "COMPLETED"));
+            for (Payment bp : bookingPayments) {
+                if (bp.getInvoiceId() == null) {
+                    bp.setInvoiceId(invoiceId);
+                    paymentRepository.save(bp);
+                    payments.add(bp);
+                }
+            }
+        }
         BigDecimal sum = payments.stream()
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

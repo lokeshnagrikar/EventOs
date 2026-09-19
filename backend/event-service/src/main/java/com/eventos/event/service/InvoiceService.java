@@ -346,8 +346,32 @@ public class InvoiceService {
 
         Invoice saved = invoiceRepository.save(invoice);
 
+        // Auto-link any existing completed payments for this booking
+        List<com.eventos.event.entity.Payment> existingPayments = paymentRepository.findAllByBookingIdAndStatusIn(effectiveBookingId, List.of("SUCCESSFUL", "COMPLETED"));
+        if (!existingPayments.isEmpty()) {
+            BigDecimal existingPaid = BigDecimal.ZERO;
+            for (com.eventos.event.entity.Payment p : existingPayments) {
+                if (p.getInvoiceId() == null) {
+                    p.setInvoiceId(saved.getId());
+                    paymentRepository.save(p);
+                    existingPaid = existingPaid.add(p.getAmount());
+                } else if (p.getInvoiceId().equals(saved.getId())) {
+                    existingPaid = existingPaid.add(p.getAmount());
+                }
+            }
+            if (existingPaid.compareTo(BigDecimal.ZERO) > 0) {
+                saved.setPaidAmount(existingPaid);
+                if (existingPaid.compareTo(saved.getTotalAmount()) >= 0) {
+                    saved.setStatus("PAID");
+                } else {
+                    saved.setStatus("PARTIALLY_PAID");
+                }
+                saved = invoiceRepository.save(saved);
+            }
+        }
+
         // Log Invoice History
-        logInvoiceHistory(saved.getId(), "DRAFT", "CREATED", "Invoice generated automatically", tenantId);
+        logInvoiceHistory(saved.getId(), saved.getStatus(), "CREATED", "Invoice generated automatically", tenantId);
 
         evictCache(tenantId);
         return saved;
@@ -607,7 +631,19 @@ public class InvoiceService {
     public Invoice reconcileInvoice(UUID invoiceId, UUID tenantId) {
         Invoice invoice = getInvoiceById(invoiceId, tenantId);
 
-        List<com.eventos.event.entity.Payment> payments = paymentRepository.findAllByInvoiceIdAndStatusIn(invoiceId, List.of("SUCCESSFUL", "COMPLETED"));
+        List<com.eventos.event.entity.Payment> payments = new java.util.ArrayList<>(
+                paymentRepository.findAllByInvoiceIdAndStatusIn(invoiceId, List.of("SUCCESSFUL", "COMPLETED"))
+        );
+        if (payments.isEmpty() && invoice.getBookingId() != null) {
+            List<com.eventos.event.entity.Payment> bookingPayments = paymentRepository.findAllByBookingIdAndStatusIn(invoice.getBookingId(), List.of("SUCCESSFUL", "COMPLETED"));
+            for (com.eventos.event.entity.Payment bp : bookingPayments) {
+                if (bp.getInvoiceId() == null) {
+                    bp.setInvoiceId(invoiceId);
+                    paymentRepository.save(bp);
+                    payments.add(bp);
+                }
+            }
+        }
         BigDecimal sum = payments.stream()
                 .map(com.eventos.event.entity.Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
