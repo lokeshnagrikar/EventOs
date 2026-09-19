@@ -296,7 +296,7 @@ export default function ActivityLogPage() {
       <div className="space-y-6 select-none text-zinc-300">
         
         {/* ── TOP TABS ────────────────────────────────────────────────────── */}
-        <div className="flex border-b border-zinc-850 text-xs font-black uppercase tracking-wider text-zinc-550 print:hidden">
+        <div className="flex overflow-x-auto scrollbar-none border-b border-zinc-850 text-xs font-black uppercase tracking-wider text-zinc-550 print:hidden touch-pan-x">
           {[
             { id: "timeline" as const, label: "Global Activity Timeline", icon: Clock },
             { id: "security" as const, label: "Security & Device Session Logs", icon: Shield },
@@ -309,7 +309,7 @@ export default function ActivityLogPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-3 border-b-2 transition-all cursor-pointer",
+                  "flex items-center gap-2 px-4 sm:px-5 py-3 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap",
                   active
                     ? "border-purple-650 text-purple-400 font-bold"
                     : "border-transparent text-zinc-500 hover:text-zinc-300"

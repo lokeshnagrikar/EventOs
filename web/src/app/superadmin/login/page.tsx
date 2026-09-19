@@ -74,8 +74,17 @@ export default function SuperAdminLoginPage() {
           permissions,
         } = response.data.data;
 
-        // 2. Strict Privilege Boundary: Only SUPER_ADMIN users can access the platform console
-        if (role !== "SUPER_ADMIN") {
+        // 2. Strict Privilege Boundary: Only authorized platform administrator roles can access this console
+        const PLATFORM_ROLES = [
+          "SUPER_ADMIN",
+          "OPERATIONS_LEAD",
+          "SUPPORT_LEAD",
+          "FINANCE_OFFICER",
+          "DEVOPS_ENGINEER",
+          "COMPLIANCE_AUDITOR",
+        ];
+
+        if (!PLATFORM_ROLES.includes(role)) {
           setErrorMessage("Access Denied: Only authorized platform administrators can access this console.");
           addToast("Access Denied: Insufficient platform permissions.", "error");
           setLoading(false);

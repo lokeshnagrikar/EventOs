@@ -289,7 +289,7 @@ export default function ReportsPage() {
       <div className="space-y-6 select-none text-zinc-300">
         
         {/* ── TOP LEVEL MODULE NAVIGATION (PRINT HUD HIDDEN) ───────────────── */}
-        <div className="flex flex-wrap border-b border-zinc-850 text-xs font-black uppercase tracking-wider text-zinc-500 print:hidden">
+        <div className="flex overflow-x-auto scrollbar-none border-b border-zinc-850 text-xs font-black uppercase tracking-wider text-zinc-500 print:hidden touch-pan-x">
           {[
             { id: "analytics" as const, label: "Analytics Dashboard", icon: TrendingUp },
             { id: "builder" as const, label: "Report Builder", icon: Sparkles },
@@ -304,7 +304,7 @@ export default function ReportsPage() {
                 key={mod.id}
                 onClick={() => setCurrentModule(mod.id)}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-3.5 border-b-2 transition-all cursor-pointer",
+                  "flex items-center gap-2 px-4 sm:px-5 py-3.5 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap",
                   active
                     ? "border-purple-650 text-purple-400 font-bold"
                     : "border-transparent text-zinc-500 hover:text-zinc-300"
@@ -322,7 +322,7 @@ export default function ReportsPage() {
           <div className="space-y-6">
             
             {/* Sub-tab selection */}
-            <div className="flex border-b border-zinc-850/60 text-[10px] font-black uppercase tracking-wider text-zinc-500 print:hidden">
+            <div className="flex overflow-x-auto scrollbar-none border-b border-zinc-850/60 text-[10px] font-black uppercase tracking-wider text-zinc-500 print:hidden touch-pan-x">
               {[
                 { id: "revenue" as const, label: "Revenue Statement" },
                 { id: "leads" as const, label: "Leads & Pipeline" },
@@ -335,7 +335,7 @@ export default function ReportsPage() {
                     key={sub.id}
                     onClick={() => setActiveTab(sub.id)}
                     className={cn(
-                      "px-4 py-2 border-b-2 transition-all cursor-pointer",
+                      "px-3.5 sm:px-4 py-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap",
                       active
                         ? "border-purple-600 text-purple-400 font-bold"
                         : "border-transparent text-zinc-550 hover:text-zinc-300"

@@ -51,7 +51,7 @@ export default function DeveloperPage() {
       <div className="space-y-6 select-none text-zinc-300">
         
         {/* ── TOP LEVEL TAB NAVIGATION ─────────────────────────────────────── */}
-        <div className="flex flex-wrap border-b border-zinc-850 text-xs font-black uppercase tracking-wider text-zinc-500">
+        <div className="flex overflow-x-auto scrollbar-none border-b border-zinc-850 text-xs font-black uppercase tracking-wider text-zinc-500 touch-pan-x">
           {[
             { id: "overview" as const, label: "Overview & Analytics", icon: Activity },
             { id: "keys" as const, label: "API Access Keys", icon: Key },
@@ -67,7 +67,7 @@ export default function DeveloperPage() {
                 key={tab.id}
                 onClick={() => setCurrentModule(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-3.5 border-b-2 transition-all cursor-pointer",
+                  "flex items-center gap-2 px-4 sm:px-5 py-3.5 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap",
                   active
                     ? "border-purple-650 text-purple-400 font-bold"
                     : "border-transparent text-zinc-500 hover:text-zinc-350"

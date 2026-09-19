@@ -644,19 +644,19 @@ export default function CrmPage() {
   if (!mounted) return null;
 
   const headerActions = (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
       {duplicateGroups.length > 0 && (
         <button
           onClick={() => setShowDuplicateModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-450 text-xs font-bold rounded-xl transition"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-450 text-xs font-bold rounded-xl transition shrink-0"
         >
           <AlertTriangle size={13} className="animate-pulse" />
-          <span>{duplicateGroups.length} Duplicates Found</span>
+          <span>{duplicateGroups.length} Duplicates</span>
         </button>
       )}
 
       {/* Smart Saved Views bar */}
-      <div className="flex bg-zinc-950/60 border border-zinc-850 p-0.5 rounded-xl text-[10px] font-bold">
+      <div className="hidden sm:flex bg-zinc-950/60 border border-zinc-850 p-0.5 rounded-xl text-[10px] font-bold shrink-0">
         {savedViews.slice(0, 4).map(v => (
           <button
             key={v.id}
@@ -674,19 +674,19 @@ export default function CrmPage() {
       <button
         onClick={() => setShowFiltersPanel(!showFiltersPanel)}
         className={cn(
-          "px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer",
+          "px-2.5 sm:px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer shrink-0",
           showFiltersPanel 
             ? "bg-purple-950/20 border-purple-500/40 text-purple-400" 
             : "bg-zinc-900 border-zinc-850 hover:bg-zinc-800 text-zinc-350"
         )}
       >
         <Filter size={13} />
-        Filters
+        <span>Filters</span>
       </button>
       
       <button
         onClick={() => setShowImportModal(true)}
-        className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-300 transition cursor-pointer"
+        className="px-2.5 sm:px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-300 transition cursor-pointer shrink-0 hidden sm:flex items-center"
       >
         <Upload size={13} className="inline mr-1" />
         Import CSV
@@ -694,7 +694,7 @@ export default function CrmPage() {
 
       <button 
         onClick={() => setShowQuickAddModal(true)}
-        className="flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-[0.98] cursor-pointer"
+        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-[0.98] cursor-pointer shrink-0"
       >
         <Plus size={14} />
         Log Lead

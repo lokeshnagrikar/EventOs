@@ -106,13 +106,22 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
   const activeRole = mounted ? userRole : "CLIENT";
   const activePermissions = mounted ? userPermissions : [];
 
+  const PLATFORM_ROLES = [
+    "SUPER_ADMIN",
+    "OPERATIONS_LEAD",
+    "SUPPORT_LEAD",
+    "FINANCE_OFFICER",
+    "DEVOPS_ENGINEER",
+    "COMPLIANCE_AUDITOR",
+  ];
+
   const isItemVisible = (item: any) => {
-    // SuperAdmin link is exclusive to SUPER_ADMIN role
+    // SuperAdmin link is accessible to SUPER_ADMIN and platform administrative sub-roles
     if (item.href === "/superadmin") {
-      return activeRole === "SUPER_ADMIN";
+      return PLATFORM_ROLES.includes(activeRole);
     }
-    // SuperAdmin and Workspace Owner have unrestricted clearance across workspace tools
-    if (activeRole === "SUPER_ADMIN" || activeRole === "OWNER") return true;
+    // SuperAdmin, platform roles and Workspace Owner have unrestricted clearance across workspace tools
+    if (PLATFORM_ROLES.includes(activeRole) || activeRole === "OWNER") return true;
 
     if (!item.permission && !item.roles) return true;
     if (item.roles && item.roles.includes(activeRole)) return true;

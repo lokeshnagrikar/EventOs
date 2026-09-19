@@ -133,6 +133,29 @@ const INITIAL_ANNOUNCEMENT_HISTORY = [
   { id: "ann-2", title: "New AI Assistant V2 Copilot Features Released", body: "Check out the newly added automated wedding quote builder.", target: "PAID", sentAt: "3 days ago", reach: "89 Workspaces", author: "operations@eventos.co", status: "DELIVERED" },
 ];
 
+const PLATFORM_ROLES = [
+  "SUPER_ADMIN",
+  "OPERATIONS_LEAD",
+  "SUPPORT_LEAD",
+  "FINANCE_OFFICER",
+  "DEVOPS_ENGINEER",
+  "COMPLIANCE_AUDITOR",
+];
+
+const ROLE_TO_SUBROLE: Record<string, string> = {
+  SUPER_ADMIN: "super_admin",
+  OPERATIONS_LEAD: "operations",
+  OPERATIONS: "operations",
+  SUPPORT_LEAD: "support_agent",
+  SUPPORT_AGENT: "support_agent",
+  FINANCE_OFFICER: "finance_admin",
+  FINANCE_ADMIN: "finance_admin",
+  DEVOPS_ENGINEER: "developer",
+  DEVELOPER: "developer",
+  COMPLIANCE_AUDITOR: "auditor",
+  AUDITOR: "auditor",
+};
+
 export default function SuperAdminDashboard() {
   const router = useRouter();
   const { addToast } = useToastStore();
@@ -167,9 +190,9 @@ export default function SuperAdminDashboard() {
   const [inspectedTenant, setInspectedTenant] = useState<any | null>(null);
 
   // Get active admin sub-role (strict RBAC control check)
-  const adminSubRole = user?.permissions?.[0] === "all"
-    ? "super_admin"
-    : (user?.permissions?.[0] || "super_admin");
+  const adminSubRole = (user?.role && ROLE_TO_SUBROLE[user.role])
+    ? ROLE_TO_SUBROLE[user.role]
+    : (user?.permissions?.[0] === "all" ? "super_admin" : (user?.permissions?.[0] || "super_admin"));
 
   useEffect(() => {
     setMounted(true);
@@ -197,8 +220,8 @@ export default function SuperAdminDashboard() {
   // Role-based access guard
   useEffect(() => {
     if (mounted) {
-      if (!user || user.role !== "SUPER_ADMIN") {
-        addToast("Access Denied: Platform Superadmin console requires SUPER_ADMIN role.", "error");
+      if (!user || !PLATFORM_ROLES.includes(user.role)) {
+        addToast("Access Denied: Platform Superadmin console requires an authorized platform administrator role.", "error");
         router.push("/superadmin/login");
       }
     }
@@ -206,7 +229,7 @@ export default function SuperAdminDashboard() {
 
   // Fetch real superadmin data
   useEffect(() => {
-    if (!mounted || !user || user.role !== "SUPER_ADMIN") return;
+    if (!mounted || !user || !PLATFORM_ROLES.includes(user.role)) return;
 
     const fetchSuperAdminData = async () => {
       try {
@@ -345,14 +368,6 @@ export default function SuperAdminDashboard() {
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastBody, setBroadcastBody] = useState("");
   const [broadcastTarget, setBroadcastTarget] = useState("ALL");
-
-  useEffect(() => {
-    setMounted(true);
-    if (!user || user.role !== "SUPER_ADMIN") {
-      addToast("Unauthorized Access: Global administration credentials required.", "error");
-      router.push("/superadmin/login");
-    }
-  }, [user, router, addToast]);
 
   const toggleTheme = () => {
     const newTheme = currentTheme === "dark" ? "light" : "dark";
@@ -624,10 +639,10 @@ export default function SuperAdminDashboard() {
         {/* MAIN SIDEBAR NAVIGATION & CONTENT AREA */}
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
 
-          {/* Apple-style Navigation Sidebar */}
-          <div className="lg:col-span-1 space-y-2">
-            <span className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.14em] font-mono block px-3">Operational Controls</span>
-            <div className="flex flex-col gap-1 text-[11px] font-bold">
+          {/* Apple-style Navigation Sidebar (Horizontal on mobile, vertical on desktop) */}
+          <div className="lg:col-span-1 space-y-2 min-w-0">
+            <span className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.14em] font-mono block px-1 lg:px-3">Operational Controls</span>
+            <div className="flex lg:flex-col overflow-x-auto lg:overflow-visible scrollbar-none pb-2 lg:pb-0 gap-1.5 text-[11px] font-bold touch-pan-x">
               {[
                 { id: "metrics" as const, label: "Global Metrics", icon: LineChart },
                 { id: "tenants" as const, label: "Tenants Directory", icon: Building },
@@ -651,7 +666,7 @@ export default function SuperAdminDashboard() {
                     onClick={() => allowed && setActiveSubTab(tab.id)}
                     disabled={!allowed}
                     className={cn(
-                      "relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-[12px] transition text-left cursor-pointer border",
+                      "relative shrink-0 lg:w-full flex items-center justify-between px-3.5 py-2 lg:py-2.5 rounded-[12px] transition text-left cursor-pointer border whitespace-nowrap gap-2",
                       active
                         ? "text-purple-400 font-extrabold border-purple-500/25 bg-purple-500/10 shadow-[0_2px_12px_rgba(168,85,247,0.15)]"
                         : "border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]",
@@ -665,7 +680,7 @@ export default function SuperAdminDashboard() {
                         transition={{ type: "spring", stiffness: 400, damping: 35 }}
                       />
                     )}
-                    <span className="flex items-center gap-2.5 relative z-10">
+                    <span className="flex items-center gap-2 relative z-10">
                       <Icon size={14} className={active ? "text-purple-400" : "text-zinc-500"} />
                       {tab.label}
                     </span>
