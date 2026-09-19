@@ -95,63 +95,35 @@ export default function ActivityLogPage() {
 
   useEffect(() => {
     setMounted(true);
-    const storedLogs = localStorage.getItem("eventos_audit_logs");
-    const storedDevices = localStorage.getItem("eventos_audit_devices");
+    const storedLogs = typeof window !== "undefined" ? localStorage.getItem("eventos_audit_logs") : null;
+    const storedDevices = typeof window !== "undefined" ? localStorage.getItem("eventos_audit_devices") : null;
 
     if (storedLogs) {
-      try { setLogs(JSON.parse(storedLogs)); } catch { setLogs(INITIAL_AUDIT_LOGS); }
+      try { setLogs(JSON.parse(storedLogs)); } catch { setLogs([]); }
     } else {
-      setLogs(INITIAL_AUDIT_LOGS);
-      localStorage.setItem("eventos_audit_logs", JSON.stringify(INITIAL_AUDIT_LOGS));
+      setLogs([]);
     }
 
     if (storedDevices) {
-      try { setDevices(JSON.parse(storedDevices)); } catch { setDevices(MOCK_DEVICES_INITIAL); }
-    } else {
-      setDevices(MOCK_DEVICES_INITIAL);
-      localStorage.setItem("eventos_audit_devices", JSON.stringify(MOCK_DEVICES_INITIAL));
+      try { setDevices(JSON.parse(storedDevices)); } catch { setDevices([]); }
+    } else if (typeof window !== "undefined") {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isMac = /Mac/i.test(navigator.userAgent);
+      const isWindows = /Win/i.test(navigator.userAgent);
+      const deviceName = isMobile ? "Mobile Device" : isMac ? "macOS Workstation" : isWindows ? "Windows Workstation" : "Web Browser";
+      const browser = navigator.userAgent.includes("Chrome") ? "Chrome" : navigator.userAgent.includes("Safari") ? "Safari" : navigator.userAgent.includes("Firefox") ? "Firefox" : "Browser";
+      const currentDev = [{
+        device: deviceName,
+        browser: browser,
+        ip: "Current IP",
+        location: "Current Session",
+        status: "Active Session",
+        current: true
+      }];
+      setDevices(currentDev);
+      localStorage.setItem("eventos_audit_devices", JSON.stringify(currentDev));
     }
   }, []);
-
-  // Live WebSocket Action simulator
-  useEffect(() => {
-    if (!isLiveEnabled || !mounted) return;
-
-    const interval = setInterval(() => {
-      const actions = [
-        { name: "Lead", act: "CREATE", desc: "Acquired new sangeet event lead", severity: "low" as const, actor: "Siddharth Wedding Lead" },
-        { name: "Invoice", act: "UPDATE", desc: "Updated invoice payment terms", severity: "medium" as const, actor: "Roy Wedding Admin" },
-        { name: "Security", act: "LOGIN", desc: "User authenticated successfully", severity: "low" as const, actor: "Sarah CS Agent" },
-        { name: "Quote", act: "UPDATE", desc: "Client accepted event quotation props", severity: "medium" as const, actor: "Ananya Bride Quote" },
-      ];
-      const selected = actions[Math.floor(Math.random() * actions.length)];
-
-      const newLog: AdvancedAuditLog = {
-        id: `AUD-${Math.random().toString(36).substring(7).toUpperCase()}`,
-        entityName: selected.name as any,
-        entityId: `evt-${Date.now()}`,
-        action: selected.act as any,
-        performedBy: selected.actor,
-        actorEmail: `${selected.actor.toLowerCase().replace(/ /g, "")}@eventos.dev`,
-        ipAddress: "192.168.1.112",
-        severity: selected.severity,
-        createdAt: new Date().toISOString(),
-        diffs: [
-          { fieldName: "Operation type", previousValue: "Draft status", newValue: selected.desc }
-        ]
-      };
-
-      setLogs((prev) => {
-        const next = [newLog, ...prev];
-        localStorage.setItem("eventos_audit_logs", JSON.stringify(next));
-        return next;
-      });
-
-      addToast(`Real-time Audit log: ${selected.name} ${selected.act}`, "info");
-    }, 15000); // Trigger simulated WS logs every 15 seconds
-
-    return () => clearInterval(interval);
-  }, [isLiveEnabled, mounted, addToast]);
 
   const saveLogs = (updated: AdvancedAuditLog[]) => {
     setLogs(updated);
@@ -573,32 +545,36 @@ export default function ActivityLogPage() {
             <div className="space-y-4">
               <h3 className="text-xs font-black uppercase text-zinc-550 tracking-wider">Active Device Sessions</h3>
               <div className="space-y-3">
-                {devices.map((dev, idx) => (
-                  <div key={idx} className="p-4 border border-zinc-855 bg-zinc-950/20 rounded-2xl space-y-3">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
-                          <Laptop size={14} />
+                {devices.length === 0 ? (
+                  <EmptyState icon={Laptop} title="No active sessions" description="No active sessions registered." />
+                ) : (
+                  devices.map((dev, idx) => (
+                    <div key={idx} className="p-4 border border-zinc-855 bg-zinc-950/20 rounded-2xl space-y-3">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-8 w-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+                            <Laptop size={14} />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-extrabold text-zinc-200">{dev.device}</h4>
+                            <p className="text-[9px] text-zinc-500 font-semibold">{dev.browser}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="text-xs font-extrabold text-zinc-200">{dev.device}</h4>
-                          <p className="text-[9px] text-zinc-500 font-semibold">{dev.browser}</p>
-                        </div>
+
+                        {dev.current && (
+                          <span className="px-1.5 py-0.5 rounded text-[7px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Current Device
+                          </span>
+                        )}
                       </div>
 
-                      {dev.current && (
-                        <span className="px-1.5 py-0.5 rounded text-[7px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          Current Device
-                        </span>
-                      )}
+                      <div className="flex justify-between items-center border-t border-zinc-850/50 pt-2 text-[9px] text-zinc-500 font-semibold">
+                        <span>IP: {dev.ip} ({dev.location})</span>
+                        <span className="font-mono text-zinc-600">{dev.status}</span>
+                      </div>
                     </div>
-
-                    <div className="flex justify-between items-center border-t border-zinc-850/50 pt-2 text-[9px] text-zinc-500 font-semibold">
-                      <span>IP: {dev.ip} ({dev.location})</span>
-                      <span className="font-mono text-zinc-600">{dev.status}</span>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 

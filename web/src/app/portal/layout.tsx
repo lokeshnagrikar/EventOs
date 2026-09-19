@@ -104,12 +104,21 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const unreadCount = notifications.filter(n => n.unread).length;
 
   // Chat conversation logs (State)
-  const [chatMessages, setChatMessages] = useState([
-    { id: "1", sender: "planner", text: "Welcome to your event workspace! You can communicate directly with our coordination desk here.", time: "Just now", read: true }
-  ]);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [pinnedNotes, setPinnedNotes] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedChat = localStorage.getItem("eventos_portal_chat_messages");
+      if (storedChat) {
+        try {
+          setChatMessages(JSON.parse(storedChat));
+        } catch (e) {}
+      }
+    }
+  }, []);
 
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -227,25 +236,17 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       sender: "client",
       text: chatInput,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      read: false
+      read: true
     };
 
-    setChatMessages(prev => [...prev, newMsg]);
+    setChatMessages(prev => {
+      const updated = [...prev, newMsg];
+      if (typeof window !== "undefined") {
+        localStorage.setItem("eventos_portal_chat_messages", JSON.stringify(updated));
+      }
+      return updated;
+    });
     setChatInput("");
-    setIsTyping(true);
-
-    // Simulate coordinator reply
-    setTimeout(() => {
-      setIsTyping(false);
-      const replyMsg = {
-        id: Math.random().toString(),
-        sender: "planner",
-        text: "Got it! I will process this immediately.",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        read: true
-      };
-      setChatMessages(prev => [...prev, replyMsg]);
-    }, 2500);
   };
 
   const markAllNotificationsRead = () => {
@@ -714,28 +715,36 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
               {/* Chat Message Lists */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {chatMessages.map((msg) => {
-                  const isMe = msg.sender === "client";
-                  return (
-                    <div key={msg.id} className={cn("flex flex-col max-w-[75%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
-                      <div className={cn(
-                        "p-3 rounded-2xl border text-[11px] leading-relaxed font-medium shadow-sm",
-                        isMe 
-                          ? "bg-purple-600 border-purple-500 text-white rounded-br-none" 
-                          : "bg-zinc-900/80 border-zinc-850 text-zinc-200 rounded-bl-none"
-                      )}>
-                        {msg.text}
+                {chatMessages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-zinc-500">
+                    <MessageSquare size={28} className="text-zinc-600 mb-2 opacity-50" />
+                    <p className="text-xs font-semibold text-zinc-400">Direct Concierge Channel</p>
+                    <p className="text-[10px] text-zinc-500 mt-1 max-w-[200px]">Send a message below to connect with your event coordinator.</p>
+                  </div>
+                ) : (
+                  chatMessages.map((msg) => {
+                    const isMe = msg.sender === "client";
+                    return (
+                      <div key={msg.id} className={cn("flex flex-col max-w-[75%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
+                        <div className={cn(
+                          "p-3 rounded-2xl border text-[11px] leading-relaxed font-medium shadow-sm",
+                          isMe 
+                            ? "bg-purple-600 border-purple-500 text-white rounded-br-none" 
+                            : "bg-zinc-900/80 border-zinc-850 text-zinc-200 rounded-bl-none"
+                        )}>
+                          {msg.text}
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5 mt-1 text-[8.5px] text-zinc-550 font-bold">
+                          <span>{msg.time}</span>
+                          {isMe && (
+                            msg.read ? <CheckCheck size={10} className="text-purple-400" /> : <Check size={10} />
+                          )}
+                        </div>
                       </div>
-                      
-                      <div className="flex items-center gap-1.5 mt-1 text-[8.5px] text-zinc-550 font-bold">
-                        <span>{msg.time}</span>
-                        {isMe && (
-                          msg.read ? <CheckCheck size={10} className="text-purple-400" /> : <Check size={10} />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
 
                 {isTyping && (
                   <div className="flex items-center gap-2 text-zinc-550 font-bold text-[9px] mt-1 pl-1">

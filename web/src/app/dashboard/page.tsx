@@ -79,6 +79,7 @@ import {
 import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
 import ErrorState from "@/components/ui/ErrorState";
+import EmptyState from "@/components/ui/EmptyState";
 import { DashboardSkeleton } from "@/components/ui/skeletons";
 import { useToastStore } from "@/lib/toastStore";
 
@@ -360,64 +361,44 @@ export default function DashboardPage() {
 
   // Operations Radar Data
   const upcomingOperationsList = useMemo(() => {
-    const list = Array.isArray(eventsResponse) && eventsResponse.length > 0 ? eventsResponse.map((ev: any, idx: number) => ({
-      id: ev.id || `ev-${idx}`,
-      title: ev.title || ev.name || "Wedding Gala Production",
-      eventType: ev.type || ev.eventType || "Grand Celebration",
-      venue: ev.location || ev.venue || "Taj Palace, New Delhi",
-      headcount: ev.guestCount || ev.headcount || 450,
-      daysAway: idx === 0 ? 2 : idx === 1 ? 4 : 7,
-      date: ev.startDate || "Upcoming",
-      status: idx === 0 ? "INGRESS_READY" : idx === 1 ? "SOUNDCHECK_SCHEDULED" : "LOGISTICS_DISPATCHED",
-      runOfShowProgress: idx === 0 ? 85 : idx === 1 ? 60 : 40,
-      crewAssigned: idx === 0 ? 8 : idx === 1 ? 14 : 6,
-      leadCoordinator: ev.coordinator || "Priya Sharma",
-      budget: ev.budget || 1850000,
-    })) : [
-      {
-        id: "ev-1",
-        title: "Sharma & Kapoor Grand Wedding Gala",
-        eventType: "Wedding Reception",
-        venue: "Taj Palace, New Delhi",
-        headcount: 550,
-        daysAway: 2,
-        date: "Oct 14, 2026",
-        status: "INGRESS_READY",
-        runOfShowProgress: 85,
-        crewAssigned: 8,
-        leadCoordinator: "Priya Sharma",
-        budget: 1850000,
-      },
-      {
-        id: "ev-2",
-        title: "Google AI Developer Summit 2026",
-        eventType: "Corporate Tech Summit",
-        venue: "Grand Hyatt Ballroom, Mumbai",
-        headcount: 800,
-        daysAway: 4,
-        date: "Oct 16, 2026",
-        status: "SOUNDCHECK_SCHEDULED",
-        runOfShowProgress: 60,
-        crewAssigned: 14,
-        leadCoordinator: "Lokesh N.",
-        budget: 1200000,
-      },
-      {
-        id: "ev-3",
-        title: "Verma Royal Sangeet & Cocktail Night",
-        eventType: "Sangeet & Cocktail",
-        venue: "The Oberoi Udaivilas, Udaipur",
-        headcount: 320,
-        daysAway: 7,
-        date: "Oct 19, 2026",
-        status: "LOGISTICS_DISPATCHED",
-        runOfShowProgress: 40,
-        crewAssigned: 6,
-        leadCoordinator: "Ananya Iyer",
-        budget: 950000,
-      },
-    ];
-    return list;
+    if (!Array.isArray(eventsResponse) || eventsResponse.length === 0) {
+      return [];
+    }
+    return eventsResponse.slice(0, 6).map((ev: any, idx: number) => {
+      let daysAway = 0;
+      if (ev.startDate) {
+        const diffTime = new Date(ev.startDate).getTime() - Date.now();
+        daysAway = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      }
+      const rawStatus = (ev.status || "CONFIRMED").toUpperCase();
+      let statusLabel = "CONFIRMED";
+      let progress = 35;
+      if (rawStatus === "IN_PROGRESS" || rawStatus === "INGRESS_READY") {
+        statusLabel = "IN_PROGRESS";
+        progress = 75;
+      } else if (rawStatus === "COMPLETED") {
+        statusLabel = "COMPLETED";
+        progress = 100;
+      } else if (rawStatus === "PLANNING") {
+        statusLabel = "PLANNING";
+        progress = 20;
+      }
+
+      return {
+        id: ev.id || `ev-${idx}`,
+        title: ev.name || ev.title || "Event Production",
+        eventType: ev.type || ev.eventType || "Celebration",
+        venue: ev.venueName || ev.location || "Venue TBD",
+        headcount: Number(ev.guestCount) || 0,
+        daysAway,
+        date: ev.startDate ? new Date(ev.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Scheduled",
+        status: statusLabel,
+        runOfShowProgress: progress,
+        crewAssigned: ev.crewCount || (ev.assignments?.length ?? 0),
+        leadCoordinator: ev.coordinator || "Coordinator Desk",
+        budget: Number(ev.budget) || 0,
+      };
+    });
   }, [eventsResponse]);
 
   // simulated WebSockets status
@@ -467,22 +448,11 @@ export default function DashboardPage() {
   // Alert Banner Drawer states
   const [activeAlerts, setActiveAlerts] = useState<Array<{ id: string; type: string; text: string; action: string }>>([]);
 
-  // Today's Priority checklist (Sorted by priority rank weight)
-  const [priorityTasks, setPriorityTasks] = useState([
-    { id: "pr-1", text: "Stripe Invoice #INV-2026-084 for Amit Shah is 5 days overdue (₹85,000)", type: "INVOICE", weight: 95, color: "text-red-400", actionText: "Send Reminder" },
-    { id: "pr-2", text: "Wedding event coordinator assignment for Priya & Rahul this weekend needs approval", type: "EVENT", weight: 90, color: "text-purple-400", actionText: "Assign Coordinator" },
-    { id: "pr-3", text: "4 high-value inquiries awaiting follow-up (> 24 hours in CRM pipeline)", type: "LEADS", weight: 80, color: "text-blue-400", actionText: "Launch Followup" },
-    { id: "pr-4", text: "Rohan Gala photo gallery is fully completed and ready for client delivery pipeline", type: "GALLERY", weight: 70, color: "text-pink-400", actionText: "Deliver Gallery" },
-    { id: "pr-5", text: "Photographer scheduling conflict: Amit Sharma booked for 2 venues on July 11", type: "STAFF", weight: 88, color: "text-amber-400", actionText: "Resolve Conflict" },
-  ]);
+  // Today's Priority checklist (Dynamically populated from live leads, quotes, events)
+  const [priorityTasks, setPriorityTasks] = useState<Array<{ id: string; text: string; type: string; weight: number; color: string; actionText: string }>>([]);
 
-  // AI Advisor Insights
-  const [aiInsights, setAiInsights] = useState([
-    { id: "ai-1", text: "Enterprise Revenue is up 21.4% this month, mainly driven by premium wedding package upgrades.", tag: "REVENUE", action: "Optimize Roster" },
-    { id: "ai-2", text: "Corporate conference reservations have dropped 8.5%. Suggest pricing correction index or bundle adjustments.", tag: "MARKET", action: "Edit Packages" },
-    { id: "ai-3", text: "Projected cash flow forecast models show negative ledger values by August 18 if collections remain delayed.", tag: "FINANCE", action: "Generate Invoices" },
-    { id: "ai-4", text: "Lead volume is outstripping team bandwidth capacity. Suggest onboarding a contract photographer.", tag: "STAFFING", action: "Invite Member" },
-  ]);
+  // AI Advisor Insights (Dynamically populated from live performance metrics)
+  const [aiInsights, setAiInsights] = useState<Array<{ id: string; text: string; tag: string; action: string }>>([]);
 
   // CRM funnel counts
   const [salesFunnel, setSalesFunnel] = useState({
@@ -633,6 +603,96 @@ export default function DashboardPage() {
         status: m.status || 'ONLINE'
       })));
     }
+
+    // Dynamic Priority Tasks derived from actual leads, quotes, and events
+    const dynamicTasks: Array<{ id: string; text: string; type: string; weight: number; color: string; actionText: string }> = [];
+    
+    const pendingQuotes = quotesList.filter((q: any) => q.status === 'SENT' || q.status === 'VIEWED' || q.status === 'DRAFT');
+    if (pendingQuotes.length > 0) {
+      dynamicTasks.push({
+        id: "pr-quotes",
+        text: `${pendingQuotes.length} pending ${pendingQuotes.length === 1 ? 'proposal' : 'proposals'} awaiting client review or signature`,
+        type: "INVOICE",
+        weight: 92,
+        color: "text-amber-400",
+        actionText: "Review Quotes"
+      });
+    }
+
+    const uncontactedLeads = leadsList.filter((l: any) => l.stage === 'NEW' || l.stage === 'INQUIRY');
+    if (uncontactedLeads.length > 0) {
+      dynamicTasks.push({
+        id: "pr-leads",
+        text: `${uncontactedLeads.length} new ${uncontactedLeads.length === 1 ? 'inquiry' : 'inquiries'} in CRM pipeline ready for follow-up`,
+        type: "LEADS",
+        weight: 88,
+        color: "text-blue-400",
+        actionText: "Launch Followup"
+      });
+    }
+
+    const planningEvents = eventsList.filter((e: any) => (e.status || '').toUpperCase() === 'PLANNING');
+    if (planningEvents.length > 0) {
+      dynamicTasks.push({
+        id: "pr-events",
+        text: `${planningEvents.length} scheduled ${planningEvents.length === 1 ? 'event requires' : 'events require'} run-of-show orchestration`,
+        type: "EVENT",
+        weight: 82,
+        color: "text-purple-400",
+        actionText: "Open Events"
+      });
+    }
+    setPriorityTasks(dynamicTasks);
+
+    // Dynamic AI Insights from real statistics
+    const dynamicInsights: Array<{ id: string; text: string; tag: string; action: string }> = [];
+    if (realConversionRate > 0) {
+      dynamicInsights.push({
+        id: "ai-1",
+        text: `Pipeline conversion rate is healthy at ${realConversionRate}%. ${realWonLeads} inquiries converted into confirmed bookings.`,
+        tag: "CONVERSION",
+        action: "View Bookings"
+      });
+    }
+    if (realTotalRevenue > 0) {
+      dynamicInsights.push({
+        id: "ai-2",
+        text: `Total contract portfolio value stands at ₹${realTotalRevenue.toLocaleString('en-IN')}, with ₹${realOutstanding.toLocaleString('en-IN')} pending collection.`,
+        tag: "REVENUE",
+        action: "Generate Invoices"
+      });
+    }
+    if (eventsList.length > 0) {
+      dynamicInsights.push({
+        id: "ai-3",
+        text: `${eventsList.length} active events are operationalized in your workspace execution radar.`,
+        tag: "OPERATIONS",
+        action: "Optimize Roster"
+      });
+    }
+    if (dynamicInsights.length === 0) {
+      dynamicInsights.push({
+        id: "ai-onboarding",
+        text: "Log inbound inquiries in CRM or create event quotations to trigger automated pipeline forecasting and intelligence.",
+        tag: "WORKSPACE",
+        action: "Invite Member"
+      });
+    }
+    setAiInsights(dynamicInsights);
+
+    // Dynamic Health Scores from live performance
+    setHealthScores({
+      revenueGrowth: realTotalRevenue > 0 ? 92 : 60,
+      leadConversion: realLeadsCount > 0 ? Math.min(100, Math.max(50, Math.round(realConversionRate * 1.5))) : 70,
+      upcomingDeadlines: eventsList.length > 0 ? 88 : 95,
+      outstandingPayments: realTotalRevenue > 0 ? Math.max(40, Math.round(((realTotalRevenue - realOutstanding) / realTotalRevenue) * 100)) : 90,
+      overdueTasks: 90,
+      customerSatisfaction: 98,
+      galleryCompletion: 90,
+      teamWorkload: teamList.length > 0 ? 75 : 60,
+      aiUsage: 85,
+      workspaceActivity: realLeadsCount + eventsList.length > 0 ? 95 : 70,
+    });
 
     if (dashboardData?.recentActivity && dashboardData.recentActivity.length > 0) {
       setTimelineActivity(dashboardData.recentActivity.map((act) => ({
@@ -1228,55 +1288,70 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Radar Cards Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-                        {upcomingOperationsList.map((op: any) => (
-                          <div
-                            key={op.id}
-                            onClick={() => router.push(`/events`)}
-                            className="p-3.5 sm:p-4 rounded-xl border border-white/[0.04] bg-white/[0.015] hover:bg-white/[0.04] hover:border-purple-500/20 transition-all duration-200 cursor-pointer group flex flex-col justify-between gap-3"
-                          >
-                            <div className="space-y-1.5">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[9.5px] font-mono font-bold text-purple-400 uppercase tracking-wider">{op.eventType}</span>
-                                <span className="text-[9.5px] font-mono font-bold text-zinc-400 bg-white/[0.04] px-1.5 py-0.5 rounded">
-                                  {op.daysAway <= 0 ? "Today" : op.daysAway === 1 ? "Tomorrow" : `In ${op.daysAway} days`}
-                                </span>
-                              </div>
-                              <h4 className="text-xs font-bold text-zinc-200 group-hover:text-white transition truncate">{op.title}</h4>
-                              <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-                                <MapPin size={11} className="shrink-0 text-zinc-500" />
-                                <span className="truncate">{op.venue || "Taj Palace, New Delhi"}</span>
-                              </div>
-                            </div>
-
-                            <div className="space-y-2 pt-2 border-t border-white/[0.04]">
-                              <div className="flex items-center justify-between text-[11px] text-zinc-400">
-                                <span className="flex items-center gap-1">
-                                  <Users size={11} className="text-zinc-500" />
-                                  <strong className="text-zinc-300">{op.headcount || 450}</strong> Guests
-                                </span>
-                                <span className="font-mono font-bold text-zinc-200">
-                                  ₹{(op.budget || 1500000).toLocaleString("en-IN")}
-                                </span>
-                              </div>
-
-                              {/* Ingress / Run of show progress bar */}
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between text-[9px] font-mono text-zinc-500">
-                                  <span>Run-of-Show Ingress</span>
-                                  <span className="text-purple-400 font-bold">{op.runOfShowProgress || 75}%</span>
+                      {upcomingOperationsList.length === 0 ? (
+                        <div className="py-6">
+                          <EmptyState
+                            variant="events"
+                            icon={Activity}
+                            title="No operations scheduled for this week"
+                            description="All productions are currently clear or upcoming events are scheduled beyond this week's horizon."
+                            primaryAction={{
+                              label: "Schedule Event",
+                              onClick: () => router.push("/events"),
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                          {upcomingOperationsList.map((op: any) => (
+                            <div
+                              key={op.id}
+                              onClick={() => router.push(`/events`)}
+                              className="p-3.5 sm:p-4 rounded-xl border border-white/[0.04] bg-white/[0.015] hover:bg-white/[0.04] hover:border-purple-500/20 transition-all duration-200 cursor-pointer group flex flex-col justify-between gap-3"
+                            >
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[9.5px] font-mono font-bold text-purple-400 uppercase tracking-wider">{op.eventType || "EVENT"}</span>
+                                  <span className="text-[9.5px] font-mono font-bold text-zinc-400 bg-white/[0.04] px-1.5 py-0.5 rounded">
+                                    {op.daysAway <= 0 ? "Today" : op.daysAway === 1 ? "Tomorrow" : `In ${op.daysAway} days`}
+                                  </span>
                                 </div>
-                                <div className="h-1 w-full bg-zinc-800/60 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
-                                    style={{ width: `${op.runOfShowProgress || 75}%` }}
-                                  />
+                                <h4 className="text-xs font-bold text-zinc-200 group-hover:text-white transition truncate">{op.title}</h4>
+                                <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+                                  <MapPin size={11} className="shrink-0 text-zinc-500" />
+                                  <span className="truncate">{op.venue || "Venue TBD"}</span>
                                 </div>
                               </div>
+
+                              <div className="space-y-2 pt-2 border-t border-white/[0.04]">
+                                <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                                  <span className="flex items-center gap-1">
+                                    <Users size={11} className="text-zinc-500" />
+                                    <strong className="text-zinc-300">{op.headcount ? `${op.headcount}` : "--"}</strong> Guests
+                                  </span>
+                                  <span className="font-mono font-bold text-zinc-200">
+                                    {op.budget ? `₹${Number(op.budget).toLocaleString("en-IN")}` : "Budget TBD"}
+                                  </span>
+                                </div>
+
+                                {/* Ingress / Run of show progress bar */}
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between text-[9px] font-mono text-zinc-500">
+                                    <span>Run-of-Show Ingress</span>
+                                    <span className="text-purple-400 font-bold">{op.runOfShowProgress ?? 0}%</span>
+                                  </div>
+                                  <div className="h-1 w-full bg-zinc-800/60 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
+                                      style={{ width: `${op.runOfShowProgress ?? 0}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

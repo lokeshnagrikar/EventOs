@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MessageSquare, Send, CheckCheck, Clock, AlertTriangle, Zap, Plus, Sparkles, Phone, FileText } from "lucide-react";
 import { useToastStore } from "@/lib/toastStore";
@@ -52,16 +52,23 @@ const INITIAL_RULES: TriggerRule[] = [
   },
 ];
 
-const INITIAL_LOGS: MessageLog[] = [
-  { id: "msg-101", recipient: "Alexander Wright", phone: "+1 (555) 019-2831", trigger: "RSVP Confirmation", channel: "WHATSAPP", status: "READ", sentAt: "10 mins ago" },
-  { id: "msg-102", recipient: "Sophia Martinez", phone: "+1 (555) 018-9920", trigger: "Invoice Payment Due", channel: "SMS", status: "DELIVERED", sentAt: "42 mins ago" },
-  { id: "msg-103", recipient: "Liam O'Connor", phone: "+1 (555) 014-8831", trigger: "Day-of Venue Map", channel: "WHATSAPP", status: "DELIVERED", sentAt: "2 hours ago" },
-];
+const INITIAL_LOGS: MessageLog[] = [];
 
 export default function WhatsAppSmsDesk() {
   const { addToast } = useToastStore();
   const [rules, setRules] = useState<TriggerRule[]>(INITIAL_RULES);
   const [logs, setLogs] = useState<MessageLog[]>(INITIAL_LOGS);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("eventos_automation_logs");
+      if (stored) {
+        try {
+          setLogs(JSON.parse(stored));
+        } catch (e) {}
+      }
+    }
+  }, []);
 
   // New Rule Modal Form State
   const [showRuleModal, setShowRuleModal] = useState(false);
@@ -87,8 +94,12 @@ export default function WhatsAppSmsDesk() {
       status: "DELIVERED",
       sentAt: "Just now",
     };
-    setLogs([newLog, ...logs]);
-    addToast(`📲 Test ${rule.channel} message transmitted to ${testPhone}!`, "success");
+    const updatedLogs = [newLog, ...logs];
+    setLogs(updatedLogs);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("eventos_automation_logs", JSON.stringify(updatedLogs));
+    }
+    addToast(`Dispatched test ${rule.channel} payload to ${testPhone}`, "success");
   };
 
   const handleCreateRule = (e: React.FormEvent) => {
@@ -192,13 +203,15 @@ export default function WhatsAppSmsDesk() {
       <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-4 shadow-xl">
         <div className="flex justify-between items-center">
           <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">Transmission Delivery Audit Log</span>
-          <span className="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1">
-            <CheckCheck size={12} /> 99.4% Delivery Success Rate
-          </span>
+          {logs.length > 0 && (
+            <span className="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1">
+              <CheckCheck size={12} /> 100% Delivery Success Rate
+            </span>
+          )}
         </div>
 
-        <div className="border border-white/[0.06] rounded-xl overflow-hidden">
-          <table className="w-full text-xs font-medium text-zinc-300 font-mono">
+        <div className="border border-white/[0.06] rounded-xl overflow-x-auto min-w-0">
+          <table className="w-full text-xs font-medium text-zinc-300 font-mono min-w-[600px]">
             <thead>
               <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02]">
                 <th className="p-3">Recipient</th>
@@ -210,23 +223,31 @@ export default function WhatsAppSmsDesk() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((log) => (
-                <tr key={log.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]">
-                  <td className="p-3 font-bold text-white font-sans">{log.recipient}</td>
-                  <td className="p-3 text-zinc-400">{log.phone}</td>
-                  <td className="p-3 text-purple-400 font-bold">{log.trigger}</td>
-                  <td className="p-3">{log.channel}</td>
-                  <td className="p-3">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[8px] font-black uppercase border",
-                      log.status === "READ" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                    )}>
-                      {log.status}
-                    </span>
+              {logs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-zinc-500 font-sans text-xs">
+                    No automated transmissions triggered yet. Broadcast logs will record here when workflows fire.
                   </td>
-                  <td className="p-3 text-right text-zinc-500 text-[10px]">{log.sentAt}</td>
                 </tr>
-              ))}
+              ) : (
+                logs.map((log) => (
+                  <tr key={log.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]">
+                    <td className="p-3 font-bold text-white font-sans">{log.recipient}</td>
+                    <td className="p-3 text-zinc-400">{log.phone}</td>
+                    <td className="p-3 text-purple-400 font-bold">{log.trigger}</td>
+                    <td className="p-3">{log.channel}</td>
+                    <td className="p-3">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[8px] font-black uppercase border",
+                        log.status === "READ" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                      )}>
+                        {log.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right text-zinc-500 text-[10px]">{log.sentAt}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

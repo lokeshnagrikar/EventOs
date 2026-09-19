@@ -43,11 +43,18 @@ export default function WorkspaceChatPage() {
   const { user } = useAuthStore();
 
   const [activeChannel, setActiveChannel] = useState("general");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: "1", sender: "Rahul (Sales)", text: "Varun Mehta requested a custom quote for the corporate event.", timestamp: "10:15 AM", channel: "sales-leads" },
-    { id: "2", sender: "Sneha (Coordinator)", text: "Confirming florals ingress scheduled for July 12.", timestamp: "10:30 AM", channel: "operations" },
-    { id: "3", sender: "Amit (Photo Lead)", text: "I uploaded the initial decorators mockup layout draft to the gallery.", timestamp: "10:45 AM", channel: "photo-galleries" }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("eventos_workspace_chat_messages");
+      if (stored) {
+        try {
+          setMessages(JSON.parse(stored));
+        } catch (e) {}
+      }
+    }
+  }, []);
 
   const [inputMessage, setInputMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,7 +109,13 @@ export default function WorkspaceChatPage() {
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         channel: activeChannel
       };
-      setMessages(prev => [...prev, localMsg]);
+      setMessages(prev => {
+        const updated = [...prev, localMsg];
+        if (typeof window !== "undefined") {
+          localStorage.setItem("eventos_workspace_chat_messages", JSON.stringify(updated));
+        }
+        return updated;
+      });
     }
 
     setInputMessage("");
@@ -231,20 +244,32 @@ export default function WorkspaceChatPage() {
 
           {/* Messages lists */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {filteredMessages.map((msg) => (
-              <div key={msg.id} className="flex items-start gap-3 text-xs leading-relaxed max-w-2xl">
-                <div className="h-7 w-7 rounded-full bg-zinc-850 border border-zinc-800 text-zinc-400 flex items-center justify-center font-bold uppercase shrink-0">
-                  {msg.sender[0]}
+            {filteredMessages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center text-zinc-500 py-16">
+                <div className="h-12 w-12 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-3">
+                  <MessageSquare size={20} />
                 </div>
-                <div className="p-3 bg-zinc-900/20 border border-zinc-850/80 rounded-xl space-y-1 w-full">
-                  <div className="flex justify-between items-center text-[9.5px] font-bold">
-                    <span className="text-zinc-300 font-black">{msg.sender}</span>
-                    <span className="text-zinc-550 font-mono">{msg.timestamp}</span>
-                  </div>
-                  <p className="text-zinc-400 leading-normal font-medium">{msg.text}</p>
-                </div>
+                <h5 className="text-xs font-bold text-zinc-300">No messages in #{activeChannel}</h5>
+                <p className="text-[11px] text-zinc-500 mt-1 max-w-xs">
+                  This channel is quiet. Start the conversation with your team members below.
+                </p>
               </div>
-            ))}
+            ) : (
+              filteredMessages.map((msg) => (
+                <div key={msg.id} className="flex items-start gap-3 text-xs leading-relaxed max-w-2xl">
+                  <div className="h-7 w-7 rounded-full bg-zinc-850 border border-zinc-800 text-zinc-400 flex items-center justify-center font-bold uppercase shrink-0">
+                    {msg.sender[0]}
+                  </div>
+                  <div className="p-3 bg-zinc-900/20 border border-zinc-850/80 rounded-xl space-y-1 w-full">
+                    <div className="flex justify-between items-center text-[9.5px] font-bold">
+                      <span className="text-zinc-300 font-black">{msg.sender}</span>
+                      <span className="text-zinc-550 font-mono">{msg.timestamp}</span>
+                    </div>
+                    <p className="text-zinc-400 leading-normal font-medium">{msg.text}</p>
+                  </div>
+                </div>
+              ))
+            )}
             
             <div ref={messagesEndRef} />
           </div>

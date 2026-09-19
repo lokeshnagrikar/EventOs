@@ -36,6 +36,7 @@ interface Album {
   createdAt: string;
   visibility?: string;
   status?: string;
+  passcode?: string;
 }
 
 interface GalleryItem {
@@ -168,51 +169,8 @@ export default function PortalGalleryPage() {
         } catch (e) {}
       }
 
-      // Default demo media items for client preview
-      return {
-        data: [
-          {
-            id: "item_1",
-            albumId: selectedAlbum.id,
-            name: "Royal Mandap Floral Arch — 4K Capture",
-            type: "IMAGE",
-            url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
-            category: "Decor",
-            createdAt: new Date().toISOString(),
-            favorite: true
-          },
-          {
-            id: "item_2",
-            albumId: selectedAlbum.id,
-            name: "Baraat Ingress Drone Reel 4K",
-            type: "VIDEO",
-            url: "https://assets.mixkit.co/videos/preview/mixkit-wedding-venue-decorated-with-flowers-42686-large.mp4",
-            category: "Venue",
-            createdAt: new Date().toISOString(),
-            favorite: false
-          },
-          {
-            id: "item_3",
-            albumId: selectedAlbum.id,
-            name: "Pastel Table Arrangement & Candlelight",
-            type: "IMAGE",
-            url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80",
-            category: "Moodboard",
-            createdAt: new Date().toISOString(),
-            favorite: false
-          },
-          {
-            id: "item_4",
-            albumId: selectedAlbum.id,
-            name: "Sangeet Pyrotechnics & Stage Setup",
-            type: "IMAGE",
-            url: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=1200&q=80",
-            category: "Decor",
-            createdAt: new Date().toISOString(),
-            favorite: true
-          }
-        ]
-      };
+      // No items found in API or local storage
+      return { data: [] };
     },
     enabled: !!selectedAlbum
   });
@@ -254,11 +212,10 @@ export default function PortalGalleryPage() {
   const handleUnlockSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setUnlockError("");
-    // Simple passcode check (e.g. 1234 or mock unlock success)
-    if (passcode === "1234" || passcode.trim().length > 0) {
+    if (!selectedAlbum?.passcode || passcode.trim() === selectedAlbum.passcode) {
       setIsUnlocked(true);
     } else {
-      setUnlockError("Invalid passcode lock. Please try again.");
+      setUnlockError("Invalid passcode. Please enter the correct access code.");
     }
   };
 
@@ -457,7 +414,7 @@ export default function PortalGalleryPage() {
         )
       ) : (
         /* PASSCODE UNLOCK SCREEN */
-        !isUnlocked ? (
+        Boolean(selectedAlbum.passcode) && !isUnlocked ? (
           <div className="max-w-md mx-auto p-6 border border-zinc-800 bg-[#111113]/40 rounded-2xl space-y-4 relative overflow-hidden text-center">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
             <div className="h-10 w-10 mx-auto rounded-full bg-purple-550/10 flex items-center justify-center text-purple-400 border border-purple-900/20">
@@ -479,7 +436,7 @@ export default function PortalGalleryPage() {
               <input
                 type="password"
                 required
-                placeholder="Enter 4-digit passcode lock (e.g. 1234)..."
+                placeholder="Enter album access passcode..."
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
                 className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-center font-mono focus:outline-none"
@@ -499,6 +456,12 @@ export default function PortalGalleryPage() {
                     <div key={n} className="aspect-square bg-zinc-900 border border-zinc-850 rounded-xl animate-pulse" />
                   ))}
                 </div>
+              ) : items.length === 0 ? (
+                <EmptyState
+                  variant="gallery"
+                  title="No media in this album"
+                  description="Photos, video reels, and highlights will appear here once published by your event team."
+                />
               ) : (
                 <MasonryGallery
                   items={items}

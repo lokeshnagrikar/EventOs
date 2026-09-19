@@ -85,14 +85,15 @@ export default function ClientDashboard() {
   const [userName, setUserName] = useState("Client");
 
   // Dynamic state checklist for event milestones
-  const [checklist, setChecklist] = useState([
-    { id: "guest", label: "Guest list confirmed", completed: false, deadline: "Stage 01", role: "Client" },
-    { id: "decor", label: "Decoration & theme finalized", completed: false, deadline: "Stage 02", role: "Planner" },
-    { id: "food", label: "Catering & menu selection", completed: false, deadline: "Stage 03", role: "Client" },
-    { id: "photo", label: "Photography & media schedule", completed: false, deadline: "Stage 04", role: "Planner" },
-    { id: "music", label: "Sound & DJ setup schedule", completed: false, deadline: "Stage 05", role: "Client" },
-    { id: "payment", label: "Initial deposit confirmed", completed: false, deadline: "Stage 06", role: "Client" }
-  ]);
+  interface PortalChecklistItem {
+    id: string;
+    label: string;
+    completed: boolean;
+    deadline: string;
+    role: string;
+  }
+
+  const [checklist, setChecklist] = useState<PortalChecklistItem[]>([]);
 
   useEffect(() => {
     if (user?.firstName) {
@@ -213,15 +214,50 @@ export default function ClientDashboard() {
       .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime())[0];
   }, [clientTimeline]);
 
+  // Sync checklist with event timeline milestones or saved user items
+  useEffect(() => {
+    if (!activeEvent) {
+      setChecklist([]);
+      return;
+    }
+    const localKey = `eventos_client_checklist_${activeEvent.id}`;
+    const saved = typeof window !== "undefined" ? localStorage.getItem(localKey) : null;
+    if (saved) {
+      try {
+        setChecklist(JSON.parse(saved));
+        return;
+      } catch (e) {}
+    }
+    if (clientTimeline && clientTimeline.length > 0) {
+      const derived: PortalChecklistItem[] = clientTimeline.map((item, idx) => ({
+        id: item.id || `tl-${idx}`,
+        label: item.title,
+        completed: Boolean(item.completed),
+        deadline: item.scheduledTime
+          ? new Date(item.scheduledTime).toLocaleDateString("en-IN", { month: "short", day: "numeric" })
+          : `Stage 0${idx + 1}`,
+        role: "Production"
+      }));
+      setChecklist(derived);
+    } else {
+      setChecklist([]);
+    }
+  }, [activeEvent, clientTimeline]);
+
   const checklistProgress = useMemo(() => {
+    if (checklist.length === 0) return 0;
     const done = checklist.filter((c) => c.completed).length;
     return Math.round((done / checklist.length) * 100);
   }, [checklist]);
 
   const toggleChecklistItem = (id: string) => {
-    setChecklist((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, completed: !c.completed } : c))
-    );
+    setChecklist((prev) => {
+      const updated = prev.map((c) => (c.id === id ? { ...c, completed: !c.completed } : c));
+      if (activeEvent && typeof window !== "undefined") {
+        localStorage.setItem(`eventos_client_checklist_${activeEvent.id}`, JSON.stringify(updated));
+      }
+      return updated;
+    });
   };
 
   // Recharts Chart Details
@@ -372,28 +408,36 @@ export default function ClientDashboard() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              {checklist.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => toggleChecklistItem(item.id)}
-                  className={cn(
-                    "p-3.5 border rounded-xl bg-white/[0.01] cursor-pointer flex flex-col justify-between gap-2.5 transition-all duration-200 select-none",
-                    item.completed ? "border-white/[0.03] text-zinc-500 bg-white/[0.005]" : "border-white/[0.06] text-zinc-200 hover:border-white/[0.12]"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className={cn("font-bold text-[10.5px]", item.completed && "line-through")}>{item.label}</span>
-                    {item.completed ? <CheckCircle2 size={13} className="text-emerald-500" /> : <div className="h-3.5 w-3.5 rounded-full border border-white/[0.1]" />}
-                  </div>
+            {checklist.length === 0 ? (
+              <div className="py-6 text-center text-zinc-500 text-xs">
+                <CheckCircle2 size={24} className="mx-auto mb-2 text-zinc-600 opacity-40" />
+                <p className="font-semibold text-zinc-400">No milestone tasks scheduled yet</p>
+                <p className="text-[11px] text-zinc-600 mt-0.5">Tasks will appear here once your production team assigns timeline milestones.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {checklist.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => toggleChecklistItem(item.id)}
+                    className={cn(
+                      "p-3.5 border rounded-xl bg-white/[0.01] cursor-pointer flex flex-col justify-between gap-2.5 transition-all duration-200 select-none",
+                      item.completed ? "border-white/[0.03] text-zinc-500 bg-white/[0.005]" : "border-white/[0.06] text-zinc-200 hover:border-white/[0.12]"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={cn("font-bold text-[10.5px]", item.completed && "line-through")}>{item.label}</span>
+                      {item.completed ? <CheckCircle2 size={13} className="text-emerald-500" /> : <div className="h-3.5 w-3.5 rounded-full border border-white/[0.1]" />}
+                    </div>
 
-                  <div className="flex justify-between items-center text-[8.5px] text-zinc-550 font-mono">
-                    <span>By: {item.role}</span>
-                    <span>Due: {item.deadline}</span>
+                    <div className="flex justify-between items-center text-[8.5px] text-zinc-550 font-mono">
+                      <span>By: {item.role}</span>
+                      <span>Due: {item.deadline}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Event specs Recharts Chart */}
