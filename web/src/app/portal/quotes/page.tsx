@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useToastStore } from "@/lib/toastStore";
@@ -54,7 +55,12 @@ export default function PortalQuotesPage() {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const [mounted, setMounted] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Digital Signature states
   const [showSignPad, setShowSignPad] = useState(false);
@@ -388,18 +394,26 @@ export default function PortalQuotesPage() {
       )}
 
       {/* ─── DETAIL VIEW MODAL & APPROVAL / SIGNATURE ENGINE ─── */}
-      <AnimatePresence>
-        {selectedQuote && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 pt-6 sm:pt-10 pb-8 overflow-y-auto">
-            <motion.div
-              ref={modalRef}
-              role="dialog"
-              aria-modal="true"
-              initial={{ opacity: 0, scale: 0.96, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 15 }}
-              className="w-full max-w-3xl bg-[#111113] border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[86vh] relative my-auto shrink-0"
-            >
+      {mounted && typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {selectedQuote && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/85 backdrop-blur-md cursor-pointer"
+                onClick={() => { setSelectedQuote(null); setShowSignPad(false); }}
+              />
+              <motion.div
+                ref={modalRef}
+                role="dialog"
+                aria-modal="true"
+                initial={{ opacity: 0, scale: 0.96, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 15 }}
+                className="w-full max-w-3xl bg-[#111113] border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] relative z-10 my-auto shrink-0"
+              >
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/20 via-transparent to-transparent pointer-events-none" />
 
               {/* Header - Always visible sticky top bar */}
@@ -443,7 +457,7 @@ export default function PortalQuotesPage() {
               </div>
 
               {/* Scrollable contents */}
-              <div className="p-6 overflow-y-auto space-y-6 text-xs leading-relaxed z-10 relative">
+              <div className="p-6 overflow-y-auto space-y-6 text-xs leading-relaxed z-10 relative flex-1 min-h-0">
                 
                 {/* Proposal Items Table */}
                 <div className="border border-zinc-850 rounded-2xl overflow-hidden bg-zinc-900/10">
@@ -603,7 +617,7 @@ export default function PortalQuotesPage() {
               </div>
 
               {/* Actions Footer */}
-              <div className="p-5 border-t border-zinc-800 bg-zinc-900/40 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0 z-10 relative">
+              <div className="p-5 border-t border-zinc-800 bg-[#111113]/95 backdrop-blur-md flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0 z-20 relative">
                 <div>
                   <button
                     onClick={(e) => handleDownloadPdf(selectedQuote.id, selectedQuote.quoteNumber, e)}
@@ -663,7 +677,9 @@ export default function PortalQuotesPage() {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
     </div>
   );

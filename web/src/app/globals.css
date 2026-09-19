@@ -211,7 +211,7 @@
   }
 
   to {
-    transform: translateY(0) scale(1);
+    transform: none;
     opacity: 1;
   }
 }

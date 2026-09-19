@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useToastStore } from "@/lib/toastStore";
@@ -28,34 +29,36 @@ interface Invoice {
   id: string;
   invoiceNumber: string;
   subtotal: number;
-  tax: number;
   discount: number;
+  tax: number;
   totalAmount: number;
+  paidAmount: number;
   dueDate: string;
-  status: "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
+  status: string;
   clientName: string;
   clientEmail: string;
-  billingAddress?: string;
-  notes?: string;
   createdAt: string;
-  bookingId: string;
 }
 
 interface Payment {
   id: string;
+  bookingId: string;
   amount: number;
   paymentMethod: string;
-  transactionReference?: string;
-  status: "PENDING" | "PENDING_VERIFICATION" | "COMPLETED" | "REFUNDED" | "FAILED";
+  status: string;
   paymentDate: string;
-  notes?: string;
 }
 
 export default function PortalInvoicesPage() {
   const { addToast } = useToastStore();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [mounted, setMounted] = useState(false);
   const modalRef = React.useRef<HTMLDivElement>(null);
-  
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Offline Payment reference submit state
   const [txnRef, setTxnRef] = useState("");
   const [txnSuccess, setTxnSuccess] = useState(false);
@@ -374,97 +377,107 @@ export default function PortalInvoicesPage() {
       </div>
 
       {/* ─── INVOICE DETAIL MODAL DIALOG ─── */}
-      <AnimatePresence>
-        {selectedInvoice && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <motion.div
-              ref={modalRef}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="modal-title"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-2xl shadow-2xl p-6 relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
+      {mounted && typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {selectedInvoice && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/80 backdrop-blur-sm cursor-pointer"
+                onClick={() => setSelectedInvoice(null)}
+              />
+              <motion.div
+                ref={modalRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-title"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-2xl shadow-2xl p-6 relative z-10 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/10 via-transparent to-transparent pointer-events-none" />
 
-              <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4 z-10 relative">
-                <h2 id="modal-title" className="text-xs font-black text-white flex items-center gap-2">
-                  <FileSpreadsheet className="text-purple-500" size={15} />
-                  Invoice Details: {selectedInvoice.invoiceNumber}
-                </h2>
-                <button onClick={() => setSelectedInvoice(null)} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400">
-                  <X size={14} />
-                </button>
-              </div>
-
-              <div className="space-y-4 text-xs font-medium z-10 relative">
-                <div className="grid grid-cols-2 gap-4 pb-3 border-b border-zinc-850/45">
-                  <div>
-                    <span className="text-zinc-500 font-bold uppercase tracking-wider text-[8.5px]">Bill To:</span>
-                    <p className="font-extrabold text-zinc-200 mt-0.5">{selectedInvoice.clientName}</p>
-                    <p className="text-[9px] text-zinc-500 font-mono mt-0.5">{selectedInvoice.clientEmail}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-zinc-500 font-bold uppercase tracking-wider text-[8.5px]">Due Date:</span>
-                    <p className="font-extrabold text-red-400 mt-0.5">{selectedInvoice.dueDate ? new Date(selectedInvoice.dueDate).toLocaleDateString() : "-"}</p>
-                  </div>
-                </div>
-
-                {/* Line item breakdown */}
-                <div>
-                  <span className="text-zinc-555 font-bold uppercase tracking-wider text-[9px] block mb-2">Item Specifications</span>
-                  <div className="space-y-2 border border-zinc-850 bg-zinc-950/30 p-3 rounded-xl">
-                    <div className="flex justify-between text-zinc-350 font-bold">
-                      <span>Event Services & Production fulfillment</span>
-                      <span className="font-mono">₹{(Number(selectedInvoice.subtotal || selectedInvoice.totalAmount) || 0).toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Taxes & subtotals */}
-                <div className="space-y-1.5 font-mono pt-3 border-t border-zinc-850/40 text-[10px]">
-                  <div className="flex justify-between text-zinc-400 font-semibold">
-                    <span>Subtotal:</span>
-                    <span>₹{(Number(selectedInvoice.subtotal) || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-zinc-400 font-semibold">
-                    <span>GST (18%):</span>
-                    <span>₹{(Number(selectedInvoice.tax) || 0).toLocaleString()}</span>
-                  </div>
-                  {(Number(selectedInvoice.discount) || 0) > 0 && (
-                    <div className="flex justify-between text-emerald-400 font-semibold">
-                      <span>Discount:</span>
-                      <span>- ₹{(Number(selectedInvoice.discount) || 0).toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-xs font-black text-zinc-100 pt-2 border-t border-zinc-850/40">
-                    <span>Grand Total:</span>
-                    <span className="text-emerald-450">₹{(Number(selectedInvoice.totalAmount) || 0).toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-zinc-800 flex justify-between items-center gap-4">
-                  <button
-                    onClick={() => handleDownloadInvoicePDF(selectedInvoice)}
-                    className="flex-1 py-2 border border-zinc-800 hover:border-zinc-700 bg-zinc-900 rounded-xl flex items-center justify-center gap-1.5 font-bold"
-                  >
-                    <Download size={13} />
-                    Download PDF Invoice
+                <div className="flex justify-between items-center pb-4 border-b border-zinc-800 mb-4 z-10 relative">
+                  <h2 id="modal-title" className="text-xs font-black text-white flex items-center gap-2">
+                    <FileSpreadsheet className="text-purple-500" size={15} />
+                    Invoice Details: {selectedInvoice.invoiceNumber}
+                  </h2>
+                  <button onClick={() => setSelectedInvoice(null)} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 cursor-pointer">
+                    <X size={14} />
                   </button>
-
-                  <span className={`px-2.5 py-1 rounded-full font-black uppercase border text-[9px] ${
-                    selectedInvoice.status === "PAID" ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
-                  }`}>
-                    {selectedInvoice.status}
-                  </span>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+
+                <div className="space-y-4 text-xs font-medium z-10 relative">
+                  <div className="grid grid-cols-2 gap-4 pb-3 border-b border-zinc-850/45">
+                    <div>
+                      <span className="text-zinc-500 font-bold uppercase tracking-wider text-[8.5px]">Bill To:</span>
+                      <p className="font-extrabold text-zinc-200 mt-0.5">{selectedInvoice.clientName}</p>
+                      <p className="text-[9px] text-zinc-500 font-mono mt-0.5">{selectedInvoice.clientEmail}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-zinc-500 font-bold uppercase tracking-wider text-[8.5px]">Due Date:</span>
+                      <p className="font-extrabold text-red-400 mt-0.5">{selectedInvoice.dueDate ? new Date(selectedInvoice.dueDate).toLocaleDateString() : "-"}</p>
+                    </div>
+                  </div>
+
+                  {/* Line item breakdown */}
+                  <div>
+                    <span className="text-zinc-555 font-bold uppercase tracking-wider text-[9px] block mb-2">Item Specifications</span>
+                    <div className="space-y-2 border border-zinc-850 bg-zinc-950/30 p-3 rounded-xl">
+                      <div className="flex justify-between text-zinc-350 font-bold">
+                        <span>Event Services & Production fulfillment</span>
+                        <span className="font-mono">₹{(Number(selectedInvoice.subtotal || selectedInvoice.totalAmount) || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Taxes & subtotals */}
+                  <div className="space-y-1.5 font-mono pt-3 border-t border-zinc-850/40 text-[10px]">
+                    <div className="flex justify-between text-zinc-400 font-semibold">
+                      <span>Subtotal:</span>
+                      <span>₹{(Number(selectedInvoice.subtotal) || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-zinc-400 font-semibold">
+                      <span>GST (18%):</span>
+                      <span>₹{(Number(selectedInvoice.tax) || 0).toLocaleString()}</span>
+                    </div>
+                    {(Number(selectedInvoice.discount) || 0) > 0 && (
+                      <div className="flex justify-between text-emerald-400 font-semibold">
+                        <span>Discount:</span>
+                        <span>- ₹{(Number(selectedInvoice.discount) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xs font-black text-zinc-100 pt-2 border-t border-zinc-850/40">
+                      <span>Grand Total:</span>
+                      <span className="text-emerald-450">₹{(Number(selectedInvoice.totalAmount) || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-zinc-800 flex justify-between items-center gap-4">
+                    <button
+                      onClick={() => handleDownloadInvoicePDF(selectedInvoice)}
+                      className="flex-1 py-2 border border-zinc-800 hover:border-zinc-700 bg-zinc-900 rounded-xl flex items-center justify-center gap-1.5 font-bold cursor-pointer"
+                    >
+                      <Download size={13} />
+                      Download PDF Invoice
+                    </button>
+
+                    <span className={`px-2.5 py-1 rounded-full font-black uppercase border text-[9px] ${
+                      selectedInvoice.status === "PAID" ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+                    }`}>
+                      {selectedInvoice.status}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
     </div>
   );
