@@ -196,7 +196,25 @@ export default function SuperAdminDashboard() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Restore session into Zustand if needed
+    if (!user && typeof window !== "undefined") {
+      const storedToken = localStorage.getItem("accessToken") || localStorage.getItem("eventos_access_token");
+      const storedProfile = localStorage.getItem("eventos_user_profile") || sessionStorage.getItem("user");
+      const storedTenant = localStorage.getItem("eventos_active_tenant_id") || sessionStorage.getItem("activeTenantId");
+      if (storedToken && storedProfile) {
+        try {
+          const parsed = JSON.parse(storedProfile);
+          useAuthStore.getState().setAuth(
+            storedToken,
+            parsed,
+            storedTenant || "00000000-0000-0000-0000-000000000000",
+            [],
+            undefined
+          );
+        } catch {}
+      }
+    }
+  }, [user]);
 
   // Real-time WebSocket activity push listener
   useEffect(() => {
@@ -220,7 +238,10 @@ export default function SuperAdminDashboard() {
   // Role-based access guard
   useEffect(() => {
     if (mounted) {
-      if (!user || !PLATFORM_ROLES.includes(user.role)) {
+      const storedRole = typeof window !== "undefined" ? localStorage.getItem("user_role") : null;
+      const effectiveRole = user?.role || storedRole;
+
+      if (!effectiveRole || !PLATFORM_ROLES.includes(effectiveRole)) {
         addToast("Access Denied: Platform Superadmin console requires an authorized platform administrator role.", "error");
         router.push("/superadmin/login");
       }
@@ -229,7 +250,9 @@ export default function SuperAdminDashboard() {
 
   // Fetch real superadmin data
   useEffect(() => {
-    if (!mounted || !user || !PLATFORM_ROLES.includes(user.role)) return;
+    const storedRole = typeof window !== "undefined" ? localStorage.getItem("user_role") : null;
+    const effectiveRole = user?.role || storedRole;
+    if (!mounted || !effectiveRole || !PLATFORM_ROLES.includes(effectiveRole)) return;
 
     const fetchSuperAdminData = async () => {
       try {

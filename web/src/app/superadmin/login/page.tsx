@@ -46,6 +46,24 @@ export default function SuperAdminLoginPage() {
     }
   }, [showCaptcha]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedRole = localStorage.getItem("user_role");
+      const storedToken = localStorage.getItem("accessToken") || localStorage.getItem("eventos_access_token");
+      const PLATFORM_ROLES = [
+        "SUPER_ADMIN",
+        "OPERATIONS_LEAD",
+        "SUPPORT_LEAD",
+        "FINANCE_OFFICER",
+        "DEVOPS_ENGINEER",
+        "COMPLIANCE_AUDITOR",
+      ];
+      if (storedToken && storedRole && PLATFORM_ROLES.includes(storedRole)) {
+        window.location.href = "/superadmin";
+      }
+    }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -59,20 +77,12 @@ export default function SuperAdminLoginPage() {
         email: email.trim().toLowerCase(),
         password,
         captchaId: showCaptcha ? captchaId : undefined,
-        captchaValue: showCaptcha ? (realRecaptchaEnabled ? captchaToken : captchaInput) : undefined,
+        captchaInput: showCaptcha ? (realRecaptchaEnabled ? captchaToken : captchaInput.trim()) : undefined,
       });
 
       if (response.data?.success) {
-        const {
-          accessToken,
-          firstName,
-          lastName,
-          role,
-          userId,
-          tenantId,
-          memberships,
-          permissions,
-        } = response.data.data;
+        const { accessToken, userId, role, firstName, lastName, permissions, memberships, tenantId: rawTenantId } =
+          response.data.data;
 
         // 2. Strict Privilege Boundary: Only authorized platform administrator roles can access this console
         const PLATFORM_ROLES = [
@@ -93,7 +103,7 @@ export default function SuperAdminLoginPage() {
 
         // 3. Set secure session cookies for Next.js Edge Middleware route verification
         const isProd = typeof window !== "undefined" && window.location.protocol === "https:";
-        const cookieFlags = `path=/; SameSite=Lax${isProd ? "; Secure" : ""}`;
+        const cookieFlags = `path=/; max-age=86400; SameSite=Lax${isProd ? "; Secure" : ""}`;
         document.cookie = `hasSession=true; ${cookieFlags}`;
         document.cookie = `user_name=${encodeURIComponent(firstName || "Admin")}; ${cookieFlags}`;
         document.cookie = `user_role=${role}; ${cookieFlags}`;
@@ -102,6 +112,12 @@ export default function SuperAdminLoginPage() {
         localStorage.setItem("user_role", role);
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("eventos_access_token", accessToken);
+
+        const tenantId =
+          rawTenantId ||
+          response.data?.data?.workspaceId ||
+          (memberships && memberships[0]?.tenantId) ||
+          "00000000-0000-0000-0000-000000000000";
 
         // 4. Update Zustand state with verified JWT & claims
         setAuth(
@@ -115,12 +131,14 @@ export default function SuperAdminLoginPage() {
             permissions: permissions && permissions.length > 0 ? permissions : ["all"],
           },
           tenantId,
-          memberships,
+          memberships || [],
           response.data?.data?.refreshToken
         );
 
-        addToast(`Welcome, ${firstName || "Admin"}.`, "success");
-        router.push("/superadmin");
+        addToast(`Welcome, ${firstName || "Admin"}. Opening dashboard...`, "success");
+        setTimeout(() => {
+          window.location.href = "/superadmin";
+        }, 150);
         return;
       } else {
         throw new Error(response.data?.error?.message || "Authentication failed.");

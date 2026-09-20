@@ -33,7 +33,11 @@ export async function middleware(request: NextRequest) {
     }
 
     const verifiedPayload = await verifyAccessToken(accessToken);
-    if (!verifiedPayload || !verifiedPayload.roles || !PLATFORM_ROLES.has(verifiedPayload.roles as string)) {
+    const role = typeof verifiedPayload?.roles === "string"
+      ? verifiedPayload.roles
+      : (Array.isArray(verifiedPayload?.roles) ? (verifiedPayload?.roles as string[])[0] : (typeof verifiedPayload?.role === "string" ? verifiedPayload.role : ""));
+
+    if (!verifiedPayload || !role || !PLATFORM_ROLES.has(role)) {
       const loginUrl = new URL("/superadmin/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);

@@ -44,26 +44,26 @@ export const useAuthStore = create<AuthState>((set) => ({
   initializeAuth: () => {
     if (typeof window === 'undefined') return;
     try {
-      const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('eventos_access_token');
+      const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('eventos_access_token') || localStorage.getItem('accessToken');
       const user = sessionStorage.getItem('user') || localStorage.getItem('eventos_user_profile');
       const activeTenantId = sessionStorage.getItem('activeTenantId') || localStorage.getItem('eventos_active_tenant_id');
       const memberships = sessionStorage.getItem('memberships') || localStorage.getItem('eventos_memberships');
       
-      if (accessToken && activeTenantId) {
+      if (accessToken) {
         set({
           accessToken,
           user: user ? JSON.parse(user) : null,
-          activeTenantId: activeTenantId,
+          activeTenantId: activeTenantId || "00000000-0000-0000-0000-000000000000",
           memberships: memberships ? JSON.parse(memberships) : [],
           isAuthenticated: true,
         });
       } else if (activeTenantId) {
         set({
-          accessToken: accessToken || null,
+          accessToken: null,
           user: user ? JSON.parse(user) : null,
           activeTenantId: activeTenantId,
           memberships: memberships ? JSON.parse(memberships) : [],
-          isAuthenticated: !!accessToken,
+          isAuthenticated: false,
         });
       }
     } catch (e) {
