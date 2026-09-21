@@ -8,6 +8,8 @@ import { Calendar, ArrowRight, CheckCircle2, Play, Sparkles } from "lucide-react
 import { analytics } from "@/lib/analytics";
 import { AnimatedMeshGradient } from "@/components/ui/AnimatedMeshGradient";
 import { LiquidMetalButton } from "@/components/landing/LiquidMetalButton";
+import { LiquidRippleHeading } from "@/components/landing/LiquidRippleHeading";
+import { StardustButton } from "@/components/landing/StardustButton";
 
 const workflowSteps = [
   { step: "1", label: "Lead captured", icon: "solar:user-plus-bold-duotone", color: "text-purple-600 bg-purple-50 border-purple-200" },
@@ -100,12 +102,9 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.08 }}
-          className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 font-heading max-w-4xl text-balance leading-[1.12]"
+          className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight font-heading max-w-4xl text-balance leading-[1.12]"
         >
-          Run Your Entire Event Business{" "}
-          <span className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-800 bg-clip-text text-transparent">
-            From One Place.
-          </span>
+          <LiquidRippleHeading />
         </motion.h1>
 
         {/* Supporting Copy */}
@@ -133,14 +132,10 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
             height={50}
           />
 
-          {/* Secondary CTA */}
-          <button
-            onClick={handleSeeHowItWorks}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-[50px] rounded-full text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-sm active:scale-[0.97] transition-all cursor-pointer hover:border-slate-300"
-          >
-            <Play className="w-3.5 h-3.5 text-purple-600 fill-purple-600" />
-            <span>See How It Works</span>
-          </button>
+          {/* Secondary CTA: Frosted Glass Button */}
+          <StardustButton onClick={handleSeeHowItWorks}>
+            See How It Works
+          </StardustButton>
         </motion.div>
 
         {/* Below CTA Reassurance Line */}

@@ -11,6 +11,7 @@ import { useAuthModalStore } from "@/store/authModalStore";
 import { useAuthStore } from "@/store/authStore";
 import { EventOsLogo } from "@/components/ui/EventOsLogo";
 import { LiquidMetalButton } from "@/components/landing/LiquidMetalButton";
+import { LiquidMetalText } from "@/components/landing/LiquidMetalText";
 
 interface NavbarProps {
   activeSection?: string;
@@ -151,8 +152,8 @@ export function Navbar({ activeSection }: NavbarProps) {
               aria-label="EventOS Home"
             >
               <EventOsLogo size={36} animated={true} interactive={true} />
-              <span className="text-base sm:text-lg font-black tracking-tight text-white font-heading">
-                Event<span className="text-purple-400">OS</span>
+              <span className="text-base sm:text-lg font-black tracking-tight font-heading inline-flex items-center text-white">
+                Event<LiquidMetalText text="OS" variant="purple" />
               </span>
             </div>
 
