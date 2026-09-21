@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { motion } from "framer-motion";
-import { CheckCircle2, Server, ShieldCheck, RefreshCw } from "lucide-react";
+import { CheckCircle2, Server, ShieldCheck, RefreshCw, Activity } from "lucide-react";
 
 export default function StatusPage() {
   const [lastRefreshed, setLastRefreshed] = useState(new Date().toLocaleTimeString());
@@ -25,86 +25,99 @@ export default function StatusPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-slate-900 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-600 selection:text-white">
+    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-600 selection:text-white">
+      {/* Liquid background glow effects */}
+      <div className="absolute top-[8%] left-[12%] w-[450px] h-[450px] bg-purple-600/10 blur-[130px] rounded-full pointer-events-none" />
+      <div className="absolute top-[40%] right-[10%] w-[500px] h-[500px] bg-indigo-600/10 blur-[140px] rounded-full pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(124,58,237,0.1)_1px,transparent_1px)] [background-size:32px_32px] opacity-25 pointer-events-none" />
+
       <Navbar />
 
-      <main className="flex-1 pt-32 pb-24 max-w-5xl mx-auto px-6 space-y-12 w-full z-10">
+      <main className="flex-1 pt-32 pb-24 max-w-5xl mx-auto px-4 sm:px-6 space-y-10 w-full relative z-10">
         {/* Top Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-8 border-b border-slate-200/80">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-8 border-b border-white/10">
           <div>
-            <span className="text-xs font-black uppercase tracking-widest text-purple-700 block mb-2 font-mono">
+            <span className="text-xs font-bold uppercase tracking-widest text-purple-400 block mb-2 font-mono">
               Real-time System Status
             </span>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3 font-heading">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
               <span>All Systems Operational</span>
-              <span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_#10b981]" />
+              <span className="h-3.5 w-3.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_15px_#34d399]" />
             </h1>
-            <p className="text-xs text-slate-600 mt-1 font-medium">
-              Live uptime monitoring and incident response tracking for EventOS microservices.
+            <p className="text-xs sm:text-sm text-slate-400 mt-1 font-medium">
+              Live uptime monitoring and incident response tracking for EventOS cloud services.
             </p>
           </div>
 
           <button
             onClick={handleRefresh}
-            className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:text-slate-900 rounded-2xl text-xs font-extrabold transition flex items-center gap-2 shadow-sm cursor-pointer"
+            className="px-4 py-2 bg-[#101524] border border-white/10 text-slate-300 hover:text-white hover:bg-[#141B2D] rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md cursor-pointer"
           >
-            <RefreshCw size={14} className="text-purple-600" />
+            <RefreshCw size={13} className="text-purple-400" />
             <span>Updated {lastRefreshed}</span>
           </button>
         </div>
 
         {/* System Health Overview Card */}
-        <div className="p-6 rounded-3xl bg-emerald-50 border border-emerald-200/80 text-emerald-900 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 size={24} className="text-emerald-600 shrink-0" />
+        <div className="p-5 sm:p-6 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg backdrop-blur-md">
+          <div className="flex items-center gap-3.5">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+              <CheckCircle2 size={22} />
+            </div>
             <div>
-              <h3 className="text-sm sm:text-base font-extrabold font-heading text-slate-900">EventOS Infrastructure Health: 100%</h3>
-              <p className="text-xs text-slate-600 font-medium">All tenant API nodes, database clusters, and webhooks are operating normally.</p>
+              <h3 className="text-sm sm:text-base font-bold text-white">EventOS Infrastructure Health: 100%</h3>
+              <p className="text-xs text-slate-300 font-medium mt-0.5">All tenant API nodes, database clusters, and webhooks are operating normally.</p>
             </div>
           </div>
-          <span className="hidden sm:inline-block text-[10px] font-mono font-extrabold uppercase tracking-wider px-3.5 py-1.5 bg-emerald-600 text-white rounded-full shadow-sm">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full shadow-sm shrink-0">
             Zero Active Incidents
           </span>
         </div>
 
         {/* Service Status Table */}
         <div className="space-y-4">
-          <h2 className="text-xs font-black uppercase tracking-widest text-purple-700 font-mono">Microservice Node Metrics</h2>
-          <div className="border border-slate-200/90 rounded-3xl bg-white overflow-hidden shadow-sm">
-            <div className="divide-y divide-slate-100">
-              {services.map((srv, idx) => (
-                <motion.div
-                  key={srv.name}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                  className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:bg-slate-50/60 transition"
-                >
-                  <div className="flex items-center gap-3">
-                    <Server size={16} className="text-purple-600 shrink-0" />
-                    <span className="text-xs sm:text-sm font-extrabold text-slate-900">{srv.name}</span>
-                  </div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 font-mono">Microservice Node Metrics</h2>
+            <span className="text-[11px] text-purple-400 font-mono">8 of 8 Clusters Active</span>
+          </div>
 
-                  <div className="flex items-center gap-4 text-xs font-mono">
-                    <span className="text-slate-500 text-[11px]">Latency: <span className="text-slate-900 font-bold">{srv.latency}</span></span>
-                    <span className="text-slate-500 text-[11px]">Uptime: <span className="text-emerald-700 font-bold">{srv.uptime}</span></span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-sans text-[10px] font-black uppercase">
-                      {srv.status}
-                    </span>
+          <div className="border border-white/10 rounded-2xl bg-[#101524] overflow-hidden shadow-xl divide-y divide-white/5">
+            {services.map((srv, idx) => (
+              <motion.div
+                key={srv.name}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.03 }}
+                className="p-4 sm:p-4.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:bg-[#141B2D] transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+                    <Server size={15} />
                   </div>
-                </motion.div>
-              ))}
-            </div>
+                  <span className="text-xs sm:text-sm font-bold text-white">{srv.name}</span>
+                </div>
+
+                <div className="flex items-center gap-4 text-xs font-mono">
+                  <span className="text-slate-400 text-xs">Latency: <strong className="text-slate-200">{srv.latency}</strong></span>
+                  <span className="text-slate-400 text-xs">Uptime: <strong className="text-emerald-400">{srv.uptime}</strong></span>
+                  <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-sans text-[10px] font-bold uppercase">
+                    {srv.status}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
 
         {/* Security & Uptime Commitment Card */}
-        <div className="p-6 border border-slate-200/90 bg-white rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <ShieldCheck size={20} className="text-purple-600 shrink-0" />
+        <div className="p-5 border border-white/10 bg-[#101524] rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg">
+          <div className="flex items-center gap-3.5">
+            <div className="h-10 w-10 rounded-xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-purple-400 shrink-0">
+              <ShieldCheck size={20} />
+            </div>
             <div className="text-xs">
-              <span className="font-extrabold text-slate-900 block font-heading">99.9% Service Level Agreement (SLA) Guarantee</span>
-              <span className="text-slate-600 font-medium">Tracked 24/7 across multi-region AWS & Render infrastructure clusters.</span>
+              <span className="font-bold text-white text-sm block">99.9% Service Level Agreement (SLA) Guarantee</span>
+              <span className="text-slate-400 font-medium">Monitored 24/7 across multi-region AWS & Render infrastructure clusters.</span>
             </div>
           </div>
         </div>

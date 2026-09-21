@@ -24,10 +24,10 @@ export function Footer() {
     ],
     developer: [
       { name: "Developer Center", href: "/developer" },
-      { name: "REST API Specs", href: "/developer" },
+      { name: "REST API Specs", href: "/docs" },
       { name: "Webhooks Engine", href: "/automation" },
       { name: "Platform Security", href: "/security" },
-      { name: "Founder Story", href: "/about" },
+      { name: "Founder Story", href: "/founder-story" },
     ],
     legal: [
       { name: "Privacy Policy", href: "/privacy" },
