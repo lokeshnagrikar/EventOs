@@ -58,7 +58,8 @@ export default function SuperAdminLoginPage() {
         "DEVOPS_ENGINEER",
         "COMPLIANCE_AUDITOR",
       ];
-      if (storedToken && storedRole && PLATFORM_ROLES.includes(storedRole)) {
+      const normalizedStoredRole = (storedRole || "").replace(/^ROLE_/, "").toUpperCase();
+      if (storedToken && normalizedStoredRole && PLATFORM_ROLES.includes(normalizedStoredRole)) {
         window.location.href = "/superadmin";
       }
     }
@@ -94,7 +95,9 @@ export default function SuperAdminLoginPage() {
           "COMPLIANCE_AUDITOR",
         ];
 
-        if (!PLATFORM_ROLES.includes(role)) {
+        const normalizedRole = (role || "").replace(/^ROLE_/, "").toUpperCase();
+
+        if (!PLATFORM_ROLES.includes(normalizedRole)) {
           setErrorMessage("Access Denied: Only authorized platform administrators can access this console.");
           addToast("Access Denied: Insufficient platform permissions.", "error");
           setLoading(false);
@@ -106,10 +109,10 @@ export default function SuperAdminLoginPage() {
         const cookieFlags = `path=/; max-age=86400; SameSite=Lax${isProd ? "; Secure" : ""}`;
         document.cookie = `hasSession=true; ${cookieFlags}`;
         document.cookie = `user_name=${encodeURIComponent(firstName || "Admin")}; ${cookieFlags}`;
-        document.cookie = `user_role=${role}; ${cookieFlags}`;
+        document.cookie = `user_role=${normalizedRole}; ${cookieFlags}`;
         document.cookie = `accessToken=${accessToken}; ${cookieFlags}`;
         localStorage.setItem("user_name", firstName || "Admin");
-        localStorage.setItem("user_role", role);
+        localStorage.setItem("user_role", normalizedRole);
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("eventos_access_token", accessToken);
 

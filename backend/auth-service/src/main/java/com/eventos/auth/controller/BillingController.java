@@ -417,6 +417,131 @@ public class BillingController {
         return ResponseEntity.ok(response);
     }
 
+    // Super Admin Tickets API - GET
+    @GetMapping("/superadmin/tickets")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getSuperAdminTickets() {
+        List<SupportTicket> tickets = billingService.getSuperAdminTickets();
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", tickets);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Tickets API - POST
+    @PostMapping("/superadmin/tickets")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> createSupportTicket(@RequestBody Map<String, Object> body) {
+        SupportTicket ticket = billingService.createSupportTicket(body);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", ticket);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Tickets API - PATCH
+    @PatchMapping("/superadmin/tickets/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> updateSupportTicket(
+            @PathVariable UUID id,
+            @RequestBody Map<String, Object> body) {
+        SupportTicket updated = billingService.updateSupportTicket(id, body);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", updated);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Feature Flags API - GET
+    @GetMapping("/superadmin/feature-flags")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getFeatureFlags() {
+        List<FeatureFlag> flags = billingService.getFeatureFlags();
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", flags);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Feature Flags API - Toggle POST
+    @PostMapping("/superadmin/feature-flags/{flagKey}/toggle")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> toggleFeatureFlag(@PathVariable String flagKey) {
+        FeatureFlag flag = billingService.toggleFeatureFlag(flagKey);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", flag);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Feature Flags API - PATCH
+    @PatchMapping("/superadmin/feature-flags/{flagKey}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> updateFeatureFlag(
+            @PathVariable String flagKey,
+            @RequestBody Map<String, Object> body) {
+        FeatureFlag flag = billingService.updateFeatureFlag(flagKey, body);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", flag);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Subscriptions Ledger API - GET
+    @GetMapping("/superadmin/subscriptions")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getSuperAdminSubscriptions() {
+        List<Map<String, Object>> ledger = billingService.getSuperAdminSubscriptions();
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", ledger);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Subscription Refund API - POST
+    @PostMapping("/superadmin/subscriptions/{id}/refund")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> refundSubscription(@PathVariable UUID id) {
+        Map<String, Object> result = billingService.refundSubscription(id);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", result);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Coupons API - GET
+    @GetMapping("/superadmin/coupons")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getCoupons() {
+        List<PlatformCoupon> coupons = billingService.getCoupons();
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", coupons);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Coupons API - POST
+    @PostMapping("/superadmin/coupons")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> createCoupon(@RequestBody Map<String, Object> body) {
+        PlatformCoupon coupon = billingService.createCoupon(body);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", coupon);
+        return ResponseEntity.ok(response);
+    }
+
+    // Super Admin Force Logout API - POST
+    @PostMapping("/superadmin/users/{id}/force-logout")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> forceLogoutUser(@PathVariable UUID id) {
+        Map<String, Object> result = billingService.forceLogoutUser(id);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", result);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/subscription/checkout")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseEntity<?> createCheckoutSession(

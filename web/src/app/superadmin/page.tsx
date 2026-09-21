@@ -239,7 +239,8 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     if (mounted) {
       const storedRole = typeof window !== "undefined" ? localStorage.getItem("user_role") : null;
-      const effectiveRole = user?.role || storedRole;
+      const rawRole = user?.role || storedRole || "";
+      const effectiveRole = rawRole.replace(/^ROLE_/, "").toUpperCase();
 
       if (!effectiveRole || !PLATFORM_ROLES.includes(effectiveRole)) {
         addToast("Access Denied: Platform Superadmin console requires an authorized platform administrator role.", "error");
@@ -251,7 +252,8 @@ export default function SuperAdminDashboard() {
   // Fetch real superadmin data
   useEffect(() => {
     const storedRole = typeof window !== "undefined" ? localStorage.getItem("user_role") : null;
-    const effectiveRole = user?.role || storedRole;
+    const rawRole = user?.role || storedRole || "";
+    const effectiveRole = rawRole.replace(/^ROLE_/, "").toUpperCase();
     if (!mounted || !effectiveRole || !PLATFORM_ROLES.includes(effectiveRole)) return;
 
     const fetchSuperAdminData = async () => {
