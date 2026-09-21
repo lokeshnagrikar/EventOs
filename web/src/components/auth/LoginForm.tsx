@@ -835,7 +835,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           </button>
         </motion.div>
       ) : (
-        <motion.div variants={itemVariants} className="flex bg-[#141417] p-1 rounded-xl border border-zinc-800 text-xs font-medium">
+        <motion.div variants={itemVariants} className="flex bg-[#070B16] p-1 rounded-xl border border-white/10 text-xs font-medium">
           <button
             type="button"
             onClick={() => {
@@ -844,8 +844,8 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               setMagicLinkSent(false);
             }}
             className={cn(
-              "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
-              authMode === "password" ? "bg-zinc-800 text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
+              "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer font-semibold",
+              authMode === "password" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30" : "text-slate-400 hover:text-white"
             )}
           >
             <KeyRound size={13} />
@@ -858,11 +858,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               setError(null);
             }}
             className={cn(
-              "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer",
-              authMode === "magic-link" ? "bg-zinc-800 text-white font-semibold shadow-sm" : "text-zinc-400 hover:text-zinc-200"
+              "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer font-semibold",
+              authMode === "magic-link" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30" : "text-slate-400 hover:text-white"
             )}
           >
-            <Sparkles size={13} className="text-purple-400" />
+            <Sparkles size={13} className="text-purple-300" />
             <span>Magic Link</span>
           </button>
         </motion.div>
@@ -871,12 +871,12 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       {/* Form elements for Password and Magic Link modes */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
         {/* Email input */}
-        <motion.div variants={itemVariants} className="space-y-1">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="email">
+        <motion.div variants={itemVariants} className="space-y-1.5">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300" htmlFor="email">
             Email Address
           </label>
           <div className="relative">
-            <Mail className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+            <Mail className={`absolute left-3.5 top-3 h-4 w-4 transition-colors duration-250 ${focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-slate-400"
               }`} />
             <input
               id="email"
@@ -884,9 +884,9 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               placeholder="you@company.com"
               autoFocus
               autoComplete="email"
-              className={`w-full pl-9 pr-3 py-2.5 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${errors.email
-                  ? "border-rose-500/50"
-                  : "border-white/10 hover:border-white/20"
+              className={`w-full pl-10 pr-3.5 py-2.5 bg-[#101524] border rounded-xl text-xs placeholder:text-slate-500 text-white focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${errors.email
+                  ? "border-rose-500/60"
+                  : "border-white/10 hover:border-white/25"
                 }`}
               {...register("email")}
               onChange={(e) => handleEmailInputChange(e.target.value)}
@@ -1068,9 +1068,9 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
         ) : (
           <>
             {/* Password input */}
-            <motion.div variants={itemVariants} className="space-y-1">
+            <motion.div variants={itemVariants} className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="password">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300" htmlFor="password">
                   Password
                 </label>
                 <button
@@ -1081,22 +1081,22 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                     setForgotPasswordSuccess(null);
                     setForgotPasswordToken(null);
                   }}
-                  className="text-[10px] text-purple-400 hover:text-purple-300 hover:underline font-semibold focus-visible:outline-none cursor-pointer"
+                  className="text-xs text-purple-400 hover:text-purple-300 hover:underline font-bold focus-visible:outline-none cursor-pointer"
                 >
                   Forgot password?
                 </button>
               </div>
               <div className="relative">
-                <KeyRound className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+                <KeyRound className={`absolute left-3.5 top-3 h-4 w-4 transition-colors duration-250 ${focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-slate-400"
                   }`} />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className={`w-full pl-9 pr-9 py-2.5 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${errors.password
-                      ? "border-rose-500/50"
-                      : "border-white/10 hover:border-white/20"
+                  className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-xs placeholder:text-slate-500 text-white focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${errors.password
+                      ? "border-rose-500/60"
+                      : "border-white/10 hover:border-white/25"
                     }`}
                   {...register("password")}
                   onFocus={() => setFocusedField("password")}
@@ -1108,51 +1108,49 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-zinc-500 hover:text-white transition-colors"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
                 >
-                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
               {errors.password && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.password.message}</p>}
             </motion.div>
 
             {/* Remember me option */}
-            <motion.div variants={itemVariants} className="flex items-center space-x-2 py-0.5 select-none">
+            <motion.div variants={itemVariants} className="flex items-center space-x-2.5 py-0.5 select-none">
               <button
                 type="button"
                 role="checkbox"
                 aria-checked={rememberMeValue}
                 onClick={() => setValue("rememberMe", !rememberMeValue)}
-                className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${rememberMeValue
+                className={`h-4 w-4 rounded-md border flex items-center justify-center transition-all cursor-pointer ${rememberMeValue
                     ? "bg-purple-600 border-purple-500 text-white"
-                    : "bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] text-transparent"
+                    : "bg-[#101524] border-white/20 hover:border-white/40 text-transparent"
                   }`}
               >
                 {rememberMeValue && <Check size={10} className="stroke-[3]" />}
               </button>
-              <span className="text-[11px] text-zinc-400 font-medium cursor-pointer" onClick={() => setValue("rememberMe", !rememberMeValue)}>
+              <span className="text-xs text-slate-300 font-medium cursor-pointer" onClick={() => setValue("rememberMe", !rememberMeValue)}>
                 Remember me
               </span>
             </motion.div>
 
             {/* Action button */}
             <motion.div variants={itemVariants}>
-              <LiquidButton
+              <button
                 type="submit"
-                variant="brand"
                 disabled={loading}
-                className="w-full py-3 h-11 rounded-xl font-bold text-sm shadow-lg shadow-purple-500/30 flex justify-center items-center gap-1.5 cursor-pointer"
-                size="lg"
+                className="w-full py-3 h-11 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:via-indigo-500 hover:to-purple-500 shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:shadow-[0_6px_26px_rgba(139,92,246,0.55)] active:scale-[0.98] transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
                   <>
-                    <Loader2 size={13} className="animate-spin" />
+                    <Loader2 size={14} className="animate-spin" />
                     <span>Signing in...</span>
                   </>
                 ) : (
                   "Sign In"
                 )}
-              </LiquidButton>
+              </button>
             </motion.div>
           </>
         )}
@@ -1160,9 +1158,9 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
 
       {/* Social login separator */}
       <motion.div variants={itemVariants} className="relative flex py-1 items-center">
-        <div className="flex-grow border-t border-zinc-850"></div>
-        <span className="flex-shrink mx-3 text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Or continue with</span>
-        <div className="flex-grow border-t border-zinc-850"></div>
+        <div className="flex-grow border-t border-white/10"></div>
+        <span className="flex-shrink mx-3 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Or continue with</span>
+        <div className="flex-grow border-t border-white/10"></div>
       </motion.div>
 
       {/* Social buttons */}
@@ -1171,7 +1169,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           type="button"
           disabled={loading || googleAuthenticating}
           onClick={() => loginWithGoogle()}
-          className="relative flex items-center justify-center w-full h-11 px-3 bg-white/[0.05] hover:bg-white/[0.09] border border-white/15 backdrop-blur-md rounded-xl text-xs font-semibold text-white transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="relative flex items-center justify-center w-full h-11 px-3 bg-[#101524] hover:bg-[#171F34] border border-white/10 hover:border-white/25 rounded-xl text-xs font-bold text-slate-200 hover:text-white transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 shadow-sm"
         >
           <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
             <path
@@ -1196,19 +1194,19 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       </motion.div>
 
       {/* Footer sign up redirection */}
-      <motion.div variants={itemVariants} className="text-center pt-3 border-t border-zinc-850">
-        <p className="text-[11px] text-zinc-400">
+      <motion.div variants={itemVariants} className="text-center pt-3 border-t border-white/10">
+        <p className="text-xs text-slate-400">
           Don't have an account?{" "}
           {isModal ? (
             <button
               type="button"
               onClick={() => onSwitchMode?.("register")}
-              className="text-purple-400 hover:text-purple-300 hover:underline font-semibold transition-colors focus:outline-none"
+              className="text-purple-400 hover:text-purple-300 hover:underline font-bold transition-colors focus:outline-none cursor-pointer"
             >
               Create a workspace
             </button>
           ) : (
-            <a href="/register" className="text-purple-400 hover:text-purple-300 hover:underline font-semibold transition-colors">
+            <a href="/register" className="text-purple-400 hover:text-purple-300 hover:underline font-bold transition-colors">
               Create a workspace
             </a>
           )}

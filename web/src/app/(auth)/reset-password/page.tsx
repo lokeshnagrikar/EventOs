@@ -154,17 +154,17 @@ function ResetPasswordForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Token input */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-zinc-400" htmlFor="token">
+          <label className="text-xs font-semibold text-slate-300" htmlFor="token">
             Security Token
           </label>
           <div className="relative">
-            <ShieldCheck className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
+            <ShieldCheck className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
             <input
               id="token"
               type="text"
               placeholder="UUID token string"
-              className={`w-full pl-10 pr-4 py-2.5 bg-zinc-950/50 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
-                errors.token ? "border-rose-500/50" : "border-zinc-800 focus:border-[#8B5CF6]"
+              className={`w-full pl-10 pr-4 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
+                errors.token ? "border-rose-500/50" : "border-white/10 hover:border-white/25"
               }`}
               {...register("token")}
             />
@@ -174,24 +174,24 @@ function ResetPasswordForm() {
 
         {/* Password input */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-zinc-400" htmlFor="password">
+          <label className="text-xs font-semibold text-slate-300" htmlFor="password">
             New Password
           </label>
           <div className="relative">
-            <KeyRound className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
+            <KeyRound className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
             <input
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
-              className={`w-full pl-10 pr-10 py-2.5 bg-zinc-950/50 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
-                errors.password ? "border-rose-500/50" : "border-zinc-800 focus:border-[#8B5CF6]"
+              className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
+                errors.password ? "border-rose-500/50" : "border-white/10 hover:border-white/25"
               }`}
               {...register("password")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-zinc-500 hover:text-white transition-colors"
+              className="absolute right-3.5 top-3.5 text-slate-500 hover:text-white transition-colors"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -201,7 +201,7 @@ function ResetPasswordForm() {
           {passwordValue && (
             <div className="space-y-1 pt-1 animate-slide-in">
               <div className="flex justify-between items-center text-[9px] select-none">
-                <span className="text-zinc-500 font-bold uppercase tracking-wider">Password Strength</span>
+                <span className="text-slate-400 font-bold uppercase tracking-wider">Password Strength</span>
                 <span className={`font-black uppercase tracking-wider transition-colors duration-300 ${
                   strength.score === 1 ? "text-rose-400" :
                   strength.score === 2 ? "text-amber-400" :
@@ -210,7 +210,7 @@ function ResetPasswordForm() {
                   {strength.label}
                 </span>
               </div>
-              <div className="w-full bg-white/[0.04] border border-white/[0.08] h-1 rounded-full relative overflow-hidden">
+              <div className="w-full bg-[#101524] border border-white/10 h-1.5 rounded-full relative overflow-hidden">
                 <div
                   className={`absolute top-0 left-0 h-full transition-all duration-350 ease-out shadow-[0_0_8px_rgba(139,92,246,0.3)] ${strength.colorClass}`}
                   style={{ width: strength.barWidth }}
@@ -222,24 +222,24 @@ function ResetPasswordForm() {
 
         {/* Confirm password input */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-zinc-400" htmlFor="confirmPassword">
+          <label className="text-xs font-semibold text-slate-300" htmlFor="confirmPassword">
             Confirm Password
           </label>
           <div className="relative">
-            <KeyRound className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
+            <KeyRound className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
             <input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="••••••••"
-              className={`w-full pl-10 pr-10 py-2.5 bg-zinc-950/50 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-650/30 transition-all ${
-                errors.confirmPassword ? "border-rose-500/50" : "border-zinc-800 focus:border-[#8B5CF6]"
+              className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
+                errors.confirmPassword ? "border-rose-500/50" : "border-white/10 hover:border-white/25"
               }`}
               {...register("confirmPassword")}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-3 text-zinc-500 hover:text-white transition-colors"
+              className="absolute right-3.5 top-3.5 text-slate-500 hover:text-white transition-colors"
             >
               {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>

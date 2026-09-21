@@ -542,7 +542,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   type="button"
                   disabled={loading || googleAuthenticating}
                   onClick={() => loginWithGoogle()}
-                  className="relative flex items-center justify-center w-full h-11 px-3 bg-[#141417] hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-medium text-zinc-200 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative flex items-center justify-center w-full h-11 px-3 bg-[#101524] hover:bg-[#151C30] border border-white/10 hover:border-white/20 rounded-xl text-xs font-medium text-white transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                 >
                   <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
                     <path
@@ -568,14 +568,14 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
 
               {/* Separator */}
               <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-zinc-850"></div>
-                <span className="flex-shrink mx-3 text-[8px] text-zinc-550 font-bold uppercase tracking-wider">Or register with email</span>
-                <div className="flex-grow border-t border-zinc-850"></div>
+                <div className="flex-grow border-t border-white/10"></div>
+                <span className="flex-shrink mx-3 text-[9px] text-slate-400 font-bold uppercase tracking-wider">Or register with email</span>
+                <div className="flex-grow border-t border-white/10"></div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="firstName">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300" htmlFor="firstName">
                     First Name
                   </label>
                   <input
@@ -584,10 +584,10 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     placeholder="John"
                     autoFocus
                     autoComplete="given-name"
-                    className={`w-full px-3 py-2 bg-[#141417] border rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
+                    className={`w-full px-3.5 py-2.5 bg-[#101524] border rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
                       errors.firstName 
-                        ? "border-rose-500/50" 
-                        : "border-zinc-800"
+                        ? "border-rose-500/60" 
+                        : "border-white/10 hover:border-white/25"
                     }`}
                     {...register("firstName")}
                     onFocus={() => setFocusedField("firstName")}
@@ -598,8 +598,8 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   />
                   {errors.firstName && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.firstName.message}</p>}
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="lastName">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300" htmlFor="lastName">
                     Last Name
                   </label>
                   <input
@@ -607,7 +607,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                     type="text"
                     placeholder="Doe"
                     autoComplete="family-name"
-                    className="w-full px-3 py-2 bg-[#141417] border border-zinc-800 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all"
+                    className="w-full px-3.5 py-2.5 bg-[#101524] border border-white/10 hover:border-white/25 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all"
                     {...register("lastName")}
                     onFocus={() => setFocusedField("lastName")}
                     onBlur={(e) => {
@@ -618,23 +618,23 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="email">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300" htmlFor="email">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
-                    focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+                  <Mail className={`absolute left-3.5 top-3 h-3.5 w-3.5 transition-colors duration-250 ${
+                    focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-slate-500"
                   }`} />
                   <input
                     id="email"
                     type="email"
                     placeholder="you@company.com"
                     autoComplete="email"
-                    className={`w-full pl-9 pr-3 py-2 bg-[#141417] border rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
+                    className={`w-full pl-10 pr-3.5 py-2.5 bg-[#101524] border rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
                       errors.email 
                         ? "border-rose-500/50" 
-                        : "border-zinc-800"
+                        : "border-white/10 hover:border-white/25"
                     }`}
                     {...register("email")}
                     onChange={(e) => handleEmailInputChange(e.target.value)}
@@ -650,14 +650,14 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                 {/* Email Domain Auto-Suggestion */}
                 {domainSuggestion && (
                   <div className="pt-1 flex items-center gap-1.5 text-[10px]">
-                    <span className="text-zinc-500">Did you mean:</span>
+                    <span className="text-slate-400">Did you mean:</span>
                     <button
                       type="button"
                       onClick={() => {
                         setValue("email", domainSuggestion);
                         setDomainSuggestion(null);
                       }}
-                      className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-300 font-bold hover:bg-purple-500/20 transition-all cursor-pointer"
+                      className="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-300 font-bold hover:bg-purple-500/30 transition-all cursor-pointer"
                     >
                       {domainSuggestion}
                     </button>
@@ -666,30 +666,30 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
 
                 {/* Business Email Nudge */}
                 {isPersonalEmail(watch("email")) && (
-                  <div className="mt-1 p-2 bg-purple-950/20 border border-purple-500/20 rounded-xl flex items-center gap-2 text-[10px] text-purple-300">
+                  <div className="mt-1 p-2.5 bg-purple-950/40 border border-purple-500/30 rounded-xl flex items-center gap-2 text-[10px] text-purple-300">
                     <Briefcase size={12} className="shrink-0 text-purple-400" />
                     <span><strong>Pro Tip:</strong> Work emails get priority team collaboration tools!</span>
                   </div>
                 )}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="phone">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300" htmlFor="phone">
                   Phone Number
                 </label>
                 <div className="relative">
-                  <Phone className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
-                    focusedField === "phone" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+                  <Phone className={`absolute left-3.5 top-3 h-3.5 w-3.5 transition-colors duration-250 ${
+                    focusedField === "phone" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-slate-500"
                   }`} />
                   <input
                     id="phone"
                     type="text"
                     placeholder="+91 XXXXX XXXXX"
                     autoComplete="tel"
-                    className={`w-full pl-9 pr-3 py-2 bg-[#141417] border rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all ${
+                    className={`w-full pl-10 pr-3.5 py-2.5 bg-[#101524] border rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
                       errors.phone 
                         ? "border-rose-500/50" 
-                        : "border-zinc-800"
+                        : "border-white/10 hover:border-white/25"
                     }`}
                     {...register("phone", {
                       onChange: (e) => {
@@ -715,7 +715,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
               <Button
                 type="button"
                 onClick={nextStep}
-                className="w-full h-11 bg-white hover:bg-zinc-200 text-black font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-[0.99]"
+                className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-[0_4px_20px_rgba(139,92,246,0.35)] transition-all flex items-center justify-center gap-1.5 active:scale-[0.99] cursor-pointer"
               >
                 <span>Continue</span>
                 <ArrowRight size={13} />
@@ -731,27 +731,27 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
               variants={slideVariants}
               className="space-y-2.5 sm:space-y-3"
             >
-              <div className="flex items-center gap-2 pb-1 border-b border-zinc-850">
+              <div className="flex items-center gap-2 pb-1 border-b border-white/10">
                 <Building2 size={13} className="text-purple-400" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Workspace Settings</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Workspace Settings</span>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="companyName">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300" htmlFor="companyName">
                   Company Name
                 </label>
                 <div className="relative">
-                  <Building2 className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
-                    focusedField === "companyName" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+                  <Building2 className={`absolute left-3.5 top-3 h-3.5 w-3.5 transition-colors duration-250 ${
+                    focusedField === "companyName" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-slate-500"
                   }`} />
                   <input
                     id="companyName"
                     type="text"
                     placeholder="Acme Events Ltd."
-                    className={`w-full pl-9 pr-3 py-2 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
+                    className={`w-full pl-10 pr-3.5 py-2.5 bg-[#101524] border rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
                       errors.companyName 
                         ? "border-rose-500/50" 
-                        : "border-white/10 hover:border-white/20"
+                        : "border-white/10 hover:border-white/25"
                     }`}
                     {...register("companyName")}
                     onFocus={() => setFocusedField("companyName")}
@@ -764,23 +764,23 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                 {errors.companyName && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.companyName.message}</p>}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="password">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300" htmlFor="password">
                   Workspace Password
                 </label>
                 <div className="relative">
-                  <KeyRound className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
-                    focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+                  <KeyRound className={`absolute left-3.5 top-3 h-3.5 w-3.5 transition-colors duration-250 ${
+                    focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-slate-500"
                   }`} />
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="new-password"
-                    className={`w-full pl-9 pr-10 py-2 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
+                    className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
                       errors.password 
                         ? "border-rose-500/50" 
-                        : "border-white/10 hover:border-white/20"
+                        : "border-white/10 hover:border-white/25"
                     }`}
                     {...register("password")}
                     onFocus={() => setFocusedField("password")}
@@ -792,7 +792,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2 text-zinc-500 hover:text-white transition-colors"
+                    className="absolute right-3.5 top-3 text-slate-500 hover:text-white transition-colors"
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -802,7 +802,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                 {passwordValue && (
                   <div className="space-y-1 pt-0.5 animate-slide-in">
                     <div className="flex justify-between items-center text-[9px] select-none">
-                      <span className="text-zinc-500 font-bold uppercase tracking-wider">Password Strength</span>
+                      <span className="text-slate-400 font-bold uppercase tracking-wider">Password Strength</span>
                       <span className={`font-black uppercase tracking-wider transition-colors duration-300 ${
                         strength.score === 1 ? "text-rose-400" :
                         strength.score === 2 ? "text-amber-400" :
@@ -811,7 +811,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                         {strength.label}
                       </span>
                     </div>
-                    <div className="w-full bg-white/[0.04] border border-white/[0.08] h-1 rounded-full relative overflow-hidden">
+                    <div className="w-full bg-[#101524] border border-white/10 h-1.5 rounded-full relative overflow-hidden">
                       <div
                         className={`absolute top-0 left-0 h-full transition-all duration-350 ease-out shadow-[0_0_8px_rgba(139,92,246,0.3)] ${strength.colorClass}`}
                         style={{ width: strength.barWidth }}
@@ -821,23 +821,23 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                 )}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500" htmlFor="confirmPassword">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300" htmlFor="confirmPassword">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <KeyRound className={`absolute left-3 top-2.5 h-3.5 w-3.5 transition-colors duration-250 ${
-                    focusedField === "confirmPassword" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-zinc-500"
+                  <KeyRound className={`absolute left-3.5 top-3 h-3.5 w-3.5 transition-colors duration-250 ${
+                    focusedField === "confirmPassword" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-slate-500"
                   }`} />
                   <input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="new-password"
-                    className={`w-full pl-9 pr-10 py-2 bg-white/[0.04] border backdrop-blur-md rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/50 transition-all ${
+                    className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
                       errors.confirmPassword 
                         ? "border-rose-500/50" 
-                        : "border-white/10 hover:border-white/20"
+                        : "border-white/10 hover:border-white/25"
                     }`}
                     {...register("confirmPassword")}
                     onFocus={() => setFocusedField("confirmPassword")}
@@ -849,7 +849,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-2 text-zinc-500 hover:text-white transition-colors"
+                    className="absolute right-3.5 top-3 text-slate-500 hover:text-white transition-colors"
                   >
                     {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -861,17 +861,15 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                 <button
                   type="button"
                   onClick={prevStep}
-                  className="col-span-2 h-11 border border-white/15 bg-white/[0.05] hover:bg-white/[0.09] text-white font-medium text-xs rounded-xl transition-all flex items-center justify-center gap-1 active:scale-[0.99] cursor-pointer"
+                  className="col-span-2 h-11 border border-white/10 bg-[#101524] hover:bg-[#151C30] hover:border-white/20 text-slate-200 font-medium text-xs rounded-xl transition-all flex items-center justify-center gap-1 active:scale-[0.99] cursor-pointer"
                 >
                   <ArrowLeft size={13} />
                   Back
                 </button>
-                <LiquidButton
+                <button
                   type="submit"
-                  variant="brand"
                   disabled={loading}
-                  className="col-span-3 h-11 rounded-xl font-bold text-xs shadow-lg shadow-purple-500/30 flex justify-center items-center gap-1.5 cursor-pointer"
-                  size="default"
+                  className="col-span-3 h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-[0_4px_20px_rgba(139,92,246,0.35)] flex justify-center items-center gap-1.5 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-60"
                 >
                   {loading ? (
                     <>
@@ -881,7 +879,7 @@ export function RegisterForm({ isModal = false, onSwitchMode, prefilledEmail }: 
                   ) : (
                     "Build Workspace"
                   )}
-                </LiquidButton>
+                </button>
               </div>
             </motion.div>
           )}

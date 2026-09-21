@@ -7,7 +7,7 @@ import { AuroraBackground } from "@/components/ui/aurora-background";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuroraBackground className="min-h-screen w-full bg-[#FAF9F6]/95 dark:bg-[#07090F]/80 text-zinc-100 flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-hidden selection:bg-purple-600/35 selection:text-white">
+    <AuroraBackground className="min-h-screen w-full bg-[#060813] text-zinc-100 flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-hidden selection:bg-purple-600/35 selection:text-white">
       {/* Liquid Glass Orb 1 */}
       <div className="absolute top-[10%] left-[15%] w-[450px] h-[450px] bg-gradient-to-tr from-[#7C3AED]/40 via-[#EC4899]/30 to-cyan-500/25 blur-[100px] rounded-full pointer-events-none animate-pulse duration-[8000ms]" />
       {/* Liquid Glass Orb 2 */}
@@ -31,7 +31,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       {/* Centered Single Card Container */}
       <div className="w-full max-w-[440px] z-10 relative my-auto animate-in fade-in zoom-in-95 duration-300">
-        <SpotlightCard className="bg-[#0e0e12]/90 border border-white/10 rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.7)] backdrop-blur-2xl relative overflow-hidden transition-all duration-300">
+        <SpotlightCard className="bg-[#0B0F19]/95 border border-purple-500/25 rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.85),0_0_40px_rgba(139,92,246,0.15)] backdrop-blur-2xl relative overflow-hidden transition-all duration-300">
           {/* Top Accent Gradient Line */}
           <div className="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] z-20" />
           <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-20" />
