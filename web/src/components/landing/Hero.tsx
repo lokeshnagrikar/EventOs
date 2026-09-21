@@ -78,11 +78,7 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
       onMouseLeave={handleMouseLeave}
       className="min-h-[92vh] flex flex-col items-center justify-center pt-28 sm:pt-32 pb-16 relative overflow-hidden bg-[#FAF9F6] text-slate-900"
     >
-      {/* Background Soft Glows */}
-      <div className="pointer-events-none absolute top-12 left-1/2 -translate-x-1/2 w-[800px] h-[450px] bg-purple-200/30 blur-[140px] rounded-full z-0" />
-      <div className="pointer-events-none absolute top-40 right-10 w-[400px] h-[300px] bg-indigo-100/30 blur-[100px] rounded-full z-0" />
-
-      {/* Subtle Mesh Gradient */}
+      {/* Ambient Breathing Aurora Background (Left & Right gradients with clean white center) */}
       <AnimatedMeshGradient />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 w-full relative z-10 flex flex-col items-center text-center">

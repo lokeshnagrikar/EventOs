@@ -3,127 +3,166 @@
 import React from "react";
 
 /**
- * AnimatedMeshGradient
+ * AnimatedMeshGradient - Peripheral Breathing Aurora
  * 
- * A premium animated background with soft morphing gradient blobs.
- * Inspired by Linear, Vercel, and Stripe hero backgrounds.
- * Pure CSS animations — no JavaScript runtime cost.
+ * Features:
+ * - Pure, clean, crisp central canvas (#FAF9F6) for 100% text legibility.
+ * - Left Flank: EventOS Royal Purple & Deep Indigo mist (breathes slowly every 11s).
+ * - Right Flank: Luminous Lavender & Soft Violet aura (breathes on an offset 13s cycle).
+ * - Organic breathing physics with subtle scale, opacity pulse, and vertical drift.
+ * - Micro-noise overlay to eliminate digital color banding.
  */
 export function AnimatedMeshGradient() {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-      {/* Base subtle tint */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-50/80 via-white to-white" />
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none" aria-hidden="true">
+      {/* Base clean background fill */}
+      <div className="absolute inset-0 bg-[#FAF9F6]" />
 
-      {/* Blob 1: Purple — top center, slow drift right */}
+      {/* LEFT FLANK: Royal Purple & Deep Indigo Breathing Aurora */}
       <div
-        className="absolute w-[900px] h-[900px] rounded-full opacity-60 blur-[120px]"
+        className="absolute w-[600px] sm:w-[750px] h-[750px] rounded-full blur-[130px] opacity-75"
         style={{
-          background: "radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, rgba(139, 92, 246, 0) 70%)",
-          top: "-20%",
-          left: "20%",
-          animation: "meshBlob1 18s ease-in-out infinite alternate",
+          background: `
+            radial-gradient(circle at 35% 50%, 
+              rgba(124, 58, 237, 0.22) 0%, 
+              rgba(99, 102, 241, 0.12) 45%, 
+              rgba(147, 51, 234, 0.04) 65%, 
+              transparent 75%
+            )
+          `,
+          top: "8%",
+          left: "-18%",
+          animation: "auroraBreatheLeft 11s ease-in-out infinite alternate",
+          willChange: "transform, opacity",
         }}
       />
 
-      {/* Blob 2: Indigo — middle left, slow drift down */}
+      {/* Secondary Left Accent: Deep Violet Ambient Flare */}
       <div
-        className="absolute w-[700px] h-[700px] rounded-full opacity-50 blur-[110px]"
+        className="absolute w-[450px] h-[500px] rounded-full blur-[110px] opacity-60"
         style={{
-          background: "radial-gradient(circle, rgba(99, 102, 241, 0.45) 0%, rgba(99, 102, 241, 0) 70%)",
-          top: "10%",
-          left: "-5%",
-          animation: "meshBlob2 22s ease-in-out infinite alternate",
+          background: "radial-gradient(circle, rgba(147, 51, 234, 0.18) 0%, rgba(99, 102, 241, 0) 70%)",
+          top: "35%",
+          left: "-10%",
+          animation: "auroraBreatheLeftAlt 14s ease-in-out infinite alternate",
+          willChange: "transform, opacity",
         }}
       />
 
-      {/* Blob 3: Cyan — right side, slow drift left */}
+      {/* RIGHT FLANK: Soft Lavender & Luminous Violet Breathing Aurora */}
       <div
-        className="absolute w-[650px] h-[650px] rounded-full opacity-45 blur-[100px]"
+        className="absolute w-[600px] sm:w-[750px] h-[750px] rounded-full blur-[135px] opacity-75"
         style={{
-          background: "radial-gradient(circle, rgba(34, 211, 238, 0.35) 0%, rgba(34, 211, 238, 0) 70%)",
-          top: "25%",
-          right: "-5%",
-          animation: "meshBlob3 20s ease-in-out infinite alternate",
+          background: `
+            radial-gradient(circle at 65% 50%, 
+              rgba(168, 85, 247, 0.22) 0%, 
+              rgba(192, 132, 252, 0.12) 45%, 
+              rgba(236, 72, 153, 0.04) 65%, 
+              transparent 75%
+            )
+          `,
+          top: "12%",
+          right: "-18%",
+          animation: "auroraBreatheRight 13s ease-in-out infinite alternate",
+          willChange: "transform, opacity",
         }}
       />
 
-      {/* Blob 4: Pink/Magenta — bottom center, slow drift up */}
+      {/* Secondary Right Accent: Warm Lilac Glow */}
       <div
-        className="absolute w-[800px] h-[800px] rounded-full opacity-40 blur-[130px]"
+        className="absolute w-[450px] h-[500px] rounded-full blur-[110px] opacity-60"
         style={{
-          background: "radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, rgba(236, 72, 153, 0) 70%)",
-          bottom: "-10%",
-          left: "30%",
-          animation: "meshBlob4 25s ease-in-out infinite alternate",
+          background: "radial-gradient(circle, rgba(192, 132, 252, 0.18) 0%, rgba(168, 85, 247, 0) 70%)",
+          top: "40%",
+          right: "-10%",
+          animation: "auroraBreatheRightAlt 16s ease-in-out infinite alternate",
+          willChange: "transform, opacity",
         }}
       />
 
-      {/* Fine grain noise overlay for texture */}
+      {/* CENTER SPOTLIGHT SHIELD: Guarantees 100% Crisp, Pure Center Legibility */}
       <div
-        className="absolute inset-0 opacity-[0.035]"
+        className="absolute inset-0"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          background: `
+            radial-gradient(ellipse 70% 65% at 50% 40%, 
+              rgba(250, 249, 246, 0.96) 0%, 
+              rgba(250, 249, 246, 0.75) 45%, 
+              rgba(250, 249, 246, 0.2) 75%, 
+              transparent 100%
+            )
+          `,
+        }}
+      />
+
+      {/* Micro-texture noise overlay for smooth, band-free gradients */}
+      <div
+        className="absolute inset-0 opacity-[0.022]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           backgroundSize: "128px 128px",
         }}
       />
 
-      {/* Keyframe animations */}
+      {/* Breathing Keyframes */}
       <style jsx>{`
-        @keyframes meshBlob1 {
+        @keyframes auroraBreatheLeft {
           0% {
-            transform: translate(0, 0) scale(1);
+            transform: translate3d(0, 0, 0) scale(1);
+            opacity: 0.65;
           }
-          33% {
-            transform: translate(80px, 40px) scale(1.1);
-          }
-          66% {
-            transform: translate(-30px, 80px) scale(0.95);
+          50% {
+            transform: translate3d(25px, -18px, 0) scale(1.06);
+            opacity: 0.85;
           }
           100% {
-            transform: translate(50px, -20px) scale(1.05);
+            transform: translate3d(-15px, 22px, 0) scale(0.96);
+            opacity: 0.60;
           }
         }
-        @keyframes meshBlob2 {
+
+        @keyframes auroraBreatheLeftAlt {
           0% {
-            transform: translate(0, 0) scale(1);
+            transform: translate3d(0, 0, 0) scale(0.95);
+            opacity: 0.5;
           }
-          33% {
-            transform: translate(60px, 70px) scale(1.08);
-          }
-          66% {
-            transform: translate(-40px, 30px) scale(0.92);
+          50% {
+            transform: translate3d(15px, 25px, 0) scale(1.05);
+            opacity: 0.7;
           }
           100% {
-            transform: translate(20px, 90px) scale(1.04);
+            transform: translate3d(-20px, -15px, 0) scale(1.0);
+            opacity: 0.55;
           }
         }
-        @keyframes meshBlob3 {
+
+        @keyframes auroraBreatheRight {
           0% {
-            transform: translate(0, 0) scale(1);
+            transform: translate3d(0, 0, 0) scale(1);
+            opacity: 0.7;
           }
-          33% {
-            transform: translate(-70px, 50px) scale(1.12);
-          }
-          66% {
-            transform: translate(40px, -30px) scale(0.9);
+          50% {
+            transform: translate3d(-28px, 20px, 0) scale(1.08);
+            opacity: 0.9;
           }
           100% {
-            transform: translate(-50px, 70px) scale(1.06);
+            transform: translate3d(18px, -16px, 0) scale(0.95);
+            opacity: 0.62;
           }
         }
-        @keyframes meshBlob4 {
+
+        @keyframes auroraBreatheRightAlt {
           0% {
-            transform: translate(0, 0) scale(1);
+            transform: translate3d(0, 0, 0) scale(1.02);
+            opacity: 0.55;
           }
-          33% {
-            transform: translate(50px, -60px) scale(1.1);
-          }
-          66% {
-            transform: translate(-60px, -30px) scale(0.95);
+          50% {
+            transform: translate3d(-18px, -22px, 0) scale(0.94);
+            opacity: 0.72;
           }
           100% {
-            transform: translate(30px, -80px) scale(1.03);
+            transform: translate3d(22px, 15px, 0) scale(1.06);
+            opacity: 0.5;
           }
         }
       `}</style>
