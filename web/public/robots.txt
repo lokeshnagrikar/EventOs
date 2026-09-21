@@ -5,4 +5,4 @@ Disallow: /settings
 Disallow: /dashboard
 Disallow: /api/
 
-Sitemap: https://eventosapp.in/sitemap.xml
+Sitemap: https://www.eventosapp.in/sitemap.xml

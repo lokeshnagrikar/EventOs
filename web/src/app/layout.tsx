@@ -48,9 +48,9 @@ export const metadata: Metadata = {
     "client portal for event planners"
   ],
   authors: [{ name: "EventOS Team" }],
-  metadataBase: new URL("https://eventosapp.in"),
+  metadataBase: new URL("https://www.eventosapp.in"),
   alternates: {
-    canonical: "https://eventosapp.in",
+    canonical: "https://www.eventosapp.in",
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "EventOS | Event Management & Wedding Planner Software for Agencies",
     description: "Centralize leads, proposals, milestone payments, event timelines, and client portals in one premium workspace designed for wedding planners and event agencies in India.",
-    url: "https://eventosapp.in",
+    url: "https://www.eventosapp.in",
     siteName: "EventOS",
     locale: "en_IN",
     type: "website",
@@ -114,7 +114,7 @@ export default async function RootLayout({
     "@graph": [
       {
         "@type": "SoftwareApplication",
-        "@id": "https://eventosapp.in/#software",
+        "@id": "https://www.eventosapp.in/#software",
         "name": "EventOS",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web, iOS, Android (PWA)",
@@ -129,10 +129,10 @@ export default async function RootLayout({
       },
       {
         "@type": "Organization",
-        "@id": "https://eventosapp.in/#organization",
+        "@id": "https://www.eventosapp.in/#organization",
         "name": "EventOS",
-        "url": "https://eventosapp.in",
-        "logo": "https://eventosapp.in/logo/logo.png",
+        "url": "https://www.eventosapp.in",
+        "logo": "https://www.eventosapp.in/logo/logo.png",
         "founder": {
           "@type": "Person",
           "name": "Lokesh Nagrikar"
@@ -143,7 +143,7 @@ export default async function RootLayout({
       },
       {
         "@type": "FAQPage",
-        "@id": "https://eventosapp.in/#faq",
+        "@id": "https://www.eventosapp.in/#faq",
         "mainEntity": [
           {
             "@type": "Question",
