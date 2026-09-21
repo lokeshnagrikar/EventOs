@@ -49,6 +49,43 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [userName, setUserName] = useState("Client");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { user, isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Strict client-side portal access check: Only authenticated CLIENT users
+  useEffect(() => {
+    if (mounted) {
+      const token = typeof window !== "undefined" ? (sessionStorage.getItem("accessToken") || localStorage.getItem("eventos_access_token")) : null;
+      const storedRole = typeof window !== "undefined" ? localStorage.getItem("user_role") : null;
+      const activeRole = (user?.role || storedRole || "").replace(/^ROLE_/, "").toUpperCase();
+
+      if (!token && !isAuthenticated) {
+        router.replace(`/?login=true&redirect=${encodeURIComponent(pathname)}`);
+        return;
+      }
+
+      const PLATFORM_ROLES = [
+        "SUPER_ADMIN", "PLATFORM_SUPER_ADMIN", "SUPERADMIN", "PLATFORM_ADMIN",
+        "OPERATIONS_LEAD", "OPERATIONS", "OPERATION", "OPERATIONS_MANAGER", "OPS",
+        "SUPPORT_LEAD", "SUPPORT_AGENT", "SUPPORT", "SUPPORT_ADMIN", "TECH_SUPPORT", "CUSTOMER_SUPPORT",
+        "FINANCE_OFFICER", "FINANCE_ADMIN", "FINANCE",
+        "DEVOPS_ENGINEER", "DEVOPS", "DEVELOPER",
+        "COMPLIANCE_AUDITOR", "AUDITOR", "COMPLIANCE"
+      ];
+
+      if (activeRole && activeRole !== "CLIENT") {
+        if (PLATFORM_ROLES.includes(activeRole)) {
+          router.replace("/superadmin");
+        } else {
+          router.replace("/dashboard");
+        }
+      }
+    }
+  }, [mounted, isAuthenticated, user, pathname, router]);
 
   // Global Floating Drawers
   const [showSearchModal, setShowSearchModal] = useState(false);

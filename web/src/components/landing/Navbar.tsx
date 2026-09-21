@@ -4,11 +4,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { Menu, X, ArrowRight, LogIn, Calendar, ChevronRight } from "lucide-react";
+import { Menu, X, ArrowRight, LogIn, Calendar, ChevronRight, LayoutDashboard, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WorkspaceSelectorPill } from "./WorkspaceSelectorPill";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
+import { useAuthStore } from "@/store/authStore";
 import { EventOsLogo } from "@/components/ui/EventOsLogo";
 
 interface NavbarProps {
@@ -18,6 +18,8 @@ interface NavbarProps {
 export function Navbar({ activeSection }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  const { isAuthenticated, user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -25,6 +27,10 @@ export function Navbar({ activeSection }: NavbarProps) {
   const [mousePos, setMousePos] = useState({ x: -999, y: -999 });
   const [isHovered, setIsHovered] = useState(false);
   const openModal = useAuthModalStore((state) => state.openModal);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = capsuleRef.current?.getBoundingClientRect();
@@ -188,27 +194,59 @@ export function Navbar({ activeSection }: NavbarProps) {
               })}
             </nav>
 
-            {/* Desktop Actions: Workspace Selector, Login, and Strong "Book a Demo" CTA */}
+            {/* Desktop Actions: Auth-Aware CTA buttons */}
             <div className="hidden md:flex items-center gap-2.5 shrink-0 relative z-10">
-              <WorkspaceSelectorPill />
+              {mounted && isAuthenticated && user ? (
+                <>
+                  <button
+                    onClick={() => {
+                      const PLATFORM_ROLES = [
+                        "SUPER_ADMIN", "PLATFORM_SUPER_ADMIN", "SUPERADMIN", "PLATFORM_ADMIN",
+                        "OPERATIONS_LEAD", "OPERATIONS", "OPERATION", "OPERATIONS_MANAGER", "OPS",
+                        "SUPPORT_LEAD", "SUPPORT_AGENT", "SUPPORT", "SUPPORT_ADMIN", "TECH_SUPPORT", "CUSTOMER_SUPPORT",
+                        "FINANCE_OFFICER", "FINANCE_ADMIN", "FINANCE",
+                        "DEVOPS_ENGINEER", "DEVOPS", "DEVELOPER",
+                        "COMPLIANCE_AUDITOR", "AUDITOR", "COMPLIANCE"
+                      ];
+                      const normRole = (user.role || "").replace(/^ROLE_/, "").toUpperCase();
+                      const dest = PLATFORM_ROLES.includes(normRole) ? "/superadmin" : normRole === "CLIENT" ? "/portal" : "/dashboard";
+                      router.push(dest);
+                    }}
+                    className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:via-indigo-500 hover:to-purple-500 shadow-[0_4px_16px_rgba(147,51,234,0.35)] hover:shadow-[0_6px_22px_rgba(147,51,234,0.5)] active:scale-[0.97] transition-all duration-200 cursor-pointer overflow-hidden group"
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    <span>Dashboard</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
 
-              <button
-                onClick={handleSignIn}
-                className="text-xs sm:text-[13px] font-semibold tracking-wide text-slate-300 hover:text-white px-3 py-1.5 rounded-full transition-colors cursor-pointer"
-              >
-                Login
-              </button>
+                  <button
+                    onClick={() => useAuthModalStore.getState().openLogoutModal()}
+                    className="flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold tracking-wide text-slate-400 hover:text-rose-400 px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleSignIn}
+                    className="text-xs sm:text-[13px] font-semibold tracking-wide text-slate-300 hover:text-white px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+                  >
+                    Login
+                  </button>
 
-              {/* Strongest Navbar CTA */}
-              <button
-                onClick={handleBookDemo}
-                className="relative inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-extrabold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:via-indigo-500 hover:to-purple-500 shadow-[0_4px_16px_rgba(147,51,234,0.35)] hover:shadow-[0_6px_22px_rgba(147,51,234,0.5)] active:scale-[0.97] transition-all duration-200 cursor-pointer overflow-hidden group"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full duration-700 transition-transform ease-in-out" />
-                <Calendar className="w-3.5 h-3.5 text-purple-200" />
-                <span className="relative z-10 tracking-tight">Book a Demo</span>
-                <ArrowRight className="w-3.5 h-3.5 text-purple-200 group-hover:translate-x-0.5 transition-transform" />
-              </button>
+                  <button
+                    onClick={handleBookDemo}
+                    className="relative inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-extrabold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:via-indigo-500 hover:to-purple-500 shadow-[0_4px_16px_rgba(147,51,234,0.35)] hover:shadow-[0_6px_22px_rgba(147,51,234,0.5)] active:scale-[0.97] transition-all duration-200 cursor-pointer overflow-hidden group"
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full duration-700 transition-transform ease-in-out" />
+                    <Calendar className="w-3.5 h-3.5 text-purple-200" />
+                    <span className="relative z-10 tracking-tight">Book a Demo</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-purple-200 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Toggle Button */}
@@ -246,11 +284,6 @@ export function Navbar({ activeSection }: NavbarProps) {
                 className="w-full md:hidden pointer-events-auto overflow-hidden rounded-3xl border border-purple-500/30 bg-[#0B0F19]/95 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(147,51,234,0.15)] flex flex-col relative max-h-[82vh]"
               >
                 <div className="p-4 space-y-3 overflow-y-auto max-h-[82vh]">
-                  {/* Workspace Selector */}
-                  <div className="pb-1">
-                    <WorkspaceSelectorPill />
-                  </div>
-
                   {/* Nav Links */}
                   <nav className="flex flex-col gap-1" aria-label="Mobile Navigation">
                     {navLinks.map((link) => (
@@ -273,24 +306,66 @@ export function Navbar({ activeSection }: NavbarProps) {
 
                   {/* CTAs */}
                   <div className="pt-2 border-t border-white/10 space-y-2">
-                    <button
-                      type="button"
-                      onClick={handleSignIn}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-white/15 bg-white/5 text-xs font-bold text-slate-200 hover:text-white transition-all cursor-pointer"
-                    >
-                      <LogIn className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Login to Workspace</span>
-                    </button>
+                    {mounted && isAuthenticated && user ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsOpen(false);
+                            document.body.style.overflow = "";
+                            const PLATFORM_ROLES = [
+                              "SUPER_ADMIN", "PLATFORM_SUPER_ADMIN", "SUPERADMIN", "PLATFORM_ADMIN",
+                              "OPERATIONS_LEAD", "OPERATIONS", "OPERATION", "OPERATIONS_MANAGER", "OPS",
+                              "SUPPORT_LEAD", "SUPPORT_AGENT", "SUPPORT", "SUPPORT_ADMIN", "TECH_SUPPORT", "CUSTOMER_SUPPORT",
+                              "FINANCE_OFFICER", "FINANCE_ADMIN", "FINANCE",
+                              "DEVOPS_ENGINEER", "DEVOPS", "DEVELOPER",
+                              "COMPLIANCE_AUDITOR", "AUDITOR", "COMPLIANCE"
+                            ];
+                            const normRole = (user.role || "").replace(/^ROLE_/, "").toUpperCase();
+                            const dest = PLATFORM_ROLES.includes(normRole) ? "/superadmin" : normRole === "CLIENT" ? "/portal" : "/dashboard";
+                            router.push(dest);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-xs font-extrabold text-white shadow-lg shadow-purple-500/25 transition-all cursor-pointer"
+                        >
+                          <LayoutDashboard className="w-4 h-4" />
+                          <span>Go to Dashboard</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
 
-                    <button
-                      type="button"
-                      onClick={handleBookDemo}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-xs font-extrabold text-white shadow-lg shadow-purple-500/25 transition-all cursor-pointer"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      <span>Book a Free Demo</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsOpen(false);
+                            document.body.style.overflow = "";
+                            useAuthModalStore.getState().openLogoutModal();
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-rose-500/20 bg-rose-500/10 text-xs font-bold text-rose-300 hover:bg-rose-500/20 transition-all cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>Sign Out</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleSignIn}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-white/15 bg-white/5 text-xs font-bold text-slate-200 hover:text-white transition-all cursor-pointer"
+                        >
+                          <LogIn className="w-3.5 h-3.5 text-purple-400" />
+                          <span>Login to Workspace</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleBookDemo}
+                          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-xs font-extrabold text-white shadow-lg shadow-purple-500/25 transition-all cursor-pointer"
+                        >
+                          <Calendar className="w-4 h-4" />
+                          <span>Book a Demo</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </motion.div>

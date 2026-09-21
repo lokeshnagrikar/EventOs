@@ -29,6 +29,15 @@ const loginSchema = z.object({
 
 type LoginInputs = z.infer<typeof loginSchema>;
 
+const PLATFORM_ROLES = [
+  "SUPER_ADMIN", "PLATFORM_SUPER_ADMIN", "SUPERADMIN", "PLATFORM_ADMIN",
+  "OPERATIONS_LEAD", "OPERATIONS", "OPERATION", "OPERATIONS_MANAGER", "OPS",
+  "SUPPORT_LEAD", "SUPPORT_AGENT", "SUPPORT", "SUPPORT_ADMIN", "TECH_SUPPORT", "CUSTOMER_SUPPORT",
+  "FINANCE_OFFICER", "FINANCE_ADMIN", "FINANCE",
+  "DEVOPS_ENGINEER", "DEVOPS", "DEVELOPER",
+  "COMPLIANCE_AUDITOR", "AUDITOR", "COMPLIANCE"
+];
+
 interface LoginFormProps {
   isModal?: boolean;
   onSwitchMode?: (mode: "login" | "register") => void;
@@ -505,15 +514,18 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       }
 
       // Redirect based on role or explicit redirect parameter
+      const normRole = (role || "").replace(/^ROLE_/, "").toUpperCase();
       const redirectUrl = searchParams.get("redirect");
-      if (redirectUrl && (!redirectUrl.startsWith("/superadmin") || role === "SUPER_ADMIN")) {
+      if (redirectUrl && (!redirectUrl.startsWith("/superadmin") || PLATFORM_ROLES.includes(normRole))) {
         router.push(redirectUrl);
-      } else if (role === "CLIENT") {
-        router.push("/portal");
-      } else if (role === "SUPER_ADMIN") {
+      } else if (PLATFORM_ROLES.includes(normRole)) {
         router.push("/superadmin");
-      } else {
+      } else if (normRole === "CLIENT") {
+        router.push("/portal");
+      } else if (memberships && memberships.length > 1) {
         router.push("/workspace-select");
+      } else {
+        router.push("/dashboard");
       }
     } catch (err: any) {
       const errCode = err.response?.data?.error?.code;
@@ -582,15 +594,18 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       }
 
       // Redirect
+      const normRole = (role || "").replace(/^ROLE_/, "").toUpperCase();
       const redirectUrl = searchParams.get("redirect");
-      if (redirectUrl && (!redirectUrl.startsWith("/superadmin") || role === "SUPER_ADMIN")) {
+      if (redirectUrl && (!redirectUrl.startsWith("/superadmin") || PLATFORM_ROLES.includes(normRole))) {
         router.push(redirectUrl);
-      } else if (role === "CLIENT") {
-        router.push("/portal");
-      } else if (role === "SUPER_ADMIN") {
+      } else if (PLATFORM_ROLES.includes(normRole)) {
         router.push("/superadmin");
-      } else {
+      } else if (normRole === "CLIENT") {
+        router.push("/portal");
+      } else if (memberships && memberships.length > 1) {
         router.push("/workspace-select");
+      } else {
+        router.push("/dashboard");
       }
     } catch (err: any) {
       const errMsg = err.response?.data?.error?.message || "Google authentication failed. Please try again.";

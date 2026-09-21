@@ -24,13 +24,12 @@ export function WorkspaceSelectorPill() {
   const [isOpen, setIsOpen] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
 
-  // Only show workspace switcher for logged-in users
-  if (!isAuthenticated) {
+  // Only show workspace switcher for logged-in users with active memberships
+  if (!isAuthenticated || !memberships || memberships.length === 0) {
     return null;
   }
 
-  // Use user memberships if available, else fallback to DEMO_WORKSPACES for smooth interactive preview
-  const availableWorkspaces = memberships.length > 0 ? memberships : DEMO_WORKSPACES;
+  const availableWorkspaces = memberships;
   const currentWorkspace = availableWorkspaces.find((m) => m.tenantId === activeTenantId) || availableWorkspaces[0];
 
   const handleSwitchWorkspace = async (target: WorkspaceMembership) => {

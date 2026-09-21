@@ -557,41 +557,49 @@ html:not(.dark) .theme-dynamic {
   }
 }
 
-/* ─── Clean Neutral Scrollbar ─── */
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+/* ─── Clean Neutral Root Scrollbar (Scoped to root window only) ─── */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-::-webkit-scrollbar-track {
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.35);
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 9999px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.55);
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.3);
+.dark html::-webkit-scrollbar-thumb,
+.dark body::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.5);
+.dark html::-webkit-scrollbar-thumb:hover,
+.dark body::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.45);
 }
 
-/* Firefox scrollbar compatibility */
-* {
+/* Firefox root scrollbar */
+html,
+body {
   scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
 }
 
-.dark * {
-  scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+.dark html,
+.dark body {
+  scrollbar-color: rgba(100, 116, 139, 0.25) transparent;
 }
 
 /* ─── Glass Testimonials Stack custom styling ─── */
@@ -754,13 +762,15 @@ html.lenis body {
   background: rgba(255, 255, 255, 0.22);
 }
 
-/* Firefox custom scrollbar */
-* {
+/* Firefox custom scrollbar scoped to explicit utility classes */
+.sidebar-scrollbar,
+.scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
 }
 
-.dark * {
+.dark .sidebar-scrollbar,
+.dark .scrollbar-thin {
   scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }
 
@@ -799,10 +809,4 @@ html.lenis body {
 /* Native iOS tap feedback */
 * {
   -webkit-tap-highlight-color: transparent;
-}
-
-/* Prevent accidental horizontal page sway on mobile screens */
-html, body {
-  max-width: 100vw;
-  overflow-x: hidden;
 }

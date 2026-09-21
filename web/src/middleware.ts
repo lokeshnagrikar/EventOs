@@ -110,31 +110,44 @@ export async function middleware(request: NextRequest) {
   const verifiedRole = (verifiedPayload?.roles as string) || null;
   const effectiveRole = verifiedRole || userRole;
 
+  // Invalidate session if accessToken is explicitly present but expired/invalid
+  const isInvalidToken = Boolean(accessToken && !verifiedPayload);
+  const activeSession = hasSession && !isInvalidToken;
+
   // Require session for protected routes
-  if (isProtectedRoute && !hasSession) {
+  if (isProtectedRoute && !activeSession) {
     const loginUrl = new URL("/", request.url);
     loginUrl.searchParams.set("login", "true");
     loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // 2. Client role boundary: CLIENT accounts must only access the client portal
-  if (hasSession && effectiveRole === "CLIENT" && !pathname.startsWith("/portal") && isProtectedRoute) {
-    return NextResponse.redirect(new URL("/portal", request.url));
+    const res = NextResponse.redirect(loginUrl);
+    res.cookies.delete("hasSession");
+    res.cookies.delete("accessToken");
+    res.cookies.delete("user_role");
+    return res;
   }
 
   const normalizedEffectiveRole = (effectiveRole || "").replace(/^ROLE_/, "").toUpperCase();
 
-  // 3. Agency staff/admin boundary: Non-clients navigating directly to /portal get sent to their workspace
-  if (hasSession && pathname.startsWith("/portal") && normalizedEffectiveRole && normalizedEffectiveRole !== "CLIENT") {
+  // 2. Client role boundary: CLIENT accounts must only access the client portal
+  if (activeSession && normalizedEffectiveRole === "CLIENT" && !pathname.startsWith("/portal") && isProtectedRoute) {
+    return NextResponse.redirect(new URL("/portal", request.url));
+  }
+
+  // 3. Agency staff boundary: Non-clients navigating directly to /portal get sent to their workspace
+  if (activeSession && pathname.startsWith("/portal") && normalizedEffectiveRole && normalizedEffectiveRole !== "CLIENT") {
     if (PLATFORM_ROLES.has(normalizedEffectiveRole)) {
       return NextResponse.redirect(new URL("/superadmin", request.url));
     }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  // 4. Platform roles boundary: Platform administrators accessing /dashboard get sent to /superadmin
+  if (activeSession && pathname.startsWith("/dashboard") && normalizedEffectiveRole && PLATFORM_ROLES.has(normalizedEffectiveRole)) {
+    return NextResponse.redirect(new URL("/superadmin", request.url));
+  }
+
   // Redirect authenticated users away from public auth routes
-  if (isAuthRoute && hasSession) {
+  if (isAuthRoute && activeSession) {
     if (normalizedEffectiveRole && PLATFORM_ROLES.has(normalizedEffectiveRole)) {
       return NextResponse.redirect(new URL("/superadmin", request.url));
     } else if (normalizedEffectiveRole === "CLIENT") {

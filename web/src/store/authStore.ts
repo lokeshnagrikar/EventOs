@@ -34,6 +34,27 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
+    if (!payload.exp) return false;
+    // Expired if current time >= exp in milliseconds (with 10s safety buffer)
+    return Date.now() >= payload.exp * 1000 - 10000;
+  } catch {
+    return true;
+  }
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
   user: null,
@@ -45,29 +66,27 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (typeof window === 'undefined') return;
     try {
       const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('eventos_access_token') || localStorage.getItem('accessToken');
+      
+      // If token is missing OR expired, clean up everything and remain unauthenticated!
+      if (!accessToken || isTokenExpired(accessToken)) {
+        useAuthStore.getState().clearAuth();
+        return;
+      }
+
       const user = sessionStorage.getItem('user') || localStorage.getItem('eventos_user_profile');
       const activeTenantId = sessionStorage.getItem('activeTenantId') || localStorage.getItem('eventos_active_tenant_id');
       const memberships = sessionStorage.getItem('memberships') || localStorage.getItem('eventos_memberships');
       
-      if (accessToken) {
-        set({
-          accessToken,
-          user: user ? JSON.parse(user) : null,
-          activeTenantId: activeTenantId || "00000000-0000-0000-0000-000000000000",
-          memberships: memberships ? JSON.parse(memberships) : [],
-          isAuthenticated: true,
-        });
-      } else if (activeTenantId) {
-        set({
-          accessToken: null,
-          user: user ? JSON.parse(user) : null,
-          activeTenantId: activeTenantId,
-          memberships: memberships ? JSON.parse(memberships) : [],
-          isAuthenticated: false,
-        });
-      }
+      set({
+        accessToken,
+        user: user ? JSON.parse(user) : null,
+        activeTenantId: activeTenantId || "00000000-0000-0000-0000-000000000000",
+        memberships: memberships ? JSON.parse(memberships) : [],
+        isAuthenticated: true,
+      });
     } catch (e) {
       console.error("Failed to initialize auth from storage", e);
+      useAuthStore.getState().clearAuth();
     }
   },
 
@@ -152,10 +171,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
     if (typeof window !== 'undefined') {
       sessionStorage.clear();
+      localStorage.removeItem("accessToken");
       localStorage.removeItem("eventos_access_token");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("eventos_refresh_token");
+      localStorage.removeItem("activeTenantId");
       localStorage.removeItem("eventos_active_tenant_id");
+      localStorage.removeItem("user");
       localStorage.removeItem("eventos_user_profile");
+      localStorage.removeItem("memberships");
       localStorage.removeItem("eventos_memberships");
       localStorage.removeItem("user_name");
       localStorage.removeItem("user_role");

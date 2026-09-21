@@ -85,9 +85,19 @@ export default function WorkspaceSelectPage() {
 
       addToast("Workspace connected.", "success");
 
-      if (role === "CLIENT") {
+      const PLATFORM_ROLES = [
+        "SUPER_ADMIN", "PLATFORM_SUPER_ADMIN", "SUPERADMIN", "PLATFORM_ADMIN",
+        "OPERATIONS_LEAD", "OPERATIONS", "OPERATION", "OPERATIONS_MANAGER", "OPS",
+        "SUPPORT_LEAD", "SUPPORT_AGENT", "SUPPORT", "SUPPORT_ADMIN", "TECH_SUPPORT", "CUSTOMER_SUPPORT",
+        "FINANCE_OFFICER", "FINANCE_ADMIN", "FINANCE",
+        "DEVOPS_ENGINEER", "DEVOPS", "DEVELOPER",
+        "COMPLIANCE_AUDITOR", "AUDITOR", "COMPLIANCE"
+      ];
+      const normRole = (role || "").replace(/^ROLE_/, "").toUpperCase();
+
+      if (normRole === "CLIENT") {
         router.push("/portal");
-      } else if (role === "SUPER_ADMIN") {
+      } else if (PLATFORM_ROLES.includes(normRole)) {
         router.push("/superadmin");
       } else {
         router.push("/dashboard");

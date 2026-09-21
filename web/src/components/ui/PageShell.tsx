@@ -38,14 +38,19 @@ export default function PageShell({
   bare = false,
   className,
 }: PageShellProps) {
-  const { user, clearAuth } = useAuthStore();
+  const { user, clearAuth, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 
+  const [mounted, setMounted] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [userName, setUserName] = useState("Admin Workspace");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -59,6 +64,16 @@ export default function PageShell({
       if (storedName) setUserName(storedName);
     }
   }, []);
+
+  // Strict client-side workspace authentication check
+  useEffect(() => {
+    if (mounted) {
+      const token = typeof window !== "undefined" ? (sessionStorage.getItem('accessToken') || localStorage.getItem('eventos_access_token')) : null;
+      if (!token && !isAuthenticated) {
+        router.replace(`/?login=true&redirect=${encodeURIComponent(pathname)}`);
+      }
+    }
+  }, [mounted, isAuthenticated, pathname, router]);
 
   const handleSetCollapsed = (collapsed: boolean) => {
     setIsCollapsed(collapsed);
