@@ -10,6 +10,7 @@ import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { useAuthStore } from "@/store/authStore";
 import { EventOsLogo } from "@/components/ui/EventOsLogo";
+import { LiquidMetalButton } from "@/components/landing/LiquidMetalButton";
 
 interface NavbarProps {
   activeSection?: string;
@@ -236,15 +237,13 @@ export function Navbar({ activeSection }: NavbarProps) {
                     Login
                   </button>
 
-                  <button
+                  <LiquidMetalButton
+                    label="Book a Demo"
                     onClick={handleBookDemo}
-                    className="relative inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-extrabold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:via-indigo-500 hover:to-purple-500 shadow-[0_4px_16px_rgba(147,51,234,0.35)] hover:shadow-[0_6px_22px_rgba(147,51,234,0.5)] active:scale-[0.97] transition-all duration-200 cursor-pointer overflow-hidden group"
-                  >
-                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full duration-700 transition-transform ease-in-out" />
-                    <Calendar className="w-3.5 h-3.5 text-purple-200" />
-                    <span className="relative z-10 tracking-tight">Book a Demo</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-purple-200 group-hover:translate-x-0.5 transition-transform" />
-                  </button>
+                    width={144}
+                    height={38}
+                    colorTheme="purple"
+                  />
                 </>
               )}
             </div>

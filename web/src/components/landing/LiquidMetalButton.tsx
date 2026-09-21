@@ -11,16 +11,18 @@ interface LiquidMetalButtonProps {
   width?: number;
   height?: number;
   showIcon?: boolean;
+  colorTheme?: "purple" | "obsidian";
   className?: string;
 }
 
 export function LiquidMetalButton({
-  label = "Book a Free Demo",
+  label = "Book a Demo",
   onClick,
   viewMode = "text",
   width: customWidth,
-  height: customHeight = 48,
+  height: customHeight = 40,
   showIcon = true,
+  colorTheme = "purple",
   className = "",
 }: LiquidMetalButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -32,30 +34,32 @@ export function LiquidMetalButton({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const rippleId = useRef(0);
 
+  const isCompact = (customHeight || 40) <= 42;
+
   const dimensions = useMemo(() => {
     if (viewMode === "icon") {
-      const size = customHeight || 46;
+      const size = customHeight || 40;
       return {
         width: size,
         height: size,
-        innerWidth: size - 4,
-        innerHeight: size - 4,
+        innerWidth: size - 3,
+        innerHeight: size - 3,
         shaderWidth: size,
         shaderHeight: size,
       };
     } else {
-      const calcWidth = customWidth || (label.length > 12 ? 198 : 156);
-      const calcHeight = customHeight || 48;
+      const calcWidth = customWidth || (label.length > 14 ? 190 : 146);
+      const calcHeight = customHeight || 40;
       return {
         width: calcWidth,
         height: calcHeight,
-        innerWidth: calcWidth - 4,
-        innerHeight: calcHeight - 4,
+        innerWidth: calcWidth - (isCompact ? 3 : 4),
+        innerHeight: calcHeight - (isCompact ? 3 : 4),
         shaderWidth: calcWidth,
         shaderHeight: calcHeight,
       };
     }
-  }, [viewMode, customWidth, customHeight, label]);
+  }, [viewMode, customWidth, customHeight, label, isCompact]);
 
   useEffect(() => {
     const styleId = "shader-canvas-style-liquid-metal";
@@ -93,14 +97,18 @@ export function LiquidMetalButton({
             shaderMount.current.destroy();
           }
 
+          // Dynamic shift parameters for faded purple chromatic effect
+          const shiftRed = colorTheme === "purple" ? 0.42 : 0.35;
+          const shiftBlue = colorTheme === "purple" ? 0.68 : 0.45;
+
           shaderMount.current = new ShaderMount(
             shaderRef.current,
             liquidMetalFragmentShader,
             {
               u_repetition: 4,
               u_softness: 0.5,
-              u_shiftRed: 0.35,
-              u_shiftBlue: 0.45,
+              u_shiftRed: shiftRed,
+              u_shiftBlue: shiftBlue,
               u_distortion: 0.05,
               u_contour: 0,
               u_angle: 45,
@@ -114,7 +122,7 @@ export function LiquidMetalButton({
           );
         }
       } catch (error) {
-        console.warn("[LiquidMetalButton] Shader initialization skipped (fallback active):", error);
+        console.warn("[LiquidMetalButton] Shader initialization skipped:", error);
       }
     };
 
@@ -128,7 +136,7 @@ export function LiquidMetalButton({
         shaderMount.current = null;
       }
     };
-  }, []);
+  }, [colorTheme]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -168,6 +176,8 @@ export function LiquidMetalButton({
     onClick?.();
   };
 
+  const isPurple = colorTheme === "purple";
+
   return (
     <div className={`relative inline-block ${className}`}>
       <div
@@ -198,20 +208,20 @@ export function LiquidMetalButton({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "8px",
+              gap: isCompact ? "6px" : "8px",
               transformStyle: "preserve-3d",
               transition:
                 "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.4s ease, height 0.4s ease, gap 0.4s ease",
               transform: "translateZ(20px)",
               zIndex: 30,
               pointerEvents: "none",
-              paddingLeft: "12px",
-              paddingRight: "12px",
+              paddingLeft: isCompact ? "10px" : "14px",
+              paddingRight: isCompact ? "10px" : "14px",
             }}
           >
             {viewMode === "icon" ? (
               <Sparkles
-                size={18}
+                size={isCompact ? 15 : 18}
                 style={{
                   color: "#FFFFFF",
                   filter: "drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.7))",
@@ -223,9 +233,9 @@ export function LiquidMetalButton({
               <>
                 {showIcon && (
                   <Calendar
-                    size={16}
+                    size={isCompact ? 14 : 16}
                     style={{
-                      color: "#E2E8F0",
+                      color: isPurple ? "#E9D5FF" : "#E2E8F0",
                       filter: "drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.7))",
                       transition: "transform 0.3s ease",
                       transform: isHovered ? "scale(1.1)" : "scale(1)",
@@ -234,11 +244,13 @@ export function LiquidMetalButton({
                 )}
                 <span
                   style={{
-                    fontSize: "13.5px",
+                    fontSize: isCompact ? "12.5px" : "13.5px",
                     color: "#FFFFFF",
                     fontWeight: 700,
                     letterSpacing: "-0.01em",
-                    textShadow: "0px 1px 3px rgba(0, 0, 0, 0.8), 0px 0px 8px rgba(168, 85, 247, 0.3)",
+                    textShadow: isPurple
+                      ? "0px 1px 3px rgba(0, 0, 0, 0.8), 0px 0px 8px rgba(192, 132, 252, 0.4)"
+                      : "0px 1px 3px rgba(0, 0, 0, 0.8), 0px 0px 8px rgba(168, 85, 247, 0.3)",
                     transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
                     transform: "scale(1)",
                     whiteSpace: "nowrap",
@@ -247,19 +259,19 @@ export function LiquidMetalButton({
                   {label}
                 </span>
                 <ArrowRight
-                  size={15}
+                  size={isCompact ? 13 : 15}
                   style={{
-                    color: "#D8B4FE",
+                    color: isPurple ? "#D8B4FE" : "#D8B4FE",
                     filter: "drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.7))",
                     transition: "transform 0.3s ease",
-                    transform: isHovered ? "translateX(2.5px)" : "translateX(0)",
+                    transform: isHovered ? "translateX(2px)" : "translateX(0)",
                   }}
                 />
               </>
             )}
           </div>
 
-          {/* Middle Cap / Inner Bevel (Obsidian Metallic Core) */}
+          {/* Middle Cap / Inner Bevel (Faded Purple / Obsidian Core) */}
           <div
             style={{
               position: "absolute",
@@ -280,12 +292,18 @@ export function LiquidMetalButton({
               style={{
                 width: `${dimensions.innerWidth}px`,
                 height: `${dimensions.innerHeight}px`,
-                margin: "2px",
+                margin: isCompact ? "1.5px" : "2px",
                 borderRadius: "100px",
-                background: "linear-gradient(180deg, #1A1A22 0%, #0D0D12 60%, #050508 100%)",
-                border: "1px solid rgba(255, 255, 255, 0.09)",
+                background: isPurple
+                  ? "linear-gradient(180deg, #2A1744 0%, #150C24 60%, #090511 100%)"
+                  : "linear-gradient(180deg, #1A1A22 0%, #0D0D12 60%, #050508 100%)",
+                border: isPurple
+                  ? "1px solid rgba(192, 132, 252, 0.25)"
+                  : "1px solid rgba(255, 255, 255, 0.09)",
                 boxShadow: isPressed
                   ? "inset 0px 2px 4px rgba(0, 0, 0, 0.6), inset 0px 1px 2px rgba(0, 0, 0, 0.5)"
+                  : isPurple
+                  ? "inset 0px 1px 1px rgba(233, 213, 255, 0.22), inset 0px -1px 2px rgba(0, 0, 0, 0.7)"
                   : "inset 0px 1px 1px rgba(255, 255, 255, 0.15), inset 0px -1px 2px rgba(0, 0, 0, 0.7)",
                 transition:
                   "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.4s ease, height 0.4s ease, box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -318,11 +336,17 @@ export function LiquidMetalButton({
                 boxShadow: isPressed
                   ? "0px 0px 0px 1px rgba(0, 0, 0, 0.6), 0px 2px 4px 0px rgba(0, 0, 0, 0.4)"
                   : isHovered
-                  ? "0px 0px 0px 1px rgba(168, 85, 247, 0.35), 0px 14px 28px -6px rgba(147, 51, 234, 0.35), 0px 6px 12px 0px rgba(0, 0, 0, 0.25)"
+                  ? isPurple
+                    ? "0px 0px 0px 1px rgba(192, 132, 252, 0.5), 0px 12px 28px -4px rgba(168, 85, 247, 0.5), 0px 4px 10px 0px rgba(0, 0, 0, 0.3)"
+                    : "0px 0px 0px 1px rgba(168, 85, 247, 0.35), 0px 14px 28px -6px rgba(147, 51, 234, 0.35), 0px 6px 12px 0px rgba(0, 0, 0, 0.25)"
+                  : isPurple
+                  ? "0px 0px 0px 1px rgba(168, 85, 247, 0.35), 0px 8px 20px -4px rgba(147, 51, 234, 0.38), 0px 3px 6px 0px rgba(0, 0, 0, 0.2)"
                   : "0px 0px 0px 1px rgba(0, 0, 0, 0.4), 0px 10px 20px -4px rgba(0, 0, 0, 0.3), 0px 4px 8px 0px rgba(0, 0, 0, 0.15)",
                 transition:
                   "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.4s ease, height 0.4s ease, box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                background: "linear-gradient(135deg, #7C3AED 0%, #3B82F6 50%, #EC4899 100%)",
+                background: isPurple
+                  ? "linear-gradient(135deg, #9333EA 0%, #6366F1 45%, #C026D3 100%)"
+                  : "linear-gradient(135deg, #7C3AED 0%, #3B82F6 50%, #EC4899 100%)",
               }}
             >
               <div
@@ -341,7 +365,7 @@ export function LiquidMetalButton({
             </div>
           </div>
 
-          {/* Interactive Invisible Button Surface */}
+          {/* Interactive Button Click Surface */}
           <button
             ref={buttonRef}
             onClick={handleClick}
@@ -379,8 +403,9 @@ export function LiquidMetalButton({
                   width: "24px",
                   height: "24px",
                   borderRadius: "50%",
-                  background:
-                    "radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%)",
+                  background: isPurple
+                    ? "radial-gradient(circle, rgba(233, 213, 255, 0.6) 0%, rgba(192, 132, 252, 0) 70%)"
+                    : "radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%)",
                   pointerEvents: "none",
                   animation: "liquid-ripple-anim 0.6s ease-out",
                 }}
