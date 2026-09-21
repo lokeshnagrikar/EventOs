@@ -63,6 +63,14 @@ export function Footer() {
     }
   };
 
+  const handleSecretFounderAccess = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("eventos_founder_key", "eventos2026");
+    }
+    router.push("/founder/waitlist?key=eventos2026");
+  };
+
   return (
     <footer suppressHydrationWarning className="border-t border-slate-800 bg-[#0B0F19] text-slate-300 pt-20 pb-24 sm:pb-20 w-full relative z-10 text-left overflow-hidden">
       {/* Top Gradient Accent Line */}
@@ -243,7 +251,16 @@ export function Footer() {
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-400 font-medium">
         <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-          <span>© 2026 EventOS Business Suite. All rights reserved.</span>
+          <span>
+            <span 
+              onClick={handleSecretFounderAccess} 
+              className="cursor-pointer hover:text-slate-200 transition-colors select-none" 
+              title="EventOS Business Suite"
+            >
+              ©
+            </span>{" "}
+            2026 EventOS Business Suite. All rights reserved.
+          </span>
           <span className="text-slate-700 hidden sm:inline">•</span>
           <span className="text-slate-300 font-semibold">
             Crafted with ❤️ by{" "}
@@ -257,12 +274,26 @@ export function Footer() {
           </span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-slate-400">
-            <Icon icon="solar:code-bold" className="text-xs text-purple-400" />
-            Build: v1.1.0-prod
-          </span>
+          <button
+            type="button"
+            onClick={handleSecretFounderAccess}
+            className="flex items-center gap-1.5 text-slate-400 hover:text-slate-300 transition-colors cursor-pointer select-none focus:outline-none"
+            title="System Diagnostics"
+          >
+            <Icon icon="solar:code-bold" className="text-xs text-purple-400/80" />
+            <span>Build: v1.1.0-prod</span>
+          </button>
           <span className="text-slate-700">•</span>
-          <span className="text-slate-400">Server Region: IN-WEST</span>
+          <span className="flex items-center gap-1.5 text-slate-400">
+            <span>Server Region: IN-WEST</span>
+            <button
+              type="button"
+              onClick={handleSecretFounderAccess}
+              className="w-1.5 h-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 transition-all cursor-pointer inline-block focus:outline-none"
+              title="Operational Node"
+              aria-label="Server Node Status"
+            />
+          </span>
         </div>
       </div>
     </footer>

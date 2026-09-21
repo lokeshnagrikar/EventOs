@@ -49,12 +49,18 @@ export default function FounderWaitlistPage() {
     status: "NEW" as WaitlistLead["status"],
   });
 
-  // Auto-login if previously verified in session
+  // Auto-login if previously verified in session or provided in URL
   useEffect(() => {
-    const saved = sessionStorage.getItem("eventos_founder_key");
-    if (saved) {
-      setPasskey(saved);
-      fetchLeads(saved);
+    let keyToUse = "";
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlKey = urlParams.get("key");
+      const saved = sessionStorage.getItem("eventos_founder_key");
+      keyToUse = urlKey || saved || "";
+    }
+    if (keyToUse) {
+      setPasskey(keyToUse);
+      fetchLeads(keyToUse);
     }
   }, []);
 
