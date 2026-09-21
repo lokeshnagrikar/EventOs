@@ -3,5 +3,6 @@ Allow: /
 Disallow: /superadmin
 Disallow: /settings
 Disallow: /dashboard
+Disallow: /api/
 
-Sitemap: https://eventos.agency/sitemap.xml
+Sitemap: https://eventosapp.in/sitemap.xml

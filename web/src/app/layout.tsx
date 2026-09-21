@@ -48,9 +48,12 @@ export const metadata: Metadata = {
     "client portal for event planners"
   ],
   authors: [{ name: "EventOS Team" }],
-  metadataBase: new URL("https://eventos.io"),
+  metadataBase: new URL("https://eventosapp.in"),
   alternates: {
-    canonical: "https://eventos.io",
+    canonical: "https://eventosapp.in",
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
   },
   robots: {
     index: true,
@@ -66,7 +69,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "EventOS | Event Management & Wedding Planner Software for Agencies",
     description: "Centralize leads, proposals, milestone payments, event timelines, and client portals in one premium workspace designed for wedding planners and event agencies in India.",
-    url: "https://eventos.io",
+    url: "https://eventosapp.in",
     siteName: "EventOS",
     locale: "en_IN",
     type: "website",
@@ -105,13 +108,13 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const theme = cookieStore.get("theme")?.value || "dark";
 
-  // Structured Data (JSON-LD)
+  // Structured Data (JSON-LD) with Software, Org & FAQPage for AEO
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "SoftwareApplication",
-        "@id": "https://eventos.io/#software",
+        "@id": "https://eventosapp.in/#software",
         "name": "EventOS",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web, iOS, Android (PWA)",
@@ -126,16 +129,54 @@ export default async function RootLayout({
       },
       {
         "@type": "Organization",
-        "@id": "https://eventos.io/#organization",
+        "@id": "https://eventosapp.in/#organization",
         "name": "EventOS",
-        "url": "https://eventos.io",
-        "logo": "https://eventos.io/logo/logo.png",
+        "url": "https://eventosapp.in",
+        "logo": "https://eventosapp.in/logo/logo.png",
         "founder": {
           "@type": "Person",
           "name": "Lokesh Nagrikar"
         },
         "sameAs": [
           "https://www.instagram.com/solo.founder.ai/"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://eventosapp.in/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is EventOS?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "EventOS is an all-in-one operating system and CRM built specifically for event management agencies and wedding planners in India. It unifies lead management, interactive quote calculations, 1-click proposal PDFs, run-of-show stage cue sheets, and client media galleries into one platform."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does EventOS support Indian Rupee (INR) and GST billing?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, EventOS is built India-first. It includes native support for INR currency, automated GST calculation for event invoices, and dynamic UPI QR code payments with 15-minute expiration countdowns."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does the EventOS Quote & Budget Calculator work?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "EventOS provides an interactive budget calculator with guest sliders (50 to 5,000 guests) and customizable production add-ons (sound, lighting, decor, catering). It instantly calculates production costs, profit margins, and exports a branded PDF proposal for clients in one click."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can clients access their event timeline and proposals online?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, EventOS includes a dedicated Client Portal where clients can view live run-of-show stage timelines, approve quotes, download GST invoices, track milestone payments, and view event photo galleries securely."
+            }
+          }
         ]
       }
     ]
