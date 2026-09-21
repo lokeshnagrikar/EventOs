@@ -7,6 +7,7 @@ import { Icon } from "@iconify/react";
 import { Calendar, ArrowRight, CheckCircle2, Play, Sparkles } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import { AnimatedMeshGradient } from "@/components/ui/AnimatedMeshGradient";
+import { LiquidMetalButton } from "@/components/landing/LiquidMetalButton";
 
 const workflowSteps = [
   { step: "1", label: "Lead captured", icon: "solar:user-plus-bold-duotone", color: "text-purple-600 bg-purple-50 border-purple-200" },
@@ -124,21 +125,18 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
           transition={{ duration: 0.5, delay: 0.24 }}
           className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto"
         >
-          {/* Primary CTA */}
-          <button
+          {/* Primary CTA: Liquid Metal Shader Button */}
+          <LiquidMetalButton
+            label="Book a Free Demo"
             onClick={handleBookDemo}
-            className="w-full sm:w-auto relative overflow-hidden inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full text-sm font-extrabold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:via-indigo-500 hover:to-purple-500 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40 active:scale-[0.97] transition-all duration-200 cursor-pointer group"
-          >
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
-            <Calendar className="w-4 h-4 text-purple-200 group-hover:scale-110 transition-transform" />
-            <span>Book a Free Demo</span>
-            <ArrowRight className="w-4 h-4 text-purple-200 group-hover:translate-x-1 transition-transform" />
-          </button>
+            width={204}
+            height={50}
+          />
 
           {/* Secondary CTA */}
           <button
             onClick={handleSeeHowItWorks}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-sm active:scale-[0.97] transition-all cursor-pointer hover:border-slate-300"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-[50px] rounded-full text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-sm active:scale-[0.97] transition-all cursor-pointer hover:border-slate-300"
           >
             <Play className="w-3.5 h-3.5 text-purple-600 fill-purple-600" />
             <span>See How It Works</span>
