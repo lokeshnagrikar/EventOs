@@ -65,10 +65,7 @@ export function Footer() {
 
   const handleSecretFounderAccess = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("eventos_founder_key", "eventos2026");
-    }
-    router.push("/founder/waitlist?key=eventos2026");
+    router.push("/founder/waitlist");
   };
 
   return (
