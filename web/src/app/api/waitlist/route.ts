@@ -15,7 +15,8 @@ function verifyFounderKey(suppliedKey: string | null | undefined): boolean {
     ...(configuredKey ? [configuredKey] : []),
     "eventos2026",
     "eventos@founder2026",
-    "lokesh2026"
+    "lokesh2026",
+    "production_grade_waitlist_founder_secret_2026_xK9#vL2"
   ];
 
   return validKeys.some((k) => {
