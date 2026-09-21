@@ -135,25 +135,56 @@ const INITIAL_ANNOUNCEMENT_HISTORY = [
 
 const PLATFORM_ROLES = [
   "SUPER_ADMIN",
+  "PLATFORM_SUPER_ADMIN",
+  "SUPERADMIN",
+  "PLATFORM_ADMIN",
   "OPERATIONS_LEAD",
+  "OPERATIONS",
+  "OPERATION",
+  "OPERATIONS_MANAGER",
+  "OPS",
   "SUPPORT_LEAD",
+  "SUPPORT_AGENT",
+  "SUPPORT",
+  "SUPPORT_ADMIN",
+  "TECH_SUPPORT",
+  "CUSTOMER_SUPPORT",
   "FINANCE_OFFICER",
+  "FINANCE_ADMIN",
+  "FINANCE",
   "DEVOPS_ENGINEER",
+  "DEVOPS",
+  "DEVELOPER",
   "COMPLIANCE_AUDITOR",
+  "AUDITOR",
+  "COMPLIANCE",
 ];
 
 const ROLE_TO_SUBROLE: Record<string, string> = {
   SUPER_ADMIN: "super_admin",
+  PLATFORM_SUPER_ADMIN: "super_admin",
+  SUPERADMIN: "super_admin",
+  PLATFORM_ADMIN: "super_admin",
   OPERATIONS_LEAD: "operations",
   OPERATIONS: "operations",
+  OPERATION: "operations",
+  OPERATIONS_MANAGER: "operations",
+  OPS: "operations",
   SUPPORT_LEAD: "support_agent",
   SUPPORT_AGENT: "support_agent",
+  SUPPORT: "support_agent",
+  SUPPORT_ADMIN: "support_agent",
+  TECH_SUPPORT: "support_agent",
+  CUSTOMER_SUPPORT: "support_agent",
   FINANCE_OFFICER: "finance_admin",
   FINANCE_ADMIN: "finance_admin",
+  FINANCE: "finance_admin",
   DEVOPS_ENGINEER: "developer",
+  DEVOPS: "developer",
   DEVELOPER: "developer",
   COMPLIANCE_AUDITOR: "auditor",
   AUDITOR: "auditor",
+  COMPLIANCE: "auditor",
 };
 
 export default function SuperAdminDashboard() {
@@ -190,9 +221,9 @@ export default function SuperAdminDashboard() {
   const [inspectedTenant, setInspectedTenant] = useState<any | null>(null);
 
   // Get active admin sub-role (strict RBAC control check)
-  const adminSubRole = (user?.role && ROLE_TO_SUBROLE[user.role])
-    ? ROLE_TO_SUBROLE[user.role]
-    : (user?.permissions?.[0] === "all" ? "super_admin" : (user?.permissions?.[0] || "super_admin"));
+  const effectiveUserRole = (user?.role || (typeof window !== "undefined" ? localStorage.getItem("user_role") : "") || "").replace(/^ROLE_/, "").toUpperCase();
+  const adminSubRole = ROLE_TO_SUBROLE[effectiveUserRole]
+    || (user?.permissions?.[0] === "all" ? "super_admin" : (user?.permissions?.[0] || "super_admin"));
 
   useEffect(() => {
     setMounted(true);
@@ -239,6 +270,10 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     if (mounted) {
       const storedRole = typeof window !== "undefined" ? localStorage.getItem("user_role") : null;
+      const storedToken = typeof window !== "undefined" ? (localStorage.getItem("accessToken") || localStorage.getItem("eventos_access_token")) : null;
+      if (storedToken && !user && !storedRole) {
+        return; // wait for storage hydration
+      }
       const rawRole = user?.role || storedRole || "";
       const effectiveRole = rawRole.replace(/^ROLE_/, "").toUpperCase();
 

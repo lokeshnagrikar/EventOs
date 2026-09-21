@@ -52,11 +52,29 @@ export default function SuperAdminLoginPage() {
       const storedToken = localStorage.getItem("accessToken") || localStorage.getItem("eventos_access_token");
       const PLATFORM_ROLES = [
         "SUPER_ADMIN",
+        "PLATFORM_SUPER_ADMIN",
+        "SUPERADMIN",
+        "PLATFORM_ADMIN",
         "OPERATIONS_LEAD",
+        "OPERATIONS",
+        "OPERATION",
+        "OPERATIONS_MANAGER",
+        "OPS",
         "SUPPORT_LEAD",
+        "SUPPORT_AGENT",
+        "SUPPORT",
+        "SUPPORT_ADMIN",
+        "TECH_SUPPORT",
+        "CUSTOMER_SUPPORT",
         "FINANCE_OFFICER",
+        "FINANCE_ADMIN",
+        "FINANCE",
         "DEVOPS_ENGINEER",
+        "DEVOPS",
+        "DEVELOPER",
         "COMPLIANCE_AUDITOR",
+        "AUDITOR",
+        "COMPLIANCE",
       ];
       const normalizedStoredRole = (storedRole || "").replace(/^ROLE_/, "").toUpperCase();
       if (storedToken && normalizedStoredRole && PLATFORM_ROLES.includes(normalizedStoredRole)) {
@@ -88,14 +106,33 @@ export default function SuperAdminLoginPage() {
         // 2. Strict Privilege Boundary: Only authorized platform administrator roles can access this console
         const PLATFORM_ROLES = [
           "SUPER_ADMIN",
+          "PLATFORM_SUPER_ADMIN",
+          "SUPERADMIN",
+          "PLATFORM_ADMIN",
           "OPERATIONS_LEAD",
+          "OPERATIONS",
+          "OPERATION",
+          "OPERATIONS_MANAGER",
+          "OPS",
           "SUPPORT_LEAD",
+          "SUPPORT_AGENT",
+          "SUPPORT",
+          "SUPPORT_ADMIN",
+          "TECH_SUPPORT",
+          "CUSTOMER_SUPPORT",
           "FINANCE_OFFICER",
+          "FINANCE_ADMIN",
+          "FINANCE",
           "DEVOPS_ENGINEER",
+          "DEVOPS",
+          "DEVELOPER",
           "COMPLIANCE_AUDITOR",
+          "AUDITOR",
+          "COMPLIANCE",
         ];
 
-        const normalizedRole = (role || "").replace(/^ROLE_/, "").toUpperCase();
+        const rawRole = role || response.data?.role || (memberships && memberships[0]?.role) || "";
+        const normalizedRole = String(rawRole).replace(/^ROLE_/, "").toUpperCase();
 
         if (!PLATFORM_ROLES.includes(normalizedRole)) {
           setErrorMessage("Access Denied: Only authorized platform administrators can access this console.");

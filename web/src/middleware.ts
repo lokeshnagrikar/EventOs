@@ -14,11 +14,29 @@ export async function middleware(request: NextRequest) {
 
   const PLATFORM_ROLES = new Set([
     "SUPER_ADMIN",
+    "PLATFORM_SUPER_ADMIN",
+    "SUPERADMIN",
+    "PLATFORM_ADMIN",
     "OPERATIONS_LEAD",
+    "OPERATIONS",
+    "OPERATION",
+    "OPERATIONS_MANAGER",
+    "OPS",
     "SUPPORT_LEAD",
+    "SUPPORT_AGENT",
+    "SUPPORT",
+    "SUPPORT_ADMIN",
+    "TECH_SUPPORT",
+    "CUSTOMER_SUPPORT",
     "FINANCE_OFFICER",
+    "FINANCE_ADMIN",
+    "FINANCE",
     "DEVOPS_ENGINEER",
+    "DEVOPS",
+    "DEVELOPER",
     "COMPLIANCE_AUDITOR",
+    "AUDITOR",
+    "COMPLIANCE",
   ]);
 
   // --- 1. SUPERADMIN ROUTE PROTECTION (PHASE 2D/2E) ---
@@ -57,7 +75,6 @@ export async function middleware(request: NextRequest) {
                             pathname.startsWith("/quotes") || 
                             pathname.startsWith("/payments") || 
                             pathname.startsWith("/invoices") || 
-                            pathname.startsWith("/calculator") || 
                             pathname.startsWith("/gallery") || 
                             pathname.startsWith("/activity") || 
                             pathname.startsWith("/ai") || 
@@ -106,9 +123,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/portal", request.url));
   }
 
+  const normalizedEffectiveRole = (effectiveRole || "").replace(/^ROLE_/, "").toUpperCase();
+
   // 3. Agency staff/admin boundary: Non-clients navigating directly to /portal get sent to their workspace
-  if (hasSession && pathname.startsWith("/portal") && effectiveRole && effectiveRole !== "CLIENT") {
-    if (PLATFORM_ROLES.has(effectiveRole)) {
+  if (hasSession && pathname.startsWith("/portal") && normalizedEffectiveRole && normalizedEffectiveRole !== "CLIENT") {
+    if (PLATFORM_ROLES.has(normalizedEffectiveRole)) {
       return NextResponse.redirect(new URL("/superadmin", request.url));
     }
     return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -116,12 +135,9 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from public auth routes
   if (isAuthRoute && hasSession) {
-    if (effectiveRole && PLATFORM_ROLES.has(effectiveRole)) {
-      if (verifiedPayload && verifiedPayload.roles && PLATFORM_ROLES.has(verifiedPayload.roles as string)) {
-        return NextResponse.redirect(new URL("/superadmin", request.url));
-      }
-      return NextResponse.redirect(new URL("/workspace-select", request.url));
-    } else if (effectiveRole === "CLIENT") {
+    if (normalizedEffectiveRole && PLATFORM_ROLES.has(normalizedEffectiveRole)) {
+      return NextResponse.redirect(new URL("/superadmin", request.url));
+    } else if (normalizedEffectiveRole === "CLIENT") {
       return NextResponse.redirect(new URL("/portal", request.url));
     } else {
       return NextResponse.redirect(new URL("/workspace-select", request.url));
