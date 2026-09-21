@@ -12,16 +12,24 @@ interface WaitlistLead {
   eventType: string;
   currentTools: string;
   joinedAt: string;
-  status: "NEW" | "DM_SENT" | "REPLIED" | "DEMO_SCHEDULED" | "FOUNDING_MEMBER" | "ARCHIVED";
+  status: "NEW" | "WAITLIST" | "DM_SENT" | "REPLIED" | "DEMO_SCHEDULED" | "FOUNDING_MEMBER" | "ARCHIVED";
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  NEW: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  DM_SENT: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  REPLIED: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-  DEMO_SCHEDULED: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
-  FOUNDING_MEMBER: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-  ARCHIVED: "bg-zinc-800 text-zinc-500 border-zinc-700",
+const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  NEW: { bg: "bg-blue-500/20", text: "text-blue-300", border: "border-blue-500/40" },
+  WAITLIST: { bg: "bg-blue-500/20", text: "text-blue-300", border: "border-blue-500/40" },
+  DM_SENT: { bg: "bg-amber-500/20", text: "text-amber-300", border: "border-amber-500/40" },
+  REPLIED: { bg: "bg-purple-500/20", text: "text-purple-300", border: "border-purple-500/40" },
+  DEMO_SCHEDULED: { bg: "bg-cyan-500/20", text: "text-cyan-300", border: "border-cyan-500/40" },
+  FOUNDING_MEMBER: { bg: "bg-emerald-500/20", text: "text-emerald-300", border: "border-emerald-500/40" },
+  ARCHIVED: { bg: "bg-zinc-800", text: "text-zinc-400", border: "border-zinc-700" },
+};
+
+const STORAGE_KEYS = {
+  LEADS: "eventos_crm_leads_v2",
+  DELETED_IDS: "eventos_crm_deleted_ids_v2",
+  STATUS_OVERRIDES: "eventos_crm_status_overrides_v2",
+  PASSKEY: "eventos_founder_key",
 };
 
 export default function FounderWaitlistPage() {
@@ -30,6 +38,7 @@ export default function FounderWaitlistPage() {
   const [leads, setLeads] = useState<WaitlistLead[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [statusToast, setStatusToast] = useState<string | null>(null);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,20 +58,71 @@ export default function FounderWaitlistPage() {
     status: "NEW" as WaitlistLead["status"],
   });
 
-  // Auto-login if previously verified in session or provided in URL
+  // Load cached leads and credentials on mount
   useEffect(() => {
-    let keyToUse = "";
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlKey = urlParams.get("key");
-      const saved = sessionStorage.getItem("eventos_founder_key");
-      keyToUse = urlKey || saved || "";
-    }
+    if (typeof window === "undefined") return;
+
+    try {
+      const cached = localStorage.getItem(STORAGE_KEYS.LEADS);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setLeads(parsed);
+        }
+      }
+    } catch {}
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlKey = urlParams.get("key");
+    const savedKey = sessionStorage.getItem(STORAGE_KEYS.PASSKEY) || localStorage.getItem(STORAGE_KEYS.PASSKEY);
+    const keyToUse = urlKey || savedKey || "";
+
     if (keyToUse) {
       setPasskey(keyToUse);
       fetchLeads(keyToUse);
     }
   }, []);
+
+  const showToast = (msg: string) => {
+    setStatusToast(msg);
+    setTimeout(() => setStatusToast(null), 3500);
+  };
+
+  const reconcileLeads = (serverLeads: WaitlistLead[]): WaitlistLead[] => {
+    if (typeof window === "undefined") return serverLeads;
+
+    try {
+      const deletedIds: string[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.DELETED_IDS) || "[]");
+      const overrides: Record<string, WaitlistLead["status"]> = JSON.parse(
+        localStorage.getItem(STORAGE_KEYS.STATUS_OVERRIDES) || "{}"
+      );
+      const localCached: WaitlistLead[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEADS) || "[]");
+
+      // 1. Filter out deleted IDs from server
+      let active = serverLeads.filter((l) => !deletedIds.includes(l.id));
+
+      // 2. Apply status overrides from local actions
+      active = active.map((l) => {
+        if (overrides[l.id]) {
+          return { ...l, status: overrides[l.id] };
+        }
+        return l;
+      });
+
+      // 3. Keep any manual leads created locally that aren't on server yet
+      for (const localLead of localCached) {
+        if (!deletedIds.includes(localLead.id) && !active.some((s) => s.id === localLead.id)) {
+          active.push(localLead);
+        }
+      }
+
+      // 4. Save clean reconciled state to localStorage
+      localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(active));
+      return active;
+    } catch {
+      return serverLeads;
+    }
+  };
 
   const fetchLeads = async (key: string) => {
     setLoading(true);
@@ -74,15 +134,24 @@ export default function FounderWaitlistPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error("Invalid Founder Key or unauthorized.");
+        throw new Error("Invalid Founder Key or unauthorized access.");
       }
 
-      setLeads(data.leads || []);
+      const rawLeads: WaitlistLead[] = data.leads || [];
+      const reconciled = reconcileLeads(rawLeads);
+
+      setLeads(reconciled);
       setIsAuthenticated(true);
-      sessionStorage.setItem("eventos_founder_key", key);
+      sessionStorage.setItem(STORAGE_KEYS.PASSKEY, key);
+      localStorage.setItem(STORAGE_KEYS.PASSKEY, key);
     } catch (err: any) {
       setError(err.message || "Failed to load leads.");
-      setIsAuthenticated(false);
+      // If we already have cached leads, keep user authenticated
+      if (leads.length > 0) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -93,48 +162,27 @@ export default function FounderWaitlistPage() {
     fetchLeads(passkey);
   };
 
-  // CREATE or UPDATE Lead
-  const handleSaveLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingLead) {
-        // UPDATE (PUT)
-        const res = await fetch("/api/waitlist", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "x-founder-key": passkey,
-          },
-          body: JSON.stringify({
-            id: editingLead.id,
-            updates: modalForm,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || "Update failed");
-        setLeads((prev) => prev.map((l) => (l.id === editingLead.id ? data.lead : l)));
-      } else {
-        // CREATE (POST)
-        const res = await fetch("/api/waitlist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(modalForm),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || "Creation failed");
-        await fetchLeads(passkey);
-      }
-      setIsModalOpen(false);
-      setEditingLead(null);
-    } catch (err: any) {
-      alert("Error saving lead: " + err.message);
-    }
-  };
-
   // QUICK UPDATE STATUS
   const handleStatusChange = async (id: string, newStatus: WaitlistLead["status"]) => {
+    // 1. Optimistic UI update
+    const updated = leads.map((l) => (l.id === id ? { ...l, status: newStatus } : l));
+    setLeads(updated);
+
+    // 2. Persist to localStorage immediately
     try {
-      const res = await fetch("/api/waitlist", {
+      localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(updated));
+      const overrides: Record<string, WaitlistLead["status"]> = JSON.parse(
+        localStorage.getItem(STORAGE_KEYS.STATUS_OVERRIDES) || "{}"
+      );
+      overrides[id] = newStatus;
+      localStorage.setItem(STORAGE_KEYS.STATUS_OVERRIDES, JSON.stringify(overrides));
+    } catch {}
+
+    showToast(`Pipeline status updated to ${newStatus}`);
+
+    // 3. Dispatch to API
+    try {
+      await fetch("/api/waitlist", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -145,27 +193,88 @@ export default function FounderWaitlistPage() {
           updates: { status: newStatus },
         }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error);
-      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
     } catch (err: any) {
-      alert("Failed to update status: " + err.message);
+      console.warn("Server status update sync warning:", err.message);
     }
   };
 
   // DELETE LEAD
   const handleDeleteLead = async (id: string, agencyName: string) => {
     if (!confirm(`Are you sure you want to delete lead "${agencyName}"?`)) return;
+
+    // 1. Update UI
+    const updated = leads.filter((l) => l.id !== id);
+    setLeads(updated);
+
+    // 2. Update localStorage & mark ID as permanently deleted
     try {
-      const res = await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, {
+      localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(updated));
+      const deletedIds: string[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.DELETED_IDS) || "[]");
+      if (!deletedIds.includes(id)) {
+        deletedIds.push(id);
+      }
+      localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(deletedIds));
+    } catch {}
+
+    showToast(`Lead "${agencyName}" removed`);
+
+    // 3. Dispatch to API
+    try {
+      await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
         headers: { "x-founder-key": passkey },
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Delete failed");
-      setLeads((prev) => prev.filter((l) => l.id !== id));
     } catch (err: any) {
-      alert("Failed to delete lead: " + err.message);
+      console.warn("Server lead delete sync warning:", err.message);
+    }
+  };
+
+  // CREATE or UPDATE Lead via Modal
+  const handleSaveLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingLead) {
+        // UPDATE (PUT)
+        const updated = leads.map((l) =>
+          l.id === editingLead.id ? { ...l, ...modalForm } : l
+        );
+        setLeads(updated);
+        localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(updated));
+
+        await fetch("/api/waitlist", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "x-founder-key": passkey,
+          },
+          body: JSON.stringify({
+            id: editingLead.id,
+            updates: modalForm,
+          }),
+        });
+        showToast("Lead details updated");
+      } else {
+        // CREATE (POST)
+        const newLead: WaitlistLead = {
+          id: "wtl_" + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+          ...modalForm,
+          joinedAt: new Date().toISOString(),
+        };
+        const updated = [newLead, ...leads];
+        setLeads(updated);
+        localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(updated));
+
+        await fetch("/api/waitlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(modalForm),
+        });
+        showToast(`Manual lead "${newLead.agencyName}" created`);
+      }
+      setIsModalOpen(false);
+      setEditingLead(null);
+    } catch (err: any) {
+      alert("Error saving lead: " + err.message);
     }
   };
 
@@ -192,7 +301,7 @@ export default function FounderWaitlistPage() {
       whatsapp: lead.whatsapp,
       eventType: lead.eventType,
       currentTools: lead.currentTools || "",
-      status: lead.status || "NEW",
+      status: (lead.status === "WAITLIST" ? "NEW" : lead.status) || "NEW",
     });
     setIsModalOpen(true);
   };
@@ -226,13 +335,15 @@ export default function FounderWaitlistPage() {
 
   // Filtered Leads
   const filteredLeads = leads.filter((lead) => {
+    const term = searchTerm.toLowerCase();
     const matchesSearch =
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.agencyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.name.toLowerCase().includes(term) ||
+      lead.agencyName.toLowerCase().includes(term) ||
       lead.whatsapp.includes(searchTerm) ||
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase());
+      lead.email.toLowerCase().includes(term);
 
-    const matchesStatus = statusFilter === "ALL" || (lead.status || "NEW") === statusFilter;
+    const leadStatus = lead.status === "WAITLIST" ? "NEW" : lead.status;
+    const matchesStatus = statusFilter === "ALL" || leadStatus === statusFilter;
     const matchesEvent = eventFilter === "ALL" || lead.eventType === eventFilter;
 
     return matchesSearch && matchesStatus && matchesEvent;
@@ -276,6 +387,14 @@ export default function FounderWaitlistPage() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0C] text-zinc-100 p-4 sm:p-8 font-sans">
+      {/* Toast Notification */}
+      {statusToast && (
+        <div className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-2xl bg-zinc-900/95 border border-emerald-500/40 shadow-xl flex items-center gap-2 text-xs font-semibold text-emerald-400 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-200">
+          <Icon icon="solar:check-circle-bold" className="text-base" />
+          <span>{statusToast}</span>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-800">
@@ -369,15 +488,15 @@ export default function FounderWaitlistPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                className="px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 cursor-pointer"
               >
-                <option value="ALL">All Statuses</option>
-                <option value="NEW">NEW</option>
-                <option value="DM_SENT">DM_SENT</option>
-                <option value="REPLIED">REPLIED</option>
-                <option value="DEMO_SCHEDULED">DEMO_SCHEDULED</option>
-                <option value="FOUNDING_MEMBER">FOUNDING_MEMBER</option>
-                <option value="ARCHIVED">ARCHIVED</option>
+                <option value="ALL" className="bg-zinc-900 text-white">All Statuses</option>
+                <option value="NEW" className="bg-zinc-900 text-white">NEW</option>
+                <option value="DM_SENT" className="bg-zinc-900 text-white">DM_SENT</option>
+                <option value="REPLIED" className="bg-zinc-900 text-white">REPLIED</option>
+                <option value="DEMO_SCHEDULED" className="bg-zinc-900 text-white">DEMO_SCHEDULED</option>
+                <option value="FOUNDING_MEMBER" className="bg-zinc-900 text-white">FOUNDING_MEMBER</option>
+                <option value="ARCHIVED" className="bg-zinc-900 text-white">ARCHIVED</option>
               </select>
             </div>
 
@@ -387,13 +506,13 @@ export default function FounderWaitlistPage() {
               <select
                 value={eventFilter}
                 onChange={(e) => setEventFilter(e.target.value)}
-                className="px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                className="px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 cursor-pointer"
               >
-                <option value="ALL">All Types</option>
-                <option value="Weddings">Weddings</option>
-                <option value="Corporate">Corporate</option>
-                <option value="Both">Both</option>
-                <option value="Photography">Photography</option>
+                <option value="ALL" className="bg-zinc-900 text-white">All Types</option>
+                <option value="Weddings" className="bg-zinc-900 text-white">Weddings</option>
+                <option value="Corporate" className="bg-zinc-900 text-white">Corporate</option>
+                <option value="Both" className="bg-zinc-900 text-white">Both</option>
+                <option value="Photography" className="bg-zinc-900 text-white">Photography</option>
               </select>
             </div>
           </div>
@@ -418,8 +537,14 @@ export default function FounderWaitlistPage() {
               <tbody className="divide-y divide-zinc-800/60">
                 {filteredLeads.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-zinc-500 font-medium">
-                      No leads match your search/filter criteria.
+                    <td colSpan={8} className="py-16 text-center text-zinc-500 font-medium">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Icon icon="solar:clipboard-list-linear" className="text-3xl text-zinc-600" />
+                        <span className="text-zinc-400 font-semibold text-sm">No waitlist leads yet</span>
+                        <span className="text-xs text-zinc-600 max-w-sm">
+                          Share your link <code className="text-purple-400 font-mono">eventosapp.in/waitlist</code> on Instagram to start receiving early bird submissions!
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -428,6 +553,9 @@ export default function FounderWaitlistPage() {
                     const waText = encodeURIComponent(
                       `Hi ${lead.name}! Lokesh here, Founder of EventOS. Thanks for joining our Founding Private Beta waitlist for ${lead.agencyName} 🚀 I'd love to learn more about your upcoming events!`
                     );
+
+                    const currentStatus = (lead.status === "WAITLIST" ? "NEW" : lead.status) || "NEW";
+                    const style = STATUS_COLORS[currentStatus] || STATUS_COLORS.NEW;
 
                     return (
                       <tr key={lead.id} className="hover:bg-zinc-800/40 transition-colors">
@@ -450,22 +578,23 @@ export default function FounderWaitlistPage() {
                           </span>
                         </td>
 
-                        {/* Editable Pipeline Status Dropdown */}
+                        {/* Editable Pipeline Status Dropdown - Sleek Dark Pill */}
                         <td className="py-3.5 px-4 whitespace-nowrap">
-                          <select
-                            value={lead.status || "NEW"}
-                            onChange={(e) => handleStatusChange(lead.id, e.target.value as any)}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border cursor-pointer focus:outline-none ${
-                              STATUS_COLORS[lead.status || "NEW"]
-                            }`}
-                          >
-                            <option value="NEW" className="bg-zinc-900 text-white">NEW</option>
-                            <option value="DM_SENT" className="bg-zinc-900 text-white">DM_SENT</option>
-                            <option value="REPLIED" className="bg-zinc-900 text-white">REPLIED</option>
-                            <option value="DEMO_SCHEDULED" className="bg-zinc-900 text-white">DEMO_SCHEDULED</option>
-                            <option value="FOUNDING_MEMBER" className="bg-zinc-900 text-white">FOUNDING_MEMBER</option>
-                            <option value="ARCHIVED" className="bg-zinc-900 text-white">ARCHIVED</option>
-                          </select>
+                          <div className="relative inline-block">
+                            <select
+                              value={currentStatus}
+                              onChange={(e) => handleStatusChange(lead.id, e.target.value as any)}
+                              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border cursor-pointer focus:outline-none transition-all ${style.bg} ${style.text} ${style.border}`}
+                              style={{ backgroundColor: "#141418" }}
+                            >
+                              <option value="NEW" className="bg-[#141418] text-blue-300">NEW</option>
+                              <option value="DM_SENT" className="bg-[#141418] text-amber-300">DM_SENT</option>
+                              <option value="REPLIED" className="bg-[#141418] text-purple-300">REPLIED</option>
+                              <option value="DEMO_SCHEDULED" className="bg-[#141418] text-cyan-300">DEMO_SCHEDULED</option>
+                              <option value="FOUNDING_MEMBER" className="bg-[#141418] text-emerald-300">FOUNDING_MEMBER</option>
+                              <option value="ARCHIVED" className="bg-[#141418] text-zinc-400">ARCHIVED</option>
+                            </select>
+                          </div>
                         </td>
 
                         <td className="py-3.5 px-4 text-zinc-400 max-w-[160px] truncate" title={lead.currentTools}>
@@ -527,7 +656,7 @@ export default function FounderWaitlistPage() {
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-zinc-500 hover:text-white text-sm"
+                className="text-zinc-500 hover:text-white text-sm cursor-pointer"
               >
                 ✕
               </button>
@@ -631,14 +760,14 @@ export default function FounderWaitlistPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-300 hover:bg-zinc-700 transition-colors"
+                  className="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-300 hover:bg-zinc-700 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition-colors shadow-md shadow-purple-600/20"
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition-colors shadow-md shadow-purple-600/20 cursor-pointer"
                 >
                   {editingLead ? "Save Changes" : "Create Lead"}
                 </button>
