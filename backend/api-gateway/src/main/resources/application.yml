@@ -59,6 +59,12 @@ spring:
             - Path=/api/v1/client/**
           filters:
             - RewritePath=/api/v1/client(?<segment>.*), /api/v1/events/client${segment}
+        - id: audit-logs-route
+          uri: ${EVENT_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/audit-logs, /api/v1/audit-logs/**
+          filters:
+            - RewritePath=/api/v1/audit-logs(?<segment>.*), /api/v1/events/audit-logs${segment}
         - id: gallery-service
           uri: ${GALLERY_SERVICE_URL:http://localhost:8084}
           predicates:

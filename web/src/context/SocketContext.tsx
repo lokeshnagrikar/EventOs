@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAuthStore } from "@/store/authStore";
 
 export type ConnectionStatus = "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "RECONNECTING";
@@ -197,7 +197,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const subscribe = (topic: string, callback: (payload: any) => void) => {
+  const subscribe = useCallback((topic: string, callback: (payload: any) => void) => {
     if (!subscriptionsRef.current[topic]) {
       subscriptionsRef.current[topic] = [];
     }
@@ -206,28 +206,37 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     sendFrame("SUBSCRIBE", { destination: topic, id: topic });
 
     return () => {
-      subscriptionsRef.current[topic] = subscriptionsRef.current[topic].filter(cb => cb !== callback);
+      subscriptionsRef.current[topic] = subscriptionsRef.current[topic]?.filter(cb => cb !== callback) || [];
       sendFrame("UNSUBSCRIBE", { id: topic });
     };
-  };
+  }, []);
 
-  const send = (destination: string, payload: any) => {
+  const send = useCallback((destination: string, payload: any) => {
     sendFrame("SEND", { destination }, payload);
     // Also echo to local subscribers if in resilient fallback mode
     if (isFallbackModeRef.current && subscriptionsRef.current[destination]) {
       subscriptionsRef.current[destination].forEach(cb => cb(payload));
     }
-  };
+  }, []);
 
-  const triggerTyping = (page: string) => {
+  const triggerTyping = useCallback((page: string) => {
     const senderName = user?.firstName || "User";
     send("/app/typing", { name: senderName, page });
     setTypingUser({ name: senderName, page });
     setTimeout(() => setTypingUser(null), 2500);
-  };
+  }, [send, user?.firstName]);
+
+  const contextValue = useMemo(() => ({
+    status,
+    subscribe,
+    send,
+    activeUsers,
+    triggerTyping,
+    typingUser
+  }), [status, subscribe, send, activeUsers, triggerTyping, typingUser]);
 
   return (
-    <SocketContext.Provider value={{ status, subscribe, send, activeUsers, triggerTyping, typingUser }}>
+    <SocketContext.Provider value={contextValue}>
       {children}
     </SocketContext.Provider>
   );

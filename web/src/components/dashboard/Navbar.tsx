@@ -82,7 +82,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { status, subscribe, activeUsers } = useSocket();
-  const { addToast } = useToastStore();
+  const addToast = useToastStore((state) => state.addToast);
   const { user, activeTenantId } = useAuthStore();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -121,99 +121,131 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
       const readIds = new Set<string>(JSON.parse(localStorage.getItem(storageKeyRead) || "[]"));
       const dismissedIds = new Set<string>(JSON.parse(localStorage.getItem(storageKeyDismissed) || "[]"));
 
-      // Fetch CRM Leads, Quotes, Events, Invoices, and Audit Logs in parallel
-      const [leadsRes, quotesRes, eventsRes, invoicesRes, auditRes, securityRes] = await Promise.allSettled([
-        api.get("/crm/leads"),
-        api.get("/crm/quotes"),
-        api.get("/events"),
-        api.get("/events/invoices"),
-        api.get("/audit-logs?size=10"),
-        api.get("/security/logs"),
-      ]);
+      const isSuperAdmin = Boolean(
+        pathname?.startsWith("/superadmin") || (user?.role || "").toUpperCase().includes("SUPER")
+      );
 
       const dynamicList: NotificationItem[] = [];
 
-      // 1. Process Live Audit Logs (SuperAdmin vs Team vs System actions)
-      if (auditRes.status === "fulfilled" && Array.isArray(auditRes.value.data?.data)) {
-        auditRes.value.data.data.slice(0, 6).forEach((logItem: any) => {
-          const id = `audit-${logItem.id}`;
-          if (dismissedIds.has(id)) return;
-          const ts = logItem.createdAt ? new Date(logItem.createdAt).getTime() : Date.now();
-          const actionStr = String(logItem.action || "").toUpperCase();
-          const isSuperAdminAction = actionStr.includes("SUPERADMIN") || actionStr.includes("SUBSCRIPTION") || actionStr.includes("TENANT_STATUS") || actionStr.includes("ANNOUNCEMENT");
-          const isSecurityAction = actionStr.includes("LOGIN") || actionStr.includes("PASSWORD") || actionStr.includes("2FA");
-
-          let actorType: "SUPER_ADMIN" | "TEAM" | "CLIENT" | "SYSTEM" = "TEAM";
-          let actorName = "Team Member";
-          let title = "Workspace Activity";
-          let type: "info" | "success" | "warning" | "error" = "info";
-          let category: any = "system";
-
-          if (isSuperAdminAction) {
-            actorType = "SUPER_ADMIN";
-            actorName = "SuperAdmin";
-            title = `Platform Update: ${logItem.action.replace(/_/g, " ")}`;
-            type = "warning";
-            category = "superadmin";
-          } else if (isSecurityAction) {
-            actorType = "TEAM";
-            actorName = "Security Guard";
-            title = `Security Event: ${logItem.action.replace(/_/g, " ")}`;
-            type = actionStr.includes("FAILURE") ? "error" : "info";
-            category = "security";
-          } else {
-            actorType = "TEAM";
-            actorName = logItem.entityName ? `${logItem.entityName} Team` : "Team Member";
-            title = `${logItem.action ? logItem.action.replace(/_/g, " ") : "Entity Update"}: ${logItem.entityName || "Record"}`;
-            type = "info";
-            category = "event";
+      if (isSuperAdmin) {
+        // SuperAdmin Notification Feed - Live Platform Logs from billing/superadmin
+        try {
+          const saLogsRes = await api.get("/auth/billing/superadmin/logs");
+          if (saLogsRes.data?.success && Array.isArray(saLogsRes.data.data)) {
+            saLogsRes.data.data.slice(0, 10).forEach((l: any) => {
+              const id = `sa-log-${l.id}`;
+              if (dismissedIds.has(id)) return;
+              const ts = l.createdAt ? new Date(l.createdAt).getTime() : Date.now();
+              dynamicList.push({
+                id,
+                title: l.action ? `Platform Action: ${String(l.action).replace(/_/g, " ")}` : "Platform Activity",
+                desc: l.details || `Logged by ${l.userId || "SuperAdmin"} · IP: ${l.ipAddress || "System"}`,
+                time: formatRelativeTime(ts),
+                timestamp: ts,
+                unread: !readIds.has(id),
+                type: "warning",
+                href: "/superadmin",
+                category: "superadmin",
+                actorType: "SUPER_ADMIN",
+                actorName: "SuperAdmin Console",
+              });
+            });
           }
+        } catch {
+          // Graceful fallback for superadmin notifications
+        }
+      } else {
+        // Regular Workspace Activities - Fetch CRM, Quotes, Events, Invoices, and Audit Logs
+        const [leadsRes, quotesRes, eventsRes, invoicesRes, auditRes, securityRes] = await Promise.allSettled([
+          api.get("/crm/leads"),
+          api.get("/crm/quotes"),
+          api.get("/events"),
+          api.get("/events/invoices"),
+          api.get("/events/audit-logs?size=10"),
+          api.get("/auth/settings/security/logs"),
+        ]);
 
-          dynamicList.push({
-            id,
-            title,
-            desc: logItem.payloadDiff || logItem.details || `Operation logged for ${logItem.entityName || "Workspace"}.`,
-            time: formatRelativeTime(ts),
-            timestamp: ts,
-            unread: !readIds.has(id),
-            type,
-            href: isSuperAdminAction ? "/settings" : "/activity",
-            category,
-            actorType,
-            actorName,
+        // 1. Process Live Audit Logs (SuperAdmin vs Team vs System actions)
+        if (auditRes.status === "fulfilled" && Array.isArray(auditRes.value.data?.data)) {
+          auditRes.value.data.data.slice(0, 6).forEach((logItem: any) => {
+            const id = `audit-${logItem.id}`;
+            if (dismissedIds.has(id)) return;
+            const ts = logItem.createdAt ? new Date(logItem.createdAt).getTime() : Date.now();
+            const actionStr = String(logItem.action || "").toUpperCase();
+            const isSuperAdminAction = actionStr.includes("SUPERADMIN") || actionStr.includes("SUBSCRIPTION") || actionStr.includes("TENANT_STATUS") || actionStr.includes("ANNOUNCEMENT");
+            const isSecurityAction = actionStr.includes("LOGIN") || actionStr.includes("PASSWORD") || actionStr.includes("2FA");
+
+            let actorType: "SUPER_ADMIN" | "TEAM" | "CLIENT" | "SYSTEM" = "TEAM";
+            let actorName = "Team Member";
+            let title = "Workspace Activity";
+            let type: "info" | "success" | "warning" | "error" = "info";
+            let category: any = "system";
+
+            if (isSuperAdminAction) {
+              actorType = "SUPER_ADMIN";
+              actorName = "SuperAdmin";
+              title = `Platform Update: ${logItem.action.replace(/_/g, " ")}`;
+              type = "warning";
+              category = "superadmin";
+            } else if (isSecurityAction) {
+              actorType = "TEAM";
+              actorName = "Security Guard";
+              title = `Security Event: ${logItem.action.replace(/_/g, " ")}`;
+              type = actionStr.includes("FAILURE") ? "error" : "info";
+              category = "security";
+            } else {
+              actorType = "TEAM";
+              actorName = logItem.entityName ? `${logItem.entityName} Team` : "Team Member";
+              title = `${logItem.action ? logItem.action.replace(/_/g, " ") : "Entity Update"}: ${logItem.entityName || "Record"}`;
+              type = "info";
+              category = "event";
+            }
+
+            dynamicList.push({
+              id,
+              title,
+              desc: logItem.payloadDiff || logItem.details || `Operation logged for ${logItem.entityName || "Workspace"}.`,
+              time: formatRelativeTime(ts),
+              timestamp: ts,
+              unread: !readIds.has(id),
+              type,
+              href: isSuperAdminAction ? "/settings" : "/activity",
+              category,
+              actorType,
+              actorName,
+            });
           });
-        });
-      }
+        }
 
-      // 2. Process Live Security Logs from auth-service
-      if (securityRes.status === "fulfilled" && Array.isArray(securityRes.value.data?.data)) {
-        securityRes.value.data.data.slice(0, 4).forEach((secItem: any) => {
-          const id = `sec-${secItem.id}`;
-          if (dismissedIds.has(id)) return;
-          const ts = secItem.createdAt ? new Date(secItem.createdAt).getTime() : Date.now() - 1000 * 60 * 15;
-          const isSuper = secItem.userAgent === "SuperAdmin" || (secItem.action && secItem.action.includes("SUPERADMIN"));
-          dynamicList.push({
-            id,
-            title: isSuper ? `SuperAdmin Action: ${secItem.action}` : `Security Audit: ${secItem.action}`,
-            desc: secItem.details || `Audit event from IP: ${secItem.ipAddress || "system"}`,
-            time: formatRelativeTime(ts),
-            timestamp: ts,
-            unread: !readIds.has(id),
-            type: isSuper ? "warning" : "info",
-            href: "/settings",
-            category: isSuper ? "superadmin" : "security",
-            actorType: isSuper ? "SUPER_ADMIN" : "SYSTEM",
-            actorName: isSuper ? "SuperAdmin" : "Security Service",
+        // 2. Process Live Security Logs from auth-service
+        if (securityRes.status === "fulfilled" && Array.isArray(securityRes.value.data?.data)) {
+          securityRes.value.data.data.slice(0, 4).forEach((secItem: any) => {
+            const id = `sec-${secItem.id}`;
+            if (dismissedIds.has(id)) return;
+            const ts = secItem.createdAt ? new Date(secItem.createdAt).getTime() : Date.now() - 1000 * 60 * 15;
+            const isSuper = secItem.userAgent === "SuperAdmin" || (secItem.action && secItem.action.includes("SUPERADMIN"));
+            dynamicList.push({
+              id,
+              title: isSuper ? `SuperAdmin Action: ${secItem.action}` : `Security Audit: ${secItem.action}`,
+              desc: secItem.details || `Audit event from IP: ${secItem.ipAddress || "system"}`,
+              time: formatRelativeTime(ts),
+              timestamp: ts,
+              unread: !readIds.has(id),
+              type: isSuper ? "warning" : "info",
+              href: "/settings",
+              category: isSuper ? "superadmin" : "security",
+              actorType: isSuper ? "SUPER_ADMIN" : "SYSTEM",
+              actorName: isSuper ? "SuperAdmin" : "Security Service",
+            });
           });
-        });
-      }
+        }
 
-      // 3. Process Live Leads
-      if (leadsRes.status === "fulfilled" && Array.isArray(leadsRes.value.data?.data)) {
-        leadsRes.value.data.data.slice(0, 4).forEach((lead: any) => {
-          const id = `lead-${lead.id}`;
-          if (dismissedIds.has(id)) return;
-          const ts = lead.createdAt ? new Date(lead.createdAt).getTime() : Date.now() - 1000 * 60 * 20;
+        // 3. Process Live Leads
+        if (leadsRes.status === "fulfilled" && Array.isArray(leadsRes.value.data?.data)) {
+          leadsRes.value.data.data.slice(0, 4).forEach((lead: any) => {
+            const id = `lead-${lead.id}`;
+            if (dismissedIds.has(id)) return;
+            const ts = lead.createdAt ? new Date(lead.createdAt).getTime() : Date.now() - 1000 * 60 * 20;
           const budgetFormatted = lead.budget ? ` · ₹${Number(lead.budget).toLocaleString("en-IN")}` : "";
           dynamicList.push({
             id,
@@ -298,6 +330,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
           });
         });
       }
+    }
 
       // Fallback: If tenant is fresh / brand new with no records, provide real workspace onboarding status
       if (dynamicList.length === 0) {
@@ -338,7 +371,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
     } finally {
       setIsRefreshing(false);
     }
-  }, [activeTenantId, user]);
+  }, [activeTenantId, user?.id, user?.role, pathname]);
 
   // Trigger initial fetch when active workspace loads
   useEffect(() => {

@@ -189,7 +189,7 @@ const ROLE_TO_SUBROLE: Record<string, string> = {
 
 export default function SuperAdminDashboard() {
   const router = useRouter();
-  const { addToast } = useToastStore();
+  const addToast = useToastStore((state) => state.addToast);
   const { user, clearAuth, logout } = useAuthStore();
   const { status: socketStatus, subscribe: socketSubscribe } = useSocket();
 
@@ -245,7 +245,7 @@ export default function SuperAdminDashboard() {
         } catch {}
       }
     }
-  }, [user]);
+  }, [user?.id]);
 
   // Real-time WebSocket activity push listener
   useEffect(() => {
@@ -282,7 +282,7 @@ export default function SuperAdminDashboard() {
         router.push("/superadmin/login");
       }
     }
-  }, [mounted, user, router, addToast]);
+  }, [mounted, user?.id, user?.role, router, addToast]);
 
   // Fetch real superadmin data
   useEffect(() => {
@@ -485,7 +485,7 @@ export default function SuperAdminDashboard() {
     };
 
     fetchSuperAdminData();
-  }, [mounted, user]);
+  }, [mounted, user?.id, user?.role]);
 
   // Support tickets
   const [tickets, setTickets] = useState<any[]>([]);
