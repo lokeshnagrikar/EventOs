@@ -153,7 +153,7 @@ export default function PageShell({
           id="main-content"
           data-lenis-prevent
           className={cn(
-            "flex-1 overflow-y-auto min-w-0 max-w-full overflow-x-hidden px-3 py-3.5 sm:px-6 sm:py-6 md:p-8 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto pb-28 md:pb-24 scrollbar-none hover:scrollbar-thin",
+            "flex-1 overflow-y-auto min-w-0 max-w-full overflow-x-hidden px-3 py-3.5 sm:px-6 sm:py-6 md:p-8 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto pb-28 md:pb-24 custom-scrollbar",
             className
           )}
         >

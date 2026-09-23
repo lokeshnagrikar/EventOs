@@ -1074,7 +1074,7 @@ export default function SuperAdminDashboard() {
   if (!mounted || !user) return null;
 
   return (
-    <PageShell>
+    <PageShell className="custom-scrollbar">
       <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 text-zinc-300 font-sans select-none">
 
         {/* TOP STATUS BAR & OPERATOR PANEL (Apple Style Redesign) */}
@@ -1142,7 +1142,7 @@ export default function SuperAdminDashboard() {
           {/* Apple-style Navigation Sidebar (Horizontal on mobile, vertical on desktop) */}
           <div className="lg:col-span-1 space-y-2 min-w-0">
             <span className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.14em] font-mono block px-1 lg:px-3">Operational Controls</span>
-            <div className="flex lg:flex-col overflow-x-auto lg:overflow-visible scrollbar-none pb-2 lg:pb-0 gap-1.5 text-[11px] font-bold touch-pan-x">
+            <div className="flex lg:flex-col overflow-x-auto lg:overflow-visible custom-scrollbar pb-2 lg:pb-0 gap-1.5 text-[11px] font-bold touch-pan-x">
               {[
                 { id: "metrics" as const, label: "Global Metrics", icon: LineChart },
                 { id: "tenants" as const, label: "Tenants Directory", icon: Building },
@@ -1269,7 +1269,7 @@ export default function SuperAdminDashboard() {
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" /> Realtime WebSocket Listening
                     </span>
                   </div>
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1 scrollbar-none font-mono text-[10px] font-semibold">
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1.5 custom-scrollbar font-mono text-[10px] font-semibold">
                     {liveActivities.map((act) => (
                       <motion.div
                         key={act.id}
@@ -1310,62 +1310,64 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 <div className="border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl overflow-hidden shadow-xl">
-                  <table className="w-full text-xs font-medium text-zinc-400">
-                    <thead>
-                      <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02] font-mono">
-                        <th className="p-4">Tenant Workspace</th>
-                        <th className="p-4">Plan Name</th>
-                        <th className="p-4">Registered Date</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tenants.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())).map((ten) => (
-                        <tr key={ten.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition">
-                          <td className="p-4">
-                            <span className="font-extrabold text-white block text-xs">{ten.name}</span>
-                            <span className="text-[9px] text-zinc-500 font-mono">{ten.id}</span>
-                          </td>
-                          <td className="p-4 font-bold text-purple-400">{ten.plan}</td>
-                          <td className="p-4 text-zinc-400 font-mono text-[10px]">{ten.created}</td>
-                          <td className="p-4">
-                            <span className={cn(
-                              "px-2 py-0.5 rounded-full text-[9px] font-black uppercase font-mono border",
-                              ten.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
-                            )}>
-                              {ten.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right flex justify-end gap-2">
-                            <button
-                              onClick={() => setInspectedTenant(ten)}
-                              className="px-2.5 py-1.5 bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
-                            >
-                              <Eye size={12} /> Inspect
-                            </button>
-                            <button
-                              onClick={() => handleImpersonate(ten.id, ten.name)}
-                              className="px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.06] hover:border-purple-500/20 text-zinc-300 hover:text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
-                            >
-                              Impersonate
-                            </button>
-                            <button
-                              onClick={() => handleToggleTenantStatus(ten.id, ten.status)}
-                              className={cn(
-                                "px-2.5 py-1.5 font-bold rounded-lg text-[10px] transition cursor-pointer border",
-                                ten.status === "ACTIVE"
-                                  ? "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20"
-                                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
-                              )}
-                            >
-                              {ten.status === "ACTIVE" ? "Suspend" : "Reactivate"}
-                            </button>
-                          </td>
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-xs font-medium text-zinc-400 min-w-[640px]">
+                      <thead>
+                        <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02] font-mono">
+                          <th className="p-4">Tenant Workspace</th>
+                          <th className="p-4">Plan Name</th>
+                          <th className="p-4">Registered Date</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4 text-right">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {tenants.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())).map((ten) => (
+                          <tr key={ten.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition">
+                            <td className="p-4">
+                              <span className="font-extrabold text-white block text-xs">{ten.name}</span>
+                              <span className="text-[9px] text-zinc-500 font-mono">{ten.id}</span>
+                            </td>
+                            <td className="p-4 font-bold text-purple-400">{ten.plan}</td>
+                            <td className="p-4 text-zinc-400 font-mono text-[10px]">{ten.created}</td>
+                            <td className="p-4">
+                              <span className={cn(
+                                "px-2 py-0.5 rounded-full text-[9px] font-black uppercase font-mono border",
+                                ten.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+                              )}>
+                                {ten.status}
+                              </span>
+                            </td>
+                            <td className="p-4 text-right flex justify-end gap-2">
+                              <button
+                                onClick={() => setInspectedTenant(ten)}
+                                className="px-2.5 py-1.5 bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
+                              >
+                                <Eye size={12} /> Inspect
+                              </button>
+                              <button
+                                onClick={() => handleImpersonate(ten.id, ten.name)}
+                                className="px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.06] hover:border-purple-500/20 text-zinc-300 hover:text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                              >
+                                Impersonate
+                              </button>
+                              <button
+                                onClick={() => handleToggleTenantStatus(ten.id, ten.status)}
+                                className={cn(
+                                  "px-2.5 py-1.5 font-bold rounded-lg text-[10px] transition cursor-pointer border",
+                                  ten.status === "ACTIVE"
+                                    ? "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20"
+                                    : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                                )}
+                              >
+                                {ten.status === "ACTIVE" ? "Suspend" : "Reactivate"}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -1374,60 +1376,62 @@ export default function SuperAdminDashboard() {
             {activeSubTab === "users" && hasAccessToTab("users") && (
               <div className="space-y-6">
                 <div className="border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl overflow-hidden shadow-xl">
-                  <table className="w-full text-xs font-medium text-zinc-400">
-                    <thead>
-                      <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02] font-mono">
-                        <th className="p-4">User Operator</th>
-                        <th className="p-4">Tenant Membership</th>
-                        <th className="p-4">Last Device</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Emergency Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((usr) => (
-                        <tr key={usr.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition">
-                          <td className="p-4">
-                            <span className="font-extrabold text-white block text-xs">{usr.name}</span>
-                            <span className="text-[9px] text-zinc-500 font-mono">{usr.email}</span>
-                          </td>
-                          <td className="p-4 font-bold text-zinc-300">{usr.tenant}</td>
-                          <td className="p-4 text-zinc-400 text-[10px]">{usr.device}</td>
-                          <td className="p-4">
-                            <span className={cn(
-                              "px-2 py-0.5 rounded-full text-[9px] font-black uppercase font-mono border",
-                              usr.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-zinc-800 text-zinc-400 border-zinc-700"
-                            )}>
-                              {usr.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right flex justify-end gap-1.5">
-                            <button
-                              onClick={() => handleResetPassword(usr.email)}
-                              className="px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.06] hover:border-purple-500/20 text-zinc-300 hover:text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
-                            >
-                              Reset Pass
-                            </button>
-                            <button
-                              onClick={() => handleForceLogout(usr.id, usr.name)}
-                              className="px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.06] text-zinc-300 hover:text-red-400 rounded-lg text-[10px] font-bold transition cursor-pointer"
-                            >
-                              Logout Session
-                            </button>
-                            <button
-                              onClick={() => handleToggleUserStatus(usr.id, usr.status)}
-                              className={cn(
-                                "px-2.5 py-1.5 font-bold rounded-lg text-[10px] transition cursor-pointer border",
-                                usr.status === "ACTIVE" ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-white/[0.03] text-zinc-400 border-white/[0.06]"
-                              )}
-                            >
-                              {usr.status === "ACTIVE" ? "Deactivate" : "Activate"}
-                            </button>
-                          </td>
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-xs font-medium text-zinc-400 min-w-[640px]">
+                      <thead>
+                        <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02] font-mono">
+                          <th className="p-4">User Operator</th>
+                          <th className="p-4">Tenant Membership</th>
+                          <th className="p-4">Last Device</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4 text-right">Emergency Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {users.map((usr) => (
+                          <tr key={usr.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition">
+                            <td className="p-4">
+                              <span className="font-extrabold text-white block text-xs">{usr.name}</span>
+                              <span className="text-[9px] text-zinc-500 font-mono">{usr.email}</span>
+                            </td>
+                            <td className="p-4 font-bold text-zinc-300">{usr.tenant}</td>
+                            <td className="p-4 text-zinc-400 text-[10px]">{usr.device}</td>
+                            <td className="p-4">
+                              <span className={cn(
+                                "px-2 py-0.5 rounded-full text-[9px] font-black uppercase font-mono border",
+                                usr.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-zinc-800 text-zinc-400 border-zinc-700"
+                              )}>
+                                {usr.status}
+                              </span>
+                            </td>
+                            <td className="p-4 text-right flex justify-end gap-1.5">
+                              <button
+                                onClick={() => handleResetPassword(usr.email)}
+                                className="px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.06] hover:border-purple-500/20 text-zinc-300 hover:text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                              >
+                                Reset Pass
+                              </button>
+                              <button
+                                onClick={() => handleForceLogout(usr.id, usr.name)}
+                                className="px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.06] text-zinc-300 hover:text-red-400 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                              >
+                                Logout Session
+                              </button>
+                              <button
+                                onClick={() => handleToggleUserStatus(usr.id, usr.status)}
+                                className={cn(
+                                  "px-2.5 py-1.5 font-bold rounded-lg text-[10px] transition cursor-pointer border",
+                                  usr.status === "ACTIVE" ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-white/[0.03] text-zinc-400 border-white/[0.06]"
+                                )}
+                              >
+                                {usr.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -1437,7 +1441,7 @@ export default function SuperAdminDashboard() {
               <div className="space-y-6">
                 <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-4 shadow-xl">
                   <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">Checkout & Billing Ledger Logs</span>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-xs font-medium text-zinc-400">
                       <thead>
                         <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider font-mono">
@@ -1759,29 +1763,31 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 <div className="border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl overflow-hidden shadow-xl">
-                  <table className="w-full text-xs font-medium text-zinc-400">
-                    <thead>
-                      <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02] font-mono">
-                        <th className="p-4">Operator Actor</th>
-                        <th className="p-4">Action Description</th>
-                        <th className="p-4">IP Address</th>
-                        <th className="p-4 text-right">Timestamp</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {auditLogs.map((log) => (
-                        <tr key={log.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition font-mono">
-                          <td className="p-4 text-white font-sans font-bold">{log.actor}</td>
-                          <td className="p-4">
-                            <span className="text-zinc-200 block font-semibold font-sans">{log.action}</span>
-                            <span className="text-[9px] text-zinc-500">Before: {log.before} | After: {log.after}</span>
-                          </td>
-                          <td className="p-4 text-zinc-400">{log.ip}</td>
-                          <td className="p-4 text-right text-zinc-500 text-[10px]">{log.time}</td>
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-xs font-medium text-zinc-400 min-w-[640px]">
+                      <thead>
+                        <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02] font-mono">
+                          <th className="p-4">Operator Actor</th>
+                          <th className="p-4">Action Description</th>
+                          <th className="p-4">IP Address</th>
+                          <th className="p-4 text-right">Timestamp</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {auditLogs.map((log) => (
+                          <tr key={log.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition font-mono">
+                            <td className="p-4 text-white font-sans font-bold">{log.actor}</td>
+                            <td className="p-4">
+                              <span className="text-zinc-200 block font-semibold font-sans">{log.action}</span>
+                              <span className="text-[9px] text-zinc-500">Before: {log.before} | After: {log.after}</span>
+                            </td>
+                            <td className="p-4 text-zinc-400">{log.ip}</td>
+                            <td className="p-4 text-right text-zinc-500 text-[10px]">{log.time}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -1938,41 +1944,43 @@ export default function SuperAdminDashboard() {
                   <div className="p-4 border-b border-white/[0.06]">
                     <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">Broadcast Transmission History Log</span>
                   </div>
-                  <table className="w-full text-xs font-medium text-zinc-400">
-                    <thead>
-                      <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02] font-mono">
-                        <th className="p-4">Title & Content</th>
-                        <th className="p-4">Audience</th>
-                        <th className="p-4">Reach</th>
-                        <th className="p-4">Timestamp</th>
-                        <th className="p-4 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {announcementHistory.map((ann) => (
-                        <tr key={ann.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
-                          <td className="p-4">
-                            <span className="font-extrabold text-white block text-xs">{ann.title}</span>
-                            <span className="text-[10px] text-zinc-400">{ann.body}</span>
-                          </td>
-                          <td className="p-4 font-mono font-bold text-purple-400">{ann.target}</td>
-                          <td className="p-4 font-mono text-zinc-300">{ann.reach}</td>
-                          <td className="p-4 font-mono text-[10px] text-zinc-500">{ann.sentAt}</td>
-                          <td className="p-4 text-right">
-                            <button
-                              onClick={() => {
-                                setAnnouncementHistory(announcementHistory.filter(a => a.id !== ann.id));
-                                addToast("Broadcast notice revoked.", "success");
-                              }}
-                              className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-lg transition text-[10px] font-bold cursor-pointer"
-                            >
-                              Revoke
-                            </button>
-                          </td>
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-xs font-medium text-zinc-400 min-w-[640px]">
+                      <thead>
+                        <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02] font-mono">
+                          <th className="p-4">Title & Content</th>
+                          <th className="p-4">Audience</th>
+                          <th className="p-4">Reach</th>
+                          <th className="p-4">Timestamp</th>
+                          <th className="p-4 text-right">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {announcementHistory.map((ann) => (
+                          <tr key={ann.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
+                            <td className="p-4">
+                              <span className="font-extrabold text-white block text-xs">{ann.title}</span>
+                              <span className="text-[10px] text-zinc-400">{ann.body}</span>
+                            </td>
+                            <td className="p-4 font-mono font-bold text-purple-400">{ann.target}</td>
+                            <td className="p-4 font-mono text-zinc-300">{ann.reach}</td>
+                            <td className="p-4 font-mono text-[10px] text-zinc-500">{ann.sentAt}</td>
+                            <td className="p-4 text-right">
+                              <button
+                                onClick={() => {
+                                  setAnnouncementHistory(announcementHistory.filter(a => a.id !== ann.id));
+                                  addToast("Broadcast notice revoked.", "success");
+                                }}
+                                className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-lg transition text-[10px] font-bold cursor-pointer"
+                              >
+                                Revoke
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -2050,8 +2058,8 @@ export default function SuperAdminDashboard() {
                   </div>
 
                   {/* Active Blacklisted IPs Table */}
-                  <div className="overflow-x-auto pt-2">
-                    <table className="w-full text-xs font-medium text-zinc-400 font-mono">
+                  <div className="overflow-x-auto pt-2 custom-scrollbar">
+                    <table className="w-full text-xs font-medium text-zinc-400 font-mono min-w-[600px]">
                       <thead>
                         <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider">
                           <th className="pb-2">IP Address</th>
@@ -2091,43 +2099,45 @@ export default function SuperAdminDashboard() {
                 <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-4 shadow-xl">
                   <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">Live Threat Detection Log</span>
                   <div className="border border-white/[0.06] rounded-xl overflow-hidden">
-                    <table className="w-full text-xs font-medium text-zinc-400 font-mono">
-                      <thead>
-                        <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02]">
-                          <th className="p-3">IP & Location</th>
-                          <th className="p-3">Vector Probe</th>
-                          <th className="p-3">Severity</th>
-                          <th className="p-3">Action Taken</th>
-                          <th className="p-3 text-right">Timestamp</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {securityLogs.map((sec) => (
-                          <tr key={sec.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
-                            <td className="p-3">
-                              <span className="font-bold text-white block">{sec.ip}</span>
-                              <span className="text-[9px] text-zinc-500">{sec.geo}</span>
-                            </td>
-                            <td className="p-3 text-zinc-300 font-sans font-semibold">{sec.vector}</td>
-                            <td className="p-3">
-                              <span className={cn(
-                                "px-2 py-0.5 rounded-full text-[8px] font-black uppercase border",
-                                sec.severity === "CRITICAL" ? "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" :
-                                  sec.severity === "HIGH" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-zinc-800 text-zinc-400"
-                              )}>
-                                {sec.severity}
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                {sec.action}
-                              </span>
-                            </td>
-                            <td className="p-3 text-right text-zinc-500 text-[10px]">{sec.time}</td>
+                    <div className="overflow-x-auto custom-scrollbar">
+                      <table className="w-full text-xs font-medium text-zinc-400 font-mono min-w-[640px]">
+                        <thead>
+                          <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02]">
+                            <th className="p-3">IP & Location</th>
+                            <th className="p-3">Vector Probe</th>
+                            <th className="p-3">Severity</th>
+                            <th className="p-3">Action Taken</th>
+                            <th className="p-3 text-right">Timestamp</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {securityLogs.map((sec) => (
+                            <tr key={sec.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
+                              <td className="p-3">
+                                <span className="font-bold text-white block">{sec.ip}</span>
+                                <span className="text-[9px] text-zinc-500">{sec.geo}</span>
+                              </td>
+                              <td className="p-3 text-zinc-300 font-sans font-semibold">{sec.vector}</td>
+                              <td className="p-3">
+                                <span className={cn(
+                                  "px-2 py-0.5 rounded-full text-[8px] font-black uppercase border",
+                                  sec.severity === "CRITICAL" ? "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" :
+                                    sec.severity === "HIGH" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-zinc-800 text-zinc-400"
+                                )}>
+                                  {sec.severity}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                  {sec.action}
+                                </span>
+                              </td>
+                              <td className="p-3 text-right text-zinc-500 text-[10px]">{sec.time}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2149,40 +2159,42 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 <div className="border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl overflow-hidden shadow-xl">
-                  <table className="w-full text-xs font-medium text-zinc-400 font-mono">
-                    <thead>
-                      <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02]">
-                        <th className="p-4">Backup Archive Name</th>
-                        <th className="p-4">Archive Size</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {backups.map((bak) => (
-                        <tr key={bak.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition">
-                          <td className="p-4">
-                            <span className="font-extrabold text-white block text-xs font-sans">{bak.name}</span>
-                            <span className="text-[9px] text-zinc-500">{bak.created}</span>
-                          </td>
-                          <td className="p-4 font-bold text-zinc-300">{bak.size}</td>
-                          <td className="p-4">
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              {bak.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right">
-                            <button
-                              onClick={() => handleDownloadBackup(bak.name)}
-                              className="px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.06] hover:border-purple-500/20 text-zinc-300 hover:text-white rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1 ml-auto"
-                            >
-                              <Download size={11} /> Download
-                            </button>
-                          </td>
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-xs font-medium text-zinc-400 font-mono min-w-[600px]">
+                      <thead>
+                        <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02]">
+                          <th className="p-4">Backup Archive Name</th>
+                          <th className="p-4">Archive Size</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4 text-right">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {backups.map((bak) => (
+                          <tr key={bak.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition">
+                            <td className="p-4">
+                              <span className="font-extrabold text-white block text-xs font-sans">{bak.name}</span>
+                              <span className="text-[9px] text-zinc-500">{bak.created}</span>
+                            </td>
+                            <td className="p-4 font-bold text-zinc-300">{bak.size}</td>
+                            <td className="p-4">
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                {bak.status}
+                              </span>
+                            </td>
+                            <td className="p-4 text-right">
+                              <button
+                                onClick={() => handleDownloadBackup(bak.name)}
+                                className="px-2.5 py-1.5 bg-white/[0.03] border border-white/[0.06] hover:border-purple-500/20 text-zinc-300 hover:text-white rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1 ml-auto"
+                              >
+                                <Download size={11} /> Download
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -2209,7 +2221,7 @@ export default function SuperAdminDashboard() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 350, damping: 30 }}
-              className="fixed inset-y-0 right-0 z-50 w-full max-w-xl bg-[#09090b]/95 border-l border-white/[0.08] backdrop-blur-2xl p-6 overflow-y-auto space-y-6 shadow-2xl text-zinc-300"
+              className="fixed inset-y-0 right-0 z-50 w-full max-w-xl bg-[#09090b]/95 border-l border-white/[0.08] backdrop-blur-2xl p-6 overflow-y-auto custom-scrollbar space-y-6 shadow-2xl text-zinc-300"
             >
               {/* Header */}
               <div className="flex justify-between items-start border-b border-white/[0.06] pb-4">

@@ -350,6 +350,35 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: rgba(113, 113, 122, 0.5);
   }
+
+  .custom-scrollbar,
+  .superadmin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 85, 247, 0.35) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar,
+  .superadmin-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track,
+  .superadmin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .superadmin-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(168, 85, 247, 0.35);
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .superadmin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(168, 85, 247, 0.65);
+  }
 }
 
 /* ─── Light Mode Override Layer for Hardcoded Dark Classes (Scoped to Console & Portal Layouts) ─── */
