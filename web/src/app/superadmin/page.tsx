@@ -1074,75 +1074,86 @@ export default function SuperAdminDashboard() {
   if (!mounted || !user) return null;
 
   return (
-    <PageShell className="custom-scrollbar">
-      <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 text-zinc-300 font-sans select-none">
+    <PageShell className="custom-scrollbar overflow-x-hidden">
+      <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-6 text-zinc-300 font-sans select-none overflow-x-hidden">
 
-        {/* TOP STATUS BAR & OPERATOR PANEL (Apple Style Redesign) */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/[0.06] pb-5 gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push("/settings")}
-              className="p-2.5 border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] rounded-2xl transition cursor-pointer text-zinc-400 hover:text-white"
-              aria-label="Back to Settings"
-            >
-              <ArrowLeft size={15} />
-            </button>
-            <div>
-              <h1 className="text-base font-black tracking-tight text-white flex items-center gap-2">
-                <Shield size={18} className="text-purple-400 animate-pulse" />
-                <AuroraText>EventOS Operations Hub</AuroraText>
-              </h1>
-              <div className="flex flex-wrap items-center gap-2 mt-1">
-                <span className="text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider font-mono">
-                  SaaS Administration
-                </span>
-                <span className="text-[9px] text-zinc-400 font-bold tracking-wide font-mono flex items-center gap-1 bg-white/[0.02] border border-white/[0.05] px-2 py-0.5 rounded-full">
-                  🛡️ Clearance: {ADMIN_ROLES.find(r => r.id === adminSubRole)?.name || "Default Operator"}
-                </span>
-                <span className="text-[9px] text-zinc-400 font-bold tracking-wide font-mono flex items-center gap-1 bg-white/[0.02] border border-white/[0.05] px-2 py-0.5 rounded-full">
-                  👤 Operator: {user.firstName} {user.lastName || ""} ({user.email})
-                </span>
-                {/* WebSocket Live Status */}
-                <span className="text-[9px] text-emerald-400 font-bold tracking-wide font-mono flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  {socketStatus === "CONNECTED" ? "WebSocket Engine Live" : "Offline"}
-                </span>
+        {/* TOP STATUS BAR & OPERATOR PANEL (Apple Style Responsive Design) */}
+        <div className="flex flex-col border-b border-white/[0.06] pb-4 sm:pb-5 gap-3 sm:gap-4">
+          <div className="flex items-center justify-between w-full gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <button
+                onClick={() => router.push("/settings")}
+                className="p-2 sm:p-2.5 border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] rounded-xl sm:rounded-2xl transition cursor-pointer text-zinc-400 hover:text-white shrink-0"
+                aria-label="Back to Settings"
+              >
+                <ArrowLeft size={15} />
+              </button>
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-1.5 sm:gap-2 truncate">
+                  <Shield size={16} className="text-purple-400 animate-pulse shrink-0" />
+                  <AuroraText>EventOS Operations Hub</AuroraText>
+                </h1>
               </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <button
+                onClick={toggleTheme}
+                className="p-1.5 sm:p-2 border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] rounded-xl transition text-zinc-400 hover:text-white cursor-pointer"
+                aria-label="Toggle dark mode"
+                title="Toggle Layout Theme"
+              >
+                {currentTheme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+              </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    await logout();
+                  } finally {
+                    router.push("/superadmin/login");
+                  }
+                }}
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 border border-white/[0.06] hover:bg-red-500/10 hover:border-red-500/20 text-zinc-400 hover:text-red-400 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer"
+              >
+                <LogOut size={12} /> <span className="hidden sm:inline">Exit Console</span><span className="sm:hidden">Exit</span>
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              className="p-2 border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] rounded-xl transition text-zinc-400 hover:text-white cursor-pointer"
-              aria-label="Toggle dark mode"
-              title="Toggle Layout Theme"
-            >
-              {currentTheme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
-
-            <button
-              onClick={async () => {
-                try {
-                  await logout();
-                } finally {
-                  router.push("/superadmin/login");
-                }
-              }}
-              className="flex items-center gap-1.5 px-3.5 py-1.8 border border-white/[0.06] hover:bg-red-500/10 hover:border-red-500/20 text-zinc-400 hover:text-red-400 rounded-xl text-xs font-bold transition cursor-pointer"
-            >
-              <LogOut size={13} /> Exit Console
-            </button>
+          {/* Clearance & Telemetry Badges - Touch-scrollable horizontally on mobile */}
+          <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar no-scrollbar py-0.5 w-full touch-pan-x -mx-1 px-1">
+            <span className="text-[8px] sm:text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider font-mono shrink-0">
+              SaaS Administration
+            </span>
+            <span className="text-[8px] sm:text-[9px] text-zinc-400 font-bold tracking-wide font-mono flex items-center gap-1 bg-white/[0.02] border border-white/[0.05] px-2 py-0.5 rounded-full shrink-0">
+              🛡️ Clearance: {ADMIN_ROLES.find(r => r.id === adminSubRole)?.name || "Default Operator"}
+            </span>
+            <span className="text-[8px] sm:text-[9px] text-zinc-400 font-bold tracking-wide font-mono flex items-center gap-1 bg-white/[0.02] border border-white/[0.05] px-2 py-0.5 rounded-full shrink-0 max-w-[220px] sm:max-w-none truncate">
+              👤 Operator: {user?.firstName || "Admin"} ({user?.email || "admin@eventosapp.in"})
+            </span>
+            <span className="text-[8px] sm:text-[9px] text-emerald-400 font-bold tracking-wide font-mono flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full shrink-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+              {socketStatus === "CONNECTED" ? "WebSocket Engine Live" : "Offline"}
+            </span>
           </div>
         </div>
 
         {/* MAIN SIDEBAR NAVIGATION & CONTENT AREA */}
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 sm:gap-6 lg:gap-8">
 
-          {/* Apple-style Navigation Sidebar (Horizontal on mobile, vertical on desktop) */}
-          <div className="lg:col-span-1 space-y-2 min-w-0">
-            <span className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.14em] font-mono block px-1 lg:px-3">Operational Controls</span>
-            <div className="flex lg:flex-col overflow-x-auto lg:overflow-visible custom-scrollbar pb-2 lg:pb-0 gap-1.5 text-[11px] font-bold touch-pan-x">
+          {/* Apple-style Navigation Sidebar (Horizontal pill slider on mobile, vertical sidebar on desktop) */}
+          <div className="lg:col-span-1 space-y-1.5 sm:space-y-2 min-w-0">
+            <div className="flex items-center justify-between px-1 lg:px-3">
+              <span className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.14em] font-mono block">
+                Operational Controls
+              </span>
+              <span className="lg:hidden text-[9px] text-purple-400 font-mono font-bold">
+                Swipe tabs →
+              </span>
+            </div>
+
+            <div className="flex lg:flex-col overflow-x-auto lg:overflow-visible custom-scrollbar no-scrollbar pb-1.5 lg:pb-0 gap-1 sm:gap-1.5 text-[11px] font-bold touch-pan-x scroll-smooth -mx-1 px-1 lg:mx-0 lg:px-0">
               {[
                 { id: "metrics" as const, label: "Global Metrics", icon: LineChart },
                 { id: "tenants" as const, label: "Tenants Directory", icon: Building },
@@ -1166,7 +1177,7 @@ export default function SuperAdminDashboard() {
                     onClick={() => allowed && setActiveSubTab(tab.id)}
                     disabled={!allowed}
                     className={cn(
-                      "relative shrink-0 lg:w-full flex items-center justify-between px-3.5 py-2 lg:py-2.5 rounded-[12px] transition text-left cursor-pointer border whitespace-nowrap gap-2",
+                      "relative shrink-0 lg:w-full flex items-center justify-between px-3 sm:px-3.5 py-1.5 sm:py-2 lg:py-2.5 rounded-xl transition text-left cursor-pointer border whitespace-nowrap gap-2",
                       active
                         ? "text-purple-400 font-extrabold border-purple-500/25 bg-purple-500/10 shadow-[0_2px_12px_rgba(168,85,247,0.15)]"
                         : "border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]",
@@ -1176,7 +1187,7 @@ export default function SuperAdminDashboard() {
                     {active && (
                       <motion.div
                         layoutId="superadmin-tab-pill"
-                        className="absolute inset-0 rounded-[12px] bg-purple-500/10 border border-purple-500/30"
+                        className="absolute inset-0 rounded-xl bg-purple-500/10 border border-purple-500/30"
                         transition={{ type: "spring", stiffness: 400, damping: 35 }}
                       />
                     )}
@@ -1192,59 +1203,83 @@ export default function SuperAdminDashboard() {
           </div>
 
           {/* Main Panel Content */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-4 sm:space-y-6 min-w-0">
 
             {/* 1. GLOBAL METRICS TAB */}
             {activeSubTab === "metrics" && hasAccessToTab("metrics") && (
-              <div className="space-y-6">
-                {/* Bento Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                  <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
-                    <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">MRR / ARR</span>
-                    <span className="text-2xl font-black text-white block mt-2">
-                      ₹{metrics ? metrics.mrr?.toLocaleString("en-IN") : "4,89,900"} / ₹{metrics ? metrics.arr?.toLocaleString("en-IN") : "58.78 Lakh"}
-                    </span>
-                    <p className="text-[10px] text-purple-400 mt-2 font-bold flex items-center gap-1">
-                      <TrendingUp size={12} /> Live SaaS Revenue Flow
+              <div className="space-y-4 sm:space-y-6">
+                {/* Bento Cards Grid - 2 columns on mobile, 4 columns on desktop */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 text-xs">
+                  <div className="p-3 sm:p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
+                    <span className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">MRR / ARR</span>
+                    <div className="mt-1.5 sm:mt-2">
+                      <span className="text-base sm:text-2xl font-black text-white block tracking-tight truncate">
+                        ₹{metrics ? metrics.mrr?.toLocaleString("en-IN") : "12,999"}
+                      </span>
+                      <span className="text-[9px] sm:text-xs text-zinc-400 font-mono font-semibold block mt-0.5 truncate">
+                        ₹{metrics ? metrics.arr?.toLocaleString("en-IN") : "1,55,988"} ARR
+                      </span>
+                    </div>
+                    <p className="text-[9px] sm:text-[10px] text-purple-400 mt-2 font-bold flex items-center gap-1 truncate">
+                      <TrendingUp size={11} /> Live Revenue Flow
                     </p>
                   </div>
 
-                  <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
-                    <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">Active Workspaces</span>
-                    <span className="text-2xl font-black text-white block mt-2">
-                      {metrics ? metrics.totalTenants : "142"} Registered
-                    </span>
-                    <p className="text-[10px] text-zinc-400 mt-2 font-semibold">
-                      {metrics ? metrics.activeCount : "128"} Active | {metrics ? metrics.trialingCount : "14"} Trialing
+                  <div className="p-3 sm:p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
+                    <span className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">Active Workspaces</span>
+                    <div className="mt-1.5 sm:mt-2">
+                      <span className="text-base sm:text-2xl font-black text-white block tracking-tight truncate">
+                        {metrics ? metrics.totalTenants : "2"} Registered
+                      </span>
+                      <span className="text-[9px] sm:text-xs text-zinc-400 font-mono font-semibold block mt-0.5 truncate">
+                        {metrics ? metrics.activeCount : "1"} Active | {metrics ? metrics.trialingCount : "1"} Trial
+                      </span>
+                    </div>
+                    <p className="text-[9px] sm:text-[10px] text-zinc-400 mt-2 font-semibold flex items-center gap-1 truncate">
+                      <Building size={11} className="text-purple-400" /> Multi-tenant
                     </p>
                   </div>
 
-                  <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
-                    <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">System Users</span>
-                    <span className="text-2xl font-black text-purple-400 block mt-2">
-                      {metrics ? metrics.totalUsers : "8,450"} Users
-                    </span>
-                    <p className="text-[10px] text-zinc-400 mt-2 font-semibold">Real-time active roster</p>
+                  <div className="p-3 sm:p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
+                    <span className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">System Users</span>
+                    <div className="mt-1.5 sm:mt-2">
+                      <span className="text-base sm:text-2xl font-black text-purple-400 block tracking-tight truncate">
+                        {metrics ? metrics.totalUsers : "13"} Users
+                      </span>
+                      <span className="text-[9px] sm:text-xs text-zinc-400 font-mono font-semibold block mt-0.5 truncate">
+                        Active staff roster
+                      </span>
+                    </div>
+                    <p className="text-[9px] sm:text-[10px] text-zinc-400 mt-2 font-semibold flex items-center gap-1 truncate">
+                      <Users size={11} className="text-purple-400" /> Real-time
+                    </p>
                   </div>
 
-                  <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
-                    <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">Average LTV</span>
-                    <span className="text-2xl font-black text-emerald-400 block mt-2">
-                      ₹{metrics ? Number(metrics.ltv || 139200).toLocaleString("en-IN") : "1,39,200"}
-                    </span>
-                    <p className="text-[10px] text-zinc-400 mt-2 font-semibold">Customer lifetime value</p>
+                  <div className="p-3 sm:p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 shadow-xl">
+                    <span className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">Average LTV</span>
+                    <div className="mt-1.5 sm:mt-2">
+                      <span className="text-base sm:text-2xl font-black text-emerald-400 block tracking-tight truncate">
+                        ₹{metrics ? Number(metrics.ltv || 311976).toLocaleString("en-IN") : "3,11,976"}
+                      </span>
+                      <span className="text-[9px] sm:text-xs text-zinc-400 font-mono font-semibold block mt-0.5 truncate">
+                        Customer lifetime
+                      </span>
+                    </div>
+                    <p className="text-[9px] sm:text-[10px] text-emerald-400 mt-2 font-semibold flex items-center gap-1 truncate">
+                      <DollarSign size={11} /> High Retention
+                    </p>
                   </div>
                 </div>
 
                 {/* Revenue Growth Trend chart */}
-                <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-4 shadow-xl">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">EventOS Platform Revenue Trends</span>
-                    <span className="text-[9px] text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20 font-mono">+38.5% YoY Growth</span>
+                <div className="p-3.5 sm:p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-3 sm:space-y-4 shadow-xl">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-[9px] sm:text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono truncate">EventOS Platform Revenue Trends</span>
+                    <span className="text-[8px] sm:text-[9px] text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20 font-mono shrink-0">+38.5% YoY Growth</span>
                   </div>
-                  <div className="h-64">
+                  <div className="h-52 sm:h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={dynamicRevenueData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                      <AreaChart data={dynamicRevenueData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorRevAdmin" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#9333ea" stopOpacity={0.3} />
@@ -1262,30 +1297,32 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 {/* Live Activity Feed */}
-                <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-4 shadow-xl">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">Live Platform Event Stream</span>
-                    <span className="text-[9px] text-emerald-400 font-mono font-extrabold flex items-center gap-1">
+                <div className="p-3.5 sm:p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-3 sm:space-y-4 shadow-xl">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-[9px] sm:text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono truncate">Live Platform Event Stream</span>
+                    <span className="text-[8px] sm:text-[9px] text-emerald-400 font-mono font-extrabold flex items-center gap-1 shrink-0">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" /> Realtime WebSocket Listening
                     </span>
                   </div>
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1.5 custom-scrollbar font-mono text-[10px] font-semibold">
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar font-mono text-[10px] font-semibold">
                     {liveActivities.map((act) => (
                       <motion.div
                         key={act.id}
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-between items-center p-2.5 border border-white/[0.04] bg-white/[0.01] rounded-xl hover:bg-white/[0.03] transition"
+                        className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2.5 border border-white/[0.04] bg-white/[0.01] rounded-xl hover:bg-white/[0.03] transition gap-1 sm:gap-2"
                       >
-                        <span className={cn(
-                          "px-2 py-0.5 border text-[8px] font-black font-sans rounded-md uppercase",
-                          act.type === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" :
-                            act.type === "error" ? "border-red-500/20 bg-red-500/10 text-red-400" : "border-white/[0.08] bg-white/[0.04] text-zinc-400"
-                        )}>
-                          {act.type}
-                        </span>
-                        <span className="text-zinc-200 ml-3 flex-1 text-left font-sans text-xs">{act.action}</span>
-                        <span className="text-zinc-500 text-[9px]">{act.time}</span>
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className={cn(
+                            "px-1.5 py-0.5 border text-[8px] font-black font-sans rounded uppercase shrink-0",
+                            act.type === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" :
+                              act.type === "error" ? "border-red-500/20 bg-red-500/10 text-red-400" : "border-white/[0.08] bg-white/[0.04] text-zinc-400"
+                          )}>
+                            {act.type}
+                          </span>
+                          <span className="text-zinc-200 text-xs truncate font-sans">{act.action}</span>
+                        </div>
+                        <span className="text-zinc-500 text-[9px] shrink-0 self-end sm:self-center">{act.time}</span>
                       </motion.div>
                     ))}
                   </div>
@@ -1442,7 +1479,7 @@ export default function SuperAdminDashboard() {
                 <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-4 shadow-xl">
                   <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">Checkout & Billing Ledger Logs</span>
                   <div className="overflow-x-auto custom-scrollbar">
-                    <table className="w-full text-xs font-medium text-zinc-400">
+                    <table className="w-full text-xs font-medium text-zinc-400 min-w-[640px]">
                       <thead>
                         <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider font-mono">
                           <th className="pb-3">Workspace</th>
@@ -1701,7 +1738,7 @@ export default function SuperAdminDashboard() {
             {/* 7. SYSTEM HEALTH MONITORS */}
             {activeSubTab === "health" && hasAccessToTab("health") && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-3">
                   <div>
                     <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">EventOS Core Microservices Cluster</span>
                     <span className="text-xs text-zinc-500 font-sans">Live telemetry, latency pings, and compute utilization</span>
@@ -1752,7 +1789,7 @@ export default function SuperAdminDashboard() {
             {/* 8. SERVER LOGS FILES */}
             {activeSubTab === "logs" && hasAccessToTab("logs") && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-3">
                   <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">Server Audit & Webhook Log Trail</span>
                   <button
                     onClick={handleExportAuditTrail}
@@ -1989,7 +2026,7 @@ export default function SuperAdminDashboard() {
             {activeSubTab === "security" && hasAccessToTab("security") && (
               <div className="space-y-6">
                 {/* WAF Switch & Security Overview Bento Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
                   <div className="p-5 border border-white/[0.06] bg-white/[0.02] backdrop-blur-2xl rounded-2xl flex flex-col justify-between">
                     <div>
                       <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest block font-mono">WAF Master Status</span>
@@ -2146,7 +2183,7 @@ export default function SuperAdminDashboard() {
             {/* 12. DATABASE BACKUPS */}
             {activeSubTab === "backups" && hasAccessToTab("backups") && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-3">
                   <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block font-mono">System Recovery Backups</span>
                   <button
                     onClick={handleTriggerBackup}
