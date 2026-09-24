@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { WaitlistForm } from "@/components/auth/WaitlistForm";
 import { EventOsLogo } from "@/components/ui/EventOsLogo";
+import { LiquidMetalText } from "@/components/landing/LiquidMetalText";
 
 export const metadata: Metadata = {
   title: "Join EventOS Private Beta | Early Bird Founding Member Access",
@@ -27,10 +28,14 @@ export default function WaitlistPage() {
 
       {/* Clean Distraction-Free Header (No Login/Register buttons) */}
       <header className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2.5 group cursor-pointer" aria-label="EventOS Home">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 cursor-pointer select-none relative z-10 group"
+          aria-label="EventOS Home"
+        >
           <EventOsLogo size={36} animated={true} interactive={true} />
-          <span className="font-extrabold text-lg sm:text-xl text-white tracking-tight font-heading">
-            Event<span className="text-purple-400">OS</span>
+          <span className="text-base sm:text-lg font-black tracking-tight font-heading inline-flex items-center text-white">
+            Event<LiquidMetalText text="OS" variant="purple" />
           </span>
         </Link>
 
