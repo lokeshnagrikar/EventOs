@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/og-image2.png",
         width: 1200,
         height: 630,
         alt: "EventOS Event Management & Wedding Planner Software",
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EventOS | Event Management & Wedding Planner Software for Agencies",
     description: "Manage client contracts, invoices, timelines, and client portals within a unified SaaS platform built for event agencies.",
-    images: ["/og-image.jpg"],
+    images: ["/og-image2.png"],
     creator: "@eventos_hq",
   },
   icons: {
@@ -198,8 +198,8 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${outfit.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
-        <a 
-          href="#main-content" 
+        <a
+          href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-purple-600 focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
         >
           Skip to main content
