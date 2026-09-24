@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { WaitlistForm } from "@/components/auth/WaitlistForm";
+import { EventOsLogo } from "@/components/ui/EventOsLogo";
 
 export const metadata: Metadata = {
   title: "Join EventOS Private Beta | Early Bird Founding Member Access",
@@ -26,10 +27,8 @@ export default function WaitlistPage() {
 
       {/* Clean Distraction-Free Header (No Login/Register buttons) */}
       <header className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2 group cursor-pointer">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-purple-600/30 group-hover:scale-105 transition-transform">
-            E
-          </div>
+        <Link href="/" className="inline-flex items-center gap-2.5 group cursor-pointer" aria-label="EventOS Home">
+          <EventOsLogo size={36} animated={true} interactive={true} />
           <span className="font-extrabold text-lg sm:text-xl text-white tracking-tight font-heading">
             Event<span className="text-purple-400">OS</span>
           </span>
