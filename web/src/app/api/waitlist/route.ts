@@ -16,12 +16,11 @@ function verifyFounderKey(suppliedKey: string | null | undefined): boolean {
   const configuredKey = (process.env.FOUNDER_SECRET_KEY || "").trim();
 
   // Valid secret keys: configured env key + default founder keys
-  const validKeys = [
+  const validKeys: string[] = [
     ...(configuredKey ? [configuredKey] : []),
     "eventos2026",
     "eventos@founder2026",
     "lokesh2026",
-    "production_grade_waitlist_founder_secret_2026_xK9#vL2",
   ];
 
   return validKeys.some((k) => {
@@ -41,7 +40,7 @@ function extractFounderKey(req: NextRequest): string | null {
     const url = new URL(req.url);
     const queryKey = url.searchParams.get("key");
     if (queryKey) return queryKey;
-  } catch {}
+  } catch { }
   return null;
 }
 
@@ -58,7 +57,7 @@ async function notifyFounder(lead: WaitlistRecord, spotNumber: number) {
           text: `🚀 *New EventOS Waitlist Lead (#${spotNumber}/25)*\n• *Agency:* ${lead.agencyName}\n• *Contact:* ${lead.name}\n• *WhatsApp:* ${lead.whatsapp}\n• *Email:* ${lead.email}\n• *Event Focus:* ${lead.eventType}\n• *Current Tools:* ${lead.currentTools || "None"}\n• *WhatsApp Direct Link:* https://wa.me/${lead.whatsapp.replace(/[^0-9]/g, "")}`,
         }),
       }).catch((err) => console.warn("[Slack Notification Failed]", err));
-    } catch {}
+    } catch { }
   }
 
   // 2. Resend Email Alert if API key exists
@@ -94,7 +93,7 @@ async function notifyFounder(lead: WaitlistRecord, spotNumber: number) {
           `,
         }),
       }).catch((err) => console.warn("[Resend Notification Failed]", err));
-    } catch {}
+    } catch { }
   }
 }
 
