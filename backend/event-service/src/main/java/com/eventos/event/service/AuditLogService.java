@@ -2,9 +2,12 @@ package com.eventos.event.service;
 
 import com.eventos.event.entity.AuditLog;
 import com.eventos.event.repository.AuditLogRepository;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +49,47 @@ public class AuditLogService {
         }
     }
 
+    private Specification<AuditLog> buildSpecification(
+            UUID tenantId,
+            String search,
+            UUID performedBy,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            List<String> entityNames) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("tenantId"), tenantId));
+
+            if (search != null && !search.trim().isEmpty()) {
+                String pattern = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                    cb.like(cb.lower(root.get("entityName")), pattern),
+                    cb.like(cb.lower(root.get("action")), pattern),
+                    cb.like(cb.lower(root.get("payloadDiff")), pattern)
+                ));
+            }
+
+            if (performedBy != null) {
+                predicates.add(cb.equal(root.get("performedBy"), performedBy));
+            }
+
+            if (startDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startDate));
+            }
+
+            if (endDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endDate));
+            }
+
+            if (entityNames != null && !entityNames.isEmpty()) {
+                predicates.add(root.get("entityName").in(entityNames));
+            }
+
+            query.orderBy(cb.desc(root.get("createdAt")));
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
     @Transactional(readOnly = true)
     public Page<AuditLog> getFilteredAuditLogs(
             UUID tenantId,
@@ -58,12 +102,9 @@ public class AuditLogService {
             int size) {
         
         List<String> entityNames = getEntityNamesForModule(module);
-        Pageable pageable = PageRequest.of(page, size);
-        if (entityNames == null || entityNames.isEmpty()) {
-            return auditLogRepository.findFilteredWithoutEntityNames(tenantId, search, performedBy, startDate, endDate, pageable);
-        } else {
-            return auditLogRepository.findFilteredWithEntityNames(tenantId, search, performedBy, startDate, endDate, entityNames, pageable);
-        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Specification<AuditLog> spec = buildSpecification(tenantId, search, performedBy, startDate, endDate, entityNames);
+        return auditLogRepository.findAll(spec, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -76,12 +117,8 @@ public class AuditLogService {
             String module) {
         
         List<String> entityNames = getEntityNamesForModule(module);
-        Pageable pageable = Pageable.unpaged();
-        if (entityNames == null || entityNames.isEmpty()) {
-            return auditLogRepository.findFilteredWithoutEntityNames(tenantId, search, performedBy, startDate, endDate, pageable).getContent();
-        } else {
-            return auditLogRepository.findFilteredWithEntityNames(tenantId, search, performedBy, startDate, endDate, entityNames, pageable).getContent();
-        }
+        Specification<AuditLog> spec = buildSpecification(tenantId, search, performedBy, startDate, endDate, entityNames);
+        return auditLogRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
     @Transactional

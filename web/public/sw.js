@@ -1,5 +1,5 @@
-const CACHE_NAME = "eventos-pwa-v2";
-const DYNAMIC_CACHE = "eventos-dynamic-v2";
+const CACHE_NAME = "eventos-pwa-v3";
+const DYNAMIC_CACHE = "eventos-dynamic-v3";
 
 const STATIC_ASSETS = [
   "/",
@@ -44,67 +44,75 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Fetch Event - Network First with Cache Fallback for API data & Stale-While-Revalidate for Assets
+// Fetch Event
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // 1. Only handle GET requests and same-origin requests
   if (request.method !== "GET") return;
   if (url.protocol.startsWith("chrome-extension")) return;
+  if (url.origin !== self.location.origin) return;
 
-  // 1. API Calls Strategy (Network First -> Fallback to Cache)
-  if (url.pathname.includes("/api/") || url.pathname.includes("/auth/")) {
+  // 2. Never intercept backend API or auth calls - let browser handle directly
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) {
+    return;
+  }
+
+  // 3. Navigation requests (HTML pages) - Network first, fallback to cache, then offline response
+  if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE).then((cache) => {
-              cache.put(request, responseClone);
-            });
+      fetch(request).catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        const appShell = (await caches.match("/dashboard")) || (await caches.match("/"));
+        if (appShell) return appShell;
+        return new Response(
+          "<!DOCTYPE html><html><body style='font-family:sans-serif;text-align:center;padding:50px;background:#09090b;color:#fff;'><h2>You are offline</h2><p>EventOS will reconnect automatically once network is restored.</p></body></html>",
+          {
+            status: 503,
+            headers: { "Content-Type": "text/html" },
           }
-          return response;
-        })
-        .catch(() => {
-          console.log("[PWA ServiceWorker] Network failed, serving API data from cache:", request.url);
-          return caches.match(request);
-        })
+        );
+      })
     );
     return;
   }
 
-  // 2. Static Assets & HTML Pages Strategy (Cache First -> Network Fallback)
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Fetch fresh version in background (Stale-While-Revalidate)
-        fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse));
-          }
-        }).catch(() => {});
-        return cachedResponse;
-      }
+  // 4. Same-origin Static Assets & Media (Stale-While-Revalidate)
+  const isStaticAsset =
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/logo/") ||
+    url.pathname.startsWith("/founder-profile/") ||
+    url.pathname.match(/\.(png|jpg|jpeg|svg|gif|webp|ico|woff2?|css|js)$/i);
 
-      return fetch(request)
-        .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== "basic") {
-            return networkResponse;
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          fetch(request)
+            .then((networkResponse) => {
+              if (networkResponse && networkResponse.status === 200) {
+                caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse));
+              }
+            })
+            .catch(() => {});
+          return cachedResponse;
+        }
+
+        return fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
+            const responseToCache = networkResponse.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => {
+              cache.put(request, responseToCache);
+            });
           }
-          const responseToCache = networkResponse.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseToCache);
-          });
           return networkResponse;
-        })
-        .catch(() => {
-          // Fallback to root html for page navigations when offline
-          if (request.headers.get("accept")?.includes("text/html")) {
-            return caches.match("/dashboard") || caches.match("/");
-          }
         });
-    })
-  );
+      })
+    );
+    return;
+  }
 });
 
 // Background Sync Event (Sync offline check-ins & mutations)
