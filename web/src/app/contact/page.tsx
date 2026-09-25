@@ -6,13 +6,14 @@ import { Footer } from "@/components/landing/Footer";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Send, HelpCircle } from "lucide-react";
 import { useToastStore } from "@/lib/toastStore";
+import { apiClient } from "@/lib/api-client";
 
 export default function ContactPage() {
   const addToast = useToastStore((state) => state.addToast);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formMountedAt] = useState<number>(() => Date.now());
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -44,8 +45,7 @@ export default function ContactPage() {
       const sector = formData.get("sector") as string || "";
       const rawMessage = (formData.get("message") as string || "").trim();
       const formattedMessage = sector ? `[Sector: ${sector}] ${rawMessage}` : rawMessage;
-
-      const { apiClient } = require("@/lib/api-client");
+ 
       await apiClient.post("/auth/inquiries", {
         name,
         email,
