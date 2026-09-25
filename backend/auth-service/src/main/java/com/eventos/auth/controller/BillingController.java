@@ -637,6 +637,70 @@ public class BillingController {
         }
     }
 
+    @PostMapping("/subscription/verify-session")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    public ResponseEntity<?> verifyCheckoutSession(@RequestBody Map<String, String> body) {
+        String sessionId = body.get("sessionId");
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "sessionId is required");
+        }
+
+        UUID tenantId = getTenantId();
+
+        try {
+            String activeKey = (stripeApiKey != null && !stripeApiKey.isBlank()) ? stripeApiKey : System.getenv("STRIPE_API_KEY");
+            if (activeKey == null || activeKey.isBlank()) {
+                activeKey = "mock_stripe_key_placeholder";
+            }
+            com.stripe.Stripe.apiKey = activeKey;
+
+            com.stripe.model.checkout.Session session = com.stripe.model.checkout.Session.retrieve(sessionId);
+            if (session == null) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Stripe session not found");
+            }
+
+            // 1. Authoritative payment status check
+            String paymentStatus = session.getPaymentStatus();
+            if (!"paid".equalsIgnoreCase(paymentStatus) && !"no_payment_required".equalsIgnoreCase(paymentStatus)) {
+                return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(Map.of(
+                        "success", false,
+                        "message", "Payment has not been completed yet (status: " + paymentStatus + ")"
+                ));
+            }
+
+            // 2. Tenant isolation check: ensure the session belongs to this tenant
+            Map<String, String> metadata = session.getMetadata();
+            String sessionTenantId = metadata != null ? metadata.get("tenantId") : null;
+            if (sessionTenantId != null && !tenantId.toString().equalsIgnoreCase(sessionTenantId)) {
+                log.warn("[STRIPE VERIFY] Tenant mismatch for session {}: user tenant {} vs session tenant {}", sessionId, tenantId, sessionTenantId);
+                throw new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.FORBIDDEN, "This payment session does not belong to your workspace");
+            }
+
+            Subscription updatedSubscription = billingService.processStripeCheckoutSession(session);
+            if (updatedSubscription == null) {
+                updatedSubscription = billingService.getSubscription(tenantId);
+            }
+
+            log.info("[STRIPE VERIFY] Successfully verified session {} and activated plan {} for tenant {}",
+                    sessionId, updatedSubscription.getPlan().getName(), tenantId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Subscription successfully activated");
+            response.put("data", updatedSubscription);
+            return ResponseEntity.ok(response);
+        } catch (org.springframework.web.server.ResponseStatusException rse) {
+            throw rse;
+        } catch (Exception e) {
+            log.error("[STRIPE VERIFY] Verification failed for session {}", sessionId, e);
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to verify Stripe payment: " + e.getMessage(), e);
+        }
+    }
+
     @PostMapping("/webhook")
     public ResponseEntity<String> handleStripeWebhook(
             @RequestBody String payload,

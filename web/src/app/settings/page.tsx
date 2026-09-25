@@ -226,6 +226,8 @@ export default function SettingsPage() {
   const [showDowngradeWarningModal, setShowDowngradeWarningModal] = useState(false);
   const [targetDowngradePlan, setTargetDowngradePlan] = useState<any>(null);
   const [isCheckingOutPlan, setIsCheckingOutPlan] = useState<string | null>(null);
+  const [isVerifyingStripeSession, setIsVerifyingStripeSession] = useState(false);
+  const [verifyingSessionMsg, setVerifyingSessionMsg] = useState("");
 
   // Chart data
   const usageHistoryData = [
@@ -395,6 +397,58 @@ export default function SettingsPage() {
     fetchPaymentMethods();
     fetchInvoices();
     fetchSettings();
+
+    // Check Stripe return query parameters (?tab=billing&status=success&session_id=... OR ?tab=billing&status=cancel)
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get("tab");
+      if (tabParam) {
+        setActiveTab(tabParam);
+      }
+
+      const statusParam = searchParams.get("status");
+      const sessionIdParam = searchParams.get("session_id");
+
+      if (statusParam === "success" && sessionIdParam) {
+        setActiveTab("billing");
+        const verifyPaymentSession = async () => {
+          setIsVerifyingStripeSession(true);
+          setVerifyingSessionMsg("Verifying payment with Stripe & upgrading your workspace...");
+          try {
+            const res = await api.post("/auth/billing/subscription/verify-session", {
+              sessionId: sessionIdParam
+            });
+            if (res.data?.success) {
+              const planName = res.data?.data?.plan?.name || "Premium";
+              addToast(`🎉 Payment verified! Your workspace is now upgraded to ${planName}.`, "success");
+              await Promise.all([fetchSubscription(), fetchUsage(), fetchInvoices()]);
+            } else {
+              addToast(res.data?.message || "Payment verification pending.", "info");
+            }
+          } catch (err: any) {
+            console.error("Stripe return verification error:", err);
+            const errMsg = err.response?.data?.message || err.message || "Failed to verify Stripe payment session.";
+            addToast(errMsg, "error");
+          } finally {
+            setIsVerifyingStripeSession(false);
+            setVerifyingSessionMsg("");
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete("status");
+            cleanUrl.searchParams.delete("session_id");
+            window.history.replaceState({}, "", cleanUrl.toString());
+          }
+        };
+
+        verifyPaymentSession();
+      } else if (statusParam === "cancel") {
+        setActiveTab("billing");
+        addToast("Payment checkout was cancelled. No charges were made.", "info");
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("status");
+        cleanUrl.searchParams.delete("session_id");
+        window.history.replaceState({}, "", cleanUrl.toString());
+      }
+    }
 
     // Hydrate Direct Payment Destination
     try {
@@ -2188,6 +2242,17 @@ export default function SettingsPage() {
                       </button>
                     )}
                   </div>
+
+                  {/* Stripe Return Payment Verification Status */}
+                  {isVerifyingStripeSession && (
+                    <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-3 text-purple-300 animate-pulse shadow-lg shadow-purple-950/20">
+                      <Loader2 size={18} className="animate-spin text-purple-400 shrink-0" />
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-bold text-white">Payment Received</p>
+                        <p className="text-[11px] text-purple-300">{verifyingSessionMsg || "Verifying payment with Stripe & activating your subscription..."}</p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Top Stats Overview */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
