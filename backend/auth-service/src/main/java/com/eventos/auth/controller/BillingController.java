@@ -419,7 +419,7 @@ public class BillingController {
 
     // Super Admin Tickets API - GET
     @GetMapping("/superadmin/tickets")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_LEAD', 'OPERATIONS_LEAD', 'COMPLIANCE_AUDITOR') or hasAuthority('admin:read')")
     public ResponseEntity<?> getSuperAdminTickets() {
         List<SupportTicket> tickets = billingService.getSuperAdminTickets();
         Map<String, Object> response = new HashMap<>();
@@ -430,7 +430,7 @@ public class BillingController {
 
     // Super Admin Tickets API - POST
     @PostMapping("/superadmin/tickets")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_LEAD', 'OPERATIONS_LEAD') or hasAuthority('admin:all')")
     public ResponseEntity<?> createSupportTicket(@RequestBody Map<String, Object> body) {
         SupportTicket ticket = billingService.createSupportTicket(body);
         Map<String, Object> response = new HashMap<>();
@@ -441,7 +441,7 @@ public class BillingController {
 
     // Super Admin Tickets API - PATCH
     @PatchMapping("/superadmin/tickets/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_LEAD', 'OPERATIONS_LEAD') or hasAuthority('admin:all')")
     public ResponseEntity<?> updateSupportTicket(
             @PathVariable UUID id,
             @RequestBody Map<String, Object> body) {
@@ -454,7 +454,7 @@ public class BillingController {
 
     // Super Admin Feature Flags API - GET
     @GetMapping("/superadmin/feature-flags")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DEVOPS_ENGINEER', 'COMPLIANCE_AUDITOR') or hasAuthority('admin:read')")
     public ResponseEntity<?> getFeatureFlags() {
         List<FeatureFlag> flags = billingService.getFeatureFlags();
         Map<String, Object> response = new HashMap<>();
@@ -465,7 +465,7 @@ public class BillingController {
 
     // Super Admin Feature Flags API - Toggle POST
     @PostMapping("/superadmin/feature-flags/{flagKey}/toggle")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DEVOPS_ENGINEER') or hasAuthority('admin:all')")
     public ResponseEntity<?> toggleFeatureFlag(@PathVariable String flagKey) {
         FeatureFlag flag = billingService.toggleFeatureFlag(flagKey);
         Map<String, Object> response = new HashMap<>();
@@ -476,7 +476,7 @@ public class BillingController {
 
     // Super Admin Feature Flags API - PATCH
     @PatchMapping("/superadmin/feature-flags/{flagKey}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DEVOPS_ENGINEER') or hasAuthority('admin:all')")
     public ResponseEntity<?> updateFeatureFlag(
             @PathVariable String flagKey,
             @RequestBody Map<String, Object> body) {
@@ -489,7 +489,7 @@ public class BillingController {
 
     // Super Admin Subscriptions Ledger API - GET
     @GetMapping("/superadmin/subscriptions")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'FINANCE_OFFICER', 'COMPLIANCE_AUDITOR') or hasAuthority('billing:read')")
     public ResponseEntity<?> getSuperAdminSubscriptions() {
         List<Map<String, Object>> ledger = billingService.getSuperAdminSubscriptions();
         Map<String, Object> response = new HashMap<>();
@@ -500,7 +500,7 @@ public class BillingController {
 
     // Super Admin Subscription Refund API - POST
     @PostMapping("/superadmin/subscriptions/{id}/refund")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'FINANCE_OFFICER') or hasAuthority('billing:write')")
     public ResponseEntity<?> refundSubscription(@PathVariable UUID id) {
         Map<String, Object> result = billingService.refundSubscription(id);
         Map<String, Object> response = new HashMap<>();
@@ -511,7 +511,7 @@ public class BillingController {
 
     // Super Admin Coupons API - GET
     @GetMapping("/superadmin/coupons")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'FINANCE_OFFICER', 'COMPLIANCE_AUDITOR') or hasAuthority('billing:read')")
     public ResponseEntity<?> getCoupons() {
         List<PlatformCoupon> coupons = billingService.getCoupons();
         Map<String, Object> response = new HashMap<>();
@@ -522,7 +522,7 @@ public class BillingController {
 
     // Super Admin Coupons API - POST
     @PostMapping("/superadmin/coupons")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'FINANCE_OFFICER') or hasAuthority('billing:write')")
     public ResponseEntity<?> createCoupon(@RequestBody Map<String, Object> body) {
         PlatformCoupon coupon = billingService.createCoupon(body);
         Map<String, Object> response = new HashMap<>();
@@ -533,7 +533,7 @@ public class BillingController {
 
     // Super Admin Force Logout API - POST
     @PostMapping("/superadmin/users/{id}/force-logout")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'OPERATIONS_LEAD') or hasAuthority('tenant:user:status')")
     public ResponseEntity<?> forceLogoutUser(@PathVariable UUID id) {
         Map<String, Object> result = billingService.forceLogoutUser(id);
         Map<String, Object> response = new HashMap<>();
@@ -757,7 +757,7 @@ public class BillingController {
 
     // Super Admin System Health API
     @GetMapping("/superadmin/health")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DEVOPS_ENGINEER', 'COMPLIANCE_AUDITOR') or hasAuthority('telemetry:read')")
     public ResponseEntity<?> getSuperAdminHealth() {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -807,7 +807,7 @@ public class BillingController {
     ));
 
     @GetMapping("/superadmin/backups")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DEVOPS_ENGINEER', 'COMPLIANCE_AUDITOR') or hasAuthority('telemetry:read')")
     public ResponseEntity<?> getSuperAdminBackups() {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -816,7 +816,7 @@ public class BillingController {
     }
 
     @PostMapping("/superadmin/backups/trigger")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DEVOPS_ENGINEER') or hasAuthority('admin:all')")
     public ResponseEntity<?> triggerBackup() {
         String newId = "bak-" + System.currentTimeMillis();
         String name = "EventOS_Manual_Snapshot_" + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));

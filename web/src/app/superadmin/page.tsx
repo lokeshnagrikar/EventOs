@@ -81,57 +81,11 @@ import PageShell from "@/components/ui/PageShell";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLES } from "./constants";
 
-// Mock data sets
-const REVENUE_DATA = [
-  { month: "Jan", revenue: 14200, users: 2100 },
-  { month: "Feb", revenue: 18900, users: 2900 },
-  { month: "Mar", revenue: 24100, users: 3800 },
-  { month: "Apr", revenue: 31200, users: 4900 },
-  { month: "May", revenue: 42800, users: 6500 },
-  { month: "Jun", revenue: 58500, users: 8450 }
-];
-
-const PLAN_DISTRIBUTION_DATA = [
-  { name: "Enterprise", value: 45, color: "#a855f7" },
-  { name: "Professional", value: 35, color: "#ec4899" },
-  { name: "Starter", value: 15, color: "#3b82f6" },
-  { name: "Free Trial", value: 5, color: "#10b981" },
-];
-
-const TENANT_ACQUISITION_DATA = [
-  { month: "Jan", newTenants: 12, churned: 2 },
-  { month: "Feb", newTenants: 18, churned: 1 },
-  { month: "Mar", newTenants: 24, churned: 3 },
-  { month: "Apr", newTenants: 31, churned: 2 },
-  { month: "May", newTenants: 42, churned: 4 },
-  { month: "Jun", newTenants: 58, churned: 3 },
-];
-
-const INITIAL_LIVE_ACTIVITIES = [
-  { id: "a1", action: "Tenant apex_events upgraded to Enterprise", time: "Just now", type: "success" },
-  { id: "a2", action: "Failed payment alert: Tenant elevate_orgs (₹4,999)", time: "3 mins ago", type: "error" },
-  { id: "a3", action: "New user registered: info@vercelfun.com", time: "7 mins ago", type: "info" },
-  { id: "a4", action: "Database auto backup successfully uploaded to S3", time: "12 mins ago", type: "info" },
-  { id: "a5", action: "Security threshold triggered: Blocked IP 192.168.1.104", time: "24 mins ago", type: "warning" },
-];
-
-const INITIAL_SECURITY_LOGS = [
-  { id: "sec-1", ip: "192.168.1.104", geo: "Frankfurt, DE", vector: "Brute-force auth attempt (18 failures)", severity: "HIGH", action: "BLOCKED", time: "2 mins ago" },
-  { id: "sec-2", ip: "45.142.120.9", geo: "Moscow, RU", vector: "SQL Injection probe detected on /api/crm", severity: "CRITICAL", action: "BLOCKED", time: "14 mins ago" },
-  { id: "sec-3", ip: "103.21.244.0", geo: "Singapore, SG", vector: "API Rate limit violation (850 req/min)", severity: "MEDIUM", action: "THROTTLED", time: "42 mins ago" },
-  { id: "sec-4", ip: "185.220.101.5", geo: "Amsterdam, NL", vector: "Tor Exit Node connections attempt", severity: "LOW", action: "MONITORED", time: "1 hour ago" },
-];
-
-const INITIAL_BLOCKED_IPS = [
-  { id: "b1", ip: "192.168.1.104", reason: "Credential Stuffing Attack", blockedAt: "Today 10:45 AM", threatLevel: "High" },
-  { id: "b2", ip: "45.142.120.9", reason: "SQLi Exploit Attempt", blockedAt: "Today 09:20 AM", threatLevel: "Critical" },
-  { id: "b3", ip: "198.51.100.42", reason: "DDoS Flood Probe", blockedAt: "Yesterday 11:15 PM", threatLevel: "Medium" },
-];
-
-const INITIAL_ANNOUNCEMENT_HISTORY = [
-  { id: "ann-1", title: "Q3 Core Database Upgrade & Scheduled Downtime", body: "We will perform a database maintenance window on Sunday 02:00 AM UTC.", target: "ALL", sentAt: "Yesterday 08:00 PM", reach: "142 Workspaces", author: "super_admin@eventos.co", status: "DELIVERED" },
-  { id: "ann-2", title: "New AI Assistant V2 Copilot Features Released", body: "Check out the newly added automated wedding quote builder.", target: "PAID", sentAt: "3 days ago", reach: "89 Workspaces", author: "operations@eventos.co", status: "DELIVERED" },
-];
+// Dynamic platform state defaults (populated from real API and WebSockets)
+const INITIAL_LIVE_ACTIVITIES: any[] = [];
+const INITIAL_SECURITY_LOGS: any[] = [];
+const INITIAL_BLOCKED_IPS: any[] = [];
+const INITIAL_ANNOUNCEMENT_HISTORY: any[] = [];
 
 const PLATFORM_ROLES = [
   "SUPER_ADMIN",
@@ -331,17 +285,45 @@ export default function SuperAdminDashboard() {
         }
 
         const resLogs = await apiClient.get("/auth/billing/superadmin/logs");
-        if (resLogs.data?.success) {
+        if (resLogs.data?.success && Array.isArray(resLogs.data.data)) {
           const formattedLogs = resLogs.data.data.map((l: any) => ({
             id: l.id,
-            actor: l.userId || "System / API",
+            actor: l.userId || "System / Operator",
             action: l.action,
             before: l.details || "N/A",
             after: "Completed",
-            ip: l.ipAddress || "192.168.1.1",
+            ip: l.ipAddress || "127.0.0.1",
             time: l.createdAt ? new Date(l.createdAt).toLocaleString() : "Just now"
           }));
           setAuditLogs(formattedLogs);
+
+          // Populate live activity feed dynamically from actual database audit trail
+          if (formattedLogs.length > 0) {
+            const dynamicActivities = formattedLogs.slice(0, 15).map((l: any) => ({
+              id: l.id,
+              action: `${l.action} by ${l.actor}`,
+              time: l.time,
+              type: l.action?.toLowerCase().includes("delete") || l.action?.toLowerCase().includes("failed") || l.action?.toLowerCase().includes("suspend") ? "error" :
+                    l.action?.toLowerCase().includes("upgrade") || l.action?.toLowerCase().includes("active") || l.action?.toLowerCase().includes("create") ? "success" : "info"
+            }));
+            setLiveActivities(dynamicActivities);
+
+            // Populate security log stream dynamically from real auth & security audit records
+            const secEvents = formattedLogs.filter((l: any) => 
+              l.action?.includes("AUTH") || l.action?.includes("LOGIN") || l.action?.includes("LOGOUT") || l.action?.includes("SECURITY") || l.action?.includes("STATUS") || l.action?.includes("PASSWORD") || l.action?.includes("RESET")
+            ).map((l: any) => ({
+              id: l.id,
+              ip: l.ip || "127.0.0.1",
+              geo: "Internal Node",
+              vector: l.action + (l.before && l.before !== "N/A" ? ` (${l.before})` : ""),
+              severity: l.action?.includes("FAILED") || l.action?.includes("SUSPEND") ? "HIGH" : "LOW",
+              action: l.action?.includes("FAILED") ? "BLOCKED" : "AUDITED",
+              time: l.time
+            }));
+            if (secEvents.length > 0) {
+              setSecurityLogs(secEvents);
+            }
+          }
         }
 
         // Fetch subscriptions from backend REST API
@@ -388,26 +370,16 @@ export default function SuperAdminDashboard() {
         // Fetch coupons from backend REST API
         try {
           const resCoupons = await apiClient.get("/auth/billing/superadmin/coupons");
-          if (resCoupons.data?.success && Array.isArray(resCoupons.data.data) && resCoupons.data.data.length > 0) {
+          if (resCoupons.data?.success && Array.isArray(resCoupons.data.data)) {
             setCoupons(resCoupons.data.data);
-          } else {
-            setCoupons([
-              { id: "c1", code: "LAUNCH2026", discountValue: 25, discountType: "PERCENTAGE", redemptionsCount: 14, active: true },
-              { id: "c2", code: "ENTERPRISE_DISCOUNT", discountValue: 10, discountType: "PERCENTAGE", redemptionsCount: 2, active: true }
-            ]);
           }
         } catch (e) {}
 
         // Fetch tickets from backend REST API
         try {
           const resTickets = await apiClient.get("/auth/billing/superadmin/tickets");
-          if (resTickets.data?.success && Array.isArray(resTickets.data.data) && resTickets.data.data.length > 0) {
+          if (resTickets.data?.success && Array.isArray(resTickets.data.data)) {
             setTickets(resTickets.data.data);
-          } else {
-            setTickets([
-              { id: "TKT-1", sender: loadedTenants[0]?.name || "Apex Events", subject: "Custom Domain CNAME Resolution Fail", status: "OPEN", priority: "HIGH", assigned: "Support Bot", notes: "Awaiting domain verification dns cache update." },
-              { id: "TKT-2", sender: loadedTenants[1]?.name || "Dream Weddings", subject: "Invoice billing discrepancy inquiry", status: "OPEN", priority: "MEDIUM", assigned: "Finance Bot", notes: "Requested Stripe transaction logs analysis." },
-            ]);
           }
         } catch (e) {}
 
@@ -422,13 +394,6 @@ export default function SuperAdminDashboard() {
               rollout: f.rolloutPercentage ?? 100,
               scope: f.scope || "Global",
             })));
-          } else {
-            setFeatureFlags([
-              { id: "ai-assistant-v2", name: "AI Assistant V2 Conversational Copilot", enabled: true, rollout: 100, scope: "Global" },
-              { id: "stripe-subscriptions", name: "Stripe Subscription Checkout", enabled: true, rollout: 100, scope: "Global" },
-              { id: "ws-sync-engine", name: "WebSockets Realtime Sync Engine", enabled: true, rollout: 100, scope: "Global" },
-              { id: "custom-domain", name: "Workspace White-label Custom Domains", enabled: true, rollout: 50, scope: "Enterprise Tenants" }
-            ]);
           }
         } catch (e) {}
 
@@ -443,14 +408,8 @@ export default function SuperAdminDashboard() {
         // Fetch backups from backend REST API
         try {
           const resBackups = await apiClient.get("/auth/billing/superadmin/backups");
-          if (resBackups.data?.success && Array.isArray(resBackups.data.data) && resBackups.data.data.length > 0) {
+          if (resBackups.data?.success && Array.isArray(resBackups.data.data)) {
             setBackups(resBackups.data.data);
-          } else {
-            setBackups([
-              { id: "bak-1", name: `EventOS_Production_DB_Daily_${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`, size: "4.8 GB", status: "SUCCESS", created: "Today 04:00 AM" },
-              { id: "bak-2", name: `EventOS_Production_DB_Daily_${new Date(Date.now() - 86400000).toISOString().slice(0, 10).replace(/-/g, "")}`, size: "4.7 GB", status: "SUCCESS", created: "Yesterday 04:00 AM" },
-              { id: "bak-3", name: `EventOS_Production_DB_Daily_${new Date(Date.now() - 172800000).toISOString().slice(0, 10).replace(/-/g, "")}`, size: "4.7 GB", status: "SUCCESS", created: "2 days ago" },
-            ]);
           }
         } catch (e) {}
 
@@ -526,10 +485,7 @@ export default function SuperAdminDashboard() {
 
   // Subscriptions & Referral Coupons
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
-  const [coupons, setCoupons] = useState<any[]>([
-    { id: "c1", code: "LAUNCH2026", discountValue: 25, discountType: "PERCENTAGE", redemptionsCount: 14, active: true },
-    { id: "c2", code: "ENTERPRISE_DISCOUNT", discountValue: 10, discountType: "PERCENTAGE", redemptionsCount: 2, active: true }
-  ]);
+  const [coupons, setCoupons] = useState<any[]>([]);
   const [showCreateCouponModal, setShowCreateCouponModal] = useState(false);
   const [newCouponCode, setNewCouponCode] = useState("");
   const [newCouponDiscount, setNewCouponDiscount] = useState("15");
@@ -609,11 +565,7 @@ export default function SuperAdminDashboard() {
   }, [tenants]);
 
   // Audit logs
-  const [auditLogs, setAuditLogs] = useState<any[]>([
-    { id: "ad-1", actor: "super_admin@eventos.agency", action: "Toggle AI Assistant flag to true", before: "false", after: "true", ip: "192.168.1.1", time: "Just now" },
-    { id: "ad-2", actor: "finance_admin@eventos.agency", action: "Refunding transaction sub-9218", before: "₹4,999 charged", after: "₹4,999 refunded", ip: "184.12.85.19", time: "2 hours ago" },
-    { id: "ad-3", actor: "developer@eventos.agency", action: "Emergency backup override triggered", before: "idle", after: "backing_up", ip: "127.0.0.1", time: "5 hours ago" },
-  ]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   // Forms
   const [broadcastTitle, setBroadcastTitle] = useState("");
@@ -1305,26 +1257,33 @@ export default function SuperAdminDashboard() {
                     </span>
                   </div>
                   <div className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar font-mono text-[10px] font-semibold">
-                    {liveActivities.map((act) => (
-                      <motion.div
-                        key={act.id}
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2.5 border border-white/[0.04] bg-white/[0.01] rounded-xl hover:bg-white/[0.03] transition gap-1 sm:gap-2"
-                      >
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <span className={cn(
-                            "px-1.5 py-0.5 border text-[8px] font-black font-sans rounded uppercase shrink-0",
-                            act.type === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" :
-                              act.type === "error" ? "border-red-500/20 bg-red-500/10 text-red-400" : "border-white/[0.08] bg-white/[0.04] text-zinc-400"
-                          )}>
-                            {act.type}
-                          </span>
-                          <span className="text-zinc-200 text-xs truncate font-sans">{act.action}</span>
-                        </div>
-                        <span className="text-zinc-500 text-[9px] shrink-0 self-end sm:self-center">{act.time}</span>
-                      </motion.div>
-                    ))}
+                    {liveActivities.length === 0 ? (
+                      <div className="py-6 text-center text-zinc-500 font-mono text-xs flex flex-col items-center justify-center gap-1.5">
+                        <Activity className="size-4 text-purple-400/60 animate-pulse" />
+                        <span>Realtime stream listening... Platform activity and WebSocket events will appear here live.</span>
+                      </div>
+                    ) : (
+                      liveActivities.map((act) => (
+                        <motion.div
+                          key={act.id}
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2.5 border border-white/[0.04] bg-white/[0.01] rounded-xl hover:bg-white/[0.03] transition gap-1 sm:gap-2"
+                        >
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <span className={cn(
+                              "px-1.5 py-0.5 border text-[8px] font-black font-sans rounded uppercase shrink-0",
+                              act.type === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" :
+                                act.type === "error" ? "border-red-500/20 bg-red-500/10 text-red-400" : "border-white/[0.08] bg-white/[0.04] text-zinc-400"
+                            )}>
+                              {act.type}
+                            </span>
+                            <span className="text-zinc-200 text-xs truncate font-sans">{act.action}</span>
+                          </div>
+                          <span className="text-zinc-500 text-[9px] shrink-0 self-end sm:self-center">{act.time}</span>
+                        </motion.div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -1536,26 +1495,32 @@ export default function SuperAdminDashboard() {
                     </button>
                   </div>
                   <div className="space-y-2 text-xs font-bold font-mono">
-                    {coupons.map((c) => (
-                      <div key={c.id || c.code} className="flex justify-between items-center p-3 border border-white/[0.04] bg-white/[0.01] rounded-xl hover:bg-white/[0.03] transition">
-                        <div>
-                          <span className="text-white block">{c.code} ({c.discountValue || 15}% off)</span>
-                          <span className="text-[9px] text-zinc-500 font-sans font-medium">Type: {c.discountType || "PERCENTAGE"}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-purple-400">{c.redemptionsCount ?? 0} Active Redeems</span>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard?.writeText(c.code);
-                              addToast(`Copied code ${c.code} to clipboard!`, "info");
-                            }}
-                            className="px-2 py-1 bg-white/[0.04] border border-white/[0.06] text-zinc-300 hover:text-white rounded text-[10px]"
-                          >
-                            Copy
-                          </button>
-                        </div>
+                    {coupons.length === 0 ? (
+                      <div className="py-6 text-center text-zinc-500 font-mono text-xs">
+                        No active referral discount coupons found. Click &quot;+ Create Coupon&quot; to issue a new promo code.
                       </div>
-                    ))}
+                    ) : (
+                      coupons.map((c) => (
+                        <div key={c.id || c.code} className="flex justify-between items-center p-3 border border-white/[0.04] bg-white/[0.01] rounded-xl hover:bg-white/[0.03] transition">
+                          <div>
+                            <span className="text-white block">{c.code} ({c.discountValue || 15}% off)</span>
+                            <span className="text-[9px] text-zinc-500 font-sans font-medium">Type: {c.discountType || "PERCENTAGE"}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-purple-400">{c.redemptionsCount ?? 0} Active Redeems</span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard?.writeText(c.code);
+                                addToast(`Copied code ${c.code} to clipboard!`, "info");
+                              }}
+                              className="px-2 py-1 bg-white/[0.04] border border-white/[0.06] text-zinc-300 hover:text-white rounded text-[10px]"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -1646,34 +1611,40 @@ export default function SuperAdminDashboard() {
                     </button>
                   </div>
                   <div className="space-y-3">
-                    {tickets.map(t => (
-                      <div
-                        key={t.id}
-                        onClick={() => {
-                          setActiveTicketId(t.id);
-                          setTicketNotes(t.notes || "");
-                        }}
-                        className={cn(
-                          "p-3.5 border rounded-xl cursor-pointer transition",
-                          activeTicketId === t.id ? "border-purple-500 bg-purple-500/10" : "border-white/[0.04] bg-white/[0.01] hover:border-white/[0.08]"
-                        )}
-                      >
-                        <div className="flex justify-between items-start font-bold">
-                          <span className="text-white text-xs block">{t.sender}</span>
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full text-[8px] font-black uppercase font-mono border",
-                            t.priority === "HIGH" ? "border-red-500/20 bg-red-500/10 text-red-400" : "border-white/[0.08] bg-white/[0.04] text-zinc-400"
-                          )}>
-                            {t.priority}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-zinc-400 mt-1 font-semibold leading-normal">{t.subject}</p>
-                        <div className="mt-2 flex justify-between items-center text-[9px] font-mono text-zinc-500">
-                          <span className={cn(t.status === "CLOSED" ? "text-emerald-400" : "text-amber-400")}>{t.status}</span>
-                          <span>Assigned: {t.assigned}</span>
-                        </div>
+                    {tickets.length === 0 ? (
+                      <div className="py-8 text-center text-zinc-500 font-mono text-xs">
+                        No support tickets currently on record. Click &quot;+ Create&quot; to file an internal support ticket.
                       </div>
-                    ))}
+                    ) : (
+                      tickets.map(t => (
+                        <div
+                          key={t.id}
+                          onClick={() => {
+                            setActiveTicketId(t.id);
+                            setTicketNotes(t.notes || "");
+                          }}
+                          className={cn(
+                            "p-3.5 border rounded-xl cursor-pointer transition",
+                            activeTicketId === t.id ? "border-purple-500 bg-purple-500/10" : "border-white/[0.04] bg-white/[0.01] hover:border-white/[0.08]"
+                          )}
+                        >
+                          <div className="flex justify-between items-start font-bold">
+                            <span className="text-white text-xs block">{t.sender}</span>
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-full text-[8px] font-black uppercase font-mono border",
+                              t.priority === "HIGH" ? "border-red-500/20 bg-red-500/10 text-red-400" : "border-white/[0.08] bg-white/[0.04] text-zinc-400"
+                            )}>
+                              {t.priority}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-400 mt-1 font-semibold leading-normal">{t.subject}</p>
+                          <div className="mt-2 flex justify-between items-center text-[9px] font-mono text-zinc-500">
+                            <span className={cn(t.status === "CLOSED" ? "text-emerald-400" : "text-amber-400")}>{t.status}</span>
+                            <span>Assigned: {t.assigned}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -1811,17 +1782,25 @@ export default function SuperAdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {auditLogs.map((log) => (
-                          <tr key={log.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition font-mono">
-                            <td className="p-4 text-white font-sans font-bold">{log.actor}</td>
-                            <td className="p-4">
-                              <span className="text-zinc-200 block font-semibold font-sans">{log.action}</span>
-                              <span className="text-[9px] text-zinc-500">Before: {log.before} | After: {log.after}</span>
+                        {auditLogs.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="p-8 text-center text-zinc-500 font-mono text-xs">
+                              No audit trail logs recorded yet. All administrative actions across the platform are captured here.
                             </td>
-                            <td className="p-4 text-zinc-400">{log.ip}</td>
-                            <td className="p-4 text-right text-zinc-500 text-[10px]">{log.time}</td>
                           </tr>
-                        ))}
+                        ) : (
+                          auditLogs.map((log) => (
+                            <tr key={log.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition font-mono">
+                              <td className="p-4 text-white font-sans font-bold">{log.actor}</td>
+                              <td className="p-4">
+                                <span className="text-zinc-200 block font-semibold font-sans">{log.action}</span>
+                                <span className="text-[9px] text-zinc-500">Before: {log.before} | After: {log.after}</span>
+                              </td>
+                              <td className="p-4 text-zinc-400">{log.ip}</td>
+                              <td className="p-4 text-right text-zinc-500 text-[10px]">{log.time}</td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -1993,28 +1972,36 @@ export default function SuperAdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {announcementHistory.map((ann) => (
-                          <tr key={ann.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
-                            <td className="p-4">
-                              <span className="font-extrabold text-white block text-xs">{ann.title}</span>
-                              <span className="text-[10px] text-zinc-400">{ann.body}</span>
-                            </td>
-                            <td className="p-4 font-mono font-bold text-purple-400">{ann.target}</td>
-                            <td className="p-4 font-mono text-zinc-300">{ann.reach}</td>
-                            <td className="p-4 font-mono text-[10px] text-zinc-500">{ann.sentAt}</td>
-                            <td className="p-4 text-right">
-                              <button
-                                onClick={() => {
-                                  setAnnouncementHistory(announcementHistory.filter(a => a.id !== ann.id));
-                                  addToast("Broadcast notice revoked.", "success");
-                                }}
-                                className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-lg transition text-[10px] font-bold cursor-pointer"
-                              >
-                                Revoke
-                              </button>
+                        {announcementHistory.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="p-8 text-center text-zinc-500 font-mono text-xs">
+                              No platform announcements broadcasted yet. Use the transmitter above to publish system-wide updates.
                             </td>
                           </tr>
-                        ))}
+                        ) : (
+                          announcementHistory.map((ann) => (
+                            <tr key={ann.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
+                              <td className="p-4">
+                                <span className="font-extrabold text-white block text-xs">{ann.title}</span>
+                                <span className="text-[10px] text-zinc-400">{ann.body}</span>
+                              </td>
+                              <td className="p-4 font-mono font-bold text-purple-400">{ann.target}</td>
+                              <td className="p-4 font-mono text-zinc-300">{ann.reach}</td>
+                              <td className="p-4 font-mono text-[10px] text-zinc-500">{ann.sentAt}</td>
+                              <td className="p-4 text-right">
+                                <button
+                                  onClick={() => {
+                                    setAnnouncementHistory(announcementHistory.filter(a => a.id !== ann.id));
+                                    addToast("Broadcast notice revoked.", "success");
+                                  }}
+                                  className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-lg transition text-[10px] font-bold cursor-pointer"
+                                >
+                                  Revoke
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -2107,26 +2094,34 @@ export default function SuperAdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {blockedIps.map((b) => (
-                          <tr key={b.id} className="border-b border-white/[0.04] last:border-0">
-                            <td className="py-2.5 font-bold text-white">{b.ip}</td>
-                            <td className="py-2.5 text-zinc-400 font-sans">{b.reason}</td>
-                            <td className="py-2.5 text-zinc-500 text-[10px]">{b.blockedAt}</td>
-                            <td className="py-2.5">
-                              <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-red-500/10 text-red-400 border border-red-500/20">
-                                {b.threatLevel}
-                              </span>
-                            </td>
-                            <td className="py-2.5 text-right">
-                              <button
-                                onClick={() => handleUnblockIp(b.ip)}
-                                className="px-2.5 py-1 bg-white/[0.03] border border-white/[0.06] text-zinc-300 hover:text-white rounded-lg text-[10px] font-bold cursor-pointer"
-                              >
-                                Unblock
-                              </button>
+                        {blockedIps.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="py-6 text-center text-zinc-500 font-mono text-xs">
+                              No IP addresses currently blacklisted. Network perimeter is clear.
                             </td>
                           </tr>
-                        ))}
+                        ) : (
+                          blockedIps.map((b) => (
+                            <tr key={b.id} className="border-b border-white/[0.04] last:border-0">
+                              <td className="py-2.5 font-bold text-white">{b.ip}</td>
+                              <td className="py-2.5 text-zinc-400 font-sans">{b.reason}</td>
+                              <td className="py-2.5 text-zinc-500 text-[10px]">{b.blockedAt}</td>
+                              <td className="py-2.5">
+                                <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-red-500/10 text-red-400 border border-red-500/20">
+                                  {b.threatLevel}
+                                </span>
+                              </td>
+                              <td className="py-2.5 text-right">
+                                <button
+                                  onClick={() => handleUnblockIp(b.ip)}
+                                  className="px-2.5 py-1 bg-white/[0.03] border border-white/[0.06] text-zinc-300 hover:text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                                >
+                                  Unblock
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -2148,30 +2143,38 @@ export default function SuperAdminDashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {securityLogs.map((sec) => (
-                            <tr key={sec.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
-                              <td className="p-3">
-                                <span className="font-bold text-white block">{sec.ip}</span>
-                                <span className="text-[9px] text-zinc-500">{sec.geo}</span>
+                          {securityLogs.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="p-8 text-center text-zinc-500 font-mono text-xs">
+                                Zero security threats detected. WAF firewall and security rate limits are actively shielding all platform endpoints.
                               </td>
-                              <td className="p-3 text-zinc-300 font-sans font-semibold">{sec.vector}</td>
-                              <td className="p-3">
-                                <span className={cn(
-                                  "px-2 py-0.5 rounded-full text-[8px] font-black uppercase border",
-                                  sec.severity === "CRITICAL" ? "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" :
-                                    sec.severity === "HIGH" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-zinc-800 text-zinc-400"
-                                )}>
-                                  {sec.severity}
-                                </span>
-                              </td>
-                              <td className="p-3">
-                                <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                  {sec.action}
-                                </span>
-                              </td>
-                              <td className="p-3 text-right text-zinc-500 text-[10px]">{sec.time}</td>
                             </tr>
-                          ))}
+                          ) : (
+                            securityLogs.map((sec) => (
+                              <tr key={sec.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03]">
+                                <td className="p-3">
+                                  <span className="font-bold text-white block">{sec.ip}</span>
+                                  <span className="text-[9px] text-zinc-500">{sec.geo}</span>
+                                </td>
+                                <td className="p-3 text-zinc-300 font-sans font-semibold">{sec.vector}</td>
+                                <td className="p-3">
+                                  <span className={cn(
+                                    "px-2 py-0.5 rounded-full text-[8px] font-black uppercase border",
+                                    sec.severity === "CRITICAL" ? "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" :
+                                      sec.severity === "HIGH" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-zinc-800 text-zinc-400"
+                                  )}>
+                                    {sec.severity}
+                                  </span>
+                                </td>
+                                <td className="p-3">
+                                  <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    {sec.action}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-right text-zinc-500 text-[10px]">{sec.time}</td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     </div>
