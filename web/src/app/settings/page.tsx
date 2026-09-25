@@ -4157,7 +4157,7 @@ export default function SettingsPage() {
                                   planName: orderData.planName || p.name,
                                   planCode: p.code,
                                   interval: billingInterval,
-                                  userName: user?.name || user?.firstName || "",
+                                  userName: `${user?.firstName || ""} ${user?.lastName || ""}`.trim(),
                                   userEmail: user?.email || "",
                                   onSuccess: async (paymentData) => {
                                     try {
