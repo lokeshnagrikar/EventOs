@@ -90,7 +90,7 @@ export default function ContactPage() {
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone size={13} className="text-purple-400" />
-                  <a href="tel:+919309965483" className="hover:text-purple-300 transition-colors">+91 93099 65483 (Demo & Support)</a>
+                  <a href="tel:+919309965483" className="hover:text-purple-300 transition-colors">+91 93099 65483</a>
                 </li>
                 <li className="flex items-start gap-3">
                   <MapPin size={13} className="text-purple-400 mt-0.5 shrink-0" />
