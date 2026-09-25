@@ -223,7 +223,7 @@ public class BillingService {
             throw new IllegalStateException("Payment status is not paid: " + paymentStatus);
         }
 
-        // 3. Server-side Binding Lookup (with authoritative Stripe metadata fallback)
+        // 3. Server-side Binding Lookup (authoritative source of truth, not metadata)
         String bindingJson = null;
         if (stringRedisTemplate != null) {
             try {
@@ -233,49 +233,34 @@ public class BillingService {
             }
         }
 
-        UUID boundTenantId;
-        String boundPlanCode;
-        long boundAmount;
-        String boundCurrency;
-        String boundCustomerId;
+        if (bindingJson == null || bindingJson.trim().isEmpty()) {
+            throw new IllegalStateException("No authoritative server-side checkout binding found for session: " + sessionId + " (expired, nonexistent, or untrusted session)");
+        }
 
-        if (bindingJson != null && !bindingJson.trim().isEmpty()) {
-            Map<String, Object> binding;
-            try {
-                binding = new com.fasterxml.jackson.databind.ObjectMapper().readValue(bindingJson, Map.class);
-            } catch (Exception e) {
-                throw new IllegalStateException("Corrupted checkout binding record for session: " + sessionId, e);
-            }
+        Map<String, Object> binding;
+        try {
+            binding = new com.fasterxml.jackson.databind.ObjectMapper().readValue(bindingJson, Map.class);
+        } catch (Exception e) {
+            throw new IllegalStateException("Corrupted checkout binding record for session: " + sessionId, e);
+        }
 
-            boundTenantId = UUID.fromString((String) binding.get("tenantId"));
-            boundPlanCode = (String) binding.get("planCode");
-            boundAmount = Long.parseLong(binding.get("expectedAmount").toString());
-            boundCurrency = (String) binding.get("expectedCurrency");
-            boundCustomerId = (String) binding.getOrDefault("customerId", "");
+        UUID boundTenantId = UUID.fromString((String) binding.get("tenantId"));
+        String boundPlanCode = (String) binding.get("planCode");
+        long boundAmount = Long.parseLong(binding.get("expectedAmount").toString());
+        String boundCurrency = (String) binding.get("expectedCurrency");
+        String boundCustomerId = (String) binding.getOrDefault("customerId", "");
 
-            // 4. Adversarial Metadata Consistency Verification (metadata must not contradict server-side binding)
-            Map<String, String> metadata = session.getMetadata();
-            if (metadata != null) {
-                String metaTenantId = metadata.get("tenantId");
-                if (metaTenantId != null && !boundTenantId.toString().equalsIgnoreCase(metaTenantId)) {
-                    throw new SecurityException("Adversarial check failed: metadata tenantId does not match server-side bound tenantId");
-                }
-                String metaPlanCode = metadata.get("planCode");
-                if (metaPlanCode != null && !boundPlanCode.equalsIgnoreCase(metaPlanCode)) {
-                    throw new SecurityException("Adversarial check failed: metadata planCode does not match server-side bound planCode");
-                }
+        // 4. Adversarial Metadata Consistency Verification (metadata must not contradict server-side binding)
+        Map<String, String> metadata = session.getMetadata();
+        if (metadata != null) {
+            String metaTenantId = metadata.get("tenantId");
+            if (metaTenantId != null && !boundTenantId.toString().equalsIgnoreCase(metaTenantId)) {
+                throw new SecurityException("Adversarial check failed: metadata tenantId does not match server-side bound tenantId");
             }
-        } else {
-            // Authoritative Fallback from immutable Stripe metadata attached by server during session creation
-            Map<String, String> metadata = session.getMetadata();
-            if (metadata == null || !metadata.containsKey("tenantId") || !metadata.containsKey("planCode")) {
-                throw new IllegalStateException("No authoritative server-side checkout binding or Stripe metadata found for session: " + sessionId);
+            String metaPlanCode = metadata.get("planCode");
+            if (metaPlanCode != null && !boundPlanCode.equalsIgnoreCase(metaPlanCode)) {
+                throw new SecurityException("Adversarial check failed: metadata planCode does not match server-side bound planCode");
             }
-            boundTenantId = UUID.fromString(metadata.get("tenantId"));
-            boundPlanCode = metadata.get("planCode");
-            boundAmount = session.getAmountTotal() != null ? session.getAmountTotal() : 0L;
-            boundCurrency = session.getCurrency() != null ? session.getCurrency().toLowerCase() : "inr";
-            boundCustomerId = session.getCustomer() != null ? session.getCustomer() : "";
         }
 
         // 5. Customer Verification
@@ -285,8 +270,8 @@ public class BillingService {
             }
         }
 
-        // 6. Authoritative Amount Verification (rejects underpayment)
-        if (session.getAmountTotal() != null && boundAmount > 0) {
+        // 6. Authoritative Amount Verification (rejects both underpayment and overpayment)
+        if (session.getAmountTotal() != null) {
             long actualAmount = session.getAmountTotal();
             if (actualAmount != boundAmount) {
                 throw new IllegalStateException("Stripe paid amount (" + actualAmount + ") does not match expected bound amount (" + boundAmount + ")");
