@@ -59,8 +59,10 @@ import {
   ShieldCheck,
   CheckCheck,
   Upload,
-  MessageSquare
+  MessageSquare,
+  Sparkles
 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar } from "recharts";
 import { cn } from "@/lib/utils";
 
@@ -228,6 +230,22 @@ export default function SettingsPage() {
   const [isCheckingOutPlan, setIsCheckingOutPlan] = useState<string | null>(null);
   const [isVerifyingStripeSession, setIsVerifyingStripeSession] = useState(false);
   const [verifyingSessionMsg, setVerifyingSessionMsg] = useState("");
+
+  useEffect(() => {
+    if (showPricingUpgrade) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setShowPricingUpgrade(false);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [showPricingUpgrade]);
 
   // Chart data
   const usageHistoryData = [
@@ -3042,187 +3060,7 @@ export default function SettingsPage() {
                     )}
                   </AnimatePresence>
 
-                  {/* Pricing Plans Tiers Modal comparison grid */}
-                  <AnimatePresence>
-                    {showPricingUpgrade && (
-                      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          onClick={() => setShowPricingUpgrade(false)}
-                          className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                          className="relative w-full max-w-5xl overflow-y-auto max-h-[92dvh] rounded-2xl sm:rounded-3xl border border-zinc-850 bg-zinc-950 p-4 sm:p-6 space-y-4 sm:space-y-6 shadow-2xl"
-                        >
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-900 pb-3">
-                            <div>
-                              <h2 className="text-sm font-black uppercase text-white tracking-wider">Choose a Subscription Plan</h2>
-                              <p className="text-[10px] text-zinc-500">Pick the best plan for your team and scaling operations.</p>
-                            </div>
-                            <div className="flex items-center gap-2 self-end sm:self-auto">
-                              {/* Monthly/Yearly billing interval toggle */}
-                              <div className="flex items-center gap-1.5 p-1 border border-zinc-900 bg-zinc-950 rounded-xl font-mono text-[9px] font-bold">
-                                <button
-                                  onClick={() => setBillingInterval("MONTHLY")}
-                                  className={cn("px-2.5 py-1 rounded-lg transition-all", billingInterval === "MONTHLY" ? "bg-purple-600 text-white font-black" : "text-zinc-500 hover:text-zinc-300")}
-                                >
-                                  Monthly
-                                </button>
-                                <button
-                                  onClick={() => setBillingInterval("YEARLY")}
-                                  className={cn("px-2.5 py-1 rounded-lg transition-all relative flex items-center gap-1", billingInterval === "YEARLY" ? "bg-purple-600 text-white font-black" : "text-zinc-500 hover:text-zinc-300")}
-                                >
-                                  Yearly
-                                  <span className="absolute -top-3.5 -right-3 px-1 rounded bg-gradient-to-r from-pink-500 to-purple-500 text-[6px] text-white uppercase font-black tracking-widest scale-90">Save 20%</span>
-                                </button>
-                              </div>
-                              <button
-                                onClick={() => setShowPricingUpgrade(false)}
-                                className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 transition"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          </div>
 
-                          {/* Plans Cards - Balanced 3x2 Grid */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                            {[...plans].sort((a, b) => {
-                              const order = ["free_trial", "starter", "professional", "business", "agency", "enterprise"];
-                              const idxA = order.indexOf(a.code.toLowerCase());
-                              const idxB = order.indexOf(b.code.toLowerCase());
-                              return (idxA !== -1 ? idxA : 99) - (idxB !== -1 ? idxB : 99);
-                            }).map((p) => {
-                              const isCurrent = subscription?.plan?.code === p.code;
-                              const isRecommended = p.code.toLowerCase() === "professional";
-
-                              const getCanonicalPrice = (code: string, fallback: number) => {
-                                const c = code.toLowerCase();
-                                if (c === "free_trial") return 0;
-                                if (c === "starter") return 1999;
-                                if (c === "professional") return 4999;
-                                if (c === "agency" || c === "enterprise") return 12999;
-                                return fallback;
-                              };
-
-                              const basePrice = getCanonicalPrice(p.code, p.price);
-                              const priceVal = billingInterval === "YEARLY" ? basePrice * 0.8 * 12 : basePrice;
-                              const labelVal = billingInterval === "YEARLY" ? "/ yr" : "/ mo";
-
-                              return (
-                                <div
-                                  key={p.id}
-                                  className={cn(
-                                    "p-5 rounded-2xl border flex flex-col justify-between space-y-4 relative transition duration-300",
-                                    isCurrent ? "border-purple-500 bg-purple-950/10 shadow-lg shadow-purple-950/20" : "border-zinc-850 bg-zinc-900/30 hover:border-zinc-800",
-                                    isRecommended && !isCurrent ? "border-pink-500/40 bg-pink-950/5 shadow-md shadow-pink-950/10" : ""
-                                  )}
-                                >
-                                  {isRecommended && (
-                                    <span className="absolute -top-2.5 left-4 px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-[7px] font-black uppercase text-white tracking-widest shadow-md">Recommended</span>
-                                  )}
-
-                                  <div className="space-y-1">
-                                    <span className="text-[11px] font-black uppercase text-zinc-300 block">{p.name}</span>
-                                    <div className="flex items-baseline gap-1 mt-2">
-                                      <span className="text-2xl font-bold text-white font-mono">₹{priceVal.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
-                                      <span className="text-[9px] text-zinc-500 font-mono uppercase">{labelVal}</span>
-                                    </div>
-                                    <p className="text-[9px] text-zinc-400 mt-1 font-semibold leading-normal">
-                                      Great for {p.code === "free_trial" ? "trying out features" : p.code === "starter" ? "small boutique teams" : p.code === "professional" ? "growing agencies" : "high-scale enterprises"}.
-                                    </p>
-                                  </div>
-
-                                  {/* Limits details */}
-                                  <div className="border-t border-zinc-900 pt-3 space-y-2 font-bold font-mono text-[9px] text-zinc-400 leading-relaxed">
-                                    <p className="flex justify-between"><span>Users:</span> <span className="text-zinc-200">{p.code === "enterprise" ? "Unlimited Users" : `${p.maxUsers} Users`}</span></p>
-                                    <p className="flex justify-between"><span>Extra Seat:</span> <span className="text-purple-400">{p.code === "enterprise" ? "Unlimited" : p.code === "free_trial" ? "N/A" : "₹799 / mo"}</span></p>
-                                    <p className="flex justify-between"><span>Storage:</span> <span className="text-zinc-200">{p.code === "enterprise" ? "1 TB Cloud" : `${(p.maxStorage / (1024 * 1024 * 1024)).toFixed(0)} GB`}</span></p>
-                                    <p className="flex justify-between"><span>Events:</span> <span className="text-zinc-200">{p.code === "enterprise" ? "Unlimited Active" : `${p.maxEvents} Active`}</span></p>
-                                    <p className="flex justify-between"><span>AI Credits:</span> <span className="text-zinc-200">{p.maxAiCredits} / mo</span></p>
-                                    <p className="flex justify-between"><span>Custom Domain:</span> <span className="text-zinc-200">{p.customDomainSupported ? "Yes" : "No"}</span></p>
-                                    <p className="flex justify-between"><span>White label:</span> <span className="text-zinc-200">{p.whiteLabelSupported ? "Yes" : "No"}</span></p>
-                                  </div>
-
-                                  <button
-                                    onClick={async () => {
-                                      if (usage) {
-                                        const usersExceeded = usage.usersCount > p.maxUsers && p.code !== "enterprise";
-                                        const storageExceeded = usage.storageBytes > p.maxStorage;
-                                        const eventsExceeded = usage.eventsCount > p.maxEvents && p.code !== "enterprise";
-
-                                        if (usersExceeded || storageExceeded || eventsExceeded) {
-                                          setTargetDowngradePlan(p);
-                                          setShowDowngradeWarningModal(true);
-                                          return;
-                                        }
-                                      }
-
-                                      if (p.code === "free_trial" || p.price === 0) {
-                                        try {
-                                          await upgradeSubscription(p.code);
-                                          addToast(`Successfully activated Free Trial!`, "success");
-                                          setShowPricingUpgrade(false);
-                                        } catch (err: any) {
-                                          addToast(err.message || "Failed to switch plan.", "error");
-                                        }
-                                        return;
-                                      }
-
-                                      // Trigger Real Stripe Checkout for Paid Tiers in INR
-                                      setIsCheckingOutPlan(p.code);
-                                      try {
-                                        const res = await api.post("/auth/billing/subscription/checkout", { 
-                                          planCode: p.code,
-                                          interval: billingInterval 
-                                        });
-                                        const checkoutUrl = res.data?.data?.url;
-                                        if (checkoutUrl) {
-                                          addToast(`Redirecting to secure Stripe checkout in INR...`, "info");
-                                          window.location.href = checkoutUrl;
-                                          return;
-                                        }
-                                        throw new Error("No checkout URL received from payment server");
-                                      } catch (err: any) {
-                                        console.error("Payment checkout error:", err);
-                                        const errMsg = err.response?.data?.message || err.message || "Stripe Checkout session creation failed.";
-                                        addToast(errMsg, "error");
-                                      } finally {
-                                        setIsCheckingOutPlan(null);
-                                      }
-                                    }}
-                                    disabled={isCurrent || billingLoading || isCheckingOutPlan === p.code}
-                                    className={cn(
-                                      "w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-center transition active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer",
-                                      isCurrent ? "bg-purple-500/10 border border-purple-500/20 text-purple-400 cursor-not-allowed" :
-                                        isRecommended ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold hover:shadow-lg hover:shadow-purple-950/40" :
-                                          "bg-zinc-900 hover:bg-zinc-850 hover:text-white border border-zinc-800 text-zinc-300"
-                                    )}
-                                  >
-                                    {isCheckingOutPlan === p.code ? (
-                                      <>
-                                        <Loader2 size={12} className="animate-spin" />
-                                        <span>Connecting Stripe...</span>
-                                      </>
-                                    ) : isCurrent ? (
-                                      "Active Plan"
-                                    ) : (
-                                      "Choose Plan"
-                                    )}
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-                  </AnimatePresence>
 
                   {/* Billing history table */}
                   <div className="space-y-3 pt-2">
@@ -4072,6 +3910,290 @@ export default function SettingsPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* ── HIGH-END PRICING PLANS MODAL POPUP (POP OUT ON SCREEN VIA REACT PORTAL) ── */}
+      {mounted && typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {showPricingUpgrade && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 md:p-8 overflow-hidden">
+              {/* Ultra-dark backdrop blur overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setShowPricingUpgrade(false)}
+                className="fixed inset-0 bg-black/85 backdrop-blur-xl z-0"
+              />
+
+              {/* Modal Box */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.94, y: 24 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 24 }}
+                transition={{ type: "spring", damping: 28, stiffness: 320 }}
+                className="relative z-10 w-full max-w-6xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-2xl sm:rounded-3xl border border-zinc-800/90 bg-[#0c0c0e]/95 backdrop-blur-2xl shadow-[0_25px_70px_rgba(0,0,0,0.95),0_0_50px_rgba(168,85,247,0.15)] overflow-hidden"
+              >
+                {/* Ambient glow accent top edge */}
+                <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent pointer-events-none" />
+
+                {/* Sticky Header */}
+                <div className="shrink-0 px-4 py-3.5 sm:px-6 sm:py-4 border-b border-zinc-850/80 bg-zinc-950/80 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-purple-600/30 to-pink-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0 shadow-inner">
+                      <Sparkles size={18} className="animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-sm sm:text-base font-black uppercase text-white tracking-wider">
+                          Choose a Subscription Plan
+                        </h2>
+                        <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[8.5px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/25">
+                          Instant Activation
+                        </span>
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-zinc-400 font-medium">
+                        Pick the best plan for your team and scaling event operations.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 sm:gap-3 ml-auto">
+                    {/* Monthly / Yearly Billing Toggle */}
+                    <div className="flex items-center p-1 bg-zinc-900/90 border border-zinc-800 rounded-xl font-mono text-[10px] font-bold shadow-inner">
+                      <button
+                        type="button"
+                        onClick={() => setBillingInterval("MONTHLY")}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg transition-all cursor-pointer",
+                          billingInterval === "MONTHLY"
+                            ? "bg-purple-600 text-white shadow-md font-black"
+                            : "text-zinc-400 hover:text-zinc-200"
+                        )}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBillingInterval("YEARLY")}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg transition-all relative flex items-center gap-1 cursor-pointer",
+                          billingInterval === "YEARLY"
+                            ? "bg-purple-600 text-white shadow-md font-black"
+                            : "text-zinc-400 hover:text-zinc-200"
+                        )}
+                      >
+                        <span>Yearly</span>
+                        <span className="px-1.5 py-0.5 rounded bg-gradient-to-r from-pink-500 to-purple-500 text-[7.5px] text-white uppercase font-black tracking-wider leading-none shadow">
+                          -20%
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Prominent, touch-friendly Close Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPricingUpgrade(false)}
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition flex items-center justify-center shrink-0 cursor-pointer shadow-sm active:scale-95"
+                      aria-label="Close dialog"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Scrollable Cards Grid Container */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 overscroll-contain scrollbar-thin">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+                    {[...plans].sort((a, b) => {
+                      const order = ["free_trial", "starter", "professional", "business", "agency", "enterprise"];
+                      const idxA = order.indexOf(a.code.toLowerCase());
+                      const idxB = order.indexOf(b.code.toLowerCase());
+                      return (idxA !== -1 ? idxA : 99) - (idxB !== -1 ? idxB : 99);
+                    }).map((p) => {
+                      const isCurrent = subscription?.plan?.code === p.code;
+                      const isRecommended = p.code.toLowerCase() === "professional";
+
+                      const getCanonicalPrice = (code: string, fallback: number) => {
+                        const c = code.toLowerCase();
+                        if (c === "free_trial") return 0;
+                        if (c === "starter") return 1999;
+                        if (c === "professional") return 4999;
+                        if (c === "business") return 11999;
+                        if (c === "agency" || c === "enterprise") return 12999;
+                        return fallback;
+                      };
+
+                      const basePrice = getCanonicalPrice(p.code, p.price);
+                      const priceVal = billingInterval === "YEARLY" ? basePrice * 0.8 * 12 : basePrice;
+                      const labelVal = billingInterval === "YEARLY" ? "/ yr" : "/ mo";
+
+                      return (
+                        <div
+                          key={p.id}
+                          className={cn(
+                            "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border flex flex-col justify-between relative transition-all duration-300 group hover:-translate-y-1",
+                            isCurrent
+                              ? "border-purple-500/70 bg-gradient-to-b from-purple-950/20 via-zinc-950/60 to-zinc-950 shadow-xl shadow-purple-950/30 ring-1 ring-purple-500/30"
+                              : isRecommended
+                                ? "border-pink-500/50 bg-gradient-to-b from-pink-950/20 via-zinc-950/60 to-zinc-950 shadow-xl shadow-pink-950/20 ring-1 ring-pink-500/20"
+                                : "border-zinc-800/80 bg-zinc-900/30 hover:border-zinc-700 hover:bg-zinc-900/50"
+                          )}
+                        >
+                          {/* Recommended Ribbon */}
+                          {isRecommended && (
+                            <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-[8px] font-black uppercase text-white tracking-widest shadow-lg shadow-pink-500/20">
+                              ★ Most Popular
+                            </span>
+                          )}
+
+                          {/* Current Plan Badge */}
+                          {isCurrent && (
+                            <span className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[8px] font-black uppercase text-emerald-400 tracking-widest shadow">
+                              Active Plan
+                            </span>
+                          )}
+
+                          {/* Top Plan Header */}
+                          <div className="space-y-2">
+                            <span className="text-xs font-black uppercase text-zinc-300 tracking-wider block">
+                              {p.name}
+                            </span>
+                            <div className="flex items-baseline gap-1.5 mt-2">
+                              <span className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">
+                                ₹{priceVal.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                              </span>
+                              <span className="text-[10px] sm:text-xs text-zinc-400 font-mono uppercase font-semibold">
+                                {labelVal}
+                              </span>
+                            </div>
+                            <p className="text-[10px] sm:text-[11px] text-zinc-400 font-medium leading-relaxed min-h-[32px]">
+                              Great for {p.code === "free_trial" ? "trying out features without commitment" : p.code === "starter" ? "small boutique teams & solo planners" : p.code === "professional" ? "growing agencies scaling events" : "large enterprise organizations"}.
+                            </p>
+                          </div>
+
+                          {/* Limits & Feature Details */}
+                          <div className="border-t border-zinc-850/80 my-4 pt-3.5 space-y-2.5 font-bold font-mono text-[9.5px] sm:text-[10px] text-zinc-400 leading-relaxed">
+                            <p className="flex justify-between items-center">
+                              <span className="text-zinc-400">Team Users:</span>
+                              <span className="text-zinc-200">{p.code === "enterprise" ? "Unlimited Users" : `${p.maxUsers} Users`}</span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-zinc-400">Extra Seat:</span>
+                              <span className="text-purple-400">{p.code === "enterprise" ? "Unlimited" : p.code === "free_trial" ? "N/A" : "₹799 / mo"}</span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-zinc-400">Cloud Storage:</span>
+                              <span className="text-zinc-200">{p.code === "enterprise" ? "1 TB Cloud" : `${(p.maxStorage / (1024 * 1024 * 1024)).toFixed(0)} GB`}</span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-zinc-400">Active Events:</span>
+                              <span className="text-zinc-200">{p.code === "enterprise" ? "Unlimited Active" : `${p.maxEvents} Active`}</span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-zinc-400">AI Credits:</span>
+                              <span className="text-zinc-200">{p.maxAiCredits} / mo</span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-zinc-400">Custom Domain:</span>
+                              <span className={p.customDomainSupported ? "text-emerald-400" : "text-zinc-500"}>
+                                {p.customDomainSupported ? "✓ Yes" : "— No"}
+                              </span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-zinc-400">White Label:</span>
+                              <span className={p.whiteLabelSupported ? "text-emerald-400" : "text-zinc-500"}>
+                                {p.whiteLabelSupported ? "✓ Yes" : "— No"}
+                              </span>
+                            </p>
+                          </div>
+
+                          {/* CTA Button */}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (usage) {
+                                const usersExceeded = usage.usersCount > p.maxUsers && p.code !== "enterprise";
+                                const storageExceeded = usage.storageBytes > p.maxStorage;
+                                const eventsExceeded = usage.eventsCount > p.maxEvents && p.code !== "enterprise";
+
+                                if (usersExceeded || storageExceeded || eventsExceeded) {
+                                  setTargetDowngradePlan(p);
+                                  setShowDowngradeWarningModal(true);
+                                  return;
+                                }
+                              }
+
+                              if (p.code === "free_trial" || p.price === 0) {
+                                try {
+                                  await upgradeSubscription(p.code);
+                                  addToast(`Successfully activated Free Trial!`, "success");
+                                  setShowPricingUpgrade(false);
+                                } catch (err: any) {
+                                  addToast(err.message || "Failed to switch plan.", "error");
+                                }
+                                return;
+                              }
+
+                              // Trigger Real Stripe Checkout for Paid Tiers in INR
+                              setIsCheckingOutPlan(p.code);
+                              try {
+                                const res = await api.post("/auth/billing/subscription/checkout", { 
+                                  planCode: p.code,
+                                  interval: billingInterval 
+                                });
+                                const checkoutUrl = res.data?.data?.url;
+                                if (checkoutUrl) {
+                                  addToast(`Redirecting to secure Stripe checkout in INR...`, "info");
+                                  window.location.href = checkoutUrl;
+                                  return;
+                                }
+                                throw new Error("No checkout URL received from payment server");
+                              } catch (err: any) {
+                                console.error("Payment checkout error:", err);
+                                const errMsg = err.response?.data?.message || err.message || "Stripe Checkout session creation failed.";
+                                addToast(errMsg, "error");
+                              } finally {
+                                setIsCheckingOutPlan(null);
+                              }
+                            }}
+                            disabled={isCurrent || billingLoading || isCheckingOutPlan === p.code}
+                            className={cn(
+                              "w-full py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-wider text-center transition-all duration-200 active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer shadow-md",
+                              isCurrent
+                                ? "bg-purple-500/10 border border-purple-500/30 text-purple-400 cursor-not-allowed"
+                                : isRecommended
+                                  ? "bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-purple-950/60 hover:brightness-110"
+                                  : "bg-zinc-900 hover:bg-zinc-850 hover:text-white border border-zinc-700/80 text-zinc-200"
+                            )}
+                          >
+                            {isCheckingOutPlan === p.code ? (
+                              <>
+                                <Loader2 size={13} className="animate-spin" />
+                                <span>Connecting Stripe...</span>
+                              </>
+                            ) : isCurrent ? (
+                              "Active Plan"
+                            ) : (
+                              "Choose Plan"
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Reassurance Footer Banner */}
+                <div className="shrink-0 px-4 py-2.5 sm:px-6 sm:py-3 border-t border-zinc-850/80 bg-zinc-950/90 text-center text-[9px] sm:text-[10px] text-zinc-500 font-mono">
+                  🔒 256-bit Secure Checkout • Cancel anytime • Instant GST Invoices generated automatically
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
     </PageShell>
   );
