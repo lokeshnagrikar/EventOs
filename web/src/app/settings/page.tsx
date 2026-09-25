@@ -4135,23 +4135,60 @@ export default function SettingsPage() {
                                 return;
                               }
 
-                              // Trigger Real Stripe Checkout for Paid Tiers in INR
+                              // Trigger Real Razorpay Checkout (UPI, GPay, PhonePe, Cards in INR)
                               setIsCheckingOutPlan(p.code);
                               try {
-                                const res = await api.post("/auth/billing/subscription/checkout", { 
+                                const { openRazorpayCheckout } = await import("@/lib/razorpay");
+                                const res = await api.post("/auth/billing/razorpay/create-order", { 
                                   planCode: p.code,
                                   interval: billingInterval 
                                 });
-                                const checkoutUrl = res.data?.data?.url;
-                                if (checkoutUrl) {
-                                  addToast(`Redirecting to secure Stripe checkout in INR...`, "info");
-                                  window.location.href = checkoutUrl;
-                                  return;
+                                
+                                const orderData = res.data?.data;
+                                if (!orderData || !orderData.orderId) {
+                                  throw new Error("Unable to initialize Razorpay payment order");
                                 }
-                                throw new Error("No checkout URL received from payment server");
+
+                                await openRazorpayCheckout({
+                                  orderId: orderData.orderId,
+                                  amount: orderData.amount,
+                                  currency: orderData.currency || "INR",
+                                  keyId: orderData.keyId,
+                                  planName: orderData.planName || p.name,
+                                  planCode: p.code,
+                                  interval: billingInterval,
+                                  userName: user?.name || user?.firstName || "",
+                                  userEmail: user?.email || "",
+                                  onSuccess: async (paymentData) => {
+                                    try {
+                                      addToast("Verifying payment with bank...", "info");
+                                      const verifyRes = await api.post("/auth/billing/razorpay/verify-payment", {
+                                        razorpay_order_id: paymentData.razorpay_order_id,
+                                        razorpay_payment_id: paymentData.razorpay_payment_id,
+                                        razorpay_signature: paymentData.razorpay_signature,
+                                        planCode: p.code,
+                                        interval: billingInterval
+                                      });
+                                      
+                                      if (verifyRes.data?.success) {
+                                        addToast(`🎉 Payment Confirmed! Plan upgraded to ${p.name}.`, "success");
+                                        await Promise.all([fetchSubscription(), fetchInvoices(), fetchUsage()]);
+                                      } else {
+                                        addToast("Payment verification failed. Please contact support.", "error");
+                                      }
+                                    } catch (vErr: any) {
+                                      console.error("Verification error:", vErr);
+                                      addToast(vErr.response?.data?.message || "Payment verification failed", "error");
+                                    }
+                                  },
+                                  onFailure: (pErr) => {
+                                    console.warn("Payment modal dismissed or failed:", pErr);
+                                    addToast("Payment cancelled or closed.", "info");
+                                  }
+                                });
                               } catch (err: any) {
                                 console.error("Payment checkout error:", err);
-                                const errMsg = err.response?.data?.message || err.message || "Stripe Checkout session creation failed.";
+                                const errMsg = err.response?.data?.message || err.message || "Payment checkout failed.";
                                 addToast(errMsg, "error");
                               } finally {
                                 setIsCheckingOutPlan(null);
@@ -4170,7 +4207,7 @@ export default function SettingsPage() {
                             {isCheckingOutPlan === p.code ? (
                               <>
                                 <Loader2 size={13} className="animate-spin" />
-                                <span>Connecting Stripe...</span>
+                                <span>Connecting Razorpay...</span>
                               </>
                             ) : isCurrent ? (
                               "Active Plan"

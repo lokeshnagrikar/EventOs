@@ -181,16 +181,33 @@ export const useBillingStore = create<BillingState>((set, get) => ({
   upgradeSubscription: async (planCode: string) => {
     set({ loading: true });
     try {
-      // 1. Try Stripe Test Checkout Session if API key is active
+      // 1. Try Razorpay Checkout for Indian UPI and Cards
       try {
-        const checkoutRes = await apiClient.post('/auth/billing/subscription/checkout', { planCode });
-        const checkoutUrl = checkoutRes.data?.data?.url;
-        if (checkoutUrl && checkoutUrl.startsWith('http')) {
-          window.location.href = checkoutUrl;
+        const { openRazorpayCheckout } = await import("@/lib/razorpay");
+        const orderRes = await apiClient.post('/auth/billing/razorpay/create-order', { planCode });
+        const orderData = orderRes.data?.data;
+        if (orderData?.orderId) {
+          await openRazorpayCheckout({
+            orderId: orderData.orderId,
+            amount: orderData.amount,
+            currency: orderData.currency || "INR",
+            keyId: orderData.keyId,
+            planName: orderData.planName || planCode,
+            planCode: planCode,
+            onSuccess: async (paymentData) => {
+              await apiClient.post('/auth/billing/razorpay/verify-payment', {
+                razorpay_order_id: paymentData.razorpay_order_id,
+                razorpay_payment_id: paymentData.razorpay_payment_id,
+                razorpay_signature: paymentData.razorpay_signature,
+                planCode: planCode,
+              });
+              await Promise.all([get().fetchSubscription(), get().fetchUsage(), get().fetchInvoices()]);
+            },
+          });
           return;
         }
-      } catch (checkoutErr) {
-        console.log("Stripe Checkout not configured or direct mode active, executing direct subscription upgrade.");
+      } catch (rzpErr) {
+        console.warn("Razorpay order initialization bypassed, falling back to direct upgrade:", rzpErr);
       }
 
       // 2. Direct database upgrade mode

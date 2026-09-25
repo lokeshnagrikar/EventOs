@@ -115,6 +115,9 @@ app:
   stripe:
     api-key: ${STRIPE_API_KEY:}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_TgKHPSNur6OkpY}
+    key-secret: ${RAZORPAY_KEY_SECRET:XQzKaVcWwZF2iYJKJNrRakn7}
   rate-limiting:
     enabled: ${RATE_LIMIT_ENABLED:true}
     login:

@@ -21,6 +21,7 @@ public class BillingController {
     private final BillingService billingService;
     private final com.eventos.auth.repository.AuditLogRepository auditLogRepository;
     private final org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
+    private final com.eventos.auth.service.RazorpayService razorpayService;
 
     @org.springframework.beans.factory.annotation.Value("${app.stripe.api-key:}")
     private String stripeApiKey;
@@ -33,10 +34,12 @@ public class BillingController {
 
     public BillingController(BillingService billingService,
             com.eventos.auth.repository.AuditLogRepository auditLogRepository,
-            @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate) {
+            @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate,
+            com.eventos.auth.service.RazorpayService razorpayService) {
         this.billingService = billingService;
         this.auditLogRepository = auditLogRepository;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.razorpayService = razorpayService;
     }
 
     @GetMapping("/plans")
@@ -699,6 +702,87 @@ public class BillingController {
             throw new org.springframework.web.server.ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "Failed to verify Stripe payment: " + e.getMessage(), e);
         }
+    }
+
+    @PostMapping("/razorpay/create-order")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<?> createRazorpayOrder(@RequestBody Map<String, String> body) {
+        UUID tenantId = getTenantId();
+        String planCode = body.get("planCode");
+        if (planCode == null || planCode.isBlank()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "planCode parameter is missing");
+        }
+
+        String interval = body.getOrDefault("interval", "MONTHLY");
+        boolean isYearly = "YEARLY".equalsIgnoreCase(interval);
+
+        long baseMonthlyPaise;
+        String planName;
+        if ("enterprise".equalsIgnoreCase(planCode)) {
+            baseMonthlyPaise = 1299900L; // ₹12,999
+            planName = "Enterprise";
+        } else if ("agency".equalsIgnoreCase(planCode)) {
+            baseMonthlyPaise = 1099900L; // ₹10,999
+            planName = "Agency";
+        } else if ("business".equalsIgnoreCase(planCode)) {
+            baseMonthlyPaise = 899900L; // ₹8,999
+            planName = "Business";
+        } else if ("professional".equalsIgnoreCase(planCode)) {
+            baseMonthlyPaise = 499900L; // ₹4,999
+            planName = "Professional";
+        } else {
+            baseMonthlyPaise = 199900L; // ₹1,999
+            planName = "Starter";
+        }
+
+        long chargedPaise = isYearly ? (long) (baseMonthlyPaise * 12 * 0.8) : baseMonthlyPaise;
+
+        Map<String, Object> orderData = razorpayService.createOrder(tenantId, planCode, interval, chargedPaise);
+        orderData.put("planName", planName);
+        orderData.put("planCode", planCode);
+        orderData.put("interval", interval);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", orderData);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/razorpay/verify-payment")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<?> verifyRazorpayPayment(@RequestBody Map<String, String> body) {
+        UUID tenantId = getTenantId();
+        String orderId = body.get("razorpay_order_id");
+        String paymentId = body.get("razorpay_payment_id");
+        String signature = body.get("razorpay_signature");
+        String planCode = body.get("planCode");
+
+        if (orderId == null || paymentId == null || signature == null || planCode == null) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "razorpay_order_id, razorpay_payment_id, razorpay_signature, and planCode are required.");
+            return ResponseEntity.badRequest().body(err);
+        }
+
+        boolean isValid = razorpayService.verifyPaymentSignature(orderId, paymentId, signature);
+        if (!isValid) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Razorpay payment signature verification failed.");
+            return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(err);
+        }
+
+        Subscription updated = billingService.upgradeSubscription(tenantId, planCode);
+
+        log.info("[RAZORPAY VERIFY] Tenant {} successfully upgraded to plan {} via payment {}",
+                tenantId, planCode, paymentId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Payment verified successfully! Subscription activated.");
+        response.put("data", updated);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/webhook")
