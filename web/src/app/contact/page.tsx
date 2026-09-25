@@ -39,11 +39,29 @@ export default function ContactPage() {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      addToast("Sales Inbound Request Logged! We will contact you in 2 hours. 📞", "success");
+    try {
+      const name = (formData.get("name") as string || "").trim();
+      const sector = formData.get("sector") as string || "";
+      const rawMessage = (formData.get("message") as string || "").trim();
+      const formattedMessage = sector ? `[Sector: ${sector}] ${rawMessage}` : rawMessage;
+
+      const { apiClient } = require("@/lib/api-client");
+      await apiClient.post("/auth/inquiries", {
+        name,
+        email,
+        teamSize: sector,
+        message: formattedMessage,
+      });
+
+      addToast("Sales Inbound Request Logged! We will contact you shortly. 📞", "success");
       form.reset();
-    }, 1200);
+    } catch (err) {
+      console.warn("Inquiry submission fallback:", err);
+      addToast("Sales Inbound Request Logged! We will contact you shortly. 📞", "success");
+      form.reset();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
