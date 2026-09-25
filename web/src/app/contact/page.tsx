@@ -86,15 +86,15 @@ export default function ContactPage() {
               <ul className="space-y-4 text-xs font-semibold text-zinc-450">
                 <li className="flex items-center gap-3">
                   <Mail size={13} className="text-purple-400" />
-                  <span>sales@eventosapp.in</span>
+                  <a href="mailto:sales@eventosapp.in" className="hover:text-purple-300 transition-colors">sales@eventosapp.in</a>
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone size={13} className="text-purple-400" />
-                  <span>+1 (800) 555-EVNT (Demo inquiries)</span>
+                  <a href="tel:+919309965483" className="hover:text-purple-300 transition-colors">+91 93099 65483 (Demo & Support)</a>
                 </li>
-                <li className="flex items-center gap-3">
-                  <MapPin size={13} className="text-purple-400" />
-                  <span>Bengaluru Tech Park, India / Delaware, US</span>
+                <li className="flex items-start gap-3">
+                  <MapPin size={13} className="text-purple-400 mt-0.5 shrink-0" />
+                  <span>SAI Colony, Ward No. 6, Deori, Gondia, Maharashtra - 441901, India</span>
                 </li>
               </ul>
             </div>
