@@ -19,6 +19,9 @@ public class EmailService {
     @org.springframework.beans.factory.annotation.Value("${app.mail.from:support@eventosapp.in}")
     private String fromAddress;
 
+    @org.springframework.beans.factory.annotation.Value("${app.mail.admin:${FOUNDER_ALERT_EMAIL:devloperonly@gmail.com}}")
+    private String adminAlertEmail;
+
     @org.springframework.beans.factory.annotation.Value("${app.frontend-url:https://eventosapp.in}")
     private String frontendUrl;
 
@@ -218,7 +221,8 @@ public class EmailService {
                     "        <div style=\"font-family:monospace; font-size:13px; color:#C084FC; word-break:break-all; background:#09090B; padding:10px; border-radius:8px; border:1px solid #3F3F46;\">"
                     + token + "</div>"
                     +
-                    "        <div style=\"font-size:10px; color:#71717A; margin-top:8px;\">Direct Link: <a href=\"" + resetUrl + "\" style=\"color:#818CF8; word-break:break-all;\">" + resetUrl + "</a></div>"
+                    "        <div style=\"font-size:10px; color:#71717A; margin-top:8px;\">Direct Link: <a href=\""
+                    + resetUrl + "\" style=\"color:#818CF8; word-break:break-all;\">" + resetUrl + "</a></div>"
                     +
                     "      </div>" +
                     "      <p style=\"color:#71717A; font-size:12px; margin-bottom:0;\">This recovery link expires in 30 minutes. If you did not request this change, please ignore this email.</p>"
@@ -527,23 +531,32 @@ public class EmailService {
             String sender = (fromAddress != null && !fromAddress.trim().isEmpty()) ? fromAddress
                     : "support@eventosapp.in";
             helper.setFrom(sender, "EventOS Inquiries");
-            helper.setTo("lokeshnagrikar2405@gmail.com");
+            helper.setTo(adminAlertEmail);
             helper.setSubject("🔥 New EventOS Inbound Lead: " + name + " (" + email + ")");
 
             String htmlContent = "<!DOCTYPE html>" +
                     "<html lang=\"en\">" +
                     "<head><meta charset=\"UTF-8\"></head>" +
-                    "<body style=\"margin:0; padding:24px; background:#0A0A0C; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#FFF;\">" +
-                    "  <div style=\"max-width:540px; margin:0 auto; background:#121217; border:1px solid #27272A; border-radius:20px; overflow:hidden; padding:28px;\">" +
-                    "    <h2 style=\"color:#A855F7; margin-top:0; font-size:20px;\">📬 New Inbound Contact Submission</h2>" +
+                    "<body style=\"margin:0; padding:24px; background:#0A0A0C; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#FFF;\">"
+                    +
+                    "  <div style=\"max-width:540px; margin:0 auto; background:#121217; border:1px solid #27272A; border-radius:20px; overflow:hidden; padding:28px;\">"
+                    +
+                    "    <h2 style=\"color:#A855F7; margin-top:0; font-size:20px;\">📬 New Inbound Contact Submission</h2>"
+                    +
                     "    <hr style=\"border:0; border-top:1px solid #27272A; margin:16px 0;\" />" +
-                    "    <p style=\"margin:8px 0; font-size:14px; color:#D4D4D8;\"><strong>Name:</strong> " + (name != null ? name : "N/A") + "</p>" +
-                    "    <p style=\"margin:8px 0; font-size:14px; color:#D4D4D8;\"><strong>Email:</strong> <a href=\"mailto:" + email + "\" style=\"color:#38BDF8;\">" + email + "</a></p>" +
-                    "    <p style=\"margin:8px 0; font-size:14px; color:#D4D4D8;\"><strong>Sector / Team Size:</strong> " + (teamSize != null ? teamSize : "General") + "</p>" +
-                    "    <div style=\"margin:16px 0; padding:14px; background:#18181B; border-radius:12px; border-left:4px solid #A855F7;\">" +
-                    "      <p style=\"margin:0; font-size:13px; color:#E4E4E7; white-space:pre-wrap;\">" + (messageText != null ? messageText : "") + "</p>" +
+                    "    <p style=\"margin:8px 0; font-size:14px; color:#D4D4D8;\"><strong>Name:</strong> "
+                    + (name != null ? name : "N/A") + "</p>" +
+                    "    <p style=\"margin:8px 0; font-size:14px; color:#D4D4D8;\"><strong>Email:</strong> <a href=\"mailto:"
+                    + email + "\" style=\"color:#38BDF8;\">" + email + "</a></p>" +
+                    "    <p style=\"margin:8px 0; font-size:14px; color:#D4D4D8;\"><strong>Sector / Team Size:</strong> "
+                    + (teamSize != null ? teamSize : "General") + "</p>" +
+                    "    <div style=\"margin:16px 0; padding:14px; background:#18181B; border-radius:12px; border-left:4px solid #A855F7;\">"
+                    +
+                    "      <p style=\"margin:0; font-size:13px; color:#E4E4E7; white-space:pre-wrap;\">"
+                    + (messageText != null ? messageText : "") + "</p>" +
                     "    </div>" +
-                    "    <p style=\"margin-top:20px; font-size:11px; color:#71717A;\">Received at: " + java.time.LocalDateTime.now() + " IST • EventOS Lead Capture</p>" +
+                    "    <p style=\"margin-top:20px; font-size:11px; color:#71717A;\">Received at: "
+                    + java.time.LocalDateTime.now() + " IST • EventOS Lead Capture</p>" +
                     "  </div>" +
                     "</body></html>";
 

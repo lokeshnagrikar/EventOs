@@ -63,6 +63,7 @@ async function notifyFounder(lead: WaitlistRecord, spotNumber: number) {
   // 2. Resend Email Alert if API key exists
   const resendKey = process.env.RESEND_API_KEY || (process.env.SMTP_PASSWORD?.startsWith("re_") ? process.env.SMTP_PASSWORD : null);
   if (resendKey) {
+    const alertRecipient = process.env.FOUNDER_ALERT_EMAIL || process.env.ADMIN_EMAIL || "devloperonly@gmail.com";
     try {
       fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -72,7 +73,7 @@ async function notifyFounder(lead: WaitlistRecord, spotNumber: number) {
         },
         body: JSON.stringify({
           from: "EventOS Alerts <onboarding@resend.dev>",
-          to: ["lokeshnagrikar2405@gmail.com"],
+          to: [alertRecipient],
           subject: `🔥 New VIP Beta Lead: ${lead.agencyName} (${lead.name})`,
           html: `
             <div style="font-family: sans-serif; max-width: 500px; padding: 20px; background: #0A0A0C; color: #fff; border-radius: 12px;">

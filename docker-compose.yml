@@ -83,6 +83,7 @@ services:
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - APP_MAIL_FROM=${APP_MAIL_FROM}
+      - FOUNDER_ALERT_EMAIL=${FOUNDER_ALERT_EMAIL:-devloperonly@gmail.com}
       - FRONTEND_URL=${FRONTEND_URL:-https://eventosapp.in}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://eventosapp.in,https://www.eventosapp.in,http://localhost:3000}
       - STRIPE_API_KEY=${STRIPE_API_KEY}
