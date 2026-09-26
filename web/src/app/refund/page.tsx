@@ -66,10 +66,13 @@ export default function RefundPolicyPage() {
           <section className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 space-y-3">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <FileText className="w-5 h-5 text-purple-400" />
-              3. Refund Request Terms
+              3. Refund Request & Turnaround Timeline
             </h2>
-            <p className="text-zinc-400">
-              If you experience service disruption or accidental duplicate charges, notify our team within 7 days of the transaction at <span className="text-purple-400 font-semibold">support@eventosapp.in</span> for immediate verification and processing.
+            <p className="text-zinc-400 leading-relaxed">
+              If you experience service disruption or accidental duplicate charges, notify our billing team within 7 days of the transaction at <span className="text-purple-400 font-semibold">support@eventosapp.in</span> or via phone at <span className="text-purple-400 font-semibold">+91 93099 65483</span>.
+            </p>
+            <p className="text-zinc-400 leading-relaxed">
+              Once verified and approved, refunds are initiated immediately and will be credited back to your original payment method (Bank Account, Credit/Debit Card, or UPI) within <strong>5 to 7 business days</strong>.
             </p>
           </section>
         </div>

@@ -86,7 +86,7 @@ export default function PrivacyPolicyPage() {
               We integrate with trusted infrastructure providers to process data securely:
             </p>
             <ul className="list-disc pl-5 space-y-1 text-zinc-400">
-              <li><strong>Stripe:</strong> Payment processing and subscription management.</li>
+              <li><strong>Razorpay & Stripe:</strong> Encrypted payment processing, subscription management, and secure webhook verification.</li>
               <li><strong>Cloudinary:</strong> Compressed media and gallery storage.</li>
               <li><strong>Redis / AWS / PostgreSQL Cloud:</strong> Encrypted caching and relational database storage.</li>
             </ul>
@@ -95,9 +95,9 @@ export default function PrivacyPolicyPage() {
           <section className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 space-y-3">
             <h2 className="text-lg font-bold text-white">5. Contact Support</h2>
             <p className="text-zinc-400">
-              If you have any questions regarding your data privacy or request data deletion, email our team at:
+              If you have any questions regarding your data privacy, account security, or request data deletion, contact our grievance team at:
             </p>
-            <p className="text-purple-400 font-semibold">privacy@eventosapp.in</p>
+            <p className="text-purple-400 font-semibold">sales@eventosapp.in <span className="text-zinc-500 font-normal">or</span> support@eventosapp.in</p>
           </section>
         </div>
       </main>
