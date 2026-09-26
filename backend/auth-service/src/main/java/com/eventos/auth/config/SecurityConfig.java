@@ -88,6 +88,8 @@ public class SecurityConfig {
                         "/ws/**",
                         "/billing/webhook",
                         "/billing/plans",
+                        "/inquiries",
+                        "/inquiries/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",

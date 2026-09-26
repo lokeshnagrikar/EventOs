@@ -514,4 +514,44 @@ public class EmailService {
             throw new RuntimeException("SMTP send failed: " + e.getMessage(), e);
         }
     }
+
+    /* -------------------------------------------------------------------------- */
+    /* 10. INBOUND INQUIRY NOTIFICATION TO FOUNDER */
+    /* -------------------------------------------------------------------------- */
+    @Async
+    public void sendInquiryNotificationToFounder(String name, String email, String teamSize, String messageText) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            String sender = (fromAddress != null && !fromAddress.trim().isEmpty()) ? fromAddress
+                    : "support@eventosapp.in";
+            helper.setFrom(sender, "EventOS Inquiries");
+            helper.setTo("lokeshnagrikar2405@gmail.com");
+            helper.setSubject("🔥 New EventOS Inbound Lead: " + name + " (" + email + ")");
+
+            String htmlContent = "<!DOCTYPE html>" +
+                    "<html lang=\"en\">" +
+                    "<head><meta charset=\"UTF-8\"></head>" +
+                    "<body style=\"margin:0; padding:24px; background:#0A0A0C; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#FFF;\">" +
+                    "  <div style=\"max-width:540px; margin:0 auto; background:#121217; border:1px solid #27272A; border-radius:20px; overflow:hidden; padding:28px;\">" +
+                    "    <h2 style=\"color:#A855F7; margin-top:0; font-size:20px;\">📬 New Inbound Contact Submission</h2>" +
+                    "    <hr style=\"border:0; border-top:1px solid #27272A; margin:16px 0;\" />" +
+                    "    <p style=\"margin:8px 0; font-size:14px; color:#D4D4D8;\"><strong>Name:</strong> " + (name != null ? name : "N/A") + "</p>" +
+                    "    <p style=\"margin:8px 0; font-size:14px; color:#D4D4D8;\"><strong>Email:</strong> <a href=\"mailto:" + email + "\" style=\"color:#38BDF8;\">" + email + "</a></p>" +
+                    "    <p style=\"margin:8px 0; font-size:14px; color:#D4D4D8;\"><strong>Sector / Team Size:</strong> " + (teamSize != null ? teamSize : "General") + "</p>" +
+                    "    <div style=\"margin:16px 0; padding:14px; background:#18181B; border-radius:12px; border-left:4px solid #A855F7;\">" +
+                    "      <p style=\"margin:0; font-size:13px; color:#E4E4E7; white-space:pre-wrap;\">" + (messageText != null ? messageText : "") + "</p>" +
+                    "    </div>" +
+                    "    <p style=\"margin-top:20px; font-size:11px; color:#71717A;\">Received at: " + java.time.LocalDateTime.now() + " IST • EventOS Lead Capture</p>" +
+                    "  </div>" +
+                    "</body></html>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            log.info("[INQUIRY_ALERT_SENT] Dispatched inbound inquiry notification for: {}", email);
+        } catch (Exception e) {
+            log.warn("[INQUIRY_ALERT_WARN] Could not send inquiry alert email for {}: {}", email, e.getMessage());
+        }
+    }
 }

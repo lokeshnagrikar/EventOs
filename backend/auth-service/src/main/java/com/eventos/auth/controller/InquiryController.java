@@ -2,6 +2,9 @@ package com.eventos.auth.controller;
 
 import com.eventos.auth.entity.Inquiry;
 import com.eventos.auth.repository.InquiryRepository;
+import com.eventos.auth.service.EmailService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
@@ -11,10 +14,14 @@ import java.util.Map;
 @RequestMapping("/inquiries")
 public class InquiryController {
 
-    private final InquiryRepository inquiryRepository;
+    private static final Logger log = LoggerFactory.getLogger(InquiryController.class);
 
-    public InquiryController(InquiryRepository inquiryRepository) {
+    private final InquiryRepository inquiryRepository;
+    private final EmailService emailService;
+
+    public InquiryController(InquiryRepository inquiryRepository, EmailService emailService) {
         this.inquiryRepository = inquiryRepository;
+        this.emailService = emailService;
     }
 
     @PostMapping
@@ -29,6 +36,20 @@ public class InquiryController {
         }
 
         Inquiry saved = inquiryRepository.save(inquiry);
+        log.info("[INQUIRY_RECEIVED] Saved new inquiry from '{}' <{}> (Sector/Team: {})", 
+                saved.getName(), saved.getEmail(), saved.getTeamSize());
+
+        try {
+            emailService.sendInquiryNotificationToFounder(
+                    saved.getName(), 
+                    saved.getEmail(), 
+                    saved.getTeamSize(), 
+                    saved.getMessage()
+            );
+        } catch (Exception e) {
+            log.warn("[INQUIRY_NOTIFICATION_FAILED] Failed to trigger email notification: {}", e.getMessage());
+        }
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("data", saved);
