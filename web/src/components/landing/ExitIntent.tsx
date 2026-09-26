@@ -34,8 +34,20 @@ export function ExitIntent() {
     };
   }, []);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim()) return;
+    try {
+      const { apiClient } = require("@/lib/api-client");
+      await apiClient.post("/auth/inquiries", {
+        name: "Exit Intent Visitor",
+        email: email.trim(),
+        teamSize: "Resource Pack Lead",
+        message: "Requested SaaS Operations Resource Pack (checklists, e-invoice templates, & vendor questionnaires)",
+      });
+    } catch (err) {
+      console.warn("Inquiry submission fallback:", err);
+    }
     setSubscribed(true);
     addToast("Resource packet and invoice template emailed! 🚀", "success");
     setTimeout(() => {

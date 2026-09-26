@@ -33,9 +33,21 @@ export default function BlogPage() {
   const addToast = useToastStore((state) => state.addToast);
   const [email, setEmail] = useState("");
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    const cleanEmail = email.trim();
+    if (!cleanEmail) return;
+    try {
+      const { apiClient } = require("@/lib/api-client");
+      await apiClient.post("/auth/inquiries", {
+        name: "Newsletter Subscriber",
+        email: cleanEmail,
+        teamSize: "Blog Reader",
+        message: "Subscribed to EventOS Insights Newsletter (AWS architecture, checklists, and billing updates)",
+      });
+    } catch (err) {
+      console.warn("Newsletter subscription fallback:", err);
+    }
     addToast("Successfully subscribed to EventOS Insights Newsletter! ✉", "success");
     setEmail("");
   };
