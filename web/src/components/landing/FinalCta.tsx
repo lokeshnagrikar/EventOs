@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Sparkles, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
+import { ShinyButton } from "@/components/ui/ShinyButton";
 
 export function FinalCta() {
   const router = useRouter();
@@ -62,16 +63,14 @@ export function FinalCta() {
 
             {/* Two-Button CTA Hierarchy */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-              {/* Primary CTA: Book a Free Demo */}
-              <button
-                type="button"
+              {/* Primary CTA: Book a Free Demo with Shiny Shimmer Effect */}
+              <ShinyButton
                 onClick={handleBookDemo}
-                className="w-full sm:w-auto relative overflow-hidden px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm sm:text-base font-extrabold shadow-xl shadow-purple-500/30 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97] group"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 group"
               >
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
                 <span>Book a Free Demo</span>
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </button>
+              </ShinyButton>
 
               {/* Secondary CTA: Start 14-Day Free Trial */}
               <button
