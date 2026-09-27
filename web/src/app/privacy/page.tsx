@@ -93,11 +93,26 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 space-y-3">
-            <h2 className="text-lg font-bold text-white">5. Contact Support</h2>
-            <p className="text-zinc-400">
-              If you have any questions regarding your data privacy, account security, or request data deletion, contact our grievance team at:
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Shield className="w-5 h-5 text-purple-400" />
+              5. User Rights & Account Data Deletion (Google OAuth / DPDP / GDPR)
+            </h2>
+            <p className="text-zinc-300">
+              In accordance with Google API Services User Data Policy, India DPDP Act 2023, and global data privacy standards, you maintain complete ownership of your personal information:
             </p>
-            <p className="text-purple-400 font-semibold">sales@eventosapp.in <span className="text-zinc-500 font-normal">or</span> support@eventosapp.in</p>
+            <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
+              <li><strong>Self-Service Account Deletion:</strong> You can permanently delete your EventOS account, Google OAuth profile credentials, and active device sessions at any time by navigating to <code className="text-purple-300 bg-purple-950/50 px-1.5 py-0.5 rounded">Settings → Security Center → Danger Zone: Delete Account</code>.</li>
+              <li><strong>Right to Erasure (Email Request):</strong> Alternatively, you may request complete data deletion by emailing our compliance team at <span className="text-purple-400 font-semibold">support@eventosapp.in</span> with the subject line <em>"Data Deletion Request"</em>. We will verify your identity and purge your personal records within 30 calendar days.</li>
+              <li><strong>Data Retention & Revocation:</strong> Deleting your account revokes all active JWT tokens, invalidates OAuth access, and terminates all active sessions across all devices immediately.</li>
+            </ul>
+          </section>
+
+          <section className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 space-y-3">
+            <h2 className="text-lg font-bold text-white">6. Grievance Officer & Contact Support</h2>
+            <p className="text-zinc-400">
+              If you have any questions regarding your data privacy, account security, or platform compliance, contact our grievance team at:
+            </p>
+            <p className="text-purple-400 font-semibold">support@eventosapp.in <span className="text-zinc-500 font-normal">or</span> sales@eventosapp.in</p>
           </section>
         </div>
       </main>

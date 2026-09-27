@@ -63,10 +63,9 @@ public class AuditLogService {
             if (search != null && !search.trim().isEmpty()) {
                 String pattern = "%" + search.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
-                    cb.like(cb.lower(root.get("entityName")), pattern),
-                    cb.like(cb.lower(root.get("action")), pattern),
-                    cb.like(cb.lower(root.get("payloadDiff")), pattern)
-                ));
+                        cb.like(cb.lower(root.get("entityName")), pattern),
+                        cb.like(cb.lower(root.get("action")), pattern),
+                        cb.like(cb.lower(root.get("payloadDiff")), pattern)));
             }
 
             if (performedBy != null) {
@@ -100,10 +99,11 @@ public class AuditLogService {
             String module,
             int page,
             int size) {
-        
+
         List<String> entityNames = getEntityNamesForModule(module);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Specification<AuditLog> spec = buildSpecification(tenantId, search, performedBy, startDate, endDate, entityNames);
+        Specification<AuditLog> spec = buildSpecification(tenantId, search, performedBy, startDate, endDate,
+                entityNames);
         return auditLogRepository.findAll(spec, pageable);
     }
 
@@ -115,9 +115,10 @@ public class AuditLogService {
             LocalDateTime startDate,
             LocalDateTime endDate,
             String module) {
-        
+
         List<String> entityNames = getEntityNamesForModule(module);
-        Specification<AuditLog> spec = buildSpecification(tenantId, search, performedBy, startDate, endDate, entityNames);
+        Specification<AuditLog> spec = buildSpecification(tenantId, search, performedBy, startDate, endDate,
+                entityNames);
         return auditLogRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
@@ -139,19 +140,20 @@ public class AuditLogService {
         csv.append("ID,Timestamp,Entity,EntityID,Action,PerformedBy,Details\n");
         for (AuditLog log : logs) {
             csv.append(log.getId()).append(",")
-               .append(log.getCreatedAt()).append(",")
-               .append(escapeCsvField(log.getEntityName())).append(",")
-               .append(log.getEntityId()).append(",")
-               .append(escapeCsvField(log.getAction())).append(",")
-               .append(log.getPerformedBy()).append(",")
-               .append(escapeCsvField(log.getPayloadDiff()))
-               .append("\n");
+                    .append(log.getCreatedAt()).append(",")
+                    .append(escapeCsvField(log.getEntityName())).append(",")
+                    .append(log.getEntityId()).append(",")
+                    .append(escapeCsvField(log.getAction())).append(",")
+                    .append(log.getPerformedBy()).append(",")
+                    .append(escapeCsvField(log.getPayloadDiff()))
+                    .append("\n");
         }
         return csv.toString();
     }
 
     private String escapeCsvField(String field) {
-        if (field == null) return "";
+        if (field == null)
+            return "";
         if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
             return "\"" + field.replace("\"", "\"\"") + "\"";
         }

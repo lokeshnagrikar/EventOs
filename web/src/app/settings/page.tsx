@@ -281,6 +281,7 @@ export default function SettingsPage() {
 
   // Delete account confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   // Tab State
   const [activeTab, setActiveTab] = useState("workspace");
@@ -762,6 +763,23 @@ export default function SettingsPage() {
     },
     onError: (err: any) => {
       addToast(err.response?.data?.error?.message || "Failed to change password", "error");
+    }
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      return (await api.delete("/auth/settings/security/account/delete")).data;
+    },
+    onSuccess: () => {
+      addToast("Your account has been deleted successfully.", "info");
+      setShowDeleteModal(false);
+      clearAuth();
+      setTimeout(() => {
+        router.push("/?message=account-deleted");
+      }, 1500);
+    },
+    onError: (err: any) => {
+      addToast(err.response?.data?.error?.message || "Failed to delete account. Please try again.", "error");
     }
   });
 
@@ -3274,6 +3292,31 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Danger Zone: Account Deletion */}
+                  <div className="p-5 border border-red-500/20 bg-red-950/10 rounded-2xl space-y-4 text-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <AlertCircle size={15} className="text-red-400" />
+                          <span className="font-extrabold text-red-200">Danger Zone: Delete Account</span>
+                        </div>
+                        <p className="text-[10.5px] text-zinc-400 mt-1 max-w-xl leading-relaxed">
+                          Permanently delete your personal profile, credentials, and revoke active sessions. In accordance with Google User Data Policy and privacy regulations, your data will be permanently wiped.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeleteConfirmText("");
+                          setShowDeleteModal(true);
+                        }}
+                        className="px-4 py-2 bg-red-600/15 hover:bg-red-600/25 border border-red-500/30 text-red-400 hover:text-red-300 rounded-xl font-bold text-xs shrink-0 transition cursor-pointer"
+                      >
+                        Delete My Account
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -4224,6 +4267,96 @@ export default function SettingsPage() {
                 {/* Reassurance Footer Banner */}
                 <div className="shrink-0 px-4 py-2.5 sm:px-6 sm:py-3 border-t border-zinc-850/80 bg-zinc-950/90 text-center text-[9px] sm:text-[10px] text-zinc-500 font-mono">
                   🔒 256-bit Secure Checkout • Cancel anytime • Instant GST Invoices generated automatically
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {showDeleteModal && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText("");
+                }}
+                className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="relative w-full max-w-md bg-zinc-950 border border-red-500/30 rounded-2xl p-6 shadow-2xl shadow-red-950/40 space-y-5 z-10"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shrink-0">
+                    <Trash2 size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-white">Delete Account Permanently</h3>
+                    <p className="text-xs text-zinc-400">Google OAuth & Platform Credentials</p>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-red-950/20 border border-red-900/30 rounded-xl text-xs text-zinc-300 space-y-2">
+                  <p className="font-semibold text-red-300">Are you sure you want to proceed?</p>
+                  <ul className="list-disc pl-4 space-y-1 text-zinc-400 text-[11px]">
+                    <li>All active sessions on all devices will be revoked immediately.</li>
+                    <li>Your account credentials and OAuth profile association will be deleted.</li>
+                    <li>This action is irreversible in compliance with Google User Data Policy.</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wide block">
+                    Type <span className="text-red-400 font-mono font-bold">DELETE</span> to confirm
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="DELETE"
+                    className="w-full bg-zinc-900 border border-zinc-800 focus:border-red-500 px-3.5 py-2.5 rounded-xl text-sm font-mono text-white placeholder-zinc-600 focus:outline-none transition"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setDeleteConfirmText("");
+                    }}
+                    className="px-4 py-2 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deleteConfirmText !== "DELETE" || deleteAccountMutation.isPending}
+                    onClick={() => deleteAccountMutation.mutate()}
+                    className="flex items-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition shadow-lg shadow-red-600/20 cursor-pointer"
+                  >
+                    {deleteAccountMutation.isPending ? (
+                      <>
+                        <Loader2 size={13} className="animate-spin" />
+                        <span>Deleting Account...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={13} />
+                        <span>Confirm Deletion</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </motion.div>
             </div>

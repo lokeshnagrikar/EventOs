@@ -77,14 +77,57 @@ docker compose build auth-service
 docker compose up -d auth-service
 ```
 
-### 3.4 Local Hybrid Development (Run Services Locally)
-If running Java or Next.js directly on host Windows:
-* Ensure database containers are running:
-  ```powershell
-  docker compose up -d postgres redis rabbitmq
-  ```
-* Run Next.js frontend:
-  ```powershell
-  cd web
-  npm run dev
-  ```
+## 4. Production Cloudflare & VPS Infrastructure Topology
+ 
+```
+               [ Internet Visitors / Browsers ]
+                               │
+               ┌───────────────┴───────────────┐
+               ▼                               ▼
+       [ eventosapp.in ]              [ api.eventosapp.in ]
+      (Cloudflare Anycast)           (Cloudflare DNS Only)
+               │                               │
+               ▼                               ▼
+      [ Vercel Edge Server ]         [ Ubuntu VPS Host ]
+       (Next.js 15 SSR/PWA)           (200.234.47.154)
+                                               │
+                                      ┌────────┴────────┐
+                                      ▼                 ▼
+                              [ Caddy Proxy ]    [ Docker Network ]
+                                              ├── api-gateway (:8080)
+                                              ├── auth-service (:8081)
+                                              ├── crm-service (:8082)
+                                              ├── event-service (:8083)
+                                              ├── gallery-service (:8084)
+                                              ├── postgres (:5433)
+                                              ├── redis (:6379)
+                                              └── rabbitmq (:5672)
+```
+
+### 4.1 Production Email Architecture
+* **Inbound Mailboxes (`@eventosapp.in`)**:
+  - Handled by **Cloudflare Email Routing**.
+  - `admin@eventosapp.in` and `support@eventosapp.in` forward seamlessly to the founder's destination inbox (`nagrikarlokesh24468@gmail.com`).
+  - Zero recurring cost and zero mailbox maintenance overhead.
+* **Outbound Transactional Email**:
+  - Dispatched via **Resend SMTP Relay** (`smtp.resend.com:587`) using dedicated sending subdomain `send.eventosapp.in`.
+  - Configured with SPF, DKIM, and DMARC verification on Amazon SES backend.
+  - Generates responsive dark-mode 3D HTML templates for verification OTPs, password resets, welcome alerts, and founder lead notices.
+
+### 4.2 Production VPS Deployment Runbook
+1. **Pull Latest Main Branch**:
+   ```bash
+   ssh root@200.234.47.154
+   cd /root/EventOs # or deployment directory
+   git pull --rebase origin main
+   ```
+2. **Rebuild & Restart Updated Containers**:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d --build auth-service
+   ```
+3. **Inspect Production Container Health**:
+   ```bash
+   docker compose ps
+   docker logs -f --tail=100 eventos-auth-service
+   ```
+

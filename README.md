@@ -48,24 +48,55 @@ EventOS maintains an authoritative, persistent knowledge base in the [`brain/`](
 
 ## ✨ Key Feature Highlights
 
-### 🏢 Multi-Tenant Workspace Engine
-- **1-Second Workspace Switcher** (`WorkspaceSelectorPill.tsx`): Agency owners managing multiple brand identities can toggle workspace contexts instantly without re-authenticating.
-- **Strict Data Isolation**: Enforces tenant-isolated PostgreSQL database scoping (`tenant_id = :tenantId`) across every entity.
-- **Superadmin Control Plane** (`/superadmin`): System-wide tenant provisioning, plan management, automated database backups (`BackupService`), platform audit logging, and system health metrics.
+### 🛡️ SuperAdmin Enterprise Operations Console (`/superadmin`)
+- **100% Real Database Backing**: Completely purged of mock data arrays; all 12 Operational Controls connect directly to live PostgreSQL tables and Spring Boot REST APIs.
+- **12 Mission-Critical Control Suites**:
+  1. *Global KPI Telemetry*: Live MRR, total tenants, active users, subscription distribution.
+  2. *Tenants Directory*: Real-time provisioning, tenant status toggling, tier overrides, and session impersonation.
+  3. *User Roster*: Platform & workspace user directory, account locking, and role elevation.
+  4. *Billing & Subscriptions Ledger*: Comprehensive transaction audit, Stripe/Razorpay sync, and coupon engine.
+  5. *Platform Analytics*: Tenant acquisition trajectories, plan distributions, and churn analytics.
+  6. *Support Tickets Desk*: Support ticket resolution workflow with priority escalations.
+  7. *System Health & Telemetry*: Real-time JVM memory, Postgres pool, Redis cache ping, and RabbitMQ queue depths.
+  8. *Audit Log Trail*: Complete platform event audit with dynamic JPA Specification criteria filtering.
+  9. *Canary Feature Flags*: Granular percentage rollout sliders and instant kill-switches.
+  10. *Platform Announcements Desk*: Real-time global workspace banner broadcasting.
+  11. *Security Threat Stream & WAF*: Real-time security incident logs and dynamic IP blacklist/whitelist.
+  12. *Database Backup Runner*: Automated snapshot creation and restoration via backend `BackupService`.
 
-### 🔑 Frictionless Authentication & Security
-- **Asymmetric RSA-256 JWT**: Secure token minting via `auth-service` and stateless public-key verification across the API Gateway and microservices.
-- **Returning User Profile Card**: Recognizes browser sessions for 1-click sign-in.
-- **Email Domain Auto-Suggestion**: Real-time domain completion (`name@gma` ➔ `name@gmail.com`) to eliminate signup typos.
+### 🔑 Zero-Trust Platform RBAC & Authentication
+- **Granular 6-Role Platform Hierarchy**:
+  - `SUPER_ADMIN`: Root omni-access across all 12 operational controls and infrastructure tools.
+  - `OPERATIONS_LEAD`: Tenant administration, user roster, global announcements, and audit trails.
+  - `SUPPORT_LEAD`: Support desk ticketing, safe password reset triggers, and read-only diagnostics.
+  - `FINANCE_OFFICER`: Subscriptions ledger, refunds, invoice generation, and coupon management.
+  - `DEVOPS_ENGINEER`: System health telemetry, database backup runs, and feature flag rollout sliders.
+  - `COMPLIANCE_AUDITOR`: Read-only audit log trail inspection, telemetry metrics, and compliance exports.
+- **Defense-in-Depth Enforcement**:
+  - *Next.js Edge Middleware*: Cryptographically verifies HMAC-SHA256 JWT signatures for `/superadmin/*` routes before requests reach the UI.
+  - *Spring Security `@PreAuthorize`*: Enforces granular method-level SpEL expressions (`admin:all`, `billing:read`, `telemetry:read`, `tenant:user:status`).
+- **Asymmetric RSA-256 JWT**: Stateless public-key verification across the API Gateway and microservices.
 - **Two-Factor Authentication (TOTP)**: Built-in 2FA support with Google Authenticator / Authy.
-- **Granular RBAC**: Role-based access control with platform superadmin roles (`SUPER_ADMIN`, `SUPPORT_AGENT`, `BILLING_ADMIN`, `AUDITOR`) and tenant-scoped roles (`OWNER`, `ADMIN`, `MANAGER`, `COORDINATOR`, `CLIENT`).
+
+### 💳 Dual Payment Gateways: Razorpay & Stripe
+- **Razorpay PG (India / Domestic)**: Seamless domestic payments supporting UPI (Google Pay, PhonePe, Paytm), RuPay/Visa/Mastercard cards, and NetBanking in INR.
+- **Stripe Subscriptions (Global)**: Multi-currency recurring billing (`$ USD`, `€ EUR`, `£ GBP`) with instant return session validation and metadata fallbacks.
+- **Responsive Pricing Modal**: React Portal checkout modal optimized for both desktop and mobile viewports.
+- **Legal Compliance Suite**: Fully formalized Terms of Service, Privacy Policy, and 5-7 business day Refund turnaround policies.
+
+### 📨 Enterprise Inbound & Outbound Email Architecture
+- **Inbound Cloudflare Email Routing**: Custom domain inboxes (`admin@eventosapp.in`, `support@eventosapp.in`) automatically forward directly into the founder's personal Gmail inbox with zero monthly maintenance or hosting cost.
+- **Outbound Resend SMTP Relay**: Transactional emails dispatched via dedicated sending subdomain `send.eventosapp.in` on Amazon SES infrastructure with 7 responsive dark-mode 3D animated HTML templates.
+- **Lead Capture & Founder Notifications**: Public `/api/v1/auth/inquiries` API captures leads from landing contact forms, exit-intent modals, and newsletters, instantly dispatching notification emails to founders.
+
+### 🏢 Multi-Tenant Workspace Engine
+- **1-Second Workspace Switcher** (`WorkspaceSelectorPill.tsx`): Agency owners managing multiple brand identities toggle contexts instantly without re-authenticating.
+- **Strict Data Isolation**: Enforces tenant-isolated PostgreSQL database scoping (`tenant_id = :tenantId`) across every entity.
 
 ### 📊 Financial Analytics & Margin Auditing
 - **Live Profit Analytics Dashboard** (`EventFinancialAnalytics.tsx`): Real-time tracking of Gross Revenue, Production Costs, and Net Profit Margins.
 - **Interactive Charts**: Monthly revenue vs. expense trends (Recharts AreaChart) and expense breakdown (Recharts Donut).
 - **Per-Event Profit Audit Table**: Audits net profitability and margin % per event contract.
-- **Multi-Currency Engine**: 1-Click toggle between `₹ INR`, `$ USD`, and `€ EUR`.
-- **Dynamic UPI QR Payment Modal** (`DynamicUpiQrModal.tsx`): Instant UPI QR payments with 15-minute countdown and VPA copy helper.
 
 ### 🧮 Instant Quote & Proposal PDF Generator
 - **Event Budget Calculator** (`/quote-calculator`): Interactive cost calculator with guest sliders (50 to 5,000 guests) and custom add-on line items.
@@ -79,49 +110,60 @@ EventOS maintains an authoritative, persistent knowledge base in the [`brain/`](
 
 ### 📸 Media Photo Booth & Gallery Engine
 - **Cloudinary CDN Integration**: High-speed photo uploads with automated thumbnail generation and EXIF metadata extraction.
-- **PIN-Protected Client Albums**: Shareable gallery links with optional download limits and PIN security.
+- **Dynamic Watermarking**: Automatic watermark overlay on unpaid client galleries, dynamically lifted upon invoice payment.
 
 ---
 
 ## 🏛️ System Architecture & Tech Stack
 
 ```
-[ Client Browser ]
-        │ (HTTPS / WSS)
-        ▼
-[ Caddy / Nginx Reverse Proxy ]
-        │
-        ▼
-[ Spring Cloud API Gateway (:8080) ]
-  ├── JWT RSA-256 Stateless Auth Filter
-  ├── Dynamic Tenant Resolver
-  ├── Rate Limiter (Redis)
-  └── Microservice Routing
-        │
- ┌──────┼──────────────┬──────────────┬──────────────┐
- ▼      ▼              ▼              ▼              ▼
-[web] [auth-service] [crm-service] [event-service] [gallery-service]
-:3000     :8081          :8082          :8083          :8084
- │        │              │              │              │
- │        ▼              ▼              ▼              ▼
- │    [auth_db]       [crm_db]      [event_db]    [gallery_db]
- │     (PostgreSQL 17 — Port 5433 / Schema per Service / Flyway Migrations)
- │
- └────────────────► [ RabbitMQ Event Bus (:5672) ]
-                         ▲
-                         └── Notification & Webhook Listeners
+               [ Client Browsers & Mobile Devices ]
+                                │
+                                ▼
+               [ Cloudflare Global Edge Network ]
+                ├── Anycast DNS & Universal SSL
+                ├── DDoS Mitigation & WAF
+                └── Email Routing (*@eventosapp.in ➔ Founder Gmail)
+                                │
+               ┌────────────────┴────────────────┐
+               ▼ (Web Traffic)                   ▼ (API Traffic)
+      [ Vercel Edge Server ]            [ Ubuntu VPS Host (200.234.47.154) ]
+      (Next.js 15 SSR / PWA)             (api.eventosapp.in / DNS-Only)
+      - Edge Auth Middleware                     │
+      - Zustand State Stores                     ▼
+      - React Portal Checkout           [ Caddy / Nginx Reverse Proxy ]
+                                                 │
+                                                 ▼
+                                  [ Spring Cloud API Gateway (:8080) ]
+                                    ├── JWT RSA-256 Stateless Auth Filter
+                                    ├── Dynamic Tenant Resolver
+                                    ├── Rate Limiter (Redis)
+                                    └── Microservice Routing
+                                                 │
+                   ┌──────────────┬──────────────┴──────────────┬──────────────┐
+                   ▼              ▼                             ▼              ▼
+           [auth-service]  [crm-service]                 [event-service] [gallery-service]
+               :8081          :8082                         :8083          :8084
+                   │              │                             │              │
+                   ▼              ▼                             ▼              ▼
+               [auth_db]       [crm_db]                      [event_db]    [gallery_db]
+                (PostgreSQL 17 — Port 5433 / Schema per Service / Flyway Migrations)
+                   │
+                   └────────────────► [ RabbitMQ Event Bus (:5672) ]
+                                           ▲
+                                           └── Notification & Webhook Listeners
 ```
 
 ### Microservices Matrix
 
 | Service | Port | Database | Migrations | Primary Responsibility |
 |:---|:---:|:---|:---:|:---|
-| **`web`** | 3000 | — | — | Next.js 15 App Router, React 19, Tailwind CSS, Zustand |
-| **`api-gateway`** | 8080 | — | — | Spring Cloud Gateway, JWT RSA Verification, Rate Limiting |
-| **`auth-service`** | 8081 | `auth_db` | Flyway (V1–V41) | Users, Tenants, Subscriptions, Stripe Billing, 2FA, Superadmin |
-| **`crm-service`** | 8082 | `crm_db` | Flyway (V1–V11) | Leads, Contacts, Quotes, Proposals, Pipeline |
-| **`event-service`** | 8083 | `event_db` | JPA / Hibernate | Events, Timeline, Stage Cues, Vendors, Invoices |
-| **`gallery-service`** | 8084 | `gallery_db` | JPA / Hibernate | Albums, Photos, EXIF Metadata, Cloudinary Uploads |
+| **`web`** | 3000 | — | — | Next.js 15 App Router, React 19, Tailwind CSS, Edge Middleware, Zustand |
+| **`api-gateway`** | 8080 | — | — | Spring Cloud Gateway, JWT RSA Verification, Rate Limiting, Route Guards |
+| **`auth-service`** | 8081 | `auth_db` | Flyway (V1–V41) | Users, Tenants, SuperAdmin (12 Controls), RBAC, Razorpay/Stripe, Inquiries, Resend |
+| **`crm-service`** | 8082 | `crm_db` | Flyway (V1–V11) | Leads, Contacts, Quotes, Proposals, Kanban Pipeline |
+| **`event-service`** | 8083 | `event_db` | JPA / Hibernate | Events, Timeline, Stage Cues, Vendors, Invoices, Margin Audit |
+| **`gallery-service`** | 8084 | `gallery_db` | JPA / Hibernate | Albums, Photos, EXIF Metadata, Cloudinary Uploads, Dynamic Watermarks |
 
 ---
 

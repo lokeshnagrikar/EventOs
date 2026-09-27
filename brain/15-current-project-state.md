@@ -1,108 +1,54 @@
 # EventOS — Current Project State
 
-> **Last updated:** 2026-09-21 (Brain initialization audit)
+> **Last updated:** 2026-09-26 (Post-SuperAdmin RBAC, Multi-Gateway & Cloudflare Hardening)
 
 ## Current Version / State
 
 **FACT:**
-- Frontend: `eventos-web` v1.0.0
-- Backend: `eventos-parent` v1.0.0
-- Spring Boot: 3.3.0
-- Next.js: 15.x
-- React: 19.0.0-rc
+- Frontend: `eventos-web` v1.0.0 (Next.js 15.0, React 19, Tailwind CSS, Zustand)
+- Backend: `eventos-parent` v1.0.0 (Spring Boot 3.3.0, Java 21)
+- Microservices: `api-gateway` (:8080), `auth-service` (:8081), `crm-service` (:8082), `event-service` (:8083), `gallery-service` (:8084)
+- Production Domain: `https://eventosapp.in`
+- Backend API Host: `https://api.eventosapp.in` (VPS 200.234.47.154)
 
 ## Implemented Modules
 
 | Module | Status | Notes |
 |---|---|---|
-| Authentication (JWT, OAuth, Magic Link, WhatsApp OTP, 2FA) | ✅ Complete | Auth-service fully functional |
-| Workspace/Team Management | ✅ Complete | Multi-tenant with invitations |
-| CRM (Leads, Contacts) | ✅ Complete | Pipeline management |
-| Quotes/Proposals | ✅ Complete | With PDF, sharing, revisions |
-| Events | ✅ Complete | Multi-day, venues, assignments |
-| Bookings | ✅ Complete | Full lifecycle with event-driven creation |
-| Invoices | ✅ Complete | Sequential numbering, history |
-| Payments | ✅ Complete | Tracking with transactions |
-| Vendors | ✅ Complete | Contracts, assignments, payments |
-| Timeline/Tasks | ✅ Complete | Backend entities and service |
-| Gallery/Albums | ✅ Complete | Cloudinary, share links |
-| Billing/Subscriptions | ✅ Complete | Stripe + direct mode |
-| Client Portal | ✅ Complete | Dedicated layout and routes |
-| Superadmin | ✅ Complete | Platform management |
-| Landing Page | ✅ Complete | 26+ sections |
-| AI Assistant | ⚠️ Partial | UI exists, responses simulated |
-| Automation | ⚠️ Partial | Routes exist, depth unclear |
-| Chat | ⚠️ Partial | Route exists, minimal implementation |
-| SMS Integration | ❌ Not implemented | Referenced in pricing only |
-| Run-of-Show Dashboard | ❌ Not implemented | WhatsApp templates exist, no dedicated UI |
+| Authentication (JWT RSA-256, OAuth, Magic Link, 2FA) | ✅ Complete | Stateless verification, refresh token in Redis |
+| Multi-Tenant Workspace Engine | ✅ Complete | 1-click workspace switching, strict `tenant_id` DB scoping |
+| SuperAdmin Operational Console (`/superadmin`) | ✅ Complete | 100% real DB wired, 12 controls, dynamic metrics, zero mocks |
+| Platform RBAC Security | ✅ Complete | 6 platform roles + 5 workspace roles, `@PreAuthorize` guards |
+| Multi-Gateway Billing (Stripe & Razorpay) | ✅ Complete | Global USD & domestic INR/UPI, checkout portals, receipts |
+| Public Inquiries & Lead Pipeline | ✅ Complete | Landing, exit-intent, blog newsletter, founder email alerts |
+| CRM (Leads, Contacts, Pipeline) | ✅ Complete | Drag-and-drop Kanban pipeline |
+| Quotes/Proposals | ✅ Complete | Dynamic calculator, PDF export, client portal approval |
+| Events & Run-of-Show Timelines | ✅ Complete | Multi-day logistics, stage cues, crew dispatch |
+| Invoices & Payments Ledger | ✅ Complete | Sequential numbering, financial margin auditing |
+| Media Gallery & Proofing | ✅ Complete | Cloudinary integration, dynamic watermarks |
+| Email Infrastructure | ✅ Complete | Resend SMTP outbound + Cloudflare Email Routing inbound |
+| Client Portal (`/portal`) | ✅ Complete | Tokenized client quote approval & milestone payments |
+| Landing Page & Marketing | ✅ Complete | 26+ responsive sections, breathing aurora, PWA enabled |
 
-## Recently Completed Work
+## Deployment & Infrastructure State
 
-**UNKNOWN:** Cannot be determined from codebase alone without git history analysis.
-
-## Active Work
-
-**UNKNOWN:** Current development priorities not determinable from codebase state.
-
-## Known Bugs
-
-- JVM crash logs present in repository (hs_err_pid files) suggesting instability in event-service and crm-service
-- No explicit bug tracker visible in the repository
-
-## Blockers
-
-- No migration system — schema changes require careful coordination
-- Large single-file pages (138KB-218KB) impede development velocity
-
-## Pending Decisions
-
-- Whether to implement real LLM integration for AI assistant
-- Whether to adopt a database migration tool
-- Whether to decompose large page files
-
-## Current Priorities
-
-**UNKNOWN:** Cannot be determined without external context.
-
-## Deployment State
-
-| Component | State |
-|---|---|
-| Production domain | `eventosapp.in` / `api.eventosapp.in` |
-| Alternative deployment | Render.com (detected in code) |
-| Docker Compose | Fully configured for dev/staging/prod |
-| Kubernetes | Manifests prepared, deployment status unknown |
-| Monitoring | Prometheus + Grafana + Loki + Tempo configured |
+| Component | Target / Provider | State | Configuration |
+|---|---|---|---|
+| Frontend Web | Vercel | ✅ Live | Next.js 15, edge routing, auto-deploy from `main` |
+| Microservices Backend | Ubuntu VPS (`200.234.47.154`) | ✅ Live | Docker Compose, Spring Boot 3.3, Java 21 |
+| Database | PostgreSQL 17 (Docker) | ✅ Healthy | Container `eventos-postgres`, Flyway migrations |
+| Cache & Session | Redis 7.2 (Docker) | ✅ Healthy | Container `eventos-redis`, token blacklist & metrics |
+| Message Bus | RabbitMQ 3.13 (Docker) | ✅ Healthy | Container `eventos-rabbitmq`, async event topics |
+| DNS & DDoS Defense | Cloudflare | ✅ Active | Anycast DNS, Universal SSL, WAF protection |
+| Email Routing | Cloudflare Email Routing | ✅ Active | `admin@eventosapp.in` -> founder Gmail forwarder |
+| Transactional Email | Resend SMTP (`send.eventosapp.in`) | ✅ Active | AWS SES backed, 7 dark-mode 3D HTML templates |
 
 ## Database State
 
-| Database | Service | Schema Management |
-|---|---|---|
-| auth_db | auth-service | Hibernate auto-DDL |
-| crm_db | crm-service | Hibernate auto-DDL |
-| event_db | event-service | Hibernate auto-DDL |
-| gallery_db | gallery-service | Hibernate auto-DDL |
-| payment_db | (unused) | Created but no service connects |
+| Database | Service | Schema Management | Port |
+|---|---|---|---|
+| `auth_db` | `auth-service` | Flyway (V1–V41) | 5433 (mapped to 5432 internal) |
+| `crm_db` | `crm-service` | Flyway (V1–V11) | 5433 (mapped to 5432 internal) |
+| `event_db` | `event-service` | JPA / Hibernate | 5433 (mapped to 5432 internal) |
+| `gallery_db` | `gallery-service` | JPA / Hibernate | 5433 (mapped to 5432 internal) |
 
-## Integration State
-
-| Integration | Status |
-|---|---|
-| PostgreSQL | ✅ Active |
-| Redis | ✅ Active |
-| RabbitMQ | ✅ Active |
-| Cloudinary | ✅ Active |
-| Stripe | ✅ Active (with fallback) |
-| SMTP/Email | ✅ Active (MailHog in dev) |
-| Google OAuth | ✅ Active |
-| WhatsApp API | ✅ Available (per-company config) |
-| reCAPTCHA | ✅ Available |
-| GA4/PostHog/Clarity | ⚠️ Optional (env-var gated) |
-
-## UI State
-
-- Landing page: Fully designed with premium effects (particles, 3D, glassmorphism)
-- Dashboard: Functional but single 138KB file needs decomposition
-- Settings: Functional but single 218KB file needs decomposition
-- Client Portal: Complete with dedicated layout
-- Design system: shadcn/ui + custom components, CSS variable theming

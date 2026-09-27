@@ -46,31 +46,55 @@ EventOS implements a stateless, asymmetric JWT-based authentication system:
 
 ## 2. Role-Based Access Control (RBAC) Matrix
 
-| Feature / Resource | `ROLE_SUPERADMIN` | `ROLE_OWNER` | `ROLE_ADMIN` | `ROLE_STAFF` | `ROLE_VENDOR` | `ROLE_CLIENT` |
+EventOS separates **Platform Roles** (system-wide administration) from **Tenant/Workspace Roles** (agency-level operations):
+
+### 2.1 Platform Superadmin Roles (`/superadmin`)
+
+| Operational Capability | `SUPER_ADMIN` | `OPERATIONS_LEAD` | `SUPPORT_LEAD` | `FINANCE_OFFICER` | `DEVOPS_ENGINEER` | `COMPLIANCE_AUDITOR` |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Platform Monitoring (`/superadmin`)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Tenant Billing & Subscriptions** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Workspace & Team Management** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Leads & Pipeline Management** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Proposal Creation & Editing** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Event Timeline & Cue Sheets** | ✅ | ✅ | ✅ | ✅ | Read Only | ❌ |
-| **Invoice & Payment Recording** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Photo Upload & Watermarking** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Client Portal Access (`/portal`)** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Vendor Itinerary Access** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **All 12 Controls (Omni-Access)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Tenant Provisioning & Status** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **User Elevation & Status Locking** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Support Desk & Safe Password Reset**| ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Subscriptions Ledger & Refunds** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **Coupon Code Management** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **System Health & Telemetry** | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ (Read) |
+| **Feature Flags Canary Rollout** | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Database Backup Execution** | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Audit Log Trail Inspection** | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+| **Security Threat Stream & WAF** | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+
+### 2.2 Workspace-Level Roles (Tenant Operations)
+
+| Feature / Resource | `ROLE_OWNER` | `ROLE_ADMIN` | `ROLE_STAFF` | `ROLE_VENDOR` | `ROLE_CLIENT` |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Tenant Billing & Subscriptions** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Workspace & Team Management** | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Leads & Pipeline Management** | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Proposal Creation & Editing** | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Event Timeline & Cue Sheets** | ✅ | ✅ | ✅ | Read Only | ❌ |
+| **Invoice & Payment Recording** | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Photo Upload & Watermarking** | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Client Portal Access (`/portal`)** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Vendor Itinerary Access** | ❌ | ❌ | ❌ | ✅ | ❌ |
 
 ---
 
 ## 3. Defense-in-Depth Security Measures
 
-1. **Strict Multi-Tenant Boundary Checks**:
+1. **Next.js Edge Middleware Cryptographic Verification** ([`middleware.ts`](file:///d:/EventOs/web/src/middleware.ts)):
+   * Verifies the cryptographic HMAC-SHA256 signature of the `accessToken` JWT directly at the Vercel edge for all `/superadmin/*` routes.
+   * Rejects requests if the token signature is missing, forged, expired, or lacks platform authorization.
+2. **Spring Security Method-Level Guards (`@PreAuthorize`)**:
+   * Every administrative endpoint in `BillingController.java` is guarded by fine-grained SpEL expressions verifying both roles and authorities (`admin:all`, `admin:read`, `billing:read`, `telemetry:read`).
+3. **Strict Multi-Tenant Boundary Checks**:
    * Downstream services inspect `TenantContext.getCurrentTenantId()`.
    * Cross-tenant query execution is blocked at the ORM repository layer.
-2. **Password Hashing**:
+4. **Password Hashing**:
    * Passwords are salted and hashed using `BCrypt` with a cost factor of 12. Plaintext passwords are never logged or stored.
-3. **Bot & Spam Protection**:
+5. **Bot & Spam Protection**:
    * Google reCAPTCHA integrated on registration and public proposal signing forms (`RECAPTCHA_ENABLED=true`).
-4. **Internal Microservice Trust (`GATEWAY_TRUST_SECRET`)**:
+6. **Internal Microservice Trust (`GATEWAY_TRUST_SECRET`)**:
    * Microservices reject direct HTTP calls unless the header `X-Gateway-Secret` matches `app.gateway.secret`.
-5. **CORS Policy**:
+7. **CORS Policy**:
    * Whitelist-only origin policy supporting `localhost:3000`, staging domains, and the production domain (`eventosapp.in`).
