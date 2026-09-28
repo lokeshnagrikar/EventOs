@@ -46,9 +46,6 @@ public class BillingService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private RefreshTokenRepository refreshTokenRepository;
 
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
-
     public BillingService(PlanRepository planRepository,
                           SubscriptionRepository subscriptionRepository,
                           PaymentMethodRepository paymentMethodRepository,

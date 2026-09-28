@@ -27,10 +27,12 @@ const CONFIG_KEY = "eventos_ai_config";
 const HISTORY_KEY = "eventos_ai_history";
 
 export const getAIConfig = (): AIConfig => {
+  const envGeminiKey = (typeof process !== "undefined" && (process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY)) || "";
+
   if (typeof window === "undefined") {
     return {
-      provider: "OPENAI",
-      apiKey: "",
+      provider: envGeminiKey ? "GEMINI" : "OPENAI",
+      apiKey: envGeminiKey,
       temperature: 0.7,
       maxTokens: 1024,
       systemPrompt: "You are the EventOS AI Enterprise Co-pilot."
@@ -40,13 +42,19 @@ export const getAIConfig = (): AIConfig => {
   const saved = localStorage.getItem(CONFIG_KEY);
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // If user had mock key but env has real key, use real key
+      if ((!parsed.apiKey || parsed.apiKey.startsWith("sk-proj-mock")) && envGeminiKey) {
+        parsed.apiKey = envGeminiKey;
+        parsed.provider = "GEMINI";
+      }
+      return parsed;
     } catch (e) {}
   }
   
   return {
-    provider: "OPENAI",
-    apiKey: "sk-proj-mockkey1234567890",
+    provider: envGeminiKey ? "GEMINI" : "OPENAI",
+    apiKey: envGeminiKey || "sk-proj-mockkey1234567890",
     temperature: 0.7,
     maxTokens: 1024,
     systemPrompt: "You are the EventOS AI Enterprise Co-pilot."
@@ -119,8 +127,41 @@ export const generateAIResponse = async (
   
   const p = prompt.toLowerCase();
   let reply = "";
-  
-  if (moduleName === "CRM AI") {
+
+  // If Gemini provider is active with a real key, invoke Google Gemini 1.5 Flash
+  if (config.provider === "GEMINI" && config.apiKey && !config.apiKey.startsWith("sk-proj-mock")) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(config.apiKey)}`;
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `${config.systemPrompt}\nContext: Module ${moduleName}\nPrompt: ${prompt}`
+            }]
+          }],
+          generationConfig: {
+            temperature: config.temperature || 0.7,
+            maxOutputTokens: config.maxTokens || 1024
+          }
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (candidate && candidate.trim().length > 0) {
+          reply = candidate.trim();
+        }
+      }
+    } catch (e) {
+      console.warn("[GEMINI] Live inference error, falling back to module intelligence:", e);
+    }
+  }
+
+  if (!reply) {
+    if (moduleName === "CRM AI") {
     reply = `Lead Score Assessment:\n` +
             `• Quality Score: 92/100 (High Priority)\n` +
             `• Win Probability: 85%\n` +
@@ -143,9 +184,10 @@ export const generateAIResponse = async (
     reply = `Gallery Tagging Audit:\n` +
             `• Generated Tags: #Backdrop, #Marigold, #FloralRing, #BrideSuite\n` +
             `• Duplicate Detection: Identified 4 similar images in album (Recycled recommendations generated).`;
-  } else {
-    reply = `[Generated via ${config.provider} Abstraction Layer]\n\n` +
-            `Here is the executive summary response for your request. Based on EventOS workspace coordinates, we suggest updating CRM notes and securing invoice references to maximize conversion rates.`;
+    } else {
+      reply = `[Generated via ${config.provider} Abstraction Layer]\n\n` +
+              `Here is the executive summary response for your request. Based on EventOS workspace coordinates, we suggest updating CRM notes and securing invoice references to maximize conversion rates.`;
+    }
   }
 
   logAIActivity(moduleName, prompt, reply, Math.floor(reply.length / 3) + 100);
