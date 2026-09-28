@@ -188,6 +188,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
   const [invDueDate, setInvDueDate] = useState(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
   const [invBilling, setInvBilling] = useState("");
   const [invNotes, setInvNotes] = useState("");
+  const [invTemplate, setInvTemplate] = useState<"ROYAL_WEDDING" | "GST_CORPORATE" | "MINIMAL_STUDIO" | "MILESTONE_SPLIT">("ROYAL_WEDDING");
 
   // Payment Form State
   const [payBookingId, setPayBookingId] = useState("");
@@ -1396,11 +1397,96 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               const subtotalNum = parseFloat(invSubtotal) || 0;
               if (subtotalNum <= 0) { setErrorText("Please specify a valid subtotal amount."); return; }
               const effectiveBookingId = (invBookingId && invBookingId !== "custom") ? invBookingId : undefined;
+              const formattedNotes = `[TPL:${invTemplate}] ${invNotes || ""}`.trim();
               createInvoiceMutation.mutate({
                 bookingId: effectiveBookingId, subtotal: subtotalNum, tax: parseFloat(invTax) || 0, discount: parseFloat(invDiscount) || 0,
-                dueDate: new Date(invDueDate).toISOString(), clientName: invClientName, clientEmail: invClientEmail || undefined, billingAddress: invBilling || undefined, notes: invNotes || undefined
+                dueDate: new Date(invDueDate).toISOString(), clientName: invClientName, clientEmail: invClientEmail || undefined, billingAddress: invBilling || undefined, notes: formattedNotes || undefined
               });
             }} className="space-y-4 text-xs z-10 relative">
+              {/* Template Selector Grid */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-[9px] text-zinc-400 uppercase font-black tracking-wider font-mono">
+                    Select Invoice Presentation Template
+                  </label>
+                  <span className="text-[9px] text-purple-400 font-mono font-bold">
+                    {invTemplate === "ROYAL_WEDDING" && "💍 Royal Wedding Luxe"}
+                    {invTemplate === "GST_CORPORATE" && "🏢 Classic GST Tax"}
+                    {invTemplate === "MINIMAL_STUDIO" && "⚡ Modern Studio"}
+                    {invTemplate === "MILESTONE_SPLIT" && "📊 Milestone Advance"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setInvTemplate("ROYAL_WEDDING")}
+                    className={cn(
+                      "p-2.5 rounded-xl border text-left transition flex items-center gap-2 cursor-pointer",
+                      invTemplate === "ROYAL_WEDDING"
+                        ? "bg-amber-950/20 border-amber-500/50 text-amber-200 ring-1 ring-amber-500/30"
+                        : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                    )}
+                  >
+                    <span className="text-base">💍</span>
+                    <div>
+                      <p className="font-bold text-[11px] leading-tight text-white">Royal Wedding</p>
+                      <p className="text-[9px] text-zinc-400">Gold crest, serif elegance</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setInvTemplate("GST_CORPORATE")}
+                    className={cn(
+                      "p-2.5 rounded-xl border text-left transition flex items-center gap-2 cursor-pointer",
+                      invTemplate === "GST_CORPORATE"
+                        ? "bg-blue-950/20 border-blue-500/50 text-blue-200 ring-1 ring-blue-500/30"
+                        : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                    )}
+                  >
+                    <span className="text-base">🏢</span>
+                    <div>
+                      <p className="font-bold text-[11px] leading-tight text-white">Classic GST Tax</p>
+                      <p className="text-[9px] text-zinc-400">Rule 46 CGST, HSN table</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setInvTemplate("MINIMAL_STUDIO")}
+                    className={cn(
+                      "p-2.5 rounded-xl border text-left transition flex items-center gap-2 cursor-pointer",
+                      invTemplate === "MINIMAL_STUDIO"
+                        ? "bg-zinc-800 border-zinc-600 text-white ring-1 ring-zinc-500"
+                        : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                    )}
+                  >
+                    <span className="text-base">⚡</span>
+                    <div>
+                      <p className="font-bold text-[11px] leading-tight text-white">Minimal Studio</p>
+                      <p className="text-[9px] text-zinc-400">Monochrome, photo-ready</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setInvTemplate("MILESTONE_SPLIT")}
+                    className={cn(
+                      "p-2.5 rounded-xl border text-left transition flex items-center gap-2 cursor-pointer",
+                      invTemplate === "MILESTONE_SPLIT"
+                        ? "bg-emerald-950/20 border-emerald-500/50 text-emerald-200 ring-1 ring-emerald-500/30"
+                        : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                    )}
+                  >
+                    <span className="text-base">📊</span>
+                    <div>
+                      <p className="font-bold text-[11px] leading-tight text-white">Milestone Split</p>
+                      <p className="text-[9px] text-zinc-400">50-25-25 + UPI QR Code</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[9px] text-zinc-550 uppercase font-black">Associated Event or Booking</label>
                 <select value={invBookingId} onChange={(e) => handleInvoiceBookingChange(e.target.value)}

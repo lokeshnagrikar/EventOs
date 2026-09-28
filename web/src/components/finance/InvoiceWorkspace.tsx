@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -22,10 +22,18 @@ import {
   RefreshCw,
   X,
   CreditCard,
-  Activity
+  Activity,
+  Sparkles,
+  Building2,
+  Crown,
+  Zap,
+  BarChart3,
+  CheckCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/lib/toastStore";
+
+export type InvoiceTemplateId = "ROYAL_WEDDING" | "GST_CORPORATE" | "MINIMAL_STUDIO" | "MILESTONE_SPLIT";
 
 interface Invoice {
   id: string;
@@ -72,10 +80,8 @@ const STATUS_PILLS: Record<string, string> = {
 export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  
   const addToast = useToastStore((state) => state.addToast);
 
-  // Show Toast helper
   const triggerToast = (msg: string, type: "success" | "info" = "success") => {
     addToast(msg, type === "success" ? "success" : "info");
   };
@@ -112,6 +118,30 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
   });
   const history = historyResponse?.data || [];
 
+  // Parse template from notes
+  const detectedTemplate = useMemo<InvoiceTemplateId>(() => {
+    if (invoice?.notes && invoice.notes.includes("[TPL:")) {
+      const match = invoice.notes.match(/\[TPL:(\w+)\]/);
+      if (match && ["ROYAL_WEDDING", "GST_CORPORATE", "MINIMAL_STUDIO", "MILESTONE_SPLIT"].includes(match[1])) {
+        return match[1] as InvoiceTemplateId;
+      }
+    }
+    return "ROYAL_WEDDING";
+  }, [invoice?.notes]);
+
+  const [activeTemplate, setActiveTemplate] = useState<InvoiceTemplateId>("ROYAL_WEDDING");
+
+  useEffect(() => {
+    if (detectedTemplate) {
+      setActiveTemplate(detectedTemplate);
+    }
+  }, [detectedTemplate]);
+
+  const cleanNotes = useMemo(() => {
+    if (!invoice?.notes) return "";
+    return invoice.notes.replace(/\[TPL:\w+\]\s*/g, "").trim();
+  }, [invoice?.notes]);
+
   // Mutations
   const updateStatusMutation = useMutation({
     mutationFn: async (status: string) => {
@@ -146,32 +176,19 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
       queryClient.invalidateQueries({ queryKey: ["invoiceHistory", invoiceId] });
-      triggerToast("Invoice ledger reconciled successfully!");
+      triggerToast("Invoice successfully reconciled against ledger!");
     },
-    onError: () => triggerToast("Failed to reconcile invoice", "info")
+    onError: () => triggerToast("Reconciliation failed", "info")
   });
 
   const handlePrint = () => {
-    if (typeof window !== "undefined") {
-      window.print();
-    }
+    window.print();
   };
 
   const handleDownloadPdf = async () => {
     try {
-      triggerToast("Generating PDF stream...", "info");
-      // Trigger download from backend
-      const response = await api.get(`/events/invoices/${invoiceId}/pdf`, {
-        responseType: "blob"
-      });
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const link = document.createElement("a");
-      link.href = window.URL.createObjectURL(blob);
-      link.download = `invoice-${invoice?.invoiceNumber || "receipt"}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      triggerToast("Invoice PDF downloaded!");
+      window.print();
+      triggerToast("Preparing Print / PDF document...");
     } catch (e) {
       triggerToast("PDF generation failed.", "info");
     }
@@ -216,7 +233,7 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/finance")}
-            className="h-8 w-8 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-800/80"
+            className="h-8 w-8 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-800/80 cursor-pointer"
           >
             <ArrowLeft size={16} />
           </button>
@@ -230,14 +247,14 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
         <div className="flex flex-wrap items-center gap-2.5 text-xs">
           <button
             onClick={handleDownloadPdf}
-            className="h-8 px-3 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5"
+            className="h-8 px-3 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5 cursor-pointer"
           >
             <Download size={12} />
             PDF File
           </button>
           <button
             onClick={handlePrint}
-            className="h-8 px-3 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5"
+            className="h-8 px-3 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5 cursor-pointer"
           >
             <Printer size={12} />
             Print Receipt
@@ -248,14 +265,14 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
               <button
                 onClick={() => sendReminderMutation.mutate()}
                 disabled={sendReminderMutation.isPending}
-                className="h-8 px-3 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5"
+                className="h-8 px-3 bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5 cursor-pointer"
               >
                 <Bell size={12} />
                 Send Reminder
               </button>
               <button
                 onClick={() => updateStatusMutation.mutate("PAID")}
-                className="h-8 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-[10px] font-bold flex items-center gap-1.5"
+                className="h-8 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-[10px] font-bold flex items-center gap-1.5 cursor-pointer"
               >
                 <Check size={12} />
                 Mark Paid
@@ -266,12 +283,53 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
           <button
             onClick={() => reconcileMutation.mutate()}
             disabled={reconcileMutation.isPending}
-            className="h-8 px-3 bg-purple-950/20 border border-purple-900/40 text-purple-400 hover:bg-purple-900/10 rounded-xl text-[10px] font-bold flex items-center gap-1.5"
+            className="h-8 px-3 bg-purple-950/20 border border-purple-900/40 text-purple-400 hover:bg-purple-900/10 rounded-xl text-[10px] font-bold flex items-center gap-1.5 cursor-pointer"
             title="Reconcile Invoice status against bookings"
           >
             <RefreshCw size={12} className={cn(reconcileMutation.isPending && "animate-spin")} />
             Reconcile Ledger
           </button>
+        </div>
+      </div>
+
+      {/* ─── TEMPLATE SWITCHER BAR (Interactive Preview Control) ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-[#121214]/60 border border-zinc-800 rounded-2xl print:hidden select-none">
+        <div className="flex items-center gap-2">
+          <Sparkles size={14} className="text-purple-400" />
+          <span className="text-[10px] text-zinc-400 font-mono uppercase font-black tracking-wider">
+            Presentation Template:
+          </span>
+          <span className="text-xs font-bold text-white">
+            {activeTemplate === "ROYAL_WEDDING" && "💍 Royal Luxury Wedding"}
+            {activeTemplate === "GST_CORPORATE" && "🏢 Classic GST Tax (Rule 46)"}
+            {activeTemplate === "MINIMAL_STUDIO" && "⚡ Minimal Modern Studio"}
+            {activeTemplate === "MILESTONE_SPLIT" && "📊 Milestone Advance & UPI QR"}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {([
+            { id: "ROYAL_WEDDING", label: "💍 Royal Wedding", desc: "Gold Luxe" },
+            { id: "GST_CORPORATE", label: "🏢 Classic GST", desc: "Rule 46 Tax" },
+            { id: "MINIMAL_STUDIO", label: "⚡ Modern Studio", desc: "Monochrome" },
+            { id: "MILESTONE_SPLIT", label: "📊 Milestone Split", desc: "50-25-25 + UPI" },
+          ] as const).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => {
+                setActiveTemplate(t.id);
+                triggerToast(`Switched preview to ${t.label}`, "info");
+              }}
+              className={cn(
+                "px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer",
+                activeTemplate === t.id
+                  ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25 ring-1 ring-purple-400"
+                  : "bg-zinc-800/80 hover:bg-zinc-750 text-zinc-400 hover:text-white border border-zinc-700/60"
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -308,145 +366,402 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
         </div>
       </div>
 
-      {/* ─── PRINT-FRIENDLY INVOICE CONTAINER ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-8 border border-zinc-800 bg-[#121214]/30 backdrop-blur rounded-3xl space-y-8 print:bg-white print:text-black print:border-none print:shadow-none"
-      >
-        
-        {/* Banner header */}
-        <div className="flex justify-between items-start gap-4">
-          <div className="space-y-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-black print:from-black print:to-black">
-              E
-            </div>
-            <h2 className="text-base font-black text-zinc-200 print:text-black">EventOS Operations Ledger</h2>
-            <p className="text-[9.5px] text-zinc-550 leading-relaxed max-w-[240px] print:text-zinc-600">
-              Sector 52, Gurgaon, Haryana, India<br />
-              GSTIN: 06ABCDE1234F1Z5
-            </p>
-          </div>
-
-          <div className="text-right space-y-1">
-            <span className={cn("px-2.5 py-0.5 border rounded-full text-[9px] font-black uppercase inline-block mb-1.5 print:border-black print:text-black", statusColor)}>
-              {invoice.status}
-            </span>
-            <p className="text-[9px] text-zinc-550 font-bold uppercase tracking-wider block print:text-zinc-600">Invoice Number</p>
-            <h3 className="font-mono font-black text-sm text-zinc-250 print:text-black">{invoice.invoiceNumber}</h3>
-          </div>
-        </div>
-
-        {/* Client details row */}
-        <div className="grid grid-cols-2 gap-6 border-t border-zinc-850/60 pt-6 print:border-zinc-300">
-          <div>
-            <span className="text-[9px] text-zinc-500 uppercase font-black block print:text-zinc-600">Billed Client</span>
-            <h4 className="font-extrabold text-zinc-200 text-xs mt-1 print:text-black">{invoice.clientName}</h4>
-            {invoice.clientEmail && <p className="text-[10px] text-zinc-450 print:text-zinc-650">{invoice.clientEmail}</p>}
-            {invoice.billingAddress && (
-              <p className="text-[10px] text-zinc-450 mt-1 max-w-[260px] leading-relaxed print:text-zinc-600">
-                {invoice.billingAddress}
-              </p>
-            )}
-          </div>
-
-          <div className="text-right space-y-3">
-            <div>
-              <span className="text-[9px] text-zinc-500 uppercase font-black block print:text-zinc-600">Date Generated</span>
-              <p className="text-zinc-300 text-xs font-bold mt-0.5 print:text-black">
-                {new Date(invoice.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              </p>
-            </div>
-            <div>
-              <span className="text-[9px] text-zinc-500 uppercase font-black block print:text-zinc-600">Payment Due Date</span>
-              <p className="text-rose-400 text-xs font-black mt-0.5 print:text-black flex items-center justify-end gap-1">
-                <Clock size={11} />
-                {new Date(invoice.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Items Breakdown Table */}
-        <div className="space-y-2 border-t border-zinc-850/60 pt-6 print:border-zinc-300">
-          <span className="text-[9px] text-zinc-500 uppercase font-black block print:text-zinc-600">Line Items Ledger</span>
+      {/* ═══════════════════════════════════════════════════════════════
+          TEMPLATE 1: 💍 ROYAL LUXURY WEDDING TEMPLATE
+          ═══════════════════════════════════════════════════════════════ */}
+      {activeTemplate === "ROYAL_WEDDING" && (
+        <motion.div
+          key="royal"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-8 sm:p-10 border border-amber-500/25 bg-gradient-to-b from-[#18131d] via-[#100d14] to-[#0c0a0e] rounded-3xl space-y-8 shadow-2xl relative overflow-hidden print:bg-white print:text-black print:border-none print:shadow-none"
+        >
+          {/* Ornamental Background Accent */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 blur-3xl pointer-events-none rounded-full" />
           
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-zinc-850 text-zinc-550 font-black uppercase text-[8px] tracking-wider print:border-zinc-350 print:text-zinc-600">
-                <th className="pb-3">Operations Description</th>
-                <th className="pb-3 text-right">Tax Rate</th>
-                <th className="pb-3 text-right">Discount</th>
-                <th className="pb-3 text-right">Total Price</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-850/40 text-zinc-300 print:divide-zinc-200 print:text-black">
-              <tr>
-                <td className="py-4 font-bold text-zinc-200 print:text-black">
-                  Event Contract Allocation &mdash; Booking Ref {booking?.bookingNumber || "Linked"}
-                  {invoice.notes && <p className="text-[9px] text-zinc-550 mt-1 font-normal italic leading-relaxed print:text-zinc-600">"{invoice.notes}"</p>}
-                </td>
-                <td className="py-4 text-right font-mono">{invoice.tax}% GST</td>
-                <td className="py-4 text-right font-mono text-rose-450">&minus; ₹{invoice.discount.toLocaleString()}</td>
-                <td className="py-4 text-right font-mono font-bold text-zinc-200 print:text-black">₹{invoice.subtotal.toLocaleString()}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          {/* Header */}
+          <div className="flex justify-between items-start gap-4 border-b border-amber-500/20 pb-6 print:border-zinc-300">
+            <div className="space-y-1.5">
+              <span className="text-[10px] text-amber-400 font-mono font-black uppercase tracking-widest flex items-center gap-1.5">
+                <Crown size={13} className="text-amber-400" /> EVENTOS ROYALE BESPOKE CELEBRATIONS
+              </span>
+              <h2 className="text-xl sm:text-2xl font-serif italic font-bold text-amber-100 print:text-black">
+                Royal Wedding Celebration
+              </h2>
+              <p className="text-xs text-zinc-400 max-w-sm leading-relaxed print:text-zinc-600">
+                Official ceremonial invoice & hospitality ledger. Managed exclusively under EventOS Luxury Suite.
+              </p>
+            </div>
 
-        {/* Totals summation block */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-t border-zinc-850/60 pt-6 print:border-zinc-300">
-          {/* QR Code and verified stamp */}
-          <div className="flex items-center gap-4 bg-zinc-950/20 border border-zinc-850 p-4 rounded-2xl print:border-zinc-300 print:bg-zinc-50">
-            <QrCode size={40} className="text-zinc-400 print:text-black shrink-0" />
+            <div className="text-right space-y-1">
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase border border-amber-500/40 bg-amber-500/10 text-amber-300 print:border-black print:text-black inline-block">
+                {invoice.status}
+              </span>
+              <p className="text-[9px] text-zinc-400 uppercase font-mono font-bold">Folio Number</p>
+              <h3 className="font-mono font-bold text-amber-200 text-sm print:text-black">{invoice.invoiceNumber}</h3>
+            </div>
+          </div>
+
+          {/* Client Details Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white/[0.02] p-5 rounded-2xl border border-amber-500/15 print:border-zinc-300 print:bg-zinc-50">
             <div>
-              <span className="text-[8px] text-zinc-550 uppercase font-black block print:text-zinc-600">Receipt Verification</span>
-              <p className="text-[9px] text-zinc-455 leading-normal mt-0.5 print:text-zinc-700">Scan QR to verify this invoice receipt on Gateway Node.</p>
-              <span className="text-[7.5px] text-emerald-450 font-bold flex items-center gap-1 mt-1 print:text-emerald-700">
-                <ShieldCheck size={10} /> Verified Ledger Record
+              <span className="text-[9px] text-amber-400 uppercase font-black tracking-wider block font-mono">Honored Patron / Family</span>
+              <h4 className="font-serif italic font-bold text-lg text-white mt-1 print:text-black">{invoice.clientName}</h4>
+              {invoice.clientEmail && <p className="text-xs text-zinc-400 mt-0.5 print:text-zinc-600">{invoice.clientEmail}</p>}
+              {invoice.billingAddress && <p className="text-xs text-zinc-400 mt-1 max-w-xs">{invoice.billingAddress}</p>}
+            </div>
+
+            <div className="sm:text-right space-y-2">
+              <div>
+                <span className="text-[9px] text-zinc-400 uppercase font-mono font-bold block">Celebration Reference</span>
+                <p className="text-xs text-zinc-200 font-bold font-mono">Booking Ref #{booking?.bookingNumber || "CONFIRMED"}</p>
+              </div>
+              <div>
+                <span className="text-[9px] text-zinc-400 uppercase font-mono font-bold block">Ceremony Due Date</span>
+                <p className="text-xs text-amber-300 font-bold font-mono flex sm:justify-end items-center gap-1">
+                  <Calendar size={12} /> {new Date(invoice.dueDate).toLocaleDateString("en-IN", { month: "long", day: "numeric", year: "numeric" })}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Line items table */}
+          <div className="space-y-3">
+            <span className="text-[10px] text-amber-400 uppercase font-mono font-black tracking-wider block">Ceremonial Deliverables Ledger</span>
+            <div className="border border-amber-500/20 rounded-2xl overflow-hidden print:border-zinc-300">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-amber-950/20 text-amber-300 border-b border-amber-500/20 text-[9px] font-mono uppercase font-black print:bg-zinc-100 print:text-black">
+                    <th className="p-3.5">Scope & Production Milestone</th>
+                    <th className="p-3.5 text-right">Tax (GST)</th>
+                    <th className="p-3.5 text-right">Investment</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04] text-zinc-200 print:text-black">
+                  <tr>
+                    <td className="p-3.5 space-y-1">
+                      <p className="font-bold text-white text-xs print:text-black">Mandap Architecture, Stage Scenography & Royal Banquet</p>
+                      <p className="text-[11px] text-zinc-400 italic font-serif">
+                        {cleanNotes || "Curated royal destination event execution, concert AV lighting, and luxury hospitality."}
+                      </p>
+                    </td>
+                    <td className="p-3.5 text-right font-mono text-zinc-400">{invoice.tax}%</td>
+                    <td className="p-3.5 text-right font-mono font-bold text-amber-200 print:text-black">₹{invoice.subtotal.toLocaleString("en-IN")}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div className="flex flex-col sm:flex-row justify-between items-end gap-6 pt-4 border-t border-amber-500/20 print:border-zinc-300">
+            <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+              <ShieldCheck size={28} className="text-amber-400 shrink-0" />
+              <div>
+                <span className="text-[9px] text-amber-300 font-mono font-black uppercase block">Certified Royal Attestation</span>
+                <p className="text-[10px] text-zinc-400 leading-snug">Every ceremony detail is verified and backed by the EventOS Bespoke Guarantee.</p>
+              </div>
+            </div>
+
+            <div className="w-full sm:w-64 space-y-2 text-xs font-mono">
+              <div className="flex justify-between text-zinc-400">
+                <span>Subtotal Investment:</span>
+                <span className="text-white font-bold">₹{invoice.subtotal.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="flex justify-between text-zinc-400">
+                <span>GST (18%):</span>
+                <span>₹{(cgst + sgst).toLocaleString("en-IN")}</span>
+              </div>
+              {invoice.discount > 0 && (
+                <div className="flex justify-between text-rose-400">
+                  <span>Royal Privilege Discount:</span>
+                  <span>- ₹{invoice.discount.toLocaleString("en-IN")}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-2 border-t border-amber-500/30 text-amber-300 font-bold text-sm print:text-black">
+                <span>Grand Total:</span>
+                <span className="text-base font-black">₹{invoice.totalAmount.toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          TEMPLATE 2: 🏢 CLASSIC CORPORATE GST TAX INVOICE (RULE 46)
+          ═══════════════════════════════════════════════════════════════ */}
+      {activeTemplate === "GST_CORPORATE" && (
+        <motion.div
+          key="gst"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-8 sm:p-10 border border-blue-900/40 bg-[#0c1222] rounded-3xl space-y-6 shadow-2xl text-zinc-100 print:bg-white print:text-black print:border-none print:shadow-none font-sans"
+        >
+          {/* Header */}
+          <div className="flex justify-between items-start border-b border-blue-900/40 pb-5 print:border-zinc-300">
+            <div>
+              <span className="text-[10px] bg-blue-500/10 border border-blue-500/30 text-blue-400 font-mono font-bold px-2 py-0.5 rounded uppercase">
+                Form GST INV-1
+              </span>
+              <h2 className="text-lg font-black text-white mt-1.5 uppercase tracking-wide print:text-black">
+                TAX INVOICE (RULE 46 OF CGST RULES, 2017)
+              </h2>
+              <p className="text-xs text-zinc-400 font-mono mt-0.5">Original for Recipient</p>
+            </div>
+
+            <div className="text-right space-y-1 font-mono">
+              <p className="text-[10px] text-zinc-400 font-bold uppercase">Invoice No: <span className="text-white font-black">{invoice.invoiceNumber}</span></p>
+              <p className="text-[10px] text-zinc-400">Date: {new Date(invoice.createdAt).toLocaleDateString("en-IN")}</p>
+              <p className="text-[10px] text-rose-400 font-bold">Due Date: {new Date(invoice.dueDate).toLocaleDateString("en-IN")}</p>
+            </div>
+          </div>
+
+          {/* Supplier & Recipient 2-Column Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+            <div className="p-4 bg-white/[0.02] border border-blue-900/30 rounded-xl space-y-1">
+              <span className="text-[9px] text-blue-400 font-black uppercase block">Details of Supplier</span>
+              <p className="font-bold text-white font-sans text-xs">EventOS Enterprise Technologies Pvt Ltd</p>
+              <p className="text-zinc-400 text-[11px]">DLF Cyber City, Sector 24, Gurgaon, HR</p>
+              <p className="text-zinc-300 text-[11px]">GSTIN: <span className="font-bold text-white">06ABCDE1234F1Z5</span></p>
+              <p className="text-zinc-400 text-[11px]">State: Haryana · Code: 06</p>
+            </div>
+
+            <div className="p-4 bg-white/[0.02] border border-blue-900/30 rounded-xl space-y-1">
+              <span className="text-[9px] text-blue-400 font-black uppercase block">Details of Recipient (Billed To)</span>
+              <p className="font-bold text-white font-sans text-xs">{invoice.clientName}</p>
+              <p className="text-zinc-400 text-[11px]">{invoice.clientEmail || "client@enterprise.com"}</p>
+              <p className="text-zinc-400 text-[11px]">{invoice.billingAddress || "Place of Supply: Gurgaon, Haryana (06)"}</p>
+              <p className="text-zinc-400 text-[11px]">Reverse Charge Applicable: <span className="font-bold text-white">NO</span></p>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="border border-blue-900/40 rounded-xl overflow-hidden text-xs font-mono">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-blue-950/30 text-blue-300 border-b border-blue-900/40 text-[9px] uppercase font-black">
+                  <th className="p-3">Sl</th>
+                  <th className="p-3">Description of Services</th>
+                  <th className="p-3">HSN/SAC</th>
+                  <th className="p-3 text-right">Taxable Value</th>
+                  <th className="p-3 text-right">CGST (9%)</th>
+                  <th className="p-3 text-right">SGST (9%)</th>
+                  <th className="p-3 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04] text-zinc-300">
+                <tr>
+                  <td className="p-3">1</td>
+                  <td className="p-3 font-sans">
+                    <p className="font-bold text-white">Corporate Event Production & Management</p>
+                    <p className="text-[10px] text-zinc-400">{cleanNotes || "Audiovisual rigging, stage staging, and technical coordination."}</p>
+                  </td>
+                  <td className="p-3 text-zinc-400">998599</td>
+                  <td className="p-3 text-right">₹{invoice.subtotal.toLocaleString("en-IN")}</td>
+                  <td className="p-3 text-right">₹{cgst.toLocaleString("en-IN")}</td>
+                  <td className="p-3 text-right">₹{sgst.toLocaleString("en-IN")}</td>
+                  <td className="p-3 text-right font-bold text-emerald-400">₹{invoice.totalAmount.toLocaleString("en-IN")}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Bank Transfer Details & Signatory */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="p-4 bg-blue-950/20 border border-blue-900/30 rounded-xl text-xs font-mono space-y-1">
+              <span className="text-[9px] text-blue-400 font-bold uppercase block">Bank Remittance (NEFT / RTGS)</span>
+              <p className="text-zinc-300 text-[11px]">Bank: <span className="font-bold text-white">HDFC Bank Ltd</span></p>
+              <p className="text-zinc-300 text-[11px]">Account Name: <span className="font-bold text-white">EventOS Enterprise Pvt Ltd</span></p>
+              <p className="text-zinc-300 text-[11px]">Account No: <span className="font-bold text-white">50200098765432</span></p>
+              <p className="text-zinc-300 text-[11px]">IFSC Code: <span className="font-bold text-white">HDFC0001234</span></p>
+            </div>
+
+            <div className="flex flex-col justify-between items-end p-4 border border-blue-900/30 rounded-xl text-right">
+              <div className="space-y-1 font-mono text-xs w-full">
+                <div className="flex justify-between text-zinc-400">
+                  <span>Total Taxable Amount:</span>
+                  <span className="font-bold text-white">₹{invoice.subtotal.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between text-zinc-400">
+                  <span>Total GST Output:</span>
+                  <span className="font-bold text-white">₹{(cgst + sgst).toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between text-white font-bold text-sm pt-2 border-t border-blue-900/40">
+                  <span>Invoice Total (INR):</span>
+                  <span className="text-emerald-400">₹{invoice.totalAmount.toLocaleString("en-IN")}</span>
+                </div>
+              </div>
+              <div className="pt-4 text-center w-full sm:w-auto">
+                <div className="h-6 w-32 border-b border-zinc-700 mx-auto" />
+                <span className="text-[8px] text-zinc-400 uppercase tracking-widest font-mono mt-1 block">Authorized Signatory</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          TEMPLATE 3: ⚡ MINIMAL MODERN STUDIO
+          ═══════════════════════════════════════════════════════════════ */}
+      {activeTemplate === "MINIMAL_STUDIO" && (
+        <motion.div
+          key="minimal"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-8 sm:p-10 border border-zinc-800 bg-[#09090b] rounded-3xl space-y-8 shadow-2xl text-zinc-200 print:bg-white print:text-black print:border-none font-sans"
+        >
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <div className="h-9 w-9 bg-white text-black font-black flex items-center justify-center rounded-lg text-sm font-mono">
+                EOS
+              </div>
+              <h2 className="text-base font-black text-white mt-2 tracking-tight">STUDIO STATEMENT</h2>
+              <p className="text-xs text-zinc-400 font-mono">Creative Media & Production Agency</p>
+            </div>
+
+            <div className="text-right space-y-1 font-mono text-xs">
+              <p className="text-zinc-400">Invoice: <span className="text-white font-bold">{invoice.invoiceNumber}</span></p>
+              <p className="text-zinc-400">Issued: {new Date(invoice.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+              <p className="text-emerald-400 font-bold">Due: {new Date(invoice.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+            </div>
+          </div>
+
+          <div className="border-t border-zinc-800 pt-6 grid grid-cols-2 gap-6 text-xs">
+            <div>
+              <span className="text-[9px] text-zinc-500 uppercase font-mono font-bold block">Client Account</span>
+              <p className="font-bold text-white mt-0.5">{invoice.clientName}</p>
+              <p className="text-zinc-400 text-[11px] font-mono">{invoice.clientEmail || "client@domain.com"}</p>
+            </div>
+            <div className="text-right font-mono">
+              <span className="text-[9px] text-zinc-500 uppercase font-bold block">Status</span>
+              <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-200 text-[10px] font-bold inline-block mt-0.5">
+                {invoice.status}
               </span>
             </div>
           </div>
 
-          <div className="w-full sm:w-64 space-y-2.5 text-xs text-zinc-400 print:text-zinc-800">
-            <div className="flex justify-between items-center text-[10px]">
-              <span>Subtotal Cost</span>
-              <span className="font-mono font-bold">₹{invoice.subtotal.toLocaleString()}</span>
+          {/* Simple Clean Table */}
+          <div className="border-t border-b border-zinc-800 py-4 text-xs font-mono space-y-3">
+            <div className="flex justify-between text-zinc-500 text-[10px] uppercase font-bold">
+              <span>Scope Item</span>
+              <span>Amount</span>
             </div>
-            <div className="flex justify-between items-center text-[10px]">
-              <span>CGST (9%)</span>
-              <span className="font-mono font-bold">₹{cgst.toLocaleString()}</span>
+            <div className="flex justify-between items-center text-white">
+              <div className="font-sans">
+                <p className="font-bold">Creative Direction, Photography & Event Production</p>
+                <p className="text-[11px] text-zinc-400 font-mono">{cleanNotes || "Deliverables include raw reels, final album proofing, and live coverage."}</p>
+              </div>
+              <span className="font-bold font-mono text-sm">₹{invoice.subtotal.toLocaleString("en-IN")}</span>
             </div>
-            <div className="flex justify-between items-center text-[10px]">
-              <span>SGST (9%)</span>
-              <span className="font-mono font-bold">₹{sgst.toLocaleString()}</span>
+          </div>
+
+          {/* Minimal Totals */}
+          <div className="flex justify-between items-end text-xs font-mono pt-2">
+            <div className="space-y-1 text-zinc-500 text-[11px]">
+              <p>• Delivery download PIN provided upon settlement clearance.</p>
+              <p>• GST 18% inclusive in official tax ledger.</p>
             </div>
-            <div className="flex justify-between items-center text-[10px]">
-              <span>Discount</span>
-              <span className="font-mono font-bold text-rose-400">&minus; ₹{invoice.discount.toLocaleString()}</span>
+            <div className="text-right space-y-1">
+              <p className="text-zinc-400 text-xs">Total Outstanding</p>
+              <p className="text-2xl font-black text-white font-mono">₹{invoice.totalAmount.toLocaleString("en-IN")}</p>
             </div>
-            <div className="flex justify-between items-center border-t border-zinc-800 pt-2.5 text-zinc-150 print:border-zinc-350 print:text-black">
-              <span className="font-extrabold">Grand Total Balance</span>
-              <span className="font-mono font-black text-emerald-450 text-sm print:text-black">
-                INR {invoice.totalAmount.toLocaleString()}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          TEMPLATE 4: 📊 MILESTONE ADVANCE SPLIT WITH DYNAMIC UPI QR
+          ═══════════════════════════════════════════════════════════════ */}
+      {activeTemplate === "MILESTONE_SPLIT" && (
+        <motion.div
+          key="milestone"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-8 sm:p-10 border border-emerald-500/25 bg-[#0a1410] rounded-3xl space-y-8 shadow-2xl text-zinc-200 print:bg-white print:text-black print:border-none font-sans"
+        >
+          {/* Header */}
+          <div className="flex justify-between items-start border-b border-emerald-500/20 pb-5">
+            <div>
+              <span className="text-[10px] text-emerald-400 font-mono font-black uppercase tracking-wider flex items-center gap-1.5">
+                <Zap size={13} className="text-emerald-400" /> Milestone Advance Settlement Invoice
               </span>
+              <h2 className="text-xl font-black text-white mt-1">Multi-Stage Payment Schedule</h2>
+              <p className="text-xs text-zinc-400">Billed for: <span className="text-emerald-300 font-bold">{invoice.clientName}</span> · Inv #{invoice.invoiceNumber}</p>
+            </div>
+
+            <div className="text-right">
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                {invoice.status}
+              </span>
+              <p className="text-lg font-black text-white font-mono mt-1">₹{invoice.totalAmount.toLocaleString("en-IN")}</p>
             </div>
           </div>
-        </div>
 
-        {/* Signature stamp line */}
-        <div className="border-t border-zinc-850/60 pt-8 flex justify-between items-end text-[10px] text-zinc-500 print:border-zinc-300 print:text-zinc-600">
-          <div>
-            <p className="font-bold uppercase tracking-wider text-[8px] text-zinc-550 print:text-zinc-500">Terms & Conditions</p>
-            <p className="mt-1 leading-relaxed max-w-[340px]">Payment is due within 7 days of invoice generation. Late payments accrue a 2% monthly interest fee.</p>
-          </div>
-          <div className="text-right space-y-4">
-            <div className="h-6 w-24 border-b border-zinc-800 inline-block print:border-zinc-400" />
-            <p className="uppercase tracking-widest font-black text-[8px] text-zinc-550 block print:text-zinc-500">Authorized Signature</p>
-          </div>
-        </div>
+          {/* 3-Stage Progress Timeline */}
+          <div className="space-y-3">
+            <span className="text-[10px] text-emerald-400 uppercase font-mono font-black tracking-wider block">Stage Progress Ledger</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Stage 1 */}
+              <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white">Stage 1: Retainer</span>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300">50%</span>
+                </div>
+                <p className="text-sm font-black text-white font-mono">₹{(invoice.totalAmount * 0.5).toLocaleString("en-IN")}</p>
+                <p className="text-[10px] text-zinc-400">Due at booking confirmation lock.</p>
+                <span className="text-[9px] font-bold text-emerald-400 flex items-center gap-1">
+                  <CheckCircle size={11} /> {invoice.status === "PAID" || invoice.status === "PARTIAL" ? "Cleared / Paid" : "Payable Now"}
+                </span>
+              </div>
 
-      </motion.div>
+              {/* Stage 2 */}
+              <div className="p-4 bg-white/[0.02] border border-white/[0.08] rounded-2xl space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white">Stage 2: Venue Setup</span>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-white/[0.05] text-zinc-300">25%</span>
+                </div>
+                <p className="text-sm font-black text-white font-mono">₹{(invoice.totalAmount * 0.25).toLocaleString("en-IN")}</p>
+                <p className="text-[10px] text-zinc-400">Due 48 hrs prior to venue ingress.</p>
+                <span className="text-[9px] font-bold text-zinc-400 flex items-center gap-1">
+                  <Clock size={11} /> Scheduled Milestone
+                </span>
+              </div>
+
+              {/* Stage 3 */}
+              <div className="p-4 bg-white/[0.02] border border-white/[0.08] rounded-2xl space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white">Stage 3: Settlement</span>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-white/[0.05] text-zinc-300">25%</span>
+                </div>
+                <p className="text-sm font-black text-white font-mono">₹{(invoice.totalAmount * 0.25).toLocaleString("en-IN")}</p>
+                <p className="text-[10px] text-zinc-400">Due at final event ceremony wrap.</p>
+                <span className="text-[9px] font-bold text-zinc-400 flex items-center gap-1">
+                  <Clock size={11} /> Post-Event Clearance
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Instant UPI Pay Box */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-5 bg-emerald-950/20 border border-emerald-500/25 rounded-2xl">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 bg-white rounded-xl shadow-lg shrink-0">
+                <QrCode size={52} className="text-black" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[9px] text-emerald-400 font-mono font-black uppercase block">Instant UPI Quick Settle</span>
+                <p className="text-xs font-bold text-white">Scan with GPay, PhonePe, Paytm or BHIM</p>
+                <p className="text-[11px] text-zinc-400 font-mono">VPA: <span className="text-emerald-300 font-bold">eventos@icici</span></p>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Current Milestone Due</span>
+              <span className="text-xl font-black text-emerald-400 font-mono">₹{(invoice.totalAmount * (invoice.status === "PAID" ? 0 : 0.5)).toLocaleString("en-IN")}</span>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* ─── AUDIT TRAILS & HISTORY TIMELINE ─── */}
       <div className="p-6 border border-zinc-850 bg-[#121214]/15 rounded-3xl space-y-4 print:hidden select-none">
