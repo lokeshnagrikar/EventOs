@@ -7,9 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -719,21 +721,30 @@ public class BillingController {
 
         long baseMonthlyPaise;
         String planName;
-        if ("enterprise".equalsIgnoreCase(planCode)) {
-            baseMonthlyPaise = 1299900L; // ₹12,999
-            planName = "Enterprise";
-        } else if ("agency".equalsIgnoreCase(planCode)) {
-            baseMonthlyPaise = 1099900L; // ₹10,999
-            planName = "Agency";
-        } else if ("business".equalsIgnoreCase(planCode)) {
-            baseMonthlyPaise = 899900L; // ₹8,999
-            planName = "Business";
-        } else if ("professional".equalsIgnoreCase(planCode)) {
-            baseMonthlyPaise = 499900L; // ₹4,999
-            planName = "Professional";
+
+        Optional<Plan> planOpt = billingService.getPlanByCode(planCode);
+        if (planOpt.isPresent()) {
+            Plan p = planOpt.get();
+            planName = p.getName();
+            baseMonthlyPaise = p.getPrice().multiply(new BigDecimal(100)).longValue();
         } else {
-            baseMonthlyPaise = 199900L; // ₹1,999
-            planName = "Starter";
+            // Fallback canonical tiers matching landing page & V34 migration
+            if ("enterprise".equalsIgnoreCase(planCode)) {
+                baseMonthlyPaise = 1299900L; // ₹12,999
+                planName = "Enterprise";
+            } else if ("agency".equalsIgnoreCase(planCode)) {
+                baseMonthlyPaise = 1299900L; // ₹12,999
+                planName = "Agency";
+            } else if ("business".equalsIgnoreCase(planCode)) {
+                baseMonthlyPaise = 899900L; // ₹8,999
+                planName = "Business";
+            } else if ("professional".equalsIgnoreCase(planCode)) {
+                baseMonthlyPaise = 499900L; // ₹4,999
+                planName = "Professional";
+            } else {
+                baseMonthlyPaise = 199900L; // ₹1,999
+                planName = "Starter";
+            }
         }
 
         long chargedPaise = isYearly ? (long) (baseMonthlyPaise * 12 * 0.8) : baseMonthlyPaise;

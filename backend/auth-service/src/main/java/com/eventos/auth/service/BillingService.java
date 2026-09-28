@@ -78,6 +78,11 @@ public class BillingService {
         return planRepository.findAll();
     }
 
+    public Optional<Plan> getPlanByCode(String code) {
+        if (code == null) return Optional.empty();
+        return planRepository.findByCode(code.trim().toLowerCase());
+    }
+
     @Transactional
     public Subscription getSubscription(UUID tenantId) {
         return subscriptionRepository.findByTenantId(tenantId)
