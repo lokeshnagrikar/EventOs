@@ -128,35 +128,51 @@ export const generateAIResponse = async (
   const p = prompt.toLowerCase();
   let reply = "";
 
-  // If Gemini provider is active with a real key, invoke Google Gemini 1.5 Flash
-  if (config.provider === "GEMINI" && config.apiKey && !config.apiKey.startsWith("sk-proj-mock")) {
-    try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(config.apiKey)}`;
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `${config.systemPrompt}\nContext: Module ${moduleName}\nPrompt: ${prompt}`
-            }]
-          }],
-          generationConfig: {
-            temperature: config.temperature || 0.7,
-            maxOutputTokens: config.maxTokens || 1024
-          }
-        })
-      });
+  // If Gemini provider is active with a real key, invoke Google Generative AI
+  const isGoogleKey = config.apiKey && (config.provider === "GEMINI" || config.apiKey.startsWith("AIza"));
+  if (isGoogleKey && !config.apiKey.startsWith("sk-proj-mock")) {
+    const modelsToTry = ["gemini-flash-latest", "gemini-3.8-flash", "gemma-4-26b-a4b-it", "gemma-4-31b-it"];
+    const systemInstruction = 
+      "You are EventOS Co-pilot, an intelligent AI operational assistant for wedding planners, event coordinators, and creative agencies on the EventOS platform. " +
+      "Give concise, practical, highly relevant answers with markdown bullet points and actionable advice. Never output internal thought blocks or meta-reasoning.";
 
-      if (res.ok) {
-        const data = await res.json();
-        const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (candidate && candidate.trim().length > 0) {
-          reply = candidate.trim();
+    for (const modelName of modelsToTry) {
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(config.apiKey)}`;
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `${systemInstruction}\nContext: Module ${moduleName}\nUser Request: ${prompt}`
+              }]
+            }],
+            generationConfig: {
+              temperature: config.temperature || 0.7,
+              maxOutputTokens: config.maxTokens || 1024
+            }
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          let candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (candidate && candidate.trim().length > 0) {
+            candidate = candidate.trim();
+            // Clean internal reasoning or meta-markers if present
+            if (candidate.includes("Final Version:")) {
+              candidate = candidate.split("Final Version:").pop()!.trim();
+            } else if (candidate.includes("</thought>")) {
+              candidate = candidate.split("</thought>").pop()!.trim();
+            }
+            reply = candidate;
+            break; // Success! Stop trying other models.
+          }
         }
+      } catch (e) {
+        console.warn(`[GEMINI] Model ${modelName} error, attempting fallback:`, e);
       }
-    } catch (e) {
-      console.warn("[GEMINI] Live inference error, falling back to module intelligence:", e);
     }
   }
 

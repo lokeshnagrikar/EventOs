@@ -16,6 +16,7 @@ import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
+import { generateAIResponse } from "@/lib/aiProvider";
 
 const CHATBOT_LOTTIE_URL = "https://lottie.host/81c78ae8-59f5-4e19-bc6c-b7c5ba867ffd/Id8PQ7Y2HD.lottie";
 
@@ -486,66 +487,98 @@ export default function AiAssistant() {
       // B. AUTHENTICATED WORKSPACE CO-PILOT RESPONSES (Real guidance, zero mock hallucination)
       // ==========================================
       else {
+        // Try live AI generation via Gemini first
+        let liveGenerated = false;
+        try {
+          const liveAnswer = await generateAIResponse(
+            `${pageContext.name} (${pageContext.role})`,
+            text
+          );
+          if (liveAnswer && liveAnswer.trim().length > 0) {
+            aiResponse = liveAnswer;
+            liveGenerated = true;
+          }
+        } catch (e) {
+          console.warn("[AiAssistant] Live generation failed, using workspace fallback:", e);
+        }
+
+        // Smart Action Button & Suggestion Mapping based on query/response context
         if (q.includes("lead") || q.includes("crm")) {
-          aiResponse =
-            "**CRM Pipeline Guidance:**\n\n" +
-            "• To log a new client inquiry, click **'+ New Lead'** in your CRM desk.\n" +
-            "• You can filter leads by stage (*New, Qualified, Proposal Sent, Won, Lost*).\n" +
-            "• When a client approves your pitch, convert the lead directly into a formal Proposal Quote with 1 click.";
           actionBtn = { label: "Open CRM / Leads Desk", href: "/crm" };
           nextSuggestions = [
             { label: "How to create a quote?", action: () => handleSendText("How do I generate a quote from a lead?") }
           ];
+          if (!liveGenerated) {
+            aiResponse =
+              "**CRM Pipeline Guidance:**\n\n" +
+              "• To log a new client inquiry, click **'+ New Lead'** in your CRM desk.\n" +
+              "• You can filter leads by stage (*New, Qualified, Proposal Sent, Won, Lost*).\n" +
+              "• When a client approves your pitch, convert the lead directly into a formal Proposal Quote with 1 click.";
+          }
         } else if (q.includes("quote") || q.includes("proposal")) {
-          aiResponse =
-            "**Quote & Proposal Engine:**\n\n" +
-            "• Build itemized packages with Catering, Decor, AV Lighting, and Stage Effects.\n" +
-            "• Automatic 18% GST and custom discounts are computed in real-time.\n" +
-            "• You can share a secure client approval link for digital sign-off and milestone clearing.";
           actionBtn = { label: "Open Quotes Desk", href: "/quotes" };
           nextSuggestions = [
             { label: "Setup Payment Engine", action: () => handleSendText("How do I setup payments?") }
           ];
+          if (!liveGenerated) {
+            aiResponse =
+              "**Quote & Proposal Engine:**\n\n" +
+              "• Build itemized packages with Catering, Decor, AV Lighting, and Stage Effects.\n" +
+              "• Automatic 18% GST and custom discounts are computed in real-time.\n" +
+              "• You can share a secure client approval link for digital sign-off and milestone clearing.";
+          }
         } else if (q.includes("event") || q.includes("timeline") || q.includes("schedule") || q.includes("wedding")) {
-          aiResponse =
-            "**Event & Operations Desk:**\n\n" +
-            "• Manage your confirmed bookings, venue ingress times, and ceremony milestones.\n" +
-            "• Set up multi-day itineraries for Sangeet, Haldi, Vows, and Reception.\n" +
-            "• To view all your real confirmed calendar bookings, click below:";
           actionBtn = { label: "Open Events & Calendar", href: "/events" };
+          if (!liveGenerated) {
+            aiResponse =
+              "**Event & Operations Desk:**\n\n" +
+              "• Manage your confirmed bookings, venue ingress times, and ceremony milestones.\n" +
+              "• Set up multi-day itineraries for Sangeet, Haldi, Vows, and Reception.\n" +
+              "• To view all your real confirmed calendar bookings, click below:";
+          }
         } else if (q.includes("invoice") || q.includes("payment") || q.includes("upi") || q.includes("unpaid")) {
-          aiResponse =
-            "**Finance & Collections:**\n\n" +
-            "• To inspect real outstanding balances, check your **Invoices Desk**.\n" +
-            "• You can generate instant **Dynamic UPI QR Codes** directly on the Payments page for client payments (GPay/PhonePe/Paytm).\n" +
-            "• Review settlements and tax liabilities under the unified Finance Hub.";
           actionBtn = { label: "Open Finance Hub", href: "/finance" };
           nextSuggestions = [
             { label: "Open Invoices", action: () => { router.push("/invoices"); setIsOpen(false); } },
             { label: "Open Payments Desk", action: () => { router.push("/payments"); setIsOpen(false); } }
           ];
+          if (!liveGenerated) {
+            aiResponse =
+              "**Finance & Collections:**\n\n" +
+              "• To inspect real outstanding balances, check your **Invoices Desk**.\n" +
+              "• You can generate instant **Dynamic UPI QR Codes** directly on the Payments page for client payments (GPay/PhonePe/Paytm).\n" +
+              "• Review settlements and tax liabilities under the unified Finance Hub.";
+          }
         } else if (q.includes("gallery") || q.includes("photo")) {
-          aiResponse =
-            "**Media Gallery & Proofing:**\n\n" +
-            "• Upload and deliver high-resolution wedding albums organized by ceremony.\n" +
-            "• Enable client selection proofing with download PIN locks and custom watermarking.";
           actionBtn = { label: "Open Media Gallery", href: "/gallery" };
+          if (!liveGenerated) {
+            aiResponse =
+              "**Media Gallery & Proofing:**\n\n" +
+              "• Upload and deliver high-resolution wedding albums organized by ceremony.\n" +
+              "• Enable client selection proofing with download PIN locks and custom watermarking.";
+          }
         } else if (q.includes("team") || q.includes("member") || q.includes("user")) {
-          aiResponse =
-            "**Team & Governance:**\n\n" +
-            "• You can invite team members and coordinators under **Settings -> Users & Teams**.\n" +
-            "• Configure granular role-based access control (RBAC) to ensure assistants only see assigned events.";
           actionBtn = { label: "Open Team Settings", href: "/settings?tab=team" };
+          if (!liveGenerated) {
+            aiResponse =
+              "**Team & Governance:**\n\n" +
+              "• You can invite team members and coordinators under **Settings -> Users & Teams**.\n" +
+              "• Configure granular role-based access control (RBAC) to ensure assistants only see assigned events.";
+          }
         } else if (q.includes("setting") || q.includes("whatsapp") || q.includes("domain") || q.includes("gateway")) {
-          aiResponse =
-            "**Enterprise Configuration:**\n\n" +
-            "Manage all 20 agency configuration settings including Meta WhatsApp API, Razorpay/Stripe gateways, Custom CNAME domain, and GST rules in the Settings center.";
           actionBtn = { label: "Open Settings Center", href: "/settings" };
+          if (!liveGenerated) {
+            aiResponse =
+              "**Enterprise Configuration:**\n\n" +
+              "Manage all 20 agency configuration settings including Meta WhatsApp API, Razorpay/Stripe gateways, Custom CNAME domain, and GST rules in the Settings center.";
+          }
         } else {
-          aiResponse =
-            `**${pageContext.role} Insight:**\n\n` +
-            `I am actively synchronized with your workspace. You can ask me how to manage any workflow, generate quotes, track payments, or navigate to any feature.\n\n` +
-            `What operational task would you like guidance on?`;
+          if (!liveGenerated) {
+            aiResponse =
+              `**${pageContext.role} Insight:**\n\n` +
+              `I am actively synchronized with your workspace. You can ask me how to manage any workflow, generate quotes, track payments, or navigate to any feature.\n\n` +
+              `What operational task would you like guidance on?`;
+          }
           nextSuggestions = getContextSuggestions();
         }
       }

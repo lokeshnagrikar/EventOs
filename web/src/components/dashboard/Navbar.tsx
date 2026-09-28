@@ -187,6 +187,18 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
               title = `Platform Update: ${logItem.action.replace(/_/g, " ")}`;
               type = "warning";
               category = "superadmin";
+            } else if (actionStr.includes("GOOGLE")) {
+              actorType = "SYSTEM";
+              actorName = "Google OAuth";
+              title = "Google Sign-In Verified";
+              type = "success";
+              category = "security";
+            } else if (actionStr === "LOGIN_SUCCESS") {
+              actorType = "SYSTEM";
+              actorName = "Auth Guard";
+              title = "User Signed In";
+              type = "success";
+              category = "security";
             } else if (isSecurityAction) {
               actorType = "TEAM";
               actorName = "Security Guard";
@@ -201,10 +213,13 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
               category = "event";
             }
 
+            const rawAuditDesc = logItem.payloadDiff || logItem.details || `Operation logged for ${logItem.entityName || "Workspace"}.`;
+            const cleanAuditDesc = rawAuditDesc.replace(/under tenant:\s*[0-9a-fA-F-]{36}/gi, "in your workspace").trim();
+
             dynamicList.push({
               id,
               title,
-              desc: logItem.payloadDiff || logItem.details || `Operation logged for ${logItem.entityName || "Workspace"}.`,
+              desc: cleanAuditDesc,
               time: formatRelativeTime(ts),
               timestamp: ts,
               unread: !readIds.has(id),
@@ -223,19 +238,58 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
             const id = `sec-${secItem.id}`;
             if (dismissedIds.has(id)) return;
             const ts = secItem.createdAt ? new Date(secItem.createdAt).getTime() : Date.now() - 1000 * 60 * 15;
-            const isSuper = secItem.userAgent === "SuperAdmin" || (secItem.action && secItem.action.includes("SUPERADMIN"));
+            const actionStr = String(secItem.action || "").toUpperCase();
+            const isSuper = secItem.userAgent === "SuperAdmin" || actionStr.includes("SUPERADMIN");
+
+            let formattedTitle = "Security Audit Event";
+            let formattedDesc = secItem.details || `Audit event from IP: ${secItem.ipAddress || "system"}`;
+            let itemType: "info" | "success" | "warning" | "error" = "info";
+            let actorName = "Security Guard";
+
+            if (isSuper) {
+              formattedTitle = `SuperAdmin Action: ${secItem.action ? secItem.action.replace(/_/g, " ") : "Update"}`;
+              itemType = "warning";
+              actorName = "SuperAdmin";
+            } else if (actionStr.includes("GOOGLE")) {
+              formattedTitle = "Google Sign-In Verified";
+              itemType = "success";
+              actorName = "Google OAuth";
+            } else if (actionStr === "LOGIN_SUCCESS") {
+              formattedTitle = "User Signed In Successfully";
+              itemType = "success";
+              actorName = "Auth Guard";
+            } else if (actionStr.includes("LOGOUT")) {
+              formattedTitle = "User Logged Out";
+              itemType = "info";
+              actorName = "Auth Guard";
+            } else if (actionStr.includes("PASSWORD")) {
+              formattedTitle = "Password Changed / Reset";
+              itemType = "warning";
+              actorName = "Security Guard";
+            } else {
+              formattedTitle = secItem.action
+                ? secItem.action.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
+                : "Security Activity";
+            }
+
+            // Remove raw UUIDs from description and clean up formatting
+            formattedDesc = formattedDesc
+              .replace(/under tenant:\s*[0-9a-fA-F-]{36}/gi, "in your workspace")
+              .replace(/\s+/g, " ")
+              .trim();
+
             dynamicList.push({
               id,
-              title: isSuper ? `SuperAdmin Action: ${secItem.action}` : `Security Audit: ${secItem.action}`,
-              desc: secItem.details || `Audit event from IP: ${secItem.ipAddress || "system"}`,
+              title: formattedTitle,
+              desc: formattedDesc,
               time: formatRelativeTime(ts),
               timestamp: ts,
               unread: !readIds.has(id),
-              type: isSuper ? "warning" : "info",
+              type: itemType,
               href: "/settings",
               category: isSuper ? "superadmin" : "security",
               actorType: isSuper ? "SUPER_ADMIN" : "SYSTEM",
-              actorName: isSuper ? "SuperAdmin" : "Security Service",
+              actorName,
             });
           });
         }
