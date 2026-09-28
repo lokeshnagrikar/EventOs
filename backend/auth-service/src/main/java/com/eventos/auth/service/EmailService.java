@@ -404,6 +404,77 @@ public class EmailService {
     }
 
     /* -------------------------------------------------------------------------- */
+    /* 4B. QUOTA USAGE ALERT EMAIL (80% / 100% Thresholds)                        */
+    /* -------------------------------------------------------------------------- */
+    @Async
+    public void sendQuotaAlertEmail(String toEmail, String workspaceName, String metricName, int currentUsed, int maxLimit, int percentUsed) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(getSenderEmail(), "EventOS Billing Alerts");
+            helper.setTo(toEmail);
+            String urgencyEmoji = percentUsed >= 100 ? "🚨 Limit Exceeded" : "⚠️ Usage Alert";
+            helper.setSubject(urgencyEmoji + ": " + percentUsed + "% of " + metricName + " Consumed (" + workspaceName + ")");
+
+            String upgradeUrl = frontendUrl + "/settings";
+
+            String body = "<p style=\"margin:0 0 16px; font-size:15px; color:#F4F4F5; font-weight:700;\">" +
+                    "  Action Required: Quota Consumption Alert" +
+                    "</p>" +
+                    "<p style=\"margin:0 0 20px; font-size:14px; line-height:1.75; color:#A1A1AA;\">" +
+                    "  Your workspace <strong style=\"color:#FFFFFF;\">" + workspaceName + "</strong> has consumed <strong style=\"color:" + (percentUsed >= 100 ? "#EF4444" : "#F59E0B") + ";\">" + percentUsed + "%</strong> of its monthly allocation for <strong style=\"color:#FFFFFF;\">" + metricName + "</strong>." +
+                    "</p>" +
+                    "<!-- METRIC BREAKDOWN BOX -->" +
+                    "<div style=\"padding:18px 20px; background:#12131A; border:1px solid #27272A; border-radius:16px; margin-bottom:24px;\">" +
+                    "  <table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">" +
+                    "    <tr>" +
+                    "      <td style=\"font-size:12px; color:#9CA3AF; font-weight:600;\">Current Consumption</td>" +
+                    "      <td align=\"right\" style=\"font-size:14px; color:#FFFFFF; font-weight:800; font-family:'SF Mono',Consolas,monospace;\">" + currentUsed + " / " + maxLimit + "</td>" +
+                    "    </tr>" +
+                    "    <tr><td colspan=\"2\" height=\"12\"></td></tr>" +
+                    "    <tr>" +
+                    "      <td colspan=\"2\">" +
+                    "        <div style=\"height:8px; width:100%; background:#27272A; border-radius:999px; overflow:hidden;\">" +
+                    "          <div style=\"height:100%; width:" + Math.min(100, percentUsed) + "%; background:" + (percentUsed >= 100 ? "linear-gradient(90deg, #EF4444, #DC2626)" : "linear-gradient(90deg, #F59E0B, #D97706)") + "; border-radius:999px;\"></div>" +
+                    "        </div>" +
+                    "      </td>" +
+                    "    </tr>" +
+                    "  </table>" +
+                    "</div>" +
+                    "<p style=\"margin:0 0 24px; font-size:13px; line-height:1.6; color:#A1A1AA;\">" +
+                    (percentUsed >= 100 
+                        ? "Further automated operations for this metric are paused until your plan is upgraded or until the next monthly billing cycle."
+                        : "To ensure uninterrupted AI assistance, client quote generation, and automated workflows, we recommend upgrading your tier before reaching the limit.") +
+                    "</p>" +
+                    "<!-- CTA BUTTON -->" +
+                    "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin:24px 0;\">" +
+                    "  <tr><td align=\"center\">" +
+                    "    <a href=\"" + upgradeUrl + "\" style=\"display:inline-block; padding:16px 42px; border-radius:14px; background:linear-gradient(135deg, #7C3AED 0%, #2563EB 100%); color:#FFFFFF; font-size:14px; font-weight:800; text-decoration:none; box-shadow:0 8px 24px rgba(124,58,237,0.35);\">" +
+                    "      ⚡ Upgrade Workspace Plan" +
+                    "    </a>" +
+                    "  </td></tr>" +
+                    "</table>";
+
+            String htmlContent = wrapInLuxuryShell(
+                    "Quota Consumption Alert",
+                    percentUsed >= 100 ? "Limit Exceeded" : "Quota Warning",
+                    percentUsed >= 100 ? "#FCA5A5" : "#FDE68A",
+                    percentUsed >= 100 ? "linear-gradient(135deg, #991B1B 0%, #DC2626 100%)" : "linear-gradient(135deg, #B45309 0%, #F59E0B 100%)",
+                    percentUsed >= 100 ? ICON_SHIELD : ICON_FIRE,
+                    body,
+                    "Automated usage telemetry for " + workspaceName
+            );
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            log.info("[EMAIL_SENT] Quota alert email ({}%) sent to: {}", percentUsed, toEmail);
+        } catch (Exception e) {
+            log.error("[EMAIL_ERROR] Failed to send quota alert email to: {}", toEmail, e);
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
     /* 5. 1-CLICK MAGIC LINK EMAIL (3D Rocket Launching)                          */
     /* -------------------------------------------------------------------------- */
     @Async

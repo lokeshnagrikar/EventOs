@@ -46,6 +46,9 @@ public class BillingService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private RefreshTokenRepository refreshTokenRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
+
     public BillingService(PlanRepository planRepository,
                           SubscriptionRepository subscriptionRepository,
                           PaymentMethodRepository paymentMethodRepository,
@@ -484,6 +487,13 @@ public class BillingService {
                 break;
             case "aicredits":
                 usage.setAiCreditsUsed(usage.getAiCreditsUsed() + amount);
+                try {
+                    Subscription sub = subscriptionRepository.findByTenantId(tenantId).orElse(null);
+                    int maxCredits = (sub != null && sub.getPlan() != null) ? sub.getPlan().getMaxAiCredits() : 50;
+                    checkAndDispatchQuotaAlert(tenantId, "AI Assistant Credits", usage.getAiCreditsUsed(), maxCredits);
+                } catch (Exception ex) {
+                    log.debug("[QUOTA_CHECK] Non-critical quota check exception: {}", ex.getMessage());
+                }
                 break;
             case "automations":
                 usage.setAutomationRuns(usage.getAutomationRuns() + amount);
@@ -499,6 +509,52 @@ public class BillingService {
                 break;
         }
         return tenantUsageRepository.save(usage);
+    }
+
+    private void checkAndDispatchQuotaAlert(UUID tenantId, String metricName, int currentUsed, int maxLimit) {
+        if (maxLimit <= 0) return;
+        double ratio = (double) currentUsed / maxLimit;
+        int percent = (int) (ratio * 100);
+
+        if (percent >= 80) {
+            String thresholdKey = percent >= 100 ? "100" : "80";
+            String cacheKey = "quota:alert:" + tenantId + ":" + metricName.toLowerCase().replaceAll("[^a-z0-9]", "") + ":" + thresholdKey;
+
+            boolean shouldSend = true;
+            if (stringRedisTemplate != null) {
+                try {
+                    Boolean isNew = stringRedisTemplate.opsForValue().setIfAbsent(cacheKey, "sent", java.time.Duration.ofDays(30));
+                    shouldSend = Boolean.TRUE.equals(isNew);
+                } catch (Exception ignored) {}
+            }
+
+            if (shouldSend) {
+                try {
+                    Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
+                    String workspaceName = (tenant != null && tenant.getName() != null) ? tenant.getName() : "Your Workspace";
+
+                    // Find recipient (Workspace Owner or Admin)
+                    List<Membership> memberships = membershipRepository.findByTenantId(tenantId);
+                    String recipientEmail = null;
+                    for (Membership m : memberships) {
+                        if (m.getRole() != null && ("OWNER".equalsIgnoreCase(m.getRole().getName()) || "ADMIN".equalsIgnoreCase(m.getRole().getName()))) {
+                            if (m.getUser() != null && m.getUser().getEmail() != null) {
+                                recipientEmail = m.getUser().getEmail();
+                                break;
+                            }
+                        }
+                    }
+
+                    if (recipientEmail != null && emailService != null) {
+                        emailService.sendQuotaAlertEmail(recipientEmail, workspaceName, metricName, currentUsed, maxLimit, percent);
+                        auditLogService.logEvent(tenantId, null, "QUOTA_ALERT_SENT", "127.0.0.1", "System",
+                                "Dispatched " + percent + "% quota warning alert for " + metricName + " to: " + recipientEmail);
+                    }
+                } catch (Exception ex) {
+                    log.warn("[QUOTA_ALERT] Failed to dispatch quota alert email for tenant {}: {}", tenantId, ex.getMessage());
+                }
+            }
+        }
     }
 
     public List<Invoice> getInvoices(UUID tenantId) {

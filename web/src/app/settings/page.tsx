@@ -2448,18 +2448,54 @@ export default function SettingsPage() {
                         </div>
                         {/* AI Credits */}
                         <div className="space-y-1.5 font-bold font-mono">
-                          <p className="flex justify-between text-zinc-400">
-                            <span>AI Credits:</span>
+                          <div className="flex justify-between items-center text-zinc-400">
+                            <span className="flex items-center gap-1.5">
+                              <span>AI Credits:</span>
+                              {((usage?.aiCreditsUsed || 0) / (subscription?.plan?.maxAiCredits || 50)) >= 0.8 && (
+                                <span className={cn(
+                                  "text-[8px] font-black uppercase px-1.5 py-0.5 rounded tracking-wider",
+                                  ((usage?.aiCreditsUsed || 0) / (subscription?.plan?.maxAiCredits || 50)) >= 1.0
+                                    ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                                    : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                                )}>
+                                  {((usage?.aiCreditsUsed || 0) / (subscription?.plan?.maxAiCredits || 50)) >= 1.0 ? "Limit Reached" : "80%+ Used"}
+                                </span>
+                              )}
+                            </span>
                             <span>{usage?.aiCreditsUsed || "0"} / {subscription?.plan?.maxAiCredits || "50"}</span>
-                          </p>
+                          </div>
                           <div className="h-1.5 w-full bg-zinc-900 border border-zinc-850 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-purple-500 rounded-full"
+                              className={cn(
+                                "h-full rounded-full transition-all duration-500",
+                                ((usage?.aiCreditsUsed || 0) / (subscription?.plan?.maxAiCredits || 50)) >= 1.0
+                                  ? "bg-rose-500"
+                                  : ((usage?.aiCreditsUsed || 0) / (subscription?.plan?.maxAiCredits || 50)) >= 0.8
+                                  ? "bg-amber-500"
+                                  : "bg-purple-500"
+                              )}
                               style={{ width: `${Math.min(100, ((usage?.aiCreditsUsed || 0) / (subscription?.plan?.maxAiCredits || 50)) * 100)}%` }}
                             />
                           </div>
                         </div>
                       </div>
+
+                      {/* 80%+ Usage Warning Banner */}
+                      {((usage?.aiCreditsUsed || 0) / (subscription?.plan?.maxAiCredits || 50)) >= 0.8 && (
+                        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center justify-between gap-3 mt-3">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle size={14} className="shrink-0 text-amber-400" />
+                            <span><strong>80%+ AI Credits consumed</strong> this billing cycle. Upgrade your plan to prevent AI workflow disruption.</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setShowPricingUpgrade(true)}
+                            className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-bold uppercase tracking-wider shrink-0 transition"
+                          >
+                            Upgrade
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Right: Premium Interactive Area Chart */}
