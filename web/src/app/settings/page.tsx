@@ -2298,7 +2298,9 @@ export default function SettingsPage() {
                       <div className="space-y-2.5 font-bold font-mono">
                         <p className="flex justify-between text-zinc-400">
                           <span>Current Plan:</span>
-                          <span className="text-purple-400 capitalize">{subscription?.plan?.name || "Free Trial"}</span>
+                          <span className="text-purple-400 capitalize">
+                            {userRole === "SUPER_ADMIN" ? "Enterprise (SuperAdmin)" : (subscription?.plan?.name || "Free Trial")}
+                          </span>
                         </p>
                         <p className="flex justify-between text-zinc-400">
                           <span>Billing Cycle:</span>
@@ -4046,34 +4048,102 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Scrollable Cards Grid Container */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 overscroll-contain scrollbar-thin">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-                    {[...plans].sort((a, b) => {
-                      const order = ["free_trial", "starter", "professional", "business", "agency", "enterprise"];
-                      const idxA = order.indexOf(a.code.toLowerCase());
-                      const idxB = order.indexOf(b.code.toLowerCase());
-                      return (idxA !== -1 ? idxA : 99) - (idxB !== -1 ? idxB : 99);
-                    }).map((p) => {
-                      const isCurrent = subscription?.plan?.code === p.code;
-                      const isRecommended = p.code.toLowerCase() === "professional";
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 overscroll-contain scrollbar-thin space-y-6">
+                  {/* SuperAdmin Omnipresence Notice Banner */}
+                  {userRole === "SUPER_ADMIN" && (
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-zinc-900 to-indigo-950/30 border border-purple-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-purple-950/20">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 shrink-0">
+                          <ShieldCheck size={20} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black uppercase text-purple-300 tracking-wider">
+                              Platform SuperAdmin Account
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                              Active Plan • Enterprise
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-400 mt-0.5">
+                            You have unrestricted Platform SuperAdmin access across all modules, white-label client portals, and unlimited capacities.
+                          </p>
+                        </div>
+                      </div>
+                      <span className="hidden md:inline-block px-3 py-1 rounded-full bg-purple-500/20 text-purple-200 text-[10px] font-black uppercase tracking-wider border border-purple-500/30">
+                        Omni-Access
+                      </span>
+                    </div>
+                  )}
 
-                      const getCanonicalPrice = (code: string, fallback: number) => {
-                        const c = code.toLowerCase();
-                        if (c === "free_trial") return 0;
-                        if (c === "starter") return 1999;
-                        if (c === "professional") return 4999;
-                        if (c === "business") return 11999;
-                        if (c === "agency" || c === "enterprise") return 12999;
-                        return fallback;
+                  {/* 3-Column Canonical Plans Grid matching Landing Page */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+                    {(["starter", "professional", "agency"] as const).map((codeKey) => {
+                      const p = plans.find((x) => x.code.toLowerCase() === codeKey) || {
+                        id: `canonical_${codeKey}`,
+                        code: codeKey,
+                        name: codeKey === "starter" ? "Starter" : codeKey === "professional" ? "Professional" : "Agency",
+                        price: codeKey === "starter" ? 1999 : codeKey === "professional" ? 4999 : 12999,
+                        currency: "INR",
+                        billingInterval: "MONTHLY",
+                        maxUsers: codeKey === "starter" ? 2 : codeKey === "professional" ? 5 : 999,
+                        maxStorage: codeKey === "starter" ? 20 * 1024 * 1024 * 1024 : codeKey === "professional" ? 100 * 1024 * 1024 * 1024 : 500 * 1024 * 1024 * 1024,
+                        maxGalleryUploads: codeKey === "starter" ? 50 : codeKey === "professional" ? 200 : 10000,
+                        maxEvents: codeKey === "starter" ? 5 : codeKey === "professional" ? 20 : 99999,
+                        maxLeads: codeKey === "starter" ? 50 : codeKey === "professional" ? 200 : 99999,
+                        maxAiCredits: codeKey === "starter" ? 200 : codeKey === "professional" ? 1000 : 10000,
+                        maxAutomationRuns: codeKey === "starter" ? 500 : codeKey === "professional" ? 2500 : 25000,
+                        maxApiCalls: codeKey === "starter" ? 5000 : codeKey === "professional" ? 25000 : 250000,
+                        customDomainSupported: codeKey !== "starter",
+                        whiteLabelSupported: codeKey === "agency",
                       };
 
-                      const basePrice = getCanonicalPrice(p.code, p.price);
+                      const isCurrent = subscription?.plan?.code === p.code;
+                      const isRecommended = codeKey === "professional";
+
+                      const basePrice = codeKey === "starter" ? 1999 : codeKey === "professional" ? 4999 : 12999;
                       const priceVal = billingInterval === "YEARLY" ? basePrice * 0.8 * 12 : basePrice;
                       const labelVal = billingInterval === "YEARLY" ? "/ yr" : "/ mo";
 
+                      const specs = {
+                        starter: {
+                          tagline: "Win more clients",
+                          desc: "For solo planners & boutique studios replacing manual proposals.",
+                          seats: "2 Team Seats",
+                          extraSeat: "₹799 / mo",
+                          events: "Up to 5 Active",
+                          storage: "20 GB High-Res",
+                          aiCredits: "200 / mo",
+                          domain: "— No",
+                          whitelabel: "— No",
+                        },
+                        professional: {
+                          tagline: "Run more events",
+                          desc: "For growing agencies & coordinators managing multi-event production.",
+                          seats: "5 Team Seats",
+                          extraSeat: "₹799 / mo",
+                          events: "Up to 20 / mo",
+                          storage: "100 GB High-Res",
+                          aiCredits: "1,000 / mo",
+                          domain: "✓ Yes",
+                          whitelabel: "— No",
+                        },
+                        agency: {
+                          tagline: "Scale your agency",
+                          desc: "Unlimited operational capacity & white-label portals for high volume.",
+                          seats: "Unlimited Seats",
+                          extraSeat: "Unlimited",
+                          events: "Unlimited Active",
+                          storage: "500+ GB Dedicated",
+                          aiCredits: "10,000 / mo",
+                          domain: "✓ Yes",
+                          whitelabel: "✓ Yes",
+                        },
+                      }[codeKey];
+
                       return (
                         <div
-                          key={p.id}
+                          key={p.id || codeKey}
                           className={cn(
                             "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border flex flex-col justify-between relative transition-all duration-300 group hover:-translate-y-1",
                             isCurrent
@@ -4086,22 +4156,27 @@ export default function SettingsPage() {
                           {/* Recommended Ribbon */}
                           {isRecommended && (
                             <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-[8px] font-black uppercase text-white tracking-widest shadow-lg shadow-pink-500/20">
-                              ★ Most Popular
+                              ★ Most Popular Choice
                             </span>
                           )}
 
                           {/* Current Plan Badge */}
                           {isCurrent && (
                             <span className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[8px] font-black uppercase text-emerald-400 tracking-widest shadow">
-                              Active Plan
+                              {userRole === "SUPER_ADMIN" ? "SuperAdmin Active" : "Active Plan"}
                             </span>
                           )}
 
                           {/* Top Plan Header */}
                           <div className="space-y-2">
-                            <span className="text-xs font-black uppercase text-zinc-300 tracking-wider block">
-                              {p.name}
-                            </span>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black uppercase text-zinc-300 tracking-wider block">
+                                {p.name}
+                              </span>
+                              <span className="text-[9px] font-bold text-purple-400 font-mono">
+                                {specs.tagline}
+                              </span>
+                            </div>
                             <div className="flex items-baseline gap-1.5 mt-2">
                               <span className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">
                                 ₹{priceVal.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
@@ -4111,42 +4186,42 @@ export default function SettingsPage() {
                               </span>
                             </div>
                             <p className="text-[10px] sm:text-[11px] text-zinc-400 font-medium leading-relaxed min-h-[32px]">
-                              Great for {p.code === "free_trial" ? "trying out features without commitment" : p.code === "starter" ? "small boutique teams & solo planners" : p.code === "professional" ? "growing agencies scaling events" : "large enterprise organizations"}.
+                              {specs.desc}
                             </p>
                           </div>
 
-                          {/* Limits & Feature Details */}
+                          {/* Limits & Feature Details Synchronized with Landing Page */}
                           <div className="border-t border-zinc-850/80 my-4 pt-3.5 space-y-2.5 font-bold font-mono text-[9.5px] sm:text-[10px] text-zinc-400 leading-relaxed">
                             <p className="flex justify-between items-center">
                               <span className="text-zinc-400">Team Users:</span>
-                              <span className="text-zinc-200">{p.code === "enterprise" ? "Unlimited Users" : `${p.maxUsers} Users`}</span>
+                              <span className="text-zinc-200">{specs.seats}</span>
                             </p>
                             <p className="flex justify-between items-center">
                               <span className="text-zinc-400">Extra Seat:</span>
-                              <span className="text-purple-400">{p.code === "enterprise" ? "Unlimited" : p.code === "free_trial" ? "N/A" : "₹799 / mo"}</span>
+                              <span className="text-purple-400">{specs.extraSeat}</span>
                             </p>
                             <p className="flex justify-between items-center">
                               <span className="text-zinc-400">Cloud Storage:</span>
-                              <span className="text-zinc-200">{p.code === "enterprise" ? "1 TB Cloud" : `${(p.maxStorage / (1024 * 1024 * 1024)).toFixed(0)} GB`}</span>
+                              <span className="text-zinc-200">{specs.storage}</span>
                             </p>
                             <p className="flex justify-between items-center">
                               <span className="text-zinc-400">Active Events:</span>
-                              <span className="text-zinc-200">{p.code === "enterprise" ? "Unlimited Active" : `${p.maxEvents} Active`}</span>
+                              <span className="text-zinc-200">{specs.events}</span>
                             </p>
                             <p className="flex justify-between items-center">
                               <span className="text-zinc-400">AI Credits:</span>
-                              <span className="text-zinc-200">{p.maxAiCredits} / mo</span>
+                              <span className="text-zinc-200">{specs.aiCredits}</span>
                             </p>
                             <p className="flex justify-between items-center">
                               <span className="text-zinc-400">Custom Domain:</span>
-                              <span className={p.customDomainSupported ? "text-emerald-400" : "text-zinc-500"}>
-                                {p.customDomainSupported ? "✓ Yes" : "— No"}
+                              <span className={codeKey !== "starter" ? "text-emerald-400" : "text-zinc-500"}>
+                                {specs.domain}
                               </span>
                             </p>
                             <p className="flex justify-between items-center">
                               <span className="text-zinc-400">White Label:</span>
-                              <span className={p.whiteLabelSupported ? "text-emerald-400" : "text-zinc-500"}>
-                                {p.whiteLabelSupported ? "✓ Yes" : "— No"}
+                              <span className={codeKey === "agency" ? "text-emerald-400" : "text-zinc-500"}>
+                                {specs.whitelabel}
                               </span>
                             </p>
                           </div>
@@ -4156,26 +4231,15 @@ export default function SettingsPage() {
                             type="button"
                             onClick={async () => {
                               if (usage) {
-                                const usersExceeded = usage.usersCount > p.maxUsers && p.code !== "enterprise";
+                                const usersExceeded = usage.usersCount > p.maxUsers;
                                 const storageExceeded = usage.storageBytes > p.maxStorage;
-                                const eventsExceeded = usage.eventsCount > p.maxEvents && p.code !== "enterprise";
+                                const eventsExceeded = usage.eventsCount > p.maxEvents;
 
                                 if (usersExceeded || storageExceeded || eventsExceeded) {
                                   setTargetDowngradePlan(p);
                                   setShowDowngradeWarningModal(true);
                                   return;
                                 }
-                              }
-
-                              if (p.code === "free_trial" || p.price === 0) {
-                                try {
-                                  await upgradeSubscription(p.code);
-                                  addToast(`Successfully activated Free Trial!`, "success");
-                                  setShowPricingUpgrade(false);
-                                } catch (err: any) {
-                                  addToast(err.message || "Failed to switch plan.", "error");
-                                }
-                                return;
                               }
 
                               // Trigger Real Razorpay Checkout (UPI, GPay, PhonePe, Cards in INR)
@@ -4261,6 +4325,87 @@ export default function SettingsPage() {
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* Dedicated Enterprise Scale Card */}
+                  <div className={cn(
+                    "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border relative transition-all duration-300",
+                    userRole === "SUPER_ADMIN" || subscription?.plan?.code === "enterprise"
+                      ? "border-purple-500/60 bg-gradient-to-r from-purple-950/30 via-zinc-950/70 to-indigo-950/30 shadow-xl shadow-purple-950/20 ring-1 ring-purple-500/20"
+                      : "border-zinc-800/80 bg-zinc-900/30 hover:border-zinc-700"
+                  )}>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="space-y-2 max-w-xl">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black uppercase text-purple-400 tracking-wider">
+                            Enterprise & Custom Scale
+                          </span>
+                          {(userRole === "SUPER_ADMIN" || subscription?.plan?.code === "enterprise") && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[8px] font-black uppercase text-emerald-400 tracking-widest">
+                              {userRole === "SUPER_ADMIN" ? "Active Plan • SuperAdmin" : "Active Plan"}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="text-base sm:text-lg font-extrabold text-white">
+                          Dedicated AWS Infrastructure & National Agency Scale
+                        </h4>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed">
+                          For high-volume production networks & enterprise organizers needing custom SLA agreements, dedicated VPC isolation, bespoke contract templates, and unlimited operational capacity.
+                        </p>
+                        <div className="flex flex-wrap gap-x-5 gap-y-1.5 pt-1.5 text-[10px] font-mono font-bold text-zinc-300">
+                          <span className="text-emerald-400">✓ Unlimited Seats</span>
+                          <span className="text-emerald-400">✓ 1 TB Dedicated Cloud</span>
+                          <span className="text-emerald-400">✓ 50,000 AI Credits</span>
+                          <span className="text-emerald-400">✓ White-Label Portals</span>
+                          <span className="text-emerald-400">✓ Dedicated Account Lead</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row md:flex-col items-start md:items-end justify-between gap-3 shrink-0">
+                        <div className="text-left md:text-right">
+                          <span className="text-xl sm:text-2xl font-black text-white font-mono">Custom</span>
+                          <span className="text-[10px] text-zinc-400 block font-mono">Bespoke SLA / Annual</span>
+                        </div>
+
+                        {userRole === "SUPER_ADMIN" || subscription?.plan?.code === "enterprise" ? (
+                          <div className="px-4 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                            <ShieldCheck size={14} className="text-emerald-400" />
+                            <span>Active Plan (Omni-Access)</span>
+                          </div>
+                        ) : (
+                          <a
+                            href="https://wa.me/919876543210?text=Hi%2C%20we%20are%20interested%20in%20an%20EventOS%20Enterprise%20custom%20plan."
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-xs uppercase tracking-wider hover:brightness-110 transition shadow-md inline-block text-center"
+                          >
+                            Talk to Founders →
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 14-day Free Trial Option */}
+                  <div className="text-center pt-1 pb-2">
+                    <span className="text-xs text-zinc-500 font-medium">
+                      Need to test before upgrading?{" "}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await upgradeSubscription("free_trial");
+                            addToast("Activated 14-day Free Trial!", "success");
+                            setShowPricingUpgrade(false);
+                          } catch (err: any) {
+                            addToast(err.message || "Failed to switch plan.", "error");
+                          }
+                        }}
+                        className="text-purple-400 font-bold hover:underline cursor-pointer"
+                      >
+                        Start 14-day Free Trial (No Card Required)
+                      </button>
+                    </span>
                   </div>
                 </div>
 
