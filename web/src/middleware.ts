@@ -4,6 +4,30 @@ import { verifyAccessToken } from "@/lib/jwtVerify";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // ── MULTI-TENANT CUSTOM DOMAIN REWRITE ──
+  // If an agency's custom domain (e.g. portal.clientbrand.com) hits EventOS,
+  // transparently rewrite requests directly to the white-labeled /portal
+  const host = request.headers.get("host") || "";
+  const isPrimaryPlatformDomain =
+    host.includes("eventosapp.in") ||
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    host.includes(".vercel.app");
+
+  if (!isPrimaryPlatformDomain && host.length > 0) {
+    if (
+      !pathname.startsWith("/api") &&
+      !pathname.startsWith("/_next") &&
+      !pathname.startsWith("/static") &&
+      !pathname.startsWith("/favicon") &&
+      !pathname.startsWith("/portal")
+    ) {
+      const portalUrl = new URL(`/portal${pathname === "/" ? "" : pathname}`, request.url);
+      return NextResponse.rewrite(portalUrl);
+    }
+  }
+
   const hasSession = request.cookies.get("hasSession")?.value || request.cookies.get("accessToken")?.value;
   const userRole = request.cookies.get("user_role")?.value;
 

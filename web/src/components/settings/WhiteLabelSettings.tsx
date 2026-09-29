@@ -60,17 +60,39 @@ export default function WhiteLabelSettings() {
       });
   }, []);
 
-  const handleVerifyDns = () => {
+  const [dnsFeedback, setDnsFeedback] = useState<string | null>(null);
+
+  const handleVerifyDns = async () => {
     if (!customDomain) {
       addToast("Please enter a custom domain name to verify.", "error");
       return;
     }
     setIsVerifying(true);
-    setTimeout(() => {
+    setDnsFeedback(null);
+    try {
+      const res = await fetch("/api/domains/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain: customDomain }),
+      });
+      const data = await res.json();
+
+      if (data.valid) {
+        setDomainStatus("ACTIVE");
+        setDnsFeedback(data.message);
+        addToast(data.message, "success");
+      } else {
+        setDomainStatus("UNVERIFIED");
+        setDnsFeedback(data.message || "CNAME verification failed.");
+        addToast(data.message || "DNS CNAME check failed. Please review your DNS records.", "warning");
+      }
+    } catch (e: any) {
+      setDomainStatus("UNVERIFIED");
+      setDnsFeedback("Could not reach DNS verification service. Check internet connection.");
+      addToast("Failed to verify DNS. Please try again.", "error");
+    } finally {
       setIsVerifying(false);
-      setDomainStatus("ACTIVE");
-      addToast(`CNAME DNS record verified for ${customDomain}. SSL certificate active.`, "success");
-    }, 1200);
+    }
   };
 
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -221,6 +243,22 @@ export default function WhiteLabelSettings() {
                 <span>cname.eventosapp.in</span>
               </div>
             </div>
+
+            {dnsFeedback && (
+              <div
+                className={cn(
+                  "p-3 rounded-xl border text-xs font-medium leading-relaxed transition-all",
+                  domainStatus === "ACTIVE"
+                    ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300"
+                    : "bg-amber-500/10 border-amber-500/25 text-amber-300"
+                )}
+              >
+                <div className="flex items-center gap-2 font-bold mb-1 font-mono text-[11px]">
+                  {domainStatus === "ACTIVE" ? "✓ LIVE DNS STATUS: VERIFIED" : "⚠ LIVE DNS STATUS: ATTENTION REQUIRED"}
+                </div>
+                <p className="text-[11px] opacity-90">{dnsFeedback}</p>
+              </div>
+            )}
           </div>
 
           {/* 2. Custom Color Theme & Logo */}
