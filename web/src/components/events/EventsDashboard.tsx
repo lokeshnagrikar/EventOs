@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import EventCard from "./EventCard";
 import { cn } from "@/lib/utils";
+import { useBillingStore } from "@/store/billingStore";
 import GlobalEmptyState from "../ui/EmptyState";
 import OfflineCheckInWidget from "./OfflineCheckInWidget";
 import { CalendarSkeleton } from "../ui/skeletons";
@@ -544,6 +545,11 @@ export default function EventsDashboard() {
       return;
     }
 
+    if (!useBillingStore.getState().checkLimit("events")) {
+      setShowCreateModal(false);
+      return;
+    }
+
     createEventMutation.mutate({
       name: formName,
       type: formType,
@@ -779,7 +785,10 @@ export default function EventsDashboard() {
               </div>
 
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => {
+                  if (!useBillingStore.getState().checkLimit("events")) return;
+                  setShowCreateModal(true);
+                }}
                 className="flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition shadow-md active:scale-95 cursor-pointer whitespace-nowrap shrink-0 animate-pulse"
               >
                 <Plus size={13} />
@@ -940,7 +949,13 @@ export default function EventsDashboard() {
                                     icon={CalendarIcon}
                                     title="No events scheduled yet"
                                     description="Create your first event workspace to start managing timelines, venues, and team logistics."
-                                    primaryAction={{ label: "Create Event", onClick: () => setShowCreateModal(true) }}
+                                    primaryAction={{
+                                      label: "Create Event",
+                                      onClick: () => {
+                                        if (!useBillingStore.getState().checkLimit("events")) return;
+                                        setShowCreateModal(true);
+                                      },
+                                    }}
                                   />
                                 ) : (
                                   filteredEvents.slice(0, 4).map((e: Event) => (

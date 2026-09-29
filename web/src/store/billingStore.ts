@@ -361,7 +361,7 @@ export const useBillingStore = create<BillingState>((set, get) => ({
         return true;
     }
 
-    if (currentValue + increment > limitValue) {
+    if (limitValue > 0 && currentValue + increment > limitValue) {
       const formatVal = (val: number, met: string) => {
         if (met === 'storage') {
           return `${(val / (1024 * 1024 * 1024)).toFixed(1)} GB`;

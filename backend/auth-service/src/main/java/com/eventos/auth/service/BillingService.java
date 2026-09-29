@@ -635,13 +635,34 @@ public class BillingService {
     @Transactional
     public WorkspaceSettings updateWorkspaceSettings(UUID tenantId, WorkspaceSettings ws) {
         WorkspaceSettings settings = getWorkspaceSettings(tenantId);
+        Subscription sub = getSubscription(tenantId);
+        Plan plan = sub != null ? sub.getPlan() : null;
         
-        if (ws.getCustomDomain() != null) {
+        if (ws.getCustomDomain() != null && !ws.getCustomDomain().trim().isEmpty()) {
+            if (plan != null && !plan.isCustomDomainSupported()) {
+                throw new com.eventos.auth.exception.PlanLimitExceededException(
+                    "Custom domain CNAME routing is an Agency Tier capability. Please upgrade your workspace to configure a custom domain.",
+                    "Custom Domain",
+                    "Agency Tier",
+                    plan.getName()
+                );
+            }
             settings.setCustomDomain(ws.getCustomDomain());
-            // Mock verify if non-empty
             settings.setCustomDomainVerified(!ws.getCustomDomain().trim().isEmpty());
         }
-        settings.setWhiteLabelEnabled(ws.isWhiteLabelEnabled());
+        if (ws.isWhiteLabelEnabled()) {
+            if (plan != null && !plan.isWhiteLabelSupported()) {
+                throw new com.eventos.auth.exception.PlanLimitExceededException(
+                    "White-label client portal & branding is an Agency Tier capability. Please upgrade your workspace to unlock white-label portals.",
+                    "White-Label Portal",
+                    "Agency Tier",
+                    plan.getName()
+                );
+            }
+            settings.setWhiteLabelEnabled(true);
+        } else {
+            settings.setWhiteLabelEnabled(false);
+        }
         if (ws.getCustomLoginUrl() != null) settings.setCustomLoginUrl(ws.getCustomLoginUrl());
         if (ws.getCustomEmailSender() != null) settings.setCustomEmailSender(ws.getCustomEmailSender());
         

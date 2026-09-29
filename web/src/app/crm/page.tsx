@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useBillingStore } from "@/store/billingStore";
 
 // Custom CRM Components
 import CrmKpis from "@/components/crm/CrmKpis";
@@ -373,6 +374,9 @@ export default function CrmPage() {
 
   const quickAddLeadMutation = useMutation({
     mutationFn: async (payload: any) => {
+      if (!useBillingStore.getState().checkLimit("leads")) {
+        throw new Error("LIMIT_EXCEEDED");
+      }
       return (await api.post("/crm/leads", payload)).data;
     },
     onSuccess: () => {
@@ -386,6 +390,7 @@ export default function CrmPage() {
       completeStep("add_lead");
     },
     onError: (err: any) => {
+      if (err.message === "LIMIT_EXCEEDED") return;
       const msg = err.response?.data?.error?.message 
         || err.response?.data?.message 
         || err.response?.data?.detail 
@@ -693,7 +698,10 @@ export default function CrmPage() {
       </button>
 
       <button 
-        onClick={() => setShowQuickAddModal(true)}
+        onClick={() => {
+          if (!useBillingStore.getState().checkLimit("leads")) return;
+          setShowQuickAddModal(true);
+        }}
         className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-[0.98] cursor-pointer shrink-0"
       >
         <Plus size={14} />
@@ -792,7 +800,10 @@ export default function CrmPage() {
             description="Let's log your first client and start tracking conversions!"
             primaryAction={{
               label: "Log Lead",
-              onClick: () => setShowQuickAddModal(true)
+              onClick: () => {
+                if (!useBillingStore.getState().checkLimit("leads")) return;
+                setShowQuickAddModal(true);
+              }
             }}
             secondaryAction={{
               label: "Import CSV",

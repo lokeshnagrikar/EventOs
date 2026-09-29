@@ -100,6 +100,21 @@ public class GlobalExceptionHandler {
                 .body(body);
     }
 
+    @ExceptionHandler(com.eventos.auth.exception.PlanLimitExceededException.class)
+    public ResponseEntity<?> handlePlanLimitExceeded(com.eventos.auth.exception.PlanLimitExceededException ex) {
+        java.util.Map<String, Object> body = new java.util.HashMap<>();
+        body.put("success", false);
+        body.put("error", "LIMIT_EXCEEDED");
+        body.put("message", ex.getMessage());
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("limitName", ex.getLimitName());
+        data.put("limitValue", ex.getLimitValue());
+        data.put("currentValue", ex.getCurrentValue());
+        body.put("data", data);
+
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneral(Exception ex) {
         log.error("Unhandled exception in auth-service", ex);

@@ -834,6 +834,9 @@ export default function SettingsPage() {
   // Team CRUD
   const addTeamMemberMutation = useMutation({
     mutationFn: async (newMember: any) => {
+      if (!useBillingStore.getState().checkLimit("users")) {
+        throw new Error("LIMIT_EXCEEDED");
+      }
       return (await api.post("/auth/settings/team", newMember)).data;
     },
     onSuccess: () => {
@@ -844,12 +847,17 @@ export default function SettingsPage() {
       completeStep("invite_member");
     },
     onError: (err: any) => {
-      addToast(err.response?.data?.error?.message || "Failed to invite member.", "error");
+      if (err.message === "LIMIT_EXCEEDED") return;
+      addToast(err.response?.data?.error?.message || err.response?.data?.message || "Failed to invite member.", "error");
     }
   });
 
   const bulkInviteMutation = useMutation({
     mutationFn: async (payload: any) => {
+      const emailCount = payload?.emails?.length || 1;
+      if (!useBillingStore.getState().checkLimit("users", emailCount)) {
+        throw new Error("LIMIT_EXCEEDED");
+      }
       return (await api.post("/auth/settings/team/bulk-invite", payload)).data;
     },
     onSuccess: () => {
@@ -857,6 +865,10 @@ export default function SettingsPage() {
       setShowBulkInviteModal(false);
       setBulkEmails("");
       addToast("Bulk invitations sent!", "success");
+    },
+    onError: (err: any) => {
+      if (err.message === "LIMIT_EXCEEDED") return;
+      addToast(err.response?.data?.error?.message || err.response?.data?.message || "Failed to send bulk invitations.", "error");
     }
   });
 
@@ -1979,10 +1991,22 @@ export default function SettingsPage() {
                       <p className="text-[11px] text-zinc-450 mt-1">Configure active staff members, suspend accesses or send new invitations.</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setShowBulkInviteModal(true)} className="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold transition-all">
+                      <button 
+                        onClick={() => {
+                          if (!useBillingStore.getState().checkLimit("users")) return;
+                          setShowBulkInviteModal(true);
+                        }} 
+                        className="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                      >
                         Bulk Invite
                       </button>
-                      <button onClick={() => setShowAddMemberModal(true)} className="px-3.5 py-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md">
+                      <button 
+                        onClick={() => {
+                          if (!useBillingStore.getState().checkLimit("users")) return;
+                          setShowAddMemberModal(true);
+                        }} 
+                        className="px-3.5 py-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                      >
                         Invite Member
                       </button>
                     </div>

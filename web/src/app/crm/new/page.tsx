@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { api } from "@/lib/api";
+import { useBillingStore } from "@/store/billingStore";
 import { 
   ArrowLeft, 
   Briefcase, 
@@ -50,6 +51,9 @@ export default function NewLeadPage() {
 
   const onSubmit = async (data: LeadInputs) => {
     setError(null);
+    if (!useBillingStore.getState().checkLimit("leads")) {
+      return;
+    }
     setLoading(true);
     try {
       await api.post("/crm/leads", {

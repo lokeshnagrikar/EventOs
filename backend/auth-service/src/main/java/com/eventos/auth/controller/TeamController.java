@@ -82,6 +82,17 @@ public class TeamController {
             Map<String, Object> result = authService.inviteTeamMember(tenantId, email, firstName, lastName, roleName,
                     phone, senderId);
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (com.eventos.auth.exception.PlanLimitExceededException e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("error", "LIMIT_EXCEEDED");
+            err.put("message", e.getMessage());
+            Map<String, Object> data = new HashMap<>();
+            data.put("limitName", e.getLimitName());
+            data.put("limitValue", e.getLimitValue());
+            data.put("currentValue", e.getCurrentValue());
+            err.put("data", data);
+            return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(err);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(createErrorResponse("FORBIDDEN", e.getMessage()));
         } catch (IllegalArgumentException e) {

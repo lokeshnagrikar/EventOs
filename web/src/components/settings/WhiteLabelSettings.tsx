@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Globe, CheckCircle2, ShieldCheck, Palette, Image as ImageIcon, Copy, ExternalLink, RefreshCw, Sparkles, Sliders, Loader2 } from "lucide-react";
+import { Globe, CheckCircle2, ShieldCheck, Palette, Image as ImageIcon, Copy, ExternalLink, RefreshCw, Sparkles, Sliders, Loader2, Lock, ArrowUpRight } from "lucide-react";
 import { useToastStore } from "@/lib/toastStore";
+import { useBillingStore } from "@/store/billingStore";
+import { useLimitStore } from "@/store/limitStore";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +32,20 @@ export default function WhiteLabelSettings() {
   const [logoUrl, setLogoUrl] = useState("");
   const [portalTagline, setPortalTagline] = useState("Welcome to your private event workspace & timeline");
   const [hideEventOsBranding, setHideEventOsBranding] = useState(true);
+
+  const { subscription, fetchSubscription } = useBillingStore();
+  const { openLimitModal } = useLimitStore();
+
+  const isAgencyPlan = 
+    subscription?.plan?.code === "AGENCY" || 
+    subscription?.plan?.whiteLabelSupported ||
+    subscription?.plan?.code === "ENTERPRISE";
+
+  useEffect(() => {
+    if (!subscription) {
+      fetchSubscription();
+    }
+  }, [subscription, fetchSubscription]);
 
   useEffect(() => {
     // 1. Fetch real workspace settings from backend
@@ -65,6 +81,16 @@ export default function WhiteLabelSettings() {
   const handleVerifyDns = async () => {
     if (!customDomain) {
       addToast("Please enter a custom domain name to verify.", "error");
+      return;
+    }
+
+    if (!isAgencyPlan) {
+      openLimitModal(
+        "Custom domain CNAME routing is an Agency Tier capability (₹9,999/mo). Upgrade your workspace to route client portals through your custom domain.",
+        "Custom Domain",
+        "Agency Tier",
+        subscription?.plan?.name || "Starter"
+      );
       return;
     }
     setIsVerifying(true);
@@ -142,6 +168,16 @@ export default function WhiteLabelSettings() {
   };
 
   const handleSaveBranding = async () => {
+    if (!isAgencyPlan) {
+      openLimitModal(
+        "White-label client portal & bespoke branding is an Agency Tier capability (₹9,999/mo). Please upgrade your workspace to unlock white-labeling.",
+        "White-Label Branding",
+        "Agency Tier",
+        subscription?.plan?.name || "Starter"
+      );
+      return;
+    }
+
     setIsSaving(true);
     const payload = {
       brandName,
@@ -171,6 +207,44 @@ export default function WhiteLabelSettings() {
 
   return (
     <div className="space-y-6 select-none text-zinc-300 font-sans">
+      {/* Agency Plan Upgrade Banner when not on Agency Tier */}
+      {!isAgencyPlan && (
+        <div className="p-4 bg-gradient-to-r from-purple-950/70 via-zinc-900/90 to-purple-950/70 border border-purple-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+              <Lock size={18} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-white uppercase tracking-wider">
+                  Agency Tier Capability Locked
+                </span>
+                <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-purple-500/20 border border-purple-500/30 text-purple-300 font-mono">
+                  Current: {subscription?.plan?.name || "Starter"}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                White-label client lounges, custom CNAME domains, custom logos, and zero EventOS branding are reserved for Agency plan subscribers (₹9,999/mo).
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() =>
+              openLimitModal(
+                "Upgrade to the Agency Tier (₹9,999/mo) to unlock bespoke white-label client portals, custom CNAME domains, and dedicated cloud infrastructure.",
+                "White-label Portals",
+                "Agency Tier",
+                subscription?.plan?.name || "Starter"
+              )
+            }
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-lg shadow-purple-600/20 cursor-pointer self-start sm:self-auto"
+          >
+            <span>Upgrade to Agency</span>
+            <ArrowUpRight size={13} />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-start border-b border-white/[0.06] pb-4">
         <div>
@@ -179,6 +253,11 @@ export default function WhiteLabelSettings() {
           </span>
           <h2 className="text-lg font-extrabold text-white mt-0.5 flex items-center gap-2">
             <Globe size={18} className="text-purple-400" /> White-Label Client Portal & Branding
+            {!isAgencyPlan && (
+              <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center gap-1">
+                <Lock size={10} /> Agency Tier
+              </span>
+            )}
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
             Serve clients on your custom domain, custom logo, and tailor-made color palette.

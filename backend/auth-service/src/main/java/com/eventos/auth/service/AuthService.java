@@ -1039,6 +1039,33 @@ public class AuthService {
                 .or(() -> roleRepository.findByName(targetRoleUpper))
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + targetRoleUpper));
 
+        // Authoritative plan seat quota enforcement
+        if (billingService != null && tenantId != null) {
+            try {
+                com.eventos.auth.entity.Subscription sub = billingService.getSubscription(tenantId);
+                if (sub != null && sub.getPlan() != null) {
+                    int maxUsers = sub.getPlan().getMaxUsers();
+                    if (maxUsers > 0) {
+                        long currentCount = membershipRepository.findAllByTenantId(tenantId).stream()
+                                .filter(m -> !"INACTIVE".equalsIgnoreCase(m.getStatus()) && (m.getUser() == null || !m.getUser().isDeleted()))
+                                .count();
+                        if (currentCount >= maxUsers) {
+                            throw new com.eventos.auth.exception.PlanLimitExceededException(
+                                    "Team member seat limit of " + maxUsers + " reached for " + sub.getPlan().getName() + " plan. Please upgrade your plan to invite more team members.",
+                                    "Team Members / Seats",
+                                    String.valueOf(maxUsers),
+                                    String.valueOf(currentCount)
+                            );
+                        }
+                    }
+                }
+            } catch (com.eventos.auth.exception.PlanLimitExceededException e) {
+                throw e;
+            } catch (Exception ex) {
+                log.warn("[TEAM_INVITE] Non-blocking subscription seat check error: {}", ex.getMessage());
+            }
+        }
+
         List<Company> companies = companyRepository.findByTenantId(tenantId);
         UUID companyId = companies.isEmpty() ? tenantId : companies.get(0).getId();
         String workspaceName = companies.isEmpty() ? "Your Workspace" : companies.get(0).getName();
