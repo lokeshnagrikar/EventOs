@@ -218,7 +218,7 @@ export default function WhiteLabelSettings() {
               <div className="flex justify-between font-bold text-white">
                 <span className="text-purple-400">CNAME</span>
                 <span>events</span>
-                <span>cname.eventos.co</span>
+                <span>cname.eventosapp.in</span>
               </div>
             </div>
           </div>
