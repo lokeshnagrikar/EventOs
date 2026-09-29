@@ -4,9 +4,9 @@ WORKDIR /app
 COPY pom.xml .
 RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY api-gateway/pom.xml ./api-gateway/
-RUN mvn -f api-gateway/pom.xml dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2 mvn -f api-gateway/pom.xml dependency:go-offline -B -Dmaven.wagon.http.retryHandler.count=5
 COPY api-gateway/src ./api-gateway/src
-RUN mvn -f api-gateway/pom.xml package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn -f api-gateway/pom.xml package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine

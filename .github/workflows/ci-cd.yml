@@ -103,6 +103,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
 
       - name: Build Gateway Image
         uses: docker/build-push-action@v5
@@ -111,6 +113,7 @@ jobs:
           file: ./backend/api-gateway/Dockerfile
           push: false
           tags: eventdoc/api-gateway:latest
+          network: host
 
       - name: Build Auth Service Image
         uses: docker/build-push-action@v5
@@ -119,3 +122,4 @@ jobs:
           file: ./backend/auth-service/Dockerfile
           push: false
           tags: eventdoc/auth-service:latest
+          network: host

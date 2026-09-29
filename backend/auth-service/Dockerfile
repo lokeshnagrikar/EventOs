@@ -4,7 +4,7 @@ WORKDIR /app
 COPY pom.xml .
 RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY auth-service/pom.xml ./auth-service/
-RUN --mount=type=cache,target=/root/.m2 mvn -f auth-service/pom.xml dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2 mvn -f auth-service/pom.xml dependency:go-offline -B -Dmaven.wagon.http.retryHandler.count=5
 COPY auth-service/src ./auth-service/src
 RUN --mount=type=cache,target=/root/.m2 mvn -f auth-service/pom.xml package -DskipTests
 

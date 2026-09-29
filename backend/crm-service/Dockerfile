@@ -4,7 +4,7 @@ WORKDIR /app
 COPY pom.xml .
 RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY crm-service/pom.xml ./crm-service/
-RUN --mount=type=cache,target=/root/.m2 mvn -f crm-service/pom.xml dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2 mvn -f crm-service/pom.xml dependency:go-offline -B -Dmaven.wagon.http.retryHandler.count=5
 COPY crm-service/src ./crm-service/src
 RUN --mount=type=cache,target=/root/.m2 mvn -f crm-service/pom.xml package -DskipTests
 
