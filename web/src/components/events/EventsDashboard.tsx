@@ -886,7 +886,7 @@ export default function EventsDashboard() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <OfflineCheckInWidget />
+                <OfflineCheckInWidget events={events} />
               </motion.div>
             )}
 
