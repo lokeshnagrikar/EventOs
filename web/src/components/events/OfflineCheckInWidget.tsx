@@ -91,10 +91,10 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
   const checkedInPercent = totalCount > 0 ? Math.round((checkedInCount / totalCount) * 100) : 0;
 
   const toggleCheckIn = (guest: Guest) => {
-    const nextStatus = guest.status === "CHECKED_IN" ? "NOT_CHECKED_IN" : "CHECKED_IN";
+    const nextStatus: Guest["status"] = guest.status === "CHECKED_IN" ? "NOT_CHECKED_IN" : "CHECKED_IN";
     const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-    const updated = guests.map((g) =>
+    const updated: Guest[] = guests.map((g) =>
       g.id === guest.id
         ? { ...g, status: nextStatus, checkInTime: nextStatus === "CHECKED_IN" ? nowTime : undefined }
         : g
