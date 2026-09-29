@@ -8,6 +8,7 @@ import { useBillingStore } from "@/store/billingStore";
 import { useLimitStore } from "@/store/limitStore";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import Switch from "@/components/ui/Switch";
 
 const COLOR_PRESETS = [
   { name: "Royal Purple", hex: "#8B5CF6", class: "bg-purple-600" },
@@ -438,15 +439,11 @@ export default function WhiteLabelSettings() {
                 <span className="text-xs font-bold text-white block">Remove "Powered by EventOS" Badge</span>
                 <span className="text-[10px] text-zinc-400 block">100% white-label client portal experience</span>
               </div>
-              <button
-                onClick={() => setHideEventOsBranding(!hideEventOsBranding)}
-                className={cn(
-                  "w-10 h-5 rounded-full p-0.5 transition-all duration-300 relative cursor-pointer",
-                  hideEventOsBranding ? "bg-purple-600" : "bg-zinc-800"
-                )}
-              >
-                <div className={cn("w-4 h-4 bg-white rounded-full transition-all duration-300 absolute top-0.5", hideEventOsBranding ? "left-5.5" : "left-0.5")} />
-              </button>
+              <Switch
+                checked={hideEventOsBranding}
+                onCheckedChange={setHideEventOsBranding}
+                aria-label="Remove Powered by EventOS Badge"
+              />
             </div>
           </div>
         </div>

@@ -69,6 +69,7 @@ import { cn } from "@/lib/utils";
 import WhiteLabelSettings from "@/components/settings/WhiteLabelSettings";
 import WhatsAppApiSettings from "@/components/settings/WhatsAppApiSettings";
 import PaymentEngineSettings from "@/components/settings/PaymentEngineSettings";
+import Switch from "@/components/ui/Switch";
 
 // Sidebar categories mapping
 const SECTIONS = [
@@ -2913,24 +2914,19 @@ export default function SettingsPage() {
                             <span className="text-[10px] font-black uppercase text-zinc-300 tracking-wider block">White labeling</span>
                             <p className="text-[9px] text-zinc-500 leading-normal">Remove EventOS watermark logo from client invites and quotes.</p>
                           </div>
-                          <button
-                            onClick={() => {
+                          <Switch
+                            checked={whiteLabelToggle}
+                            onCheckedChange={(nextVal) => {
                               if (!subscription?.plan?.whiteLabelSupported) {
                                 addToast("Watermark removal is only available on Business or Enterprise tiers.", "error");
                                 return;
                               }
-                              const nextVal = !whiteLabelToggle;
                               setWhiteLabelToggle(nextVal);
                               updateSettings({ whiteLabelEnabled: nextVal });
                               addToast(`White labeling ${nextVal ? "enabled" : "disabled"}.`, "success");
                             }}
-                            className={cn(
-                              "w-10 h-5 rounded-full p-0.5 transition-all duration-300 relative",
-                              whiteLabelToggle ? "bg-purple-650" : "bg-zinc-800"
-                            )}
-                          >
-                            <div className={cn("w-4 h-4 bg-white rounded-full transition-all duration-300 absolute top-0.5", whiteLabelToggle ? "left-5" : "left-0.5")} />
-                          </button>
+                            aria-label="Remove watermark & custom agency branding"
+                          />
                         </div>
                       </div>
                     </div>

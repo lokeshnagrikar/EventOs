@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { MessageSquare, Send, CheckCheck, Clock, AlertTriangle, Zap, Plus, Sparkles, Phone, FileText } from "lucide-react";
 import { useToastStore } from "@/lib/toastStore";
 import { cn } from "@/lib/utils";
+import Switch from "@/components/ui/Switch";
 
 interface TriggerRule {
   id: string;
@@ -160,15 +161,11 @@ export default function WhatsAppSmsDesk() {
               <div className="space-y-2">
                 <div className="flex justify-between items-start">
                   <span className="text-xs font-extrabold text-white block">{rule.name}</span>
-                  <button
-                    onClick={() => handleToggleRule(rule.id)}
-                    className={cn(
-                      "w-9 h-5 rounded-full p-0.5 transition-all duration-300 relative cursor-pointer",
-                      rule.enabled ? "bg-emerald-500" : "bg-zinc-800"
-                    )}
-                  >
-                    <div className={cn("w-4 h-4 bg-white rounded-full transition-all duration-300 absolute top-0.5", rule.enabled ? "left-4.5" : "left-0.5")} />
-                  </button>
+                  <Switch
+                    checked={rule.enabled}
+                    onCheckedChange={() => handleToggleRule(rule.id)}
+                    aria-label={`Toggle ${rule.name}`}
+                  />
                 </div>
 
                 <div className="flex items-center gap-2">

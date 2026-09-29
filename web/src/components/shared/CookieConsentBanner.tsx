@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cookie, Shield, Check, X, Settings2 } from "lucide-react";
+import Switch from "@/components/ui/Switch";
 
 export function CookieConsentBanner() {
   const [isOpen, setIsOpen] = useState(false);
@@ -133,19 +134,11 @@ export function CookieConsentBanner() {
                       <span className="font-semibold text-zinc-200">Analytics & Performance</span>
                       <p className="text-[11px] text-zinc-500 mt-0.5">Helps us evaluate load times and system reliability.</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setAnalyticsEnabled(!analyticsEnabled)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        analyticsEnabled ? "bg-purple-600" : "bg-zinc-700"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                          analyticsEnabled ? "translate-x-4" : "translate-x-0"
-                        }`}
-                      />
-                    </button>
+                    <Switch
+                      checked={analyticsEnabled}
+                      onCheckedChange={setAnalyticsEnabled}
+                      aria-label="Analytics & Performance"
+                    />
                   </div>
                 </motion.div>
               )}

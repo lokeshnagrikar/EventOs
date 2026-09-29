@@ -80,6 +80,7 @@ import { AuroraText } from "@/components/ui/aurora-text";
 import PageShell from "@/components/ui/PageShell";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLES } from "./constants";
+import Switch from "@/components/ui/Switch";
 
 // Dynamic platform state defaults (populated from real API and WebSockets)
 const INITIAL_LIVE_ACTIVITIES: any[] = [];
@@ -1820,15 +1821,11 @@ export default function SuperAdminDashboard() {
                           <span className="text-xs font-black uppercase text-white tracking-wider block font-mono">{flag.name}</span>
                           <span className="text-[9px] text-purple-400 font-bold uppercase tracking-wider mt-0.5 block">Scope: {flag.scope}</span>
                         </div>
-                        <button
-                          onClick={() => handleToggleFeatureFlag(flag.id)}
-                          className={cn(
-                            "w-10 h-5 rounded-full p-0.5 transition-all duration-300 relative cursor-pointer",
-                            flag.enabled ? "bg-purple-600" : "bg-zinc-800"
-                          )}
-                        >
-                          <div className={cn("w-4 h-4 bg-white rounded-full transition-all duration-300 absolute top-0.5", flag.enabled ? "left-5.5" : "left-0.5")} />
-                        </button>
+                        <Switch
+                          checked={flag.enabled}
+                          onCheckedChange={() => handleToggleFeatureFlag(flag.id)}
+                          aria-label={`Toggle feature flag ${flag.name}`}
+                        />
                       </div>
 
                       <div className="space-y-1.5">

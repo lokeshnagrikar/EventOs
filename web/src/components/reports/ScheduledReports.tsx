@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/lib/toastStore";
+import Switch from "@/components/ui/Switch";
 import { SCHEDULED_REPORTS_INITIAL, ScheduledReportItem } from "@/lib/reportsData";
 
 export default function ScheduledReports() {
@@ -257,13 +258,11 @@ export default function ScheduledReports() {
 
                 <div className="flex items-center gap-3 shrink-0">
                   {/* Toggle Active Switch */}
-                  <button onClick={() => toggleScheduleActive(schedule.id)} className="text-zinc-500 hover:text-white transition-colors cursor-pointer">
-                    {schedule.active ? (
-                      <ToggleRight size={22} className="text-purple-400" />
-                    ) : (
-                      <ToggleLeft size={22} className="text-zinc-650" />
-                    )}
-                  </button>
+                  <Switch
+                    checked={schedule.active}
+                    onCheckedChange={() => toggleScheduleActive(schedule.id)}
+                    aria-label={`Toggle schedule for ${schedule.name}`}
+                  />
 
                   <button onClick={() => handleDeleteSchedule(schedule.id)} className="text-zinc-700 hover:text-red-500 transition-colors cursor-pointer opacity-0 group-hover:opacity-100">
                     <Trash2 size={14} />

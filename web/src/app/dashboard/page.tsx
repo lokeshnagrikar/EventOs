@@ -78,6 +78,7 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
+import Switch from "@/components/ui/Switch";
 import ErrorState from "@/components/ui/ErrorState";
 import EmptyState from "@/components/ui/EmptyState";
 import { DashboardSkeleton } from "@/components/ui/skeletons";
@@ -1433,9 +1434,12 @@ export default function DashboardPage() {
                         >
                           <div className="flex justify-between items-center w-full">
                             <span className="text-sm">🌓</span>
-                            <div className={cn("h-3 w-6 rounded-full p-0.5 transition-colors duration-200", darkMode ? "bg-purple-500" : "bg-zinc-800")}>
-                              <div className={cn("h-2 w-2 rounded-full bg-white transition-transform duration-200", darkMode ? "translate-x-3" : "translate-x-0")} />
-                            </div>
+                            <Switch
+                              checked={darkMode}
+                              onCheckedChange={setDarkMode}
+                              className="scale-90 origin-right"
+                              aria-label="Theme View"
+                            />
                           </div>
                           <div>
                             <span className="text-[10px] font-extrabold block">Theme View</span>
@@ -1457,9 +1461,12 @@ export default function DashboardPage() {
                         >
                           <div className="flex justify-between items-center w-full">
                             <span className="text-sm">📡</span>
-                            <div className={cn("h-3 w-6 rounded-full p-0.5 transition-colors duration-200", liveUpdates ? "bg-purple-500" : "bg-zinc-800")}>
-                              <div className={cn("h-2 w-2 rounded-full bg-white transition-transform duration-200", liveUpdates ? "translate-x-3" : "translate-x-0")} />
-                            </div>
+                            <Switch
+                              checked={liveUpdates}
+                              onCheckedChange={setLiveUpdates}
+                              className="scale-90 origin-right"
+                              aria-label="Live Sync"
+                            />
                           </div>
                           <div>
                             <span className="text-[10px] font-extrabold block">Live Sync</span>
@@ -1479,9 +1486,12 @@ export default function DashboardPage() {
                         >
                           <div className="flex justify-between items-center w-full">
                             <span className="text-sm">🛠️</span>
-                            <div className={cn("h-3 w-6 rounded-full p-0.5 transition-colors duration-200", isCustomizeMode ? "bg-purple-500" : "bg-zinc-800")}>
-                              <div className={cn("h-2 w-2 rounded-full bg-white transition-transform duration-200", isCustomizeMode ? "translate-x-3" : "translate-x-0")} />
-                            </div>
+                            <Switch
+                              checked={isCustomizeMode}
+                              onCheckedChange={setIsCustomizeMode}
+                              className="scale-90 origin-right"
+                              aria-label="Grid Design"
+                            />
                           </div>
                           <div>
                             <span className="text-[10px] font-extrabold block">Grid Design</span>

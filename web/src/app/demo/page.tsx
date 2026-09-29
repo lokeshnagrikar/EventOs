@@ -43,6 +43,7 @@ import { Icon } from "@iconify/react";
 import { useToastStore } from "@/lib/toastStore";
 import { cn } from "@/lib/utils";
 import { useAuthModalStore } from "@/store/authModalStore";
+import Switch from "@/components/ui/Switch";
 
 // Mock revenue data
 const REVENUE_DATA = [
@@ -590,15 +591,12 @@ export default function InteractiveDemoPage() {
                           {/* Lock download toggle */}
                           <div className="flex items-center gap-1.5">
                             <span className="text-[8px] text-zinc-555 uppercase font-black font-sans">Lock</span>
-                            <button
-                              onClick={() => triggerUpgrade("Toggle client download lock restrictions.")}
-                              className={cn(
-                                "w-8 h-4 rounded-full p-0.5 transition-all duration-300 relative cursor-pointer",
-                                g.status === "LOCKED" ? "bg-purple-650" : "bg-zinc-800"
-                              )}
-                            >
-                              <div className={cn("w-3 h-3 bg-white rounded-full transition-all duration-300 absolute top-0.5", g.status === "LOCKED" ? "left-4.5" : "left-0.5")} />
-                            </button>
+                            <Switch
+                              checked={g.status === "LOCKED"}
+                              onCheckedChange={() => triggerUpgrade("Toggle client download lock restrictions.")}
+                              className="scale-75 origin-right"
+                              aria-label="Lock download restrictions"
+                            />
                           </div>
                         </div>
                       </div>

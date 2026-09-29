@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/lib/toastStore";
+import Switch from "@/components/ui/Switch";
 import {
   INITIAL_WEBHOOK_ENDPOINTS,
   INITIAL_WEBHOOK_LOGS,
@@ -234,9 +235,11 @@ export default function WebhookManager() {
 
                     <div className="flex items-center gap-3 shrink-0">
                       {/* Active Status switch */}
-                      <button onClick={() => handleToggleActive(ep.id)} className="text-zinc-500 hover:text-white cursor-pointer">
-                        {ep.active ? <ToggleRight size={22} className="text-purple-400" /> : <ToggleLeft size={22} className="text-zinc-650" />}
-                      </button>
+                      <Switch
+                        checked={ep.active}
+                        onCheckedChange={() => handleToggleActive(ep.id)}
+                        aria-label={`Toggle webhook for ${ep.url}`}
+                      />
 
                       <button onClick={() => handleDeleteEndpoint(ep.id)} className="p-1 text-zinc-700 hover:text-red-500 transition-colors cursor-pointer opacity-0 group-hover:opacity-100">
                         <Trash2 size={13} />

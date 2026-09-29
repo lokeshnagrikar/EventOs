@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
 import { useToastStore } from "@/lib/toastStore";
 import { useAuthStore } from "@/store/authStore";
+import Switch from "@/components/ui/Switch";
 
 // Mock existing features to show in upvoting board & roadmaps
 const INITIAL_FEATURE_REQUESTS = [
@@ -740,35 +741,29 @@ export default function ProductFeedbackHub() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-2.5 border border-zinc-900 bg-zinc-950/40 rounded-xl">
                     <span className="text-zinc-350">In-App Banner Notifications</span>
-                    <button
-                      type="button"
-                      onClick={() => setNotifDashboard(!notifDashboard)}
-                      className={cn("w-9 h-4.5 rounded-full p-0.5 transition-all relative cursor-pointer", notifDashboard ? "bg-purple-650" : "bg-zinc-800")}
-                    >
-                      <div className={cn("w-3.5 h-3.5 bg-white rounded-full transition-all absolute top-0.5", notifDashboard ? "left-5.5" : "left-0.5")} />
-                    </button>
+                    <Switch
+                      checked={notifDashboard}
+                      onCheckedChange={setNotifDashboard}
+                      aria-label="In-App Banner Notifications"
+                    />
                   </div>
 
                   <div className="flex justify-between items-center p-2.5 border border-zinc-900 bg-zinc-950/40 rounded-xl">
                     <span className="text-zinc-350">Email Digests & Reports</span>
-                    <button
-                      type="button"
-                      onClick={() => setNotifEmail(!notifEmail)}
-                      className={cn("w-9 h-4.5 rounded-full p-0.5 transition-all relative cursor-pointer", notifEmail ? "bg-purple-650" : "bg-zinc-800")}
-                    >
-                      <div className={cn("w-3.5 h-3.5 bg-white rounded-full transition-all absolute top-0.5", notifEmail ? "left-5.5" : "left-0.5")} />
-                    </button>
+                    <Switch
+                      checked={notifEmail}
+                      onCheckedChange={setNotifEmail}
+                      aria-label="Email Digests & Reports"
+                    />
                   </div>
 
                   <div className="flex justify-between items-center p-2.5 border border-zinc-900 bg-zinc-950/40 rounded-xl">
                     <span className="text-zinc-350">Push notifications</span>
-                    <button
-                      type="button"
-                      onClick={() => setNotifPush(!notifPush)}
-                      className={cn("w-9 h-4.5 rounded-full p-0.5 transition-all relative cursor-pointer", notifPush ? "bg-purple-650" : "bg-zinc-800")}
-                    >
-                      <div className={cn("w-3.5 h-3.5 bg-white rounded-full transition-all absolute top-0.5", notifPush ? "left-5.5" : "left-0.5")} />
-                    </button>
+                    <Switch
+                      checked={notifPush}
+                      onCheckedChange={setNotifPush}
+                      aria-label="Push notifications"
+                    />
                   </div>
                 </div>
               </div>
