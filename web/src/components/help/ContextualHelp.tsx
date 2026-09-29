@@ -26,8 +26,9 @@ export default function ContextualHelp() {
       {/* Floating Help Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        data-print-hide="true"
         className={cn(
-          "fixed bottom-6 left-6 z-50 h-10 w-10 rounded-full flex items-center justify-center shadow-lg transition cursor-pointer",
+          "fixed bottom-6 left-6 z-50 h-10 w-10 rounded-full flex items-center justify-center shadow-lg transition cursor-pointer print:hidden print-hidden",
           isOpen
             ? "bg-purple-600 text-white border border-purple-500/30"
             : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-purple-400 hover:border-purple-500/30"

@@ -3,7 +3,6 @@
 import React from "react";
 import { useParams } from "next/navigation";
 import InvoiceWorkspace from "@/components/finance/InvoiceWorkspace";
-import QuickActionsFAB from "@/components/finance/QuickActionsFAB";
 
 export default function InvoiceDetailPage() {
   const params = useParams();
@@ -19,8 +18,6 @@ export default function InvoiceDetailPage() {
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full z-10">
         <InvoiceWorkspace invoiceId={invoiceId} />
       </main>
-
-      <QuickActionsFAB />
     </div>
   );
 }

@@ -844,3 +844,50 @@ html.lenis body {
 * {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* ==========================================================================
+   PRINT / PDF EXPORT MEDIA STYLES
+   Ensures clean printable documents (invoices, proposals, receipts)
+   Hides floating assistants, quick action FABs, cookie bars, and notifications.
+   ========================================================================== */
+@media print {
+  /* 1. Hide all floating UI elements, interactive bots, FABs, banners, and overlays */
+  .ai-trigger-btn,
+  .print-hidden,
+  .print\:hidden,
+  [data-print-hide],
+  [data-fab],
+  button[title*="AI Assistant"],
+  button[aria-label*="AI Assistant"],
+  button[aria-label*="Open EventOS AI Assistant"],
+  button[aria-label*="Toggle quick actions"],
+  button[aria-label*="Quick action menu"],
+  button[aria-label*="Toggle contextual help"],
+  .lottie-theme-bot {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 2. Reset print body and preserve high-fidelity colors */
+  body, html {
+    background: transparent !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    margin: 10mm;
+    size: auto;
+  }
+}

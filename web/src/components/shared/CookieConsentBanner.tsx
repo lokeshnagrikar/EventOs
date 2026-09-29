@@ -67,7 +67,8 @@ export function CookieConsentBanner() {
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 80, opacity: 0, scale: 0.98 }}
           transition={{ type: "spring", stiffness: 350, damping: 28 }}
-          className="fixed bottom-3 left-3 right-3 sm:left-6 sm:right-auto sm:bottom-6 z-[99990] sm:max-w-md w-auto pointer-events-auto"
+          data-print-hide="true"
+          className="fixed bottom-3 left-3 right-3 sm:left-6 sm:right-auto sm:bottom-6 z-[99990] sm:max-w-md w-auto pointer-events-auto print:hidden print-hidden"
         >
           <div className="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-zinc-950/90 p-5 sm:p-6 shadow-2xl shadow-purple-950/40 backdrop-blur-xl">
             {/* Ambient background glow */}

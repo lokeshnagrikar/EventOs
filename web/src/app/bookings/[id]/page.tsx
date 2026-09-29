@@ -4,7 +4,6 @@ import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import BookingDetailsWorkspace from "@/components/bookings/BookingDetailsWorkspace";
-import QuickActionsFAB from "@/components/finance/QuickActionsFAB";
 
 export default function BookingDetailPage() {
   const params = useParams();
@@ -38,8 +37,6 @@ export default function BookingDetailPage() {
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full z-10">
         <BookingDetailsWorkspace bookingId={bookingId} />
       </main>
-
-      <QuickActionsFAB />
     </div>
   );
 }

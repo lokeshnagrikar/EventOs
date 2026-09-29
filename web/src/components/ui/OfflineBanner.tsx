@@ -77,7 +77,8 @@ export default function OfflineBanner() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -50, opacity: 0 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 z-[1000] bg-gradient-to-r from-purple-950/90 via-zinc-900/95 to-purple-950/90 border-b border-purple-500/30 backdrop-blur-xl px-4 py-2 flex items-center justify-between shadow-2xl text-xs text-zinc-200 select-none"
+        data-print-hide="true"
+        className="fixed top-0 left-0 right-0 z-[1000] bg-gradient-to-r from-purple-950/90 via-zinc-900/95 to-purple-950/90 border-b border-purple-500/30 backdrop-blur-xl px-4 py-2 flex items-center justify-between shadow-2xl text-xs text-zinc-200 select-none print:hidden print-hidden"
       >
         <div className="flex items-center gap-2.5 max-w-7xl mx-auto w-full justify-between">
           <div className="flex items-center gap-2">

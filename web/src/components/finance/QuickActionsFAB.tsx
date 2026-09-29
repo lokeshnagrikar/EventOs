@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, BookOpen, FileText, Coins, Download, ArrowRight, X } from "lucide-react";
@@ -9,10 +9,16 @@ import { cn } from "@/lib/utils";
 export function QuickActionsFAB() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // 1. Keyboard Shortcuts listener
+  // 1. Keyboard Shortcuts listener + Escape to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        return;
+      }
+
       // Check if it matches shortcuts: Ctrl + Shift + key
       if (e.ctrlKey && e.shiftKey) {
         switch (e.key.toLowerCase()) {
@@ -41,12 +47,29 @@ export function QuickActionsFAB() {
         }
       }
     };
+
+    // Close on outside click
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
   }, [router]);
 
   return (
-    <div className="fixed bottom-6 right-24 z-50 print:hidden">
+    <div
+      ref={containerRef}
+      data-fab="true"
+      data-print-hide="true"
+      className="fixed bottom-6 right-24 z-50 print:hidden print-hidden select-none"
+    >
       <AnimatePresence>
         {isOpen && (
           <motion.div
