@@ -40,6 +40,7 @@ import PageShell from "@/components/ui/PageShell";
 import EmptyState from "@/components/ui/EmptyState";
 import { useToastStore } from "@/lib/toastStore";
 import { useAuthStore } from "@/store/authStore";
+import { api } from "@/lib/api";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
 import {
   INITIAL_AUDIT_LOGS,
@@ -103,6 +104,51 @@ export default function ActivityLogPage() {
     } else {
       setLogs([]);
     }
+
+    // Fetch real-time audit events from backend microservice
+    api.get("/events/audit-logs", { params: { size: 100 } })
+      .then((res) => {
+        const liveLogs = res.data?.data?.content || res.data?.data || [];
+        if (Array.isArray(liveLogs) && liveLogs.length > 0) {
+          const mapped: AdvancedAuditLog[] = liveLogs.map((l: any) => {
+            const rawEntity = (l.entityType || l.module || "System").toUpperCase();
+            const validEntity: AdvancedAuditLog["entityName"] = 
+              rawEntity.includes("LEAD") ? "Lead"
+              : rawEntity.includes("EVENT") ? "Event"
+              : rawEntity.includes("INVOICE") ? "Invoice"
+              : rawEntity.includes("QUOTE") ? "Quote"
+              : rawEntity.includes("GALLERY") ? "Gallery"
+              : rawEntity.includes("SECURITY") ? "Security"
+              : rawEntity.includes("MEMBER") ? "Member"
+              : "System";
+
+            const rawAction = (l.action || "UPDATE").toUpperCase();
+            const validAction: AdvancedAuditLog["action"] =
+              ["CREATE", "UPDATE", "DELETE", "RESTORE", "EXPORT", "IMPORT", "LOGIN", "FAILED_LOGIN", "DENIED", "SETTINGS"].includes(rawAction)
+                ? (rawAction as any)
+                : "UPDATE";
+
+            return {
+              id: l.id || Math.random().toString(),
+              entityName: validEntity,
+              entityId: l.entityId || "N/A",
+              action: validAction,
+              performedBy: l.performedByName || l.performedBy || "Team Admin",
+              actorEmail: l.performedByEmail || l.actorEmail || "admin@eventosapp.in",
+              ipAddress: l.ipAddress || "127.0.0.1",
+              severity: ["low", "medium", "high", "critical"].includes((l.severity || "").toLowerCase()) ? l.severity.toLowerCase() : "medium",
+              createdAt: l.createdAt || new Date().toISOString(),
+              notes: l.description || l.details,
+              isPinned: false
+            };
+          });
+          setLogs(mapped);
+          localStorage.setItem("eventos_audit_logs", JSON.stringify(mapped));
+        }
+      })
+      .catch(() => {
+        // Safe offline fallback
+      });
 
     if (storedDevices) {
       try { setDevices(JSON.parse(storedDevices)); } catch { setDevices([]); }

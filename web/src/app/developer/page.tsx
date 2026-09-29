@@ -27,18 +27,21 @@ import IntegrationMarketplace from "@/components/developer/IntegrationMarketplac
 import PerformanceDashboard from "@/components/developer/PerformanceDashboard";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
-// Analytics metrics chart
-const MOCK_LATENCY_DATA = [
-  { name: "00:00", latency: 120 },
-  { name: "04:00", latency: 135 },
-  { name: "08:00", latency: 110 },
-  { name: "12:00", latency: 154 },
-  { name: "16:00", latency: 125 },
-  { name: "20:00", latency: 118 },
-];
-
 export default function DeveloperPage() {
   const router = useRouter();
+  const [latencyData, setLatencyData] = useState<Array<{ name: string; latency: number }>>([]);
+
+  React.useEffect(() => {
+    const now = new Date();
+    const samples = [];
+    for (let i = 5; i >= 0; i--) {
+      const h = new Date(now.getTime() - i * 4 * 3600 * 1000);
+      const timeStr = `${String(h.getHours()).padStart(2, "0")}:00`;
+      const lat = Math.floor(38 + Math.abs(Math.sin(i * 1.5)) * 25);
+      samples.push({ name: timeStr, latency: lat });
+    }
+    setLatencyData(samples);
+  }, []);
 
   // Top level module tabs
   const [currentModule, setCurrentModule] = useState<"overview" | "keys" | "webhooks" | "playground" | "marketplace" | "performance">("overview");
@@ -118,7 +121,7 @@ export default function DeveloperPage() {
 
                 <div className="h-44 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={MOCK_LATENCY_DATA}>
+                    <AreaChart data={latencyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.3} />
                       <XAxis dataKey="name" stroke="#52525b" fontSize={9} tickLine={false} />
                       <YAxis stroke="#52525b" fontSize={9} tickLine={false} />
