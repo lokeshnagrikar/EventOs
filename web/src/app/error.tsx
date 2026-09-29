@@ -12,9 +12,22 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const isChunkError =
+    error?.name === "ChunkLoadError" ||
+    error?.message?.includes("Loading chunk") ||
+    error?.message?.includes("ChunkLoadError");
+
   useEffect(() => {
     console.error("[GlobalError Boundary]", error);
-  }, [error]);
+    if (isChunkError) {
+      const lastReload = sessionStorage.getItem("chunk_reload_ts");
+      const now = Date.now();
+      if (!lastReload || now - Number(lastReload) > 10000) {
+        sessionStorage.setItem("chunk_reload_ts", String(now));
+        window.location.reload();
+      }
+    }
+  }, [error, isChunkError]);
 
   return (
     <div className="min-h-screen w-full bg-[#09090B] text-zinc-100 flex items-center justify-center p-6 overflow-hidden relative selection:bg-purple-600/35 selection:text-white font-sans">

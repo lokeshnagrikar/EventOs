@@ -42,6 +42,30 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     initializeAuth();
     setMounted(true);
+
+    const handleChunkError = (event: any) => {
+      const err = event?.reason || event?.error;
+      const msg = err?.message || event?.message || "";
+      if (
+        err?.name === "ChunkLoadError" ||
+        msg.includes("Loading chunk") ||
+        msg.includes("ChunkLoadError")
+      ) {
+        const lastReload = sessionStorage.getItem("chunk_reload_ts");
+        const now = Date.now();
+        if (!lastReload || now - Number(lastReload) > 10000) {
+          sessionStorage.setItem("chunk_reload_ts", String(now));
+          window.location.reload();
+        }
+      }
+    };
+
+    window.addEventListener("error", handleChunkError);
+    window.addEventListener("unhandledrejection", handleChunkError);
+    return () => {
+      window.removeEventListener("error", handleChunkError);
+      window.removeEventListener("unhandledrejection", handleChunkError);
+    };
   }, [initializeAuth]);
 
   useEffect(() => {
