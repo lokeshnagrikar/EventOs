@@ -17,6 +17,8 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +39,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping({"/events", ""})
 public class EventController {
+
+    private static final Logger log = LoggerFactory.getLogger(EventController.class);
 
     private final EventService eventService;
 
