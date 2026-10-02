@@ -157,7 +157,7 @@ public class BillingController {
     }
 
     @GetMapping("/invoices")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> getInvoices() {
         UUID tenantId = getTenantId();
         List<Invoice> invoices = billingService.getInvoices(tenantId);
@@ -169,7 +169,7 @@ public class BillingController {
     }
 
     @GetMapping("/payment-methods")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'OWNER', 'ADMIN', 'MANAGER')")
     public ResponseEntity<?> getPaymentMethods() {
         UUID tenantId = getTenantId();
         List<PaymentMethod> paymentMethods = billingService.getPaymentMethods(tenantId);

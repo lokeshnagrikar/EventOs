@@ -1,5 +1,7 @@
 package com.eventos.auth.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -13,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Invoice {
 
     @Id
@@ -22,6 +25,7 @@ public class Invoice {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subscription_id", nullable = false)
     private Subscription subscription;
@@ -74,5 +78,10 @@ public class Invoice {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @JsonProperty("subscriptionId")
+    public UUID getSubscriptionId() {
+        return subscription != null ? subscription.getId() : null;
     }
 }

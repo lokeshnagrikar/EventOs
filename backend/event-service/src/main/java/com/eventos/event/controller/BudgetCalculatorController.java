@@ -112,7 +112,7 @@ public class BudgetCalculatorController {
 
     @Operation(summary = "Save budget estimate")
     @PostMapping
-    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','STAFF')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','OWNER','ADMIN','MANAGER','STAFF','CLIENT')")
     public ResponseEntity<?> createBudgetEstimate(@Valid @RequestBody CreateBudgetEstimateDto dto) {
         UUID tenantId = getTenantId();
         seedDefaultPricingRules(tenantId);

@@ -38,6 +38,12 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", message);
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        log.warn("Malformed request payload in event-service: {}", ex.getMessage());
+        return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Malformed request body or invalid data type format");
+    }
+
     // ─── Business-rule violations ──────────────────────────────────────────────
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -554,7 +554,7 @@ export default function BudgetCalculatorPage() {
       guestCount: guestCount || 100,
       venueType: venueType || "HOTEL",
       decorStyle: decorStyle || "STANDARD",
-      effectsList: selectedEffects.join(","),
+      effectsList: selectedEffects,
       cateringTotal: cateringSum,
       venueTotal: venueSum,
       decorTotal: decorSum,
@@ -574,7 +574,13 @@ export default function BudgetCalculatorPage() {
     setGuestCount(est.guestCount || 100);
     setVenueType(est.venueType || "HOTEL");
     setDecorStyle(est.decorStyle || "STANDARD");
-    setSelectedEffects(est.effectsList ? est.effectsList.split(",").map((s) => s.trim()) : []);
+    setSelectedEffects(
+      est.effectsList
+        ? (Array.isArray(est.effectsList)
+            ? (est.effectsList as string[])
+            : (est.effectsList as string).split(",").map((s) => s.trim()).filter(Boolean))
+        : []
+    );
     setClientName(est.clientName || "");
     setClientEmail(est.clientEmail || "");
     setClientPhone(est.clientPhone || "");

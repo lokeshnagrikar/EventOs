@@ -1,5 +1,7 @@
 package com.eventos.auth.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -13,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class BillingHistory {
 
     @Id
@@ -22,6 +25,7 @@ public class BillingHistory {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = false)
     private Invoice invoice;
@@ -35,6 +39,7 @@ public class BillingHistory {
     @Column(nullable = false)
     private String status; // SUCCESS, FAILED
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_method_id")
     private PaymentMethod paymentMethod;
