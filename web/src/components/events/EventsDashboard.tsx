@@ -34,7 +34,8 @@ import {
   Download,
   Star,
   Fuel,
-  Zap
+  Zap,
+  Trash2
 } from "lucide-react";
 import EventCard from "./EventCard";
 import { cn } from "@/lib/utils";
@@ -192,6 +193,21 @@ export default function EventsDashboard() {
   const [vendorForm, setVendorForm] = useState({
     company: "", contact: "", email: "", phone: "", category: "Floral",
     gst: "", pan: "", address: "", bankName: "", accountNo: "", upiId: ""
+  });
+
+  const [showResourceModal, setShowResourceModal] = useState(false);
+  const [resourceForm, setResourceForm] = useState({
+    name: "", role: "Event Coordinator", contact: "", email: "", experience: "3+ Years", skills: "Coordination, Guest Relations"
+  });
+
+  const [showInventoryModal, setShowInventoryModal] = useState(false);
+  const [inventoryForm, setInventoryForm] = useState({
+    name: "", category: "Props", stock: "10", reserved: "0"
+  });
+
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [vehicleForm, setVehicleForm] = useState({
+    name: "", plateNumber: "", driver: "", fuel: "100"
   });
 
   // Calendar States
@@ -591,6 +607,86 @@ export default function EventsDashboard() {
     addToast("New vendor logged in database successfully", "success");
   };
 
+  const handleResourceSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resourceForm.name.trim()) return;
+    const newRes: Resource = {
+      id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      name: resourceForm.name.trim(),
+      role: resourceForm.role,
+      skills: resourceForm.skills.split(",").map(s => s.trim()).filter(Boolean),
+      experience: resourceForm.experience,
+      contact: resourceForm.contact || "+91 98000 00000",
+      email: resourceForm.email || "staff@eventos.in",
+      rating: 5,
+      performanceScore: 98,
+      utilization: 0,
+      status: "AVAILABLE",
+      emergencyContact: "+91 99999 99999",
+      pastEventsCount: 0,
+      upcomingEventsCount: 0,
+      availability: {}
+    };
+    setResources(prev => [...prev, newRes]);
+    setShowResourceModal(false);
+    setResourceForm({ name: "", role: "Event Coordinator", contact: "", email: "", experience: "3+ Years", skills: "Coordination, Guest Relations" });
+    addToast(`Added ${newRes.name} to staff roster`, "success");
+  };
+
+  const handleInventorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inventoryForm.name.trim()) return;
+    const totalStock = Number(inventoryForm.stock) || 1;
+    const reservedCount = Number(inventoryForm.reserved) || 0;
+    const newInv: InventoryItem = {
+      id: `inv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      name: inventoryForm.name.trim(),
+      category: inventoryForm.category,
+      stock: totalStock,
+      reserved: reservedCount,
+      damaged: 0,
+      returned: 0,
+      status: reservedCount >= totalStock ? "OUT_OF_STOCK" : totalStock - reservedCount <= 3 ? "LOW_STOCK" : "IN_STOCK"
+    };
+    setInventory(prev => [...prev, newInv]);
+    setShowInventoryModal(false);
+    setInventoryForm({ name: "", category: "Props", stock: "10", reserved: "0" });
+    addToast(`Added ${newInv.name} to prop inventory`, "success");
+  };
+
+  const handleVehicleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vehicleForm.name.trim()) return;
+    const newVeh: Vehicle = {
+      id: `veh-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      name: vehicleForm.name.trim(),
+      plateNumber: vehicleForm.plateNumber.trim().toUpperCase() || "MH-02-CD-0000",
+      driver: vehicleForm.driver.trim() || "Assigned Driver",
+      fuel: Number(vehicleForm.fuel) || 100,
+      trips: 0,
+      status: "AVAILABLE"
+    };
+    setVehicles(prev => [...prev, newVeh]);
+    setShowVehicleModal(false);
+    setVehicleForm({ name: "", plateNumber: "", driver: "", fuel: "100" });
+    addToast(`Added ${newVeh.name} to logistics fleet`, "success");
+  };
+
+  const handleDeleteResource = (id: string, name: string) => {
+    setResources(prev => prev.filter(r => r.id !== id));
+    addToast(`Removed ${name} from roster`, "info");
+  };
+
+  const handleDeleteInventory = (id: string, name: string) => {
+    setInventory(prev => prev.filter(i => i.id !== id));
+    addToast(`Removed ${name} from inventory`, "info");
+  };
+
+  const handleDeleteVehicle = (id: string, name: string) => {
+    setVehicles(prev => prev.filter(v => v.id !== id));
+    addToast(`Removed ${name} from fleet`, "info");
+  };
+
   // Calendar Date manipulators
   const handlePrevDate = () => {
     const next = new Date(currentDate);
@@ -808,6 +904,33 @@ export default function EventsDashboard() {
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-300 cursor-pointer"
               >
                 <Download size={12} /> Export CSV
+              </button>
+            </div>
+          ) : mainCategory === "resources" ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowResourceModal(true)}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold cursor-pointer"
+              >
+                <Plus size={12} /> Add Staff Resource
+              </button>
+            </div>
+          ) : mainCategory === "inventory" ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowInventoryModal(true)}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold cursor-pointer"
+              >
+                <Plus size={12} /> Add Prop Inventory
+              </button>
+            </div>
+          ) : mainCategory === "vehicles" ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowVehicleModal(true)}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold cursor-pointer"
+              >
+                <Plus size={12} /> Add Fleet Vehicle
               </button>
             </div>
           ) : null}
@@ -1296,14 +1419,26 @@ export default function EventsDashboard() {
                                       <span className="font-extrabold text-zinc-200 text-xs block">{res.name}</span>
                                       <span className="text-[10px] text-zinc-500">{res.role} • {res.experience}</span>
                                     </div>
-                                    <span className={cn(
-                                      "px-2 py-0.5 border rounded-full text-[8px] font-black uppercase tracking-wider",
-                                      res.status === "AVAILABLE" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
-                                        res.status === "BOOKED" ? "border-purple-500/20 bg-purple-500/5 text-purple-400" :
-                                          "border-red-500/20 bg-red-500/5 text-red-400"
-                                    )}>
-                                      {res.status}
-                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                      <span className={cn(
+                                        "px-2 py-0.5 border rounded-full text-[8px] font-black uppercase tracking-wider",
+                                        res.status === "AVAILABLE" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
+                                          res.status === "BOOKED" ? "border-purple-500/20 bg-purple-500/5 text-purple-400" :
+                                            "border-red-500/20 bg-red-500/5 text-red-400"
+                                      )}>
+                                        {res.status}
+                                      </span>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteResource(res.id, res.name);
+                                        }}
+                                        className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition cursor-pointer"
+                                        title="Remove resource"
+                                      >
+                                        <Trash2 size={12} />
+                                      </button>
+                                    </div>
                                   </div>
 
                                   <div className="flex flex-wrap gap-1 text-[8.5px] font-bold text-zinc-400">
@@ -1325,8 +1460,14 @@ export default function EventsDashboard() {
                             </Draggable>
                           ))}
                           {resources.length === 0 && (
-                            <div className="text-center py-16 px-4 border border-dashed border-zinc-850 rounded-2xl text-zinc-550 text-xs">
-                              No team resources registered yet. Click &quot;+ Add Resource&quot; above to add staff or crew members.
+                            <div className="text-center py-16 px-4 border border-dashed border-zinc-850 rounded-2xl text-zinc-550 text-xs space-y-3">
+                              <p>No team resources registered yet. Add event coordinators, stage crew, or supervisors.</p>
+                              <button
+                                onClick={() => setShowResourceModal(true)}
+                                className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer inline-flex items-center gap-1.5"
+                              >
+                                <Plus size={13} /> Add Staff Resource
+                              </button>
                             </div>
                           )}
                         </div>
@@ -1476,28 +1617,43 @@ export default function EventsDashboard() {
               >
                 {/* Inventory Stock Grid */}
                 {filteredInventory.length === 0 ? (
-                  <div className="text-center py-16 px-4 border border-dashed border-zinc-850 rounded-2xl text-zinc-550 text-xs">
-                    No inventory items registered yet. Click &quot;+ Add Inventory&quot; to track event props and equipment.
+                  <div className="text-center py-16 px-4 border border-dashed border-zinc-850 rounded-2xl text-zinc-550 text-xs space-y-3">
+                    <p>No inventory items registered yet. Track props, lighting rigs, audio gear, and decor assets.</p>
+                    <button
+                      onClick={() => setShowInventoryModal(true)}
+                      className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Plus size={13} /> Add Prop Inventory
+                    </button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredInventory.map((item) => {
                       const progress = item.stock > 0 ? (item.reserved / item.stock) * 100 : 0;
                       return (
-                        <div key={item.id} className="p-5 border border-zinc-850 bg-zinc-950/40 rounded-3xl relative overflow-hidden flex flex-col justify-between space-y-4">
+                        <div key={item.id} className="p-5 border border-zinc-850 bg-zinc-950/40 rounded-3xl relative overflow-hidden flex flex-col justify-between space-y-4 group">
                           <div className="flex justify-between items-start">
                             <div>
                               <span className="text-[10px] text-zinc-550 uppercase font-black block tracking-wider">{item.category}</span>
                               <span className="font-extrabold text-zinc-200 text-xs mt-0.5 block">{item.name}</span>
                             </div>
-                            <span className={cn(
-                              "px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase tracking-wider",
-                              item.status === "IN_STOCK" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
-                                item.status === "LOW_STOCK" ? "border-amber-500/20 bg-amber-500/5 text-amber-500" :
-                                  "border-red-500/20 bg-red-500/5 text-red-400"
-                            )}>
-                              {item.status.replace("_", " ")}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className={cn(
+                                "px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase tracking-wider",
+                                item.status === "IN_STOCK" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
+                                  item.status === "LOW_STOCK" ? "border-amber-500/20 bg-amber-500/5 text-amber-500" :
+                                    "border-red-500/20 bg-red-500/5 text-red-400"
+                              )}>
+                                {item.status.replace("_", " ")}
+                              </span>
+                              <button
+                                onClick={() => handleDeleteInventory(item.id, item.name)}
+                                className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                                title="Remove prop"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
                           </div>
 
                           {/* Inventory stock levels progress bar */}
@@ -1541,25 +1697,40 @@ export default function EventsDashboard() {
                 className="grid grid-cols-1 md:grid-cols-3 gap-6"
               >
                 {vehicles.length === 0 ? (
-                  <div className="col-span-full text-center py-16 px-4 border border-dashed border-zinc-850 rounded-2xl text-zinc-550 text-xs">
-                    No fleet vehicles registered yet. Click &quot;+ Add Vehicle&quot; to manage logistics vehicles.
+                  <div className="col-span-full text-center py-16 px-4 border border-dashed border-zinc-850 rounded-2xl text-zinc-550 text-xs space-y-3">
+                    <p>No fleet vehicles registered yet. Manage transport trucks, pickups, and logistics vans.</p>
+                    <button
+                      onClick={() => setShowVehicleModal(true)}
+                      className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Plus size={13} /> Add Fleet Vehicle
+                    </button>
                   </div>
                 ) : (
                   vehicles.map((veh) => (
-                    <div key={veh.id} className="p-5 border border-zinc-850 bg-zinc-950/40 rounded-3xl flex flex-col justify-between space-y-4">
+                    <div key={veh.id} className="p-5 border border-zinc-850 bg-zinc-950/40 rounded-3xl flex flex-col justify-between space-y-4 group">
                       <div className="flex justify-between items-start">
                         <div>
                           <span className="font-mono text-[9px] text-zinc-500 block">{veh.plateNumber}</span>
                           <span className="font-extrabold text-zinc-200 text-xs mt-0.5 block">{veh.name}</span>
                         </div>
-                        <span className={cn(
-                          "px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase tracking-wider",
-                          veh.status === "AVAILABLE" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
-                            veh.status === "IN_TRANSIT" ? "border-blue-500/20 bg-blue-500/5 text-blue-400" :
-                              "border-amber-500/20 bg-amber-550/5 text-amber-500"
-                        )}>
-                          {veh.status.replace("_", " ")}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={cn(
+                            "px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase tracking-wider",
+                            veh.status === "AVAILABLE" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
+                              veh.status === "IN_TRANSIT" ? "border-blue-500/20 bg-blue-500/5 text-blue-400" :
+                                "border-amber-500/20 bg-amber-550/5 text-amber-500"
+                          )}>
+                            {veh.status.replace("_", " ")}
+                          </span>
+                          <button
+                            onClick={() => handleDeleteVehicle(veh.id, veh.name)}
+                            className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                            title="Remove vehicle"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="space-y-3.5 text-xs">
@@ -1782,6 +1953,201 @@ export default function EventsDashboard() {
             </div>
           )
         }
+      </AnimatePresence>
+
+      {/* LOG RESOURCE / STAFF MODAL */}
+      <AnimatePresence>
+        {showResourceModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
+                <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                  <UserPlus className="text-purple-500" size={16} /> Add Staff Resource
+                </h3>
+                <button onClick={() => setShowResourceModal(false)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-white cursor-pointer"><X size={12} /></button>
+              </div>
+
+              <form onSubmit={handleResourceSubmit} className="space-y-4 text-xs font-semibold">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Full Name *</label>
+                    <input type="text" required value={resourceForm.name} onChange={(e) => setResourceForm({ ...resourceForm, name: e.target.value })} placeholder="e.g. Vikramaditya Singh"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Role</label>
+                    <select value={resourceForm.role} onChange={(e) => setResourceForm({ ...resourceForm, role: e.target.value })}
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none">
+                      <option value="Event Coordinator">Event Coordinator</option>
+                      <option value="Lead Planner">Lead Planner</option>
+                      <option value="Stage Supervisor">Stage Supervisor</option>
+                      <option value="Sound Engineer">Sound Engineer</option>
+                      <option value="VIP Usher">VIP Usher</option>
+                      <option value="Logistics Manager">Logistics Manager</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Contact Phone</label>
+                    <input type="text" value={resourceForm.contact} onChange={(e) => setResourceForm({ ...resourceForm, contact: e.target.value })} placeholder="+91 98765 43210"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Email Address</label>
+                    <input type="email" value={resourceForm.email} onChange={(e) => setResourceForm({ ...resourceForm, email: e.target.value })} placeholder="crew@eventos.in"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Experience</label>
+                    <input type="text" value={resourceForm.experience} onChange={(e) => setResourceForm({ ...resourceForm, experience: e.target.value })} placeholder="e.g. 4+ Years"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Skills (Comma separated)</label>
+                    <input type="text" value={resourceForm.skills} onChange={(e) => setResourceForm({ ...resourceForm, skills: e.target.value })} placeholder="Coordination, Audio, Rigging"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
+                >
+                  Save Staff Resource
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* LOG PROP INVENTORY MODAL */}
+      <AnimatePresence>
+        {showInventoryModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
+                <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                  <Layers className="text-purple-500" size={16} /> Add Prop / Equipment Asset
+                </h3>
+                <button onClick={() => setShowInventoryModal(false)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-white cursor-pointer"><X size={12} /></button>
+              </div>
+
+              <form onSubmit={handleInventorySubmit} className="space-y-4 text-xs font-semibold">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Item Name *</label>
+                    <input type="text" required value={inventoryForm.name} onChange={(e) => setInventoryForm({ ...inventoryForm, name: e.target.value })} placeholder="e.g. Vintage Floral Mandap"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Category</label>
+                    <select value={inventoryForm.category} onChange={(e) => setInventoryForm({ ...inventoryForm, category: e.target.value })}
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none">
+                      <option value="Props">Props & Backdrops</option>
+                      <option value="Lighting">Lighting & Truss</option>
+                      <option value="Sound">Audio & Speakers</option>
+                      <option value="Furniture">Sofas & Seating</option>
+                      <option value="Drapes">Tents & Drapes</option>
+                      <option value="Cutlery">Catering Cutlery</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Total Available Stock *</label>
+                    <input type="number" min="1" required value={inventoryForm.stock} onChange={(e) => setInventoryForm({ ...inventoryForm, stock: e.target.value })} placeholder="10"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Currently Reserved</label>
+                    <input type="number" min="0" value={inventoryForm.reserved} onChange={(e) => setInventoryForm({ ...inventoryForm, reserved: e.target.value })} placeholder="0"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
+                >
+                  Save Inventory Asset
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* LOG FLEET VEHICLE MODAL */}
+      <AnimatePresence>
+        {showVehicleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
+                <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                  <Fuel className="text-purple-500" size={16} /> Add Logistics Fleet Vehicle
+                </h3>
+                <button onClick={() => setShowVehicleModal(false)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-white cursor-pointer"><X size={12} /></button>
+              </div>
+
+              <form onSubmit={handleVehicleSubmit} className="space-y-4 text-xs font-semibold">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Vehicle Model / Name *</label>
+                    <input type="text" required value={vehicleForm.name} onChange={(e) => setVehicleForm({ ...vehicleForm, name: e.target.value })} placeholder="e.g. Tata Ace Mega XL"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Registration Plate No. *</label>
+                    <input type="text" required value={vehicleForm.plateNumber} onChange={(e) => setVehicleForm({ ...vehicleForm, plateNumber: e.target.value })} placeholder="MH-02-EE-1994"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none font-mono" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Assigned Driver Name</label>
+                    <input type="text" value={vehicleForm.driver} onChange={(e) => setVehicleForm({ ...vehicleForm, driver: e.target.value })} placeholder="Suresh Kumar"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Fuel Level (%)</label>
+                    <input type="number" min="0" max="100" value={vehicleForm.fuel} onChange={(e) => setVehicleForm({ ...vehicleForm, fuel: e.target.value })} placeholder="90"
+                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
+                >
+                  Save Fleet Vehicle
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
 
       {/* DETAIL DRAWERS */}
