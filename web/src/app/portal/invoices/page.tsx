@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/skeletons";
+import { emitWorkspaceNotification } from "@/lib/notificationService";
 
 interface Invoice {
   id: string;
@@ -189,6 +190,17 @@ export default function PortalInvoicesPage() {
     e.preventDefault();
     if (!txnRef.trim()) return;
     setTxnSuccess(true);
+
+    emitWorkspaceNotification({
+      title: "New Payment UTR Submitted! 💳",
+      desc: `Client submitted transaction ref (${txnRef}) for Invoice #${selectedInvoice?.invoiceNumber || "ALL_DUE"}`,
+      type: "success",
+      href: "/finance",
+      category: "payment",
+      actorType: "CLIENT",
+      actorName: selectedInvoice?.clientName || "Client"
+    });
+
     addToast("Payment reference logged. Coordinator will verify receipt.", "success");
     setTimeout(() => {
       setTxnSuccess(false);

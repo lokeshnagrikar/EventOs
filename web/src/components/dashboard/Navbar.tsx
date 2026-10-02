@@ -36,6 +36,14 @@ import { api } from "@/lib/api";
 import { useSocket } from "@/context/SocketContext";
 import { useToastStore } from "@/lib/toastStore";
 import { useAuthStore } from "@/store/authStore";
+import {
+  subscribeToRealtimeNotifications,
+  getStoredRealtimeNotifications,
+  persistRealtimeNotification,
+  playNotificationChime,
+  emitWorkspaceNotification,
+  type WorkspaceNotificationPayload
+} from "@/lib/notificationService";
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -417,9 +425,37 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
         });
       }
 
-      // Sort newest first
-      dynamicList.sort((a, b) => b.timestamp - a.timestamp);
-      setNotifications(dynamicList);
+      // 7. Merge Locally Emitted Realtime Notifications that were persisted
+      const storedRealtime = getStoredRealtimeNotifications();
+      storedRealtime.forEach((rt) => {
+        if (!rt.id || dismissedIds.has(rt.id)) return;
+        const ts = rt.timestamp || Date.now();
+        dynamicList.push({
+          id: rt.id,
+          title: rt.title,
+          desc: rt.desc,
+          time: formatRelativeTime(ts),
+          timestamp: ts,
+          unread: !readIds.has(rt.id),
+          type: rt.type || "info",
+          href: rt.href || "/dashboard",
+          category: rt.category || "system",
+          actorType: rt.actorType || "SYSTEM",
+          actorName: rt.actorName || "Workspace Feed",
+        });
+      });
+
+      // Deduplicate by ID and sort newest first
+      const seenIds = new Set<string>();
+      const deduplicated: NotificationItem[] = [];
+      dynamicList.forEach((item) => {
+        if (!seenIds.has(item.id)) {
+          seenIds.add(item.id);
+          deduplicated.push(item);
+        }
+      });
+      deduplicated.sort((a, b) => b.timestamp - a.timestamp);
+      setNotifications(deduplicated);
     } catch (err) {
       console.warn("Failed to load dynamic workspace notifications:", err);
     } finally {
@@ -427,14 +463,18 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
     }
   }, [activeTenantId, user?.id, user?.role, pathname]);
 
-  // Trigger initial fetch when active workspace loads
+  // Real-Time Background polling every 12 seconds + initial load
   useEffect(() => {
     fetchWorkspaceNotifications();
+    const interval = setInterval(() => {
+      fetchWorkspaceNotifications();
+    }, 12000);
+    return () => clearInterval(interval);
   }, [fetchWorkspaceNotifications]);
 
   // 3. Real-Time Notification & Toast Handler
-  const handleIncomingNotification = useCallback((data: { title: string; desc: string; type?: "info" | "success" | "warning" | "error"; href?: string; category?: any }) => {
-    const notifId = `rt-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  const handleIncomingNotification = useCallback((data: { title: string; desc: string; type?: "info" | "success" | "warning" | "error"; href?: string; category?: any; id?: string }) => {
+    const notifId = data.id || `rt-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const newNotif: NotificationItem = {
       id: notifId,
       title: data.title || "Real-Time Activity",
@@ -447,7 +487,13 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
       category: data.category || "system"
     };
 
-    setNotifications((prev) => [newNotif, ...prev]);
+    // Save to persistent storage so it stays across refresh/tabs
+    persistRealtimeNotification(newNotif);
+
+    // Play real-time chime
+    playNotificationChime();
+
+    setNotifications((prev) => [newNotif, ...prev.filter(n => n.id !== notifId)]);
 
     // Trigger Dynamic Floating Toast
     addToast(data.desc, data.type || "info", {
@@ -457,13 +503,10 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
   }, [addToast]);
 
   useEffect(() => {
-    // Listen to custom window events
-    const handleAddNotification = (e: Event) => {
-      const customEvent = e as CustomEvent<{ title: string; desc: string; type?: "info" | "success" | "warning" | "error"; href?: string; category?: any }>;
-      if (customEvent.detail) {
-        handleIncomingNotification(customEvent.detail);
-      }
-    };
+    // Listen to cross-tab broadcast notifications
+    const unsubscribeBroadcast = subscribeToRealtimeNotifications((notif) => {
+      handleIncomingNotification(notif);
+    });
 
     const handleThemeChange = (e: Event) => {
       const customEvent = e as CustomEvent<"dark" | "light">;
@@ -472,7 +515,6 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
       }
     };
 
-    window.addEventListener("add-notification", handleAddNotification);
     window.addEventListener("theme-changed", handleThemeChange);
 
     // WebSocket subscription for live notifications
@@ -490,7 +532,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
     }
 
     return () => {
-      window.removeEventListener("add-notification", handleAddNotification);
+      unsubscribeBroadcast();
       window.removeEventListener("theme-changed", handleThemeChange);
       if (unsubscribeNotifs) unsubscribeNotifs();
     };
@@ -752,15 +794,15 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                       <button
                         onClick={() => {
                           const testEvents = [
-                            { title: "New Lead Logged", desc: "Varun & Priya requested pricing for Goa Gala 2026 (₹4,50,000).", type: "info" as const, href: "/crm", category: "lead" },
-                            { title: "UPI Payment Received", desc: "₹85,000 advance cleared for Invoice #INV-2026-904.", type: "success" as const, href: "/finance", category: "payment" },
-                            { title: "Run-of-Show Alert", desc: "Soundcheck completed for Taj Palace Ballroom 1.", type: "warning" as const, href: "/events", category: "event" },
-                            { title: "Proposal E-Signed", desc: "Client accepted and e-signed Proposal #QT-2026-118.", type: "success" as const, href: "/quotes", category: "quote" },
+                            { title: "New Lead Logged! 📋", desc: "Varun & Priya requested pricing for Goa Gala 2026 (₹4,50,000).", type: "info" as const, href: "/crm", category: "lead" as const },
+                            { title: "UPI Payment Received! 💰", desc: "₹85,000 advance cleared for Invoice #INV-2026-904.", type: "success" as const, href: "/finance", category: "payment" as const },
+                            { title: "Run-of-Show Alert! ⏱️", desc: "Soundcheck completed for Taj Palace Ballroom 1.", type: "warning" as const, href: "/events", category: "event" as const },
+                            { title: "Proposal E-Signed! 🎉", desc: "Client accepted and e-signed Proposal #QT-2026-118.", type: "success" as const, href: "/quotes", category: "quote" as const },
                           ];
                           const randomEvt = testEvents[Math.floor(Math.random() * testEvents.length)];
-                          handleIncomingNotification(randomEvt);
+                          emitWorkspaceNotification(randomEvt);
                         }}
-                        className="text-[10px] bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 px-2 py-1 rounded-lg font-bold transition-all cursor-pointer"
+                        className="text-[10px] bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 px-2 py-1 rounded-lg font-bold transition-all cursor-pointer active:scale-95"
                         title="Simulate Real-Time Incoming Notification Alert"
                       >
                         + Test Alert

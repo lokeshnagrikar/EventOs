@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DynamicUpiQrModal from "@/components/finance/DynamicUpiQrModal";
+import { emitWorkspaceNotification } from "@/lib/notificationService";
 
 interface QuoteItem {
   id: string;
@@ -254,6 +255,16 @@ export default function PublicQuoteSharePage() {
 
     setShowSignModal(false);
     setActionSuccess("Proposal approved & digitally signed successfully!");
+
+    emitWorkspaceNotification({
+      title: "Proposal Digitally Signed! 🎉",
+      desc: `${signerName} (${signerTitle}) signed & accepted Proposal #${quote?.quoteNumber || "QT"} (₹${quote?.total?.toLocaleString("en-IN")})`,
+      type: "success",
+      href: "/quotes",
+      category: "quote",
+      actorType: "CLIENT",
+      actorName: signerName
+    });
   };
 
   const handleRejectQuote = async (e: React.FormEvent) => {
@@ -275,6 +286,16 @@ export default function PublicQuoteSharePage() {
 
     setShowRejectModal(false);
     setActionSuccess("Feedback sent to event coordinator.");
+
+    emitWorkspaceNotification({
+      title: "Proposal Revision Requested 📝",
+      desc: `${quote?.clientName || "Client"} requested revisions on Proposal #${quote?.quoteNumber || "QT"}: "${rejectionNotes.slice(0, 50)}"`,
+      type: "warning",
+      href: "/quotes",
+      category: "quote",
+      actorType: "CLIENT",
+      actorName: quote?.clientName || "Client"
+    });
   };
 
   if (loading) {
@@ -511,6 +532,15 @@ export default function PublicQuoteSharePage() {
         onPaymentConfirm={() => {
           setQuote({ ...quote, status: "ACCEPTED" });
           setActionSuccess("Deposit payment cleared! Proposal confirmed.");
+          emitWorkspaceNotification({
+            title: "Token Deposit Cleared! 💰",
+            desc: `₹${Math.round(quote.total * 0.3).toLocaleString("en-IN")} advance deposit received for #${quote.quoteNumber}`,
+            type: "success",
+            href: "/finance",
+            category: "payment",
+            actorType: "CLIENT",
+            actorName: quote.clientName
+          });
         }}
       />
 

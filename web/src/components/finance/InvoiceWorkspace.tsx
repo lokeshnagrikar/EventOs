@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/lib/toastStore";
 import DynamicUpiQrModal from "@/components/finance/DynamicUpiQrModal";
+import { emitWorkspaceNotification } from "@/lib/notificationService";
 
 export type InvoiceTemplateId = "ROYAL_WEDDING" | "GST_CORPORATE" | "MINIMAL_STUDIO" | "MILESTONE_SPLIT";
 
@@ -893,9 +894,19 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
           invoiceNumber={invoice.invoiceNumber}
           clientName={invoice.clientName}
           onPaymentConfirm={() => {
+            const milestonePaid = Math.round(invoice.totalAmount * (invoice.status === "PAID" ? 0 : 0.5));
             triggerToast("Payment recorded successfully!", "success");
             queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
             queryClient.invalidateQueries({ queryKey: ["invoiceHistory", invoiceId] });
+            emitWorkspaceNotification({
+              title: "Invoice Payment Logged! 💰",
+              desc: `Milestone payment of ₹${milestonePaid.toLocaleString("en-IN")} recorded for Invoice #${invoice.invoiceNumber}`,
+              type: "success",
+              href: `/invoices/${invoiceId}`,
+              category: "payment",
+              actorType: "TEAM",
+              actorName: "Finance Desk"
+            });
           }}
         />
       )}
