@@ -7,6 +7,8 @@ import { useAuthModalStore } from "@/store/authModalStore";
 import { api } from "@/lib/api";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Navbar from "@/components/dashboard/Navbar";
+import TrialBanner from "@/components/dashboard/TrialBanner";
+import TrialExpiredModal from "@/components/dashboard/TrialExpiredModal";
 import CommandPalette from "@/components/CommandPalette";
 import { LucideIcon, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -101,6 +103,9 @@ export default function PageShell({
       {/* Command Palette */}
       <CommandPalette isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />
 
+      {/* 14-Day Free Trial Concluded Paywall Modal */}
+      <TrialExpiredModal />
+
       {/* Desktop Sidebar */}
       <Sidebar
         isCollapsed={isCollapsed}
@@ -144,6 +149,9 @@ export default function PageShell({
 
       {/* Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-dvh max-h-dvh overflow-hidden relative z-10">
+        {/* Trial Countdown & Expired Alert Banner */}
+        <TrialBanner />
+
         <Navbar
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           onSearchClick={() => setIsPaletteOpen(true)}

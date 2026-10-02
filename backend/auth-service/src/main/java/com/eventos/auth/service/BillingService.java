@@ -85,8 +85,32 @@ public class BillingService {
 
     @Transactional
     public Subscription getSubscription(UUID tenantId) {
-        return subscriptionRepository.findByTenantId(tenantId)
+        Subscription sub = subscriptionRepository.findByTenantId(tenantId)
                 .orElseGet(() -> initDefaultTenantSubscription(tenantId));
+        return checkAndExpireTrialIfNeeded(sub);
+    }
+
+    @Transactional
+    public Subscription checkAndExpireTrialIfNeeded(Subscription sub) {
+        if (sub == null) return null;
+        if ("TRIALING".equalsIgnoreCase(sub.getStatus())) {
+            if (sub.getTrialEnd() != null && LocalDateTime.now().isAfter(sub.getTrialEnd())) {
+                log.info("[TRIAL_EXPIRED] Subscription {} for tenant {} exceeded trialEnd {}. Transitioning to EXPIRED.",
+                        sub.getId(), sub.getTenantId(), sub.getTrialEnd());
+                sub.setStatus("EXPIRED");
+                sub = subscriptionRepository.save(sub);
+
+                Tenant tenant = tenantRepository.findById(sub.getTenantId()).orElse(null);
+                if (tenant != null) {
+                    tenant.setSubscriptionStatus("EXPIRED");
+                    tenantRepository.save(tenant);
+                }
+
+                auditLogService.logEvent(sub.getTenantId(), null, "TRIAL_EXPIRED", "127.0.0.1", "System",
+                        "14-day Free Trial concluded and marked EXPIRED automatically.");
+            }
+        }
+        return sub;
     }
 
     @Transactional

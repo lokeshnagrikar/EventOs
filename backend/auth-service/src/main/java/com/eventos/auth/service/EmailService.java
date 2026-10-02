@@ -732,4 +732,138 @@ public class EmailService {
             log.warn("[INQUIRY_ALERT_WARN] Could not send inquiry alert email for {}: {}", email, e.getMessage());
         }
     }
+
+    /* -------------------------------------------------------------------------- */
+    /* 9. 14-DAY TRIAL EXPIRY REMINDER (Day 11 & Day 13 Alerts)                   */
+    /* -------------------------------------------------------------------------- */
+    @Async
+    public void sendTrialReminderEmail(String toEmail, String recipientName, String workspaceName, int daysRemaining) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(getSenderEmail(), "EventOS Team");
+            helper.setTo(toEmail);
+
+            String subject = (daysRemaining <= 1)
+                    ? "⚠️ Urgent: Your EventOS Free Trial Expires Tomorrow"
+                    : "⏳ " + daysRemaining + " Days Left in Your EventOS Trial — Upgrade to Keep Full Access";
+            helper.setSubject(subject);
+
+            String name = (recipientName != null && !recipientName.trim().isEmpty()) ? recipientName : "Creator";
+            String wsName = (workspaceName != null && !workspaceName.trim().isEmpty()) ? workspaceName : "Your Workspace";
+            String billingUrl = frontendUrl + "/settings?tab=billing";
+
+            String body = "<p style=\"margin:0 0 16px; font-size:15px; color:#F4F4F5; font-weight:700;\">" +
+                    "  Hi " + name + " 👋" +
+                    "</p>" +
+                    "<p style=\"margin:0 0 20px; font-size:14px; line-height:1.75; color:#A1A1AA;\">" +
+                    "  Your 14-day free trial for <strong style=\"color:#F4F4F5;\">" + wsName + "</strong> ends in " +
+                    "  <strong style=\"color:#F59E0B;\">" + daysRemaining + (daysRemaining == 1 ? " day" : " days") + "</strong>. " +
+                    "  To make sure your events, client proposals, and team workflows continue uninterrupted, choose a plan that fits your business." +
+                    "</p>" +
+                    "<!-- VALUE HIGHLIGHTS -->" +
+                    "<div style=\"background:#14141E; border:1px solid #27272A; border-radius:16px; padding:20px; margin-bottom:24px;\">" +
+                    "  <div style=\"font-size:11px; font-weight:800; color:#A78BFA; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;\">✨ WHAT REMAINS UNLOCKED ON PAID TIERS:</div>" +
+                    "  <div style=\"font-size:13px; color:#E4E4E7; margin-bottom:8px;\">⚡ <strong>Unlimited Events & Timelines</strong> — Manage run-of-show seamlessly</div>" +
+                    "  <div style=\"font-size:13px; color:#E4E4E7; margin-bottom:8px;\">📊 <strong>CRM & Quotation Builder</strong> — Generate GST-ready PDF quotes & invoices</div>" +
+                    "  <div style=\"font-size:13px; color:#E4E4E7; margin-bottom:8px;\">📲 <strong>Live Venue Check-in & PWA</strong> — Offline-capable guest check-ins</div>" +
+                    "  <div style=\"font-size:13px; color:#E4E4E7;\">💬 <strong>Automated Reminders</strong> — WhatsApp & Email notifications</div>" +
+                    "</div>" +
+                    "<!-- ACTION BUTTON -->" +
+                    "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin:24px 0;\">" +
+                    "  <tr>" +
+                    "    <td align=\"center\">" +
+                    "      <a href=\"" + billingUrl + "\" style=\"display:inline-block; padding:14px 36px; border-radius:14px; background:linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); color:#FFFFFF; font-size:14px; font-weight:800; text-decoration:none; box-shadow:0 10px 25px -5px rgba(139,92,246,0.4);\">" +
+                    "        🚀 Choose a Plan & Retain Access" +
+                    "      </a>" +
+                    "    </td>" +
+                    "  </tr>" +
+                    "</table>" +
+                    "<p style=\"margin:0; font-size:12px; color:#71717A; text-align:center;\">" +
+                    "  Need a custom plan or have questions? Simply reply to this email." +
+                    "</p>";
+
+            String htmlContent = wrapInLuxuryShell(
+                    "Trial Ending Soon",
+                    daysRemaining <= 1 ? "1 DAY LEFT" : daysRemaining + " DAYS LEFT",
+                    "#FDE68A",
+                    "linear-gradient(135deg, #D97706 0%, #7C3AED 100%)",
+                    ICON_FIRE,
+                    body,
+                    "EventOS Trial Security Dispatch"
+            );
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            log.info("[TRIAL_REMINDER_SENT] Dispatched {}-day trial reminder email to: {}", daysRemaining, toEmail);
+        } catch (Exception e) {
+            log.warn("[TRIAL_REMINDER_WARN] Failed to send trial reminder to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /* 10. TRIAL EXPIRED NOTIFICATION (Account Locked to Read-Only/Upgrade)       */
+    /* -------------------------------------------------------------------------- */
+    @Async
+    public void sendTrialExpiredEmail(String toEmail, String recipientName, String workspaceName) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(getSenderEmail(), "EventOS Billing");
+            helper.setTo(toEmail);
+            helper.setSubject("🔒 Your EventOS 14-Day Free Trial Has Concluded");
+
+            String name = (recipientName != null && !recipientName.trim().isEmpty()) ? recipientName : "Creator";
+            String wsName = (workspaceName != null && !workspaceName.trim().isEmpty()) ? workspaceName : "Your Workspace";
+            String billingUrl = frontendUrl + "/settings?tab=billing";
+
+            String body = "<p style=\"margin:0 0 16px; font-size:15px; color:#F4F4F5; font-weight:700;\">" +
+                    "  Hi " + name + " 👋" +
+                    "</p>" +
+                    "<p style=\"margin:0 0 20px; font-size:14px; line-height:1.75; color:#A1A1AA;\">" +
+                    "  The 14-day free trial period for <strong style=\"color:#F4F4F5;\">" + wsName + "</strong> has ended. " +
+                    "  To protect your business workflows, new lead creations, quotation generations, and event updates have been paused." +
+                    "</p>" +
+                    "<!-- DATA SAFETY REASSURANCE BOX -->" +
+                    "<div style=\"background:#1A1318; border:1px solid #7F1D1D; border-radius:16px; padding:20px; margin-bottom:24px;\">" +
+                    "  <div style=\"font-size:11px; font-weight:800; color:#F87171; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;\">🛡️ YOUR DATA IS 100% PRESERVED</div>" +
+                    "  <p style=\"margin:0; font-size:13px; line-height:1.6; color:#E4E4E7;\">" +
+                    "    All your created events, guest lists, leads, and custom templates are securely preserved. " +
+                    "    The moment you upgrade to an active subscription, your workspace will instantly unlock with everything right where you left it." +
+                    "  </p>" +
+                    "</div>" +
+                    "<!-- ACTION BUTTON -->" +
+                    "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin:24px 0;\">" +
+                    "  <tr>" +
+                    "    <td align=\"center\">" +
+                    "      <a href=\"" + billingUrl + "\" style=\"display:inline-block; padding:14px 36px; border-radius:14px; background:linear-gradient(135deg, #DC2626 0%, #7C3AED 100%); color:#FFFFFF; font-size:14px; font-weight:800; text-decoration:none; box-shadow:0 10px 25px -5px rgba(220,38,38,0.4);\">" +
+                    "        🔓 Reactivate Workspace Access" +
+                    "      </a>" +
+                    "    </td>" +
+                    "  </tr>" +
+                    "</table>" +
+                    "<p style=\"margin:0; font-size:12px; color:#71717A; text-align:center;\">" +
+                    "  Have an existing invoice query? Contact our founders at support@eventosapp.in" +
+                    "</p>";
+
+            String htmlContent = wrapInLuxuryShell(
+                    "Trial Period Ended",
+                    "SUBSCRIPTION PAUSED",
+                    "#FCA5A5",
+                    "linear-gradient(135deg, #7F1D1D 0%, #181822 100%)",
+                    ICON_LOCK,
+                    body,
+                    "EventOS Lifecycle Operations"
+            );
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            log.info("[TRIAL_EXPIRED_SENT] Dispatched trial expired notification email to: {}", toEmail);
+        } catch (Exception e) {
+            log.warn("[TRIAL_EXPIRED_WARN] Failed to send trial expired email to {}: {}", toEmail, e.getMessage());
+        }
+    }
 }
+

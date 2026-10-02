@@ -302,6 +302,17 @@ export const useBillingStore = create<BillingState>((set, get) => ({
     const { subscription, usage } = get();
     if (!subscription || !usage) return true;
 
+    // Hard block if 14-day free trial or subscription has expired
+    if ((subscription.status || '').toUpperCase() === 'EXPIRED') {
+      useLimitStore.getState().openLimitModal(
+        'Your 14-day free trial has expired. To create new events, leads, quotations, or team members, please choose an active subscription plan.',
+        'Trial Expired',
+        '0 (Expired)',
+        'Paused'
+      );
+      return false;
+    }
+
     const plan = subscription.plan;
     let limitValue = 0;
     let currentValue = 0;
