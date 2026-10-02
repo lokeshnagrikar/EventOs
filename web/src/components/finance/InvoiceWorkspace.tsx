@@ -28,10 +28,12 @@ import {
   Crown,
   Zap,
   BarChart3,
-  CheckCircle
+  CheckCircle,
+  ArrowUpRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/lib/toastStore";
+import DynamicUpiQrModal from "@/components/finance/DynamicUpiQrModal";
 
 export type InvoiceTemplateId = "ROYAL_WEDDING" | "GST_CORPORATE" | "MINIMAL_STUDIO" | "MILESTONE_SPLIT";
 
@@ -141,6 +143,53 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
     if (!invoice?.notes) return "";
     return invoice.notes.replace(/\[TPL:\w+\]\s*/g, "").trim();
   }, [invoice?.notes]);
+
+  // Real Owner Payment Destination from Workspace Settings
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [ownerPaymentConfig, setOwnerPaymentConfig] = useState({
+    upiId: "eventos@okhdfcbank",
+    accountHolder: "EventOS Workspace",
+    bankName: "HDFC Bank",
+    accountNumber: "50100293847192",
+    ifsc: "HDFC0001092"
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedConfig = localStorage.getItem("eventos_payment_engine_config");
+      if (savedConfig) {
+        try {
+          const parsed = JSON.parse(savedConfig);
+          if (parsed.ownerUpiId) {
+            setOwnerPaymentConfig((prev) => ({
+              ...prev,
+              upiId: parsed.ownerUpiId,
+              accountHolder: parsed.ownerAccountHolder || prev.accountHolder,
+              bankName: parsed.ownerBankName || prev.bankName,
+              accountNumber: parsed.ownerAccountNumber || prev.accountNumber,
+              ifsc: parsed.ownerIfsc || prev.ifsc
+            }));
+          }
+        } catch (e) {}
+      }
+      const directDest = localStorage.getItem("eventos_direct_payment_destination");
+      if (directDest) {
+        try {
+          const parsed = JSON.parse(directDest);
+          if (parsed.ownerUpiId) {
+            setOwnerPaymentConfig((prev) => ({
+              ...prev,
+              upiId: parsed.ownerUpiId,
+              accountHolder: parsed.ownerAccountName || prev.accountHolder,
+              bankName: parsed.ownerBankName || prev.bankName,
+              accountNumber: parsed.ownerAccountNumber || prev.accountNumber,
+              ifsc: parsed.ownerIfsc || prev.ifsc
+            }));
+          }
+        } catch (e) {}
+      }
+    }
+  }, []);
 
   // Mutations
   const updateStatusMutation = useMutation({
@@ -742,24 +791,66 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
             </div>
           </div>
 
-          {/* Instant UPI Pay Box */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-5 bg-emerald-950/20 border border-emerald-500/25 rounded-2xl">
-            <div className="flex items-center gap-4">
-              <div className="p-2.5 bg-white rounded-xl shadow-lg shrink-0">
-                <QrCode size={52} className="text-black" />
-              </div>
-              <div className="space-y-1">
-                <span className="text-[9px] text-emerald-400 font-mono font-black uppercase block">Instant UPI Quick Settle</span>
-                <p className="text-xs font-bold text-white">Scan with GPay, PhonePe, Paytm or BHIM</p>
-                <p className="text-[11px] text-zinc-400 font-mono">VPA: <span className="text-emerald-300 font-bold">eventos@icici</span></p>
-              </div>
-            </div>
+          {/* Instant Live UPI Pay Box with Real Dynamic QR */}
+          {(() => {
+            const milestoneDue = Math.round(invoice.totalAmount * (invoice.status === "PAID" ? 0 : 0.5));
+            const upiPayString = `upi://pay?pa=${encodeURIComponent(ownerPaymentConfig.upiId)}&pn=${encodeURIComponent(ownerPaymentConfig.accountHolder)}&am=${milestoneDue}&cu=INR&tn=${encodeURIComponent(`Inv_${invoice.invoiceNumber}`)}`;
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiPayString)}&color=09090b&bgcolor=ffffff`;
 
-            <div className="text-right">
-              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Current Milestone Due</span>
-              <span className="text-xl font-black text-emerald-400 font-mono">₹{(invoice.totalAmount * (invoice.status === "PAID" ? 0 : 0.5)).toLocaleString("en-IN")}</span>
-            </div>
-          </div>
+            return (
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-5 bg-emerald-950/20 border border-emerald-500/25 rounded-2xl relative overflow-hidden group">
+                <div className="flex items-center gap-4">
+                  {/* Real Live Dynamic Scannable QR Code */}
+                  <div
+                    onClick={() => setShowUpiModal(true)}
+                    className="p-2 bg-white rounded-xl shadow-lg shrink-0 cursor-pointer hover:scale-105 transition-transform border border-emerald-400/30 group-hover:ring-2 group-hover:ring-emerald-400/40"
+                    title="Click to view full payment modal"
+                  >
+                    <img
+                      src={qrImageUrl}
+                      alt="Real NPCI UPI QR"
+                      className="w-16 h-16 object-contain rounded-md"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-emerald-400 font-mono font-black uppercase px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30">
+                        Live Dynamic NPCI UPI QR
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowUpiModal(true)}
+                        className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Enlarge / Details</span>
+                        <ArrowUpRight size={11} />
+                      </button>
+                    </div>
+                    <p className="text-xs font-bold text-white">Scan with GPay, PhonePe, Paytm or BHIM</p>
+                    <p className="text-[11px] text-zinc-300 font-mono">
+                      VPA: <span className="text-emerald-300 font-bold">{ownerPaymentConfig.upiId}</span>
+                      {ownerPaymentConfig.bankName && <span className="text-zinc-500 text-[10px] ml-2">({ownerPaymentConfig.bankName})</span>}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right flex flex-col items-end">
+                  <span className="text-[10px] text-zinc-400 uppercase font-mono block">Current Milestone Due</span>
+                  <span className="text-xl font-black text-emerald-400 font-mono">₹{milestoneDue.toLocaleString("en-IN")}</span>
+                  {invoice.status !== "PAID" && (
+                    <button
+                      type="button"
+                      onClick={() => setShowUpiModal(true)}
+                      className="mt-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer shadow"
+                    >
+                      <span>Pay Milestone ₹{milestoneDue.toLocaleString("en-IN")}</span>
+                      <ArrowUpRight size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </motion.div>
       )}
 
@@ -786,6 +877,28 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
           )}
         </div>
       </div>
+
+      {/* Real Owner Dynamic UPI QR Modal */}
+      {invoice && (
+        <DynamicUpiQrModal
+          isOpen={showUpiModal}
+          onClose={() => setShowUpiModal(false)}
+          ownerUpiId={ownerPaymentConfig.upiId}
+          ownerName={ownerPaymentConfig.accountHolder}
+          bankAccountName={ownerPaymentConfig.accountHolder}
+          bankAccountNumber={ownerPaymentConfig.accountNumber}
+          bankIfsc={ownerPaymentConfig.ifsc}
+          bankName={ownerPaymentConfig.bankName}
+          amount={Math.round(invoice.totalAmount * (invoice.status === "PAID" ? 0 : 0.5))}
+          invoiceNumber={invoice.invoiceNumber}
+          clientName={invoice.clientName}
+          onPaymentConfirm={() => {
+            triggerToast("Payment recorded successfully!", "success");
+            queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
+            queryClient.invalidateQueries({ queryKey: ["invoiceHistory", invoiceId] });
+          }}
+        />
+      )}
 
     </div>
   );

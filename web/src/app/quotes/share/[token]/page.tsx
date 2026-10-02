@@ -102,6 +102,52 @@ export default function PublicQuoteSharePage() {
   const [rejectionNotes, setRejectionNotes] = useState("");
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
+  // Real Owner Payment Destination from Workspace Settings
+  const [ownerPaymentConfig, setOwnerPaymentConfig] = useState({
+    upiId: "apexevents@okicici",
+    accountHolder: "Apex Event Management",
+    bankName: "HDFC Bank, Ramdaspeth",
+    accountNumber: "9180200492810",
+    ifsc: "HDFC0001092"
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedConfig = localStorage.getItem("eventos_payment_engine_config");
+      if (savedConfig) {
+        try {
+          const parsed = JSON.parse(savedConfig);
+          if (parsed.ownerUpiId) {
+            setOwnerPaymentConfig((prev) => ({
+              ...prev,
+              upiId: parsed.ownerUpiId,
+              accountHolder: parsed.ownerAccountHolder || prev.accountHolder,
+              bankName: parsed.ownerBankName || prev.bankName,
+              accountNumber: parsed.ownerAccountNumber || prev.accountNumber,
+              ifsc: parsed.ownerIfsc || prev.ifsc
+            }));
+          }
+        } catch (e) {}
+      }
+      const directDest = localStorage.getItem("eventos_direct_payment_destination");
+      if (directDest) {
+        try {
+          const parsed = JSON.parse(directDest);
+          if (parsed.ownerUpiId) {
+            setOwnerPaymentConfig((prev) => ({
+              ...prev,
+              upiId: parsed.ownerUpiId,
+              accountHolder: parsed.ownerAccountName || prev.accountHolder,
+              bankName: parsed.ownerBankName || prev.bankName,
+              accountNumber: parsed.ownerAccountNumber || prev.accountNumber,
+              ifsc: parsed.ownerIfsc || prev.ifsc
+            }));
+          }
+        } catch (e) {}
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const fetchPublicQuote = async () => {
       setLoading(true);
@@ -453,12 +499,12 @@ export default function PublicQuoteSharePage() {
       <DynamicUpiQrModal
         isOpen={showUpiModal}
         onClose={() => setShowUpiModal(false)}
-        ownerUpiId="apexevents@okicici"
-        ownerName="Apex Event Management"
-        bankAccountName="Apex Event Management Pvt Ltd"
-        bankAccountNumber="9180200492810"
-        bankIfsc="HDFC0001092"
-        bankName="HDFC Bank, Ramdaspeth"
+        ownerUpiId={ownerPaymentConfig.upiId}
+        ownerName={ownerPaymentConfig.accountHolder}
+        bankAccountName={ownerPaymentConfig.accountHolder}
+        bankAccountNumber={ownerPaymentConfig.accountNumber}
+        bankIfsc={ownerPaymentConfig.ifsc}
+        bankName={ownerPaymentConfig.bankName}
         amount={Math.round(quote.total * 0.3)} // 30% Advance Retainer Deposit
         invoiceNumber={quote.quoteNumber}
         clientName={quote.clientName}

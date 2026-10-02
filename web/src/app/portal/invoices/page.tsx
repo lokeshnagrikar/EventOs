@@ -18,7 +18,11 @@ import {
   AlertCircle,
   TrendingUp,
   Receipt,
-  FileText
+  FileText,
+  ArrowUpRight,
+  Copy,
+  Check,
+  Building
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -63,6 +67,54 @@ export default function PortalInvoicesPage() {
   const [txnRef, setTxnRef] = useState("");
   const [txnSuccess, setTxnSuccess] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<"UPI" | "BANK" | "CARD">("UPI");
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [copiedBank, setCopiedBank] = useState(false);
+
+  // Real Owner Payment Destination from Workspace Settings
+  const [ownerPaymentConfig, setOwnerPaymentConfig] = useState({
+    upiId: "eventos@okhdfcbank",
+    accountHolder: "EventOS Workspace",
+    bankName: "HDFC Bank",
+    accountNumber: "50100293847192",
+    ifsc: "HDFC0001092"
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedConfig = localStorage.getItem("eventos_payment_engine_config");
+      if (savedConfig) {
+        try {
+          const parsed = JSON.parse(savedConfig);
+          if (parsed.ownerUpiId) {
+            setOwnerPaymentConfig((prev) => ({
+              ...prev,
+              upiId: parsed.ownerUpiId,
+              accountHolder: parsed.ownerAccountHolder || prev.accountHolder,
+              bankName: parsed.ownerBankName || prev.bankName,
+              accountNumber: parsed.ownerAccountNumber || prev.accountNumber,
+              ifsc: parsed.ownerIfsc || prev.ifsc
+            }));
+          }
+        } catch (e) {}
+      }
+      const directDest = localStorage.getItem("eventos_direct_payment_destination");
+      if (directDest) {
+        try {
+          const parsed = JSON.parse(directDest);
+          if (parsed.ownerUpiId) {
+            setOwnerPaymentConfig((prev) => ({
+              ...prev,
+              upiId: parsed.ownerUpiId,
+              accountHolder: parsed.ownerAccountName || prev.accountHolder,
+              bankName: parsed.ownerBankName || prev.bankName,
+              accountNumber: parsed.ownerAccountNumber || prev.accountNumber,
+              ifsc: parsed.ownerIfsc || prev.ifsc
+            }));
+          }
+        } catch (e) {}
+      }
+    }
+  }, []);
 
   // Escape key listener
   React.useEffect(() => {
@@ -301,51 +353,160 @@ export default function PortalInvoicesPage() {
             )}
           </AnimatePresence>
 
-          <form onSubmit={handleOfflinePaymentSubmit} className="space-y-3.5 text-xs">
-            <div className="flex gap-2">
-              {(["UPI", "BANK", "CARD"] as const).map((method) => (
-                <button
-                  key={method}
-                  type="button"
-                  onClick={() => setSelectedMethod(method)}
-                  className={cn(
-                    "flex-1 py-1.5 border rounded-xl font-bold text-[9px] transition-colors",
-                    selectedMethod === method
-                      ? "border-purple-600 bg-purple-600/5 text-purple-400"
-                      : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
-                  )}
-                >
-                  {method}
-                </button>
-              ))}
-            </div>
+          {/* Dynamic live payment calculation */}
+          {(() => {
+            const targetAmount = selectedInvoice
+              ? Math.max(0, (selectedInvoice.totalAmount || 0) - (selectedInvoice.paidAmount || 0))
+              : (totalBalanceDue > 0 ? totalBalanceDue : 25000);
 
-            {selectedMethod === "UPI" && (
-              <div className="p-3.5 bg-zinc-950/20 border border-zinc-850 rounded-xl space-y-3 text-center">
-                <span className="text-[8px] text-zinc-550 uppercase font-black tracking-widest block">Scan UPI QR Code</span>
-                <div className="h-28 w-28 mx-auto bg-white p-1 rounded-xl flex items-center justify-center border border-zinc-800">
-                  <QrCode size={96} className="text-black" />
+            const targetInvoiceRef = selectedInvoice?.invoiceNumber || "ALL_DUE";
+            const portalUpiString = `upi://pay?pa=${encodeURIComponent(ownerPaymentConfig.upiId)}&pn=${encodeURIComponent(ownerPaymentConfig.accountHolder)}&am=${targetAmount}&cu=INR&tn=${encodeURIComponent(`Inv_${targetInvoiceRef}`)}`;
+            const portalQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(portalUpiString)}&color=09090b&bgcolor=ffffff`;
+
+            const copyUpi = () => {
+              navigator.clipboard.writeText(ownerPaymentConfig.upiId);
+              setCopiedUpi(true);
+              setTimeout(() => setCopiedUpi(false), 2000);
+            };
+
+            const copyBankDetails = () => {
+              const text = `Bank: ${ownerPaymentConfig.bankName}\nAccount Name: ${ownerPaymentConfig.accountHolder}\nAccount No: ${ownerPaymentConfig.accountNumber}\nIFSC Code: ${ownerPaymentConfig.ifsc}`;
+              navigator.clipboard.writeText(text);
+              setCopiedBank(true);
+              setTimeout(() => setCopiedBank(false), 2000);
+            };
+
+            return (
+              <form onSubmit={handleOfflinePaymentSubmit} className="space-y-3.5 text-xs">
+                <div className="flex gap-2">
+                  {(["UPI", "BANK", "CARD"] as const).map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setSelectedMethod(method)}
+                      className={cn(
+                        "flex-1 py-1.5 border rounded-xl font-bold text-[9px] transition-colors cursor-pointer",
+                        selectedMethod === method
+                          ? "border-purple-600 bg-purple-600/10 text-purple-400"
+                          : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                      )}
+                    >
+                      {method}
+                    </button>
+                  ))}
                 </div>
-                <span className="text-[9px] text-zinc-500 font-bold block font-mono">UPI ID: eventos@yesbank</span>
-              </div>
-            )}
 
-            <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-black">Transaction Reference Number</label>
-              <input
-                type="text"
-                required
-                value={txnRef}
-                onChange={(e) => setTxnRef(e.target.value)}
-                placeholder="Enter UPI Ref / Bank UTN..."
-                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none"
-              />
-            </div>
+                {selectedMethod === "UPI" && (
+                  <div className="p-4 bg-zinc-950/40 border border-purple-500/20 rounded-2xl space-y-3 text-center">
+                    <div className="flex items-center justify-between text-[9px] font-mono">
+                      <span className="text-purple-400 uppercase font-black tracking-widest block">
+                        NPCI Live Dynamic UPI QR
+                      </span>
+                      <span className="text-emerald-400 font-bold text-xs">
+                        ₹{targetAmount.toLocaleString("en-IN")}
+                      </span>
+                    </div>
 
-            <button type="submit" className="w-full py-2 bg-purple-650 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md">
-              Verify Transaction Reference
-            </button>
-          </form>
+                    <div className="p-2.5 bg-white rounded-2xl w-44 h-44 mx-auto flex items-center justify-center border-2 border-purple-500/30 shadow-xl relative group">
+                      <img
+                        src={portalQrUrl}
+                        alt="Real Scannable NPCI UPI QR"
+                        className="w-full h-full object-contain rounded-lg"
+                      />
+                      <div className="absolute -bottom-2 bg-zinc-950 border border-zinc-800 text-[8px] font-mono text-purple-300 px-2 py-0.5 rounded-full font-bold shadow">
+                        GPay • PhonePe • Paytm
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-[10px]">
+                        <span className="text-zinc-400 font-mono truncate max-w-[170px]">
+                          VPA: <strong className="text-white">{ownerPaymentConfig.upiId}</strong>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={copyUpi}
+                          className="text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 cursor-pointer shrink-0 ml-1"
+                        >
+                          {copiedUpi ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                          <span>{copiedUpi ? "Copied" : "Copy"}</span>
+                        </button>
+                      </div>
+
+                      <a
+                        href={portalUpiString}
+                        className="inline-flex items-center justify-center gap-1.5 w-full py-1.5 rounded-xl bg-purple-950/60 border border-purple-500/30 text-purple-300 hover:bg-purple-900/60 text-[10px] font-bold transition cursor-pointer"
+                      >
+                        <span>Tap to Pay in UPI App</span>
+                        <ArrowUpRight size={12} />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {selectedMethod === "BANK" && (
+                  <div className="p-4 bg-zinc-950/40 border border-purple-500/20 rounded-2xl space-y-2.5 text-left text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] text-purple-400 uppercase font-black font-mono tracking-widest">
+                        Direct Wire / NEFT / RTGS Details
+                      </span>
+                      <button
+                        type="button"
+                        onClick={copyBankDetails}
+                        className="text-[10px] font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedBank ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                        <span>{copiedBank ? "Copied" : "Copy Bank Info"}</span>
+                      </button>
+                    </div>
+
+                    <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3 space-y-1 font-mono text-[10.5px]">
+                      <div><span className="text-zinc-400">Bank:</span> <strong className="text-white">{ownerPaymentConfig.bankName}</strong></div>
+                      <div><span className="text-zinc-400">Account Name:</span> <strong className="text-white">{ownerPaymentConfig.accountHolder}</strong></div>
+                      <div><span className="text-zinc-400">Account No:</span> <strong className="text-emerald-400">{ownerPaymentConfig.accountNumber}</strong></div>
+                      <div><span className="text-zinc-400">IFSC Code:</span> <strong className="text-white">{ownerPaymentConfig.ifsc}</strong></div>
+                    </div>
+                    <p className="text-[9.5px] text-zinc-500 italic">Transfer to above account and paste your transaction UTR reference below.</p>
+                  </div>
+                )}
+
+                {selectedMethod === "CARD" && (
+                  <div className="p-4 bg-zinc-950/40 border border-purple-500/20 rounded-2xl space-y-2 text-center text-xs">
+                    <div className="flex justify-center items-center gap-2 text-purple-400">
+                      <CreditCard size={20} />
+                      <span className="font-bold text-white">Credit / Debit Card Online Pay</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-400">Accepting Visa, Mastercard, RuPay & Corporate Cards via secure gateway abstraction.</p>
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => addToast("Redirecting to secure gateway checkout...", "info")}
+                        className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-[10px] transition cursor-pointer"
+                      >
+                        Proceed with Card (₹{targetAmount.toLocaleString("en-IN")})
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-[9px] text-zinc-500 uppercase font-black">Transaction Reference Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={txnRef}
+                    onChange={(e) => setTxnRef(e.target.value)}
+                    placeholder="Enter UPI Ref / Bank UTN..."
+                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none"
+                  />
+                </div>
+
+                <button type="submit" className="w-full py-2 bg-purple-650 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md cursor-pointer transition">
+                  Verify Transaction Reference
+                </button>
+              </form>
+            );
+          })()}
         </div>
 
         {/* Payments Ledger logs */}
