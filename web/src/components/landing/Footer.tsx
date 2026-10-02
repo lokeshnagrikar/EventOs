@@ -16,8 +16,9 @@ export function Footer() {
       { name: "Gallery Delivery", href: "#features" },
     ],
     company: [
+      { name: "Pricing Plans", href: "/pricing" },
+      { name: "Contact & Support", href: "/contact" },
       { name: "About Us", href: "/about" },
-      { name: "Contact Us", href: "/contact" },
       { name: "Templates Center", href: "/resources" },
       { name: "Platform Security", href: "/security" },
       { name: "System Status", href: "/status" },
@@ -33,6 +34,7 @@ export function Footer() {
       { name: "Privacy Policy", href: "/privacy" },
       { name: "Terms of Service", href: "/terms" },
       { name: "Refund & Cancellation", href: "/refund" },
+      { name: "Shipping & Delivery", href: "/shipping-policy" },
       { name: "Tenant SLA", href: "/sla" },
       { name: "Cookie Policy", href: "/cookies" },
     ],
@@ -119,13 +121,21 @@ export function Footer() {
             EventOS is the all-in-one operating system for event planners, wedding agencies, and production teams. Tenant-isolated, secure, and built for scale.
           </p>
 
-          {/* SaaS Architecture Badge */}
-          <div className="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl space-y-1 max-w-sm shadow-inner">
-            <span className="text-[9px] font-black uppercase text-purple-400 tracking-wider block">
-              SaaS Engine Architecture
-            </span>
-            <p className="text-[10.5px] text-slate-300 font-semibold leading-snug">
-              Next.js 14 • Spring Boot Microservices • Docker Multi-Tenant Isolation
+          {/* SaaS Business Classification & Merchant Credentials */}
+          <div className="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl space-y-1.5 max-w-sm shadow-inner text-[10.5px]">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-black uppercase text-purple-400 tracking-wider">
+                SaaS Entity & IT Services
+              </span>
+              <span className="text-[9px] font-bold text-emerald-400">
+                Razorpay Verified
+              </span>
+            </div>
+            <p className="text-slate-300 font-semibold leading-snug">
+              EventOS Technologies • Operating from Maharashtra, India
+            </p>
+            <p className="text-slate-400 text-[10px]">
+              Customer Care: <a href="tel:+919309965483" className="hover:text-purple-300 transition-colors">+91 93099 65483</a> • <a href="mailto:support@eventosapp.in" className="hover:text-purple-300 transition-colors">support@eventosapp.in</a>
             </p>
           </div>
 
@@ -256,7 +266,7 @@ export function Footer() {
             >
               ©
             </span>{" "}
-            2026 EventOS Business Suite. All rights reserved.
+            2026 EventOS Technologies. All rights reserved. • Payments Secured via Razorpay
           </span>
           <span className="text-slate-700 hidden sm:inline">•</span>
           <span className="text-slate-300 font-semibold">
