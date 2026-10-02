@@ -115,9 +115,17 @@ export const offlineStore = {
         syncedCount++;
       } catch (err: any) {
         console.warn(`[Offline Sync] Failed to sync action ${action.id}:`, err);
-        // If it was already processed or client error 400-409, dequeue to prevent queue obstruction
-        if (err.response && err.response.status >= 400 && err.response.status < 500) {
+        action.retryCount = (action.retryCount || 0) + 1;
+        // If client error (4xx) or retried >= 3 times, dequeue to prevent queue obstruction & infinite console spam
+        if (
+          (err.response && err.response.status >= 400 && err.response.status < 500) ||
+          action.retryCount >= 3 ||
+          (err.response && err.response.status >= 500 && action.retryCount >= 2)
+        ) {
+          console.warn(`[Offline Sync] Evicting action ${action.id} after ${action.retryCount} failed attempts.`);
           this.dequeue(action.id);
+        } else {
+          this.saveQueue(queue);
         }
         failedCount++;
       }
