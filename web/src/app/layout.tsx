@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   authors: [{ name: "EventOS Team" }],
   metadataBase: new URL("https://www.eventosapp.in"),
   alternates: {
-    canonical: "https://www.eventosapp.in",
+    canonical: "./",
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
