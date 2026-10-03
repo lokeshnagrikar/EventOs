@@ -95,6 +95,9 @@ services:
       - COOKIE_SECURE=true
       - COOKIE_SAMESITE=${COOKIE_SAMESITE:-None}
       - COOKIE_DOMAIN=${COOKIE_DOMAIN:-eventosapp.in}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-rzp_live_TjIIttn39f18sO}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-c1B76Np8hv3Ckj8y2WxiZIIT}
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET:-eventos_rzp_secret_2026}
     entrypoint: ["java", "-XX:+UseSerialGC", "-Xms128m", "-Xmx512m", "-jar", "app.jar"]
     depends_on:
       postgres:
