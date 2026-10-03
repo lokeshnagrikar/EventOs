@@ -33,6 +33,7 @@ export function Pricing() {
   const [eventVolume, setEventVolume] = useState<number>(12);
   const [showComparison, setShowComparison] = useState<boolean>(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [expandedPlans, setExpandedPlans] = useState<Record<string, boolean>>({});
 
   const openModal = useAuthModalStore((state) => state.openModal);
 
@@ -60,35 +61,35 @@ export function Pricing() {
 
   return (
     <section
-      className="py-24 sm:py-32 relative bg-[#FAF9F6] border-b border-slate-200/80 font-sans overflow-hidden"
+      className="py-10 sm:py-16 relative bg-[#FAF9F6] border-b border-slate-200/80 font-sans overflow-hidden"
       id="pricing"
     >
       {/* Background Soft Glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-purple-200/25 blur-[150px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[450px] bg-purple-200/20 blur-[130px] rounded-full pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header Container */}
-        <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200/80 text-purple-700 text-xs font-bold uppercase tracking-widest mb-4 shadow-xs">
-            <Sparkles size={13} className="text-purple-600" />
+        <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-8">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200/80 text-purple-700 text-[11px] font-bold uppercase tracking-wider mb-2.5 shadow-xs">
+            <Sparkles size={12} className="text-purple-600" />
             <span>Transparent, Predictable Pricing</span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
             Run Your Event Business. <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-800 bg-clip-text text-transparent">
               Not Your Spreadsheets.
             </span>
           </h2>
 
-          <p className="mt-4 text-sm sm:text-base text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
-            From enquiry and quotation to client approval, payments, vendors, timelines, and event-day execution — EventOS keeps your entire operation in one workspace.
+          <p className="mt-2 text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl mx-auto">
+            From enquiry and quotation to approvals, payments, vendors, timelines, and event-day execution — EventOS keeps your entire operation in one workspace.
           </p>
 
           {/* Billing Switcher with 20% Discount Badge */}
-          <div className="mt-8 flex items-center justify-center gap-3">
+          <div className="mt-4 flex items-center justify-center gap-3">
             <div
-              className="inline-flex items-center p-1 rounded-full bg-white border border-slate-200/90 shadow-sm"
+              className="inline-flex items-center p-1 rounded-full bg-white border border-slate-200/90 shadow-xs"
               role="group"
               aria-label="Billing cycle selector"
             >
@@ -97,9 +98,9 @@ export function Pricing() {
                 aria-pressed={!isYearly}
                 onClick={() => setIsYearly(false)}
                 className={cn(
-                  "px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer",
+                  "px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer",
                   !isYearly
-                    ? "bg-[#7C3AED] text-white shadow-md shadow-purple-500/25"
+                    ? "bg-[#7C3AED] text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
@@ -110,14 +111,14 @@ export function Pricing() {
                 aria-pressed={isYearly}
                 onClick={() => setIsYearly(true)}
                 className={cn(
-                  "px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2",
+                  "px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
                   isYearly
-                    ? "bg-[#7C3AED] text-white shadow-md shadow-purple-500/25"
+                    ? "bg-[#7C3AED] text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
                 <span>Annual Billing</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase tracking-wider">
                   Save 20%
                 </span>
               </button>
@@ -126,18 +127,18 @@ export function Pricing() {
         </div>
 
         {/* Interactive Event Volume Slider & Recommendation */}
-        <div className="max-w-2xl mx-auto mb-16 p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/90 shadow-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+        <div className="max-w-xl mx-auto mb-6 p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
+          <div className="flex items-center justify-between gap-2 mb-2">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">
                 Interactive Plan Finder
               </span>
-              <h4 className="text-base font-bold text-slate-900 mt-0.5">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900">
                 How many events does your agency run per month?
               </h4>
             </div>
-            <div className="text-left sm:text-right">
-              <span className="text-2xl font-black text-purple-700 font-heading">
+            <div className="text-right">
+              <span className="text-lg sm:text-xl font-black text-purple-700 font-heading">
                 {eventVolume >= 50 ? "50+ Events" : `${eventVolume} Events`}
               </span>
             </div>
@@ -151,52 +152,54 @@ export function Pricing() {
             value={eventVolume}
             onChange={(e) => setEventVolume(parseInt(e.target.value))}
             aria-label="Monthly events volume slider"
-            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+            className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
           />
 
-          <div className="flex justify-between text-[11px] font-semibold text-slate-400 mt-2 font-mono">
+          <div className="flex justify-between text-[10px] font-semibold text-slate-400 mt-1.5 font-mono">
             <span>1 (Solo)</span>
-            <span>10 (Growing Team)</span>
-            <span>20 (Active Agency)</span>
-            <span>21+ (Agency Scale)</span>
+            <span>10 (Team)</span>
+            <span>20 (Agency)</span>
+            <span>21+ (Scale)</span>
           </div>
 
           {/* Live Recommendation Badge */}
-          <div className="mt-4 p-3.5 rounded-2xl bg-purple-50/80 border border-purple-200/80 flex items-center gap-3">
-            <Zap size={16} className="text-purple-600 shrink-0 fill-purple-600" />
-            <p className="text-xs text-purple-950 font-semibold leading-relaxed">
+          <div className="mt-2.5 p-2 rounded-xl bg-purple-50/80 border border-purple-200/80 flex items-center gap-2">
+            <Zap size={14} className="text-purple-600 shrink-0 fill-purple-600" />
+            <p className="text-[11px] text-purple-950 font-semibold leading-snug">
               {getRecommendationMessage()}
             </p>
           </div>
         </div>
 
         {/* 3 Pricing Cards Grid */}
-        <div className="grid lg:grid-cols-3 gap-8 items-stretch mb-16">
+        <div className="grid lg:grid-cols-3 gap-4 xl:gap-5 items-stretch mb-8">
           {PRICING_PLANS.map((plan, index) => {
             const price = isYearly ? plan.annualMonthlyPrice : plan.monthlyPrice;
             const isHighlighted = plan.id === recommendedPlanId;
+            const isExpanded = Boolean(expandedPlans[plan.id]);
+            const displayFeatures = isExpanded ? plan.features : plan.features.slice(0, 5);
 
             return (
               <motion.div
                 key={plan.id}
-                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.35, delay: index * 0.08 }}
                 className={cn(
-                  "rounded-3xl p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 relative border",
+                  "rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 relative border",
                   plan.popular
-                    ? "bg-[#0B0F19] text-white border-purple-500/80 shadow-2xl shadow-purple-950/30 lg:-translate-y-2 ring-2 ring-purple-500/30"
+                    ? "bg-[#0B0F19] text-white border-purple-500/80 shadow-xl shadow-purple-950/20 lg:-translate-y-1.5 ring-2 ring-purple-500/30"
                     : isHighlighted
-                    ? "bg-white border-purple-400 shadow-xl ring-2 ring-purple-400/20 text-slate-900"
-                    : "bg-white/90 border-slate-200/90 hover:border-slate-300 shadow-md text-slate-900"
+                    ? "bg-white border-purple-400 shadow-lg ring-2 ring-purple-400/20 text-slate-900"
+                    : "bg-white/90 border-slate-200/90 hover:border-slate-300 shadow-xs text-slate-900"
                 )}
               >
                 {/* Popular Badge */}
                 {plan.popular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20">
-                    <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white text-[11px] font-extrabold uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                      <Sparkles size={12} className="fill-white" />
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                    <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                      <Sparkles size={11} className="fill-white" />
                       <span>{plan.badge || "⚡ MOST POPULAR CHOICE"}</span>
                     </span>
                   </div>
@@ -204,11 +207,11 @@ export function Pricing() {
 
                 <div>
                   {/* Top Plan Header */}
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between gap-2">
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between gap-1.5">
                       <h3
                         className={cn(
-                          "text-2xl font-black font-heading tracking-tight",
+                          "text-xl font-black font-heading tracking-tight",
                           plan.popular ? "text-white" : "text-slate-900"
                         )}
                       >
@@ -216,7 +219,7 @@ export function Pricing() {
                       </h3>
                       <span
                         className={cn(
-                          "text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full font-mono",
+                          "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-mono",
                           plan.popular
                             ? "bg-purple-900/60 text-purple-300 border border-purple-700/50"
                             : "bg-slate-100 text-slate-600"
@@ -228,7 +231,7 @@ export function Pricing() {
 
                     <p
                       className={cn(
-                        "text-xs font-semibold mt-1",
+                        "text-[11px] font-semibold mt-0.5",
                         plan.popular ? "text-purple-300" : "text-purple-700"
                       )}
                     >
@@ -237,7 +240,7 @@ export function Pricing() {
 
                     <p
                       className={cn(
-                        "text-xs leading-relaxed mt-2.5",
+                        "text-xs leading-snug mt-1 line-clamp-2",
                         plan.popular ? "text-slate-300" : "text-slate-600"
                       )}
                     >
@@ -246,11 +249,11 @@ export function Pricing() {
                   </div>
 
                   {/* Price Section */}
-                  <div className="mb-6 pb-6 border-b border-slate-200/60 dark:border-slate-800">
+                  <div className="mb-3.5 pb-3 border-b border-slate-200/60 dark:border-slate-800">
                     <div className="flex items-baseline gap-1">
                       <span
                         className={cn(
-                          "text-4xl sm:text-5xl font-extrabold tracking-tight font-heading",
+                          "text-3xl sm:text-4xl font-extrabold tracking-tight font-heading",
                           plan.popular ? "text-white" : "text-slate-900"
                         )}
                       >
@@ -262,20 +265,20 @@ export function Pricing() {
                           plan.popular ? "text-slate-400" : "text-slate-500"
                         )}
                       >
-                        {isYearly ? "/ month · billed annually" : "/ month"}
+                        {isYearly ? "/ mo · billed annually" : "/ mo"}
                       </span>
                     </div>
 
                     {/* Annual Savings Badge */}
-                    <div className="mt-2.5 flex items-center gap-2">
+                    <div className="mt-1 flex items-center gap-1.5">
                       {isYearly ? (
-                        <span className="inline-flex items-center text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 px-2.5 py-0.5 rounded-full font-mono">
+                        <span className="inline-flex items-center text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 px-2 py-0.5 rounded-full font-mono">
                           {plan.annualSavingsFormatted}
                         </span>
                       ) : (
                         <span
                           className={cn(
-                            "text-[11px] font-semibold",
+                            "text-[10px] font-semibold",
                             plan.popular ? "text-slate-400" : "text-slate-500"
                           )}
                         >
@@ -287,43 +290,43 @@ export function Pricing() {
                     {/* Operational Value Callout */}
                     <div
                       className={cn(
-                        "mt-3.5 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2",
+                        "mt-2 p-2 rounded-xl text-[11px] font-bold flex items-center gap-1.5",
                         plan.popular
                           ? "bg-purple-950/70 border border-purple-800/50 text-purple-200"
                           : "bg-slate-100 border border-slate-200/80 text-slate-800"
                       )}
                     >
-                      <Clock size={13} className="text-purple-500 shrink-0" />
-                      <span>{plan.valueCallout}</span>
+                      <Clock size={12} className="text-purple-500 shrink-0" />
+                      <span className="truncate">{plan.valueCallout}</span>
                     </div>
 
                     {/* Agency Infrastructure Optional Note */}
                     {plan.infrastructureNote && (
-                      <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-                        <Server size={12} className="text-slate-400 shrink-0" />
+                      <div className="mt-1.5 flex items-center gap-1 text-[10px] text-slate-500 font-medium">
+                        <Server size={11} className="text-slate-400 shrink-0" />
                         <span>{plan.infrastructureNote}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Features List */}
-                  <div className="space-y-3 mb-8">
+                  <div className="space-y-2 mb-4">
                     <span
                       className={cn(
-                        "text-[11px] font-bold uppercase tracking-wider block font-mono",
+                        "text-[10px] font-bold uppercase tracking-wider block font-mono",
                         plan.popular ? "text-slate-400" : "text-slate-500"
                       )}
                     >
                       Included Capabilities:
                     </span>
-                    <ul className="space-y-2.5">
-                      {plan.features.map((feature, i) => {
+                    <ul className="space-y-1.5">
+                      {displayFeatures.map((feature, i) => {
                         const isPlusHeader = feature.startsWith("Everything in");
                         return (
                           <li
                             key={i}
                             className={cn(
-                              "flex items-start gap-2.5 text-xs",
+                              "flex items-start gap-2 text-xs",
                               isPlusHeader
                                 ? plan.popular
                                   ? "text-purple-300 font-bold"
@@ -334,26 +337,58 @@ export function Pricing() {
                             )}
                           >
                             <Check
-                              size={15}
+                              size={14}
                               className={cn(
                                 "shrink-0 mt-0.5",
                                 plan.popular ? "text-purple-400" : "text-purple-600"
                               )}
                             />
-                            <span>{feature}</span>
+                            <span className="leading-tight">{feature}</span>
                           </li>
                         );
                       })}
                     </ul>
+
+                    {/* Expand/Collapse Toggle Button */}
+                    {plan.features.length > 5 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedPlans((prev) => ({
+                            ...prev,
+                            [plan.id]: !prev[plan.id],
+                          }))
+                        }
+                        className={cn(
+                          "mt-1 text-[11px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer",
+                          plan.popular
+                            ? "text-purple-300 hover:text-white"
+                            : "text-purple-600 hover:text-purple-900"
+                        )}
+                      >
+                        <span>
+                          {isExpanded
+                            ? "Show fewer capabilities"
+                            : `+ ${plan.features.length - 5} more capabilities`}
+                        </span>
+                        <ChevronDown
+                          size={12}
+                          className={cn(
+                            "transition-transform duration-200",
+                            isExpanded && "rotate-180"
+                          )}
+                        />
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 {/* Card CTA Button */}
-                <div className="pt-4 border-t border-slate-200/60 dark:border-slate-800">
+                <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 mt-2">
                   <button
                     onClick={() => handleCtaClick(plan)}
                     className={cn(
-                      "w-full py-3.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md",
+                      "w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm",
                       plan.popular
                         ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white hover:brightness-110 active:scale-[0.98] shadow-purple-500/25"
                         : "bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98]"
@@ -363,7 +398,7 @@ export function Pricing() {
                   </button>
                   <p
                     className={cn(
-                      "text-[11px] text-center font-medium mt-2",
+                      "text-[10px] text-center font-medium mt-1.5",
                       plan.popular ? "text-slate-400" : "text-slate-500"
                     )}
                   >
