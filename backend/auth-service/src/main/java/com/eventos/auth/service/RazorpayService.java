@@ -26,6 +26,9 @@ public class RazorpayService {
     @Value("${app.razorpay.key-secret:XQzKaVcWwZF2iYJKJNrRakn7}")
     private String keySecret;
 
+    @Value("${app.razorpay.webhook-secret:}")
+    private String webhookSecret;
+
     private final RestTemplate restTemplate;
 
     public RazorpayService() {
@@ -131,6 +134,40 @@ public class RazorpayService {
             return isValid;
         } catch (Exception e) {
             log.error("[RAZORPAY] Error during signature verification", e);
+            return false;
+        }
+    }
+
+    /**
+     * Verify webhook payload signature using HMAC-SHA256 with webhookSecret.
+     */
+    public boolean verifyWebhookSignature(String payload, String signature) {
+        if (webhookSecret == null || webhookSecret.isBlank()) {
+            return true; // Secret not set, pass through
+        }
+        if (signature == null || signature.isBlank()) {
+            log.warn("[RAZORPAY WEBHOOK] Missing signature header while secret is configured");
+            return false;
+        }
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(webhookSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(secretKeySpec);
+
+            byte[] hmacBytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hmacBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            String calculatedSignature = hexString.toString();
+            return MessageDigest.isEqual(
+                    calculatedSignature.getBytes(StandardCharsets.UTF_8),
+                    signature.trim().getBytes(StandardCharsets.UTF_8)
+            );
+        } catch (Exception e) {
+            log.error("[RAZORPAY WEBHOOK] Error verifying webhook signature", e);
             return false;
         }
     }

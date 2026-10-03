@@ -87,6 +87,8 @@ public class SecurityConfig {
                         "/ws",
                         "/ws/**",
                         "/billing/webhook",
+                        "/billing/razorpay/webhook",
+                        "/billing/razorpay-webhook",
                         "/billing/plans",
                         "/inquiries",
                         "/inquiries/**",

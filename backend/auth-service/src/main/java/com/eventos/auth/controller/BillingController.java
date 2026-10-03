@@ -837,6 +837,46 @@ public class BillingController {
         }
     }
 
+    @PostMapping({"/razorpay/webhook", "/razorpay-webhook"})
+    public ResponseEntity<String> handleRazorpayWebhook(
+            @RequestBody String payload,
+            @RequestHeader(value = "X-Razorpay-Signature", required = false) String sigHeader) {
+        log.info("[RAZORPAY WEBHOOK] Received webhook event");
+
+        boolean isValid = razorpayService.verifyWebhookSignature(payload, sigHeader);
+        if (!isValid) {
+            log.warn("[RAZORPAY WEBHOOK] Signature verification failed");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Signature verification failed");
+        }
+
+        try {
+            com.fasterxml.jackson.databind.JsonNode rootNode = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payload);
+            String event = rootNode.path("event").asText("");
+            log.info("[RAZORPAY WEBHOOK] Event type: {}", event);
+
+            if ("payment.captured".equals(event) || "order.paid".equals(event)) {
+                com.fasterxml.jackson.databind.JsonNode paymentEntity = rootNode.path("payload").path("payment").path("entity");
+                com.fasterxml.jackson.databind.JsonNode notesNode = paymentEntity.path("notes");
+                String tenantIdStr = notesNode.path("tenantId").asText("");
+                String planCode = notesNode.path("planCode").asText("");
+
+                if (!tenantIdStr.isBlank() && !planCode.isBlank()) {
+                    try {
+                        UUID tenantId = UUID.fromString(tenantIdStr);
+                        billingService.upgradeSubscription(tenantId, planCode);
+                        log.info("[RAZORPAY WEBHOOK] Upgraded tenant {} to plan {} via event {}", tenantId, planCode, event);
+                    } catch (Exception ex) {
+                        log.warn("[RAZORPAY WEBHOOK] Failed to upgrade tenant: {}", ex.getMessage());
+                    }
+                }
+            }
+            return ResponseEntity.ok("Webhook Handled Successfully");
+        } catch (Exception e) {
+            log.error("[RAZORPAY WEBHOOK] Error processing webhook JSON payload: {}", e.getMessage(), e);
+            return ResponseEntity.ok("Received");
+        }
+    }
+
     // Super Admin platform logs API
     @GetMapping("/superadmin/logs")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('audit:read')")
