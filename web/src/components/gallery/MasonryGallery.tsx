@@ -201,8 +201,8 @@ export default function MasonryGallery({
               <span className="font-extrabold text-zinc-250">Compiling asset archive...</span>
               <span className="font-mono">{downloadProgress}%</span>
             </div>
-            <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
-              <div className="h-full bg-purple-550 rounded-full transition-all" style={{ width: `${downloadProgress}%` }} />
+            <div className="h-2 bg-zinc-800/90 border border-zinc-700/50 rounded-full overflow-hidden relative shadow-inner">
+              <div className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full transition-all duration-300" style={{ width: `${Math.max(downloadProgress, 4)}%` }} />
             </div>
           </div>
         </div>

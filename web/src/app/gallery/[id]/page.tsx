@@ -1011,9 +1011,9 @@ export default function AlbumDetailPage() {
                     </button>
                   </form>
 
-                  {/* Newly Generated Secure Link Success Banner with Real QR Code */}
+                  {/* Newly Generated Secure Link Success Banner */}
                   {shareSuccessToken && (
-                    <div className="p-3.5 bg-gradient-to-b from-emerald-500/15 to-emerald-950/20 border border-emerald-500/30 rounded-2xl space-y-3 shadow-lg animate-in fade-in duration-200">
+                    <div className="p-3.5 bg-gradient-to-b from-emerald-500/15 to-emerald-950/20 border border-emerald-500/30 rounded-2xl space-y-2.5 shadow-lg animate-in fade-in duration-200">
                       <div className="flex items-center justify-between">
                         <span className="font-extrabold text-emerald-400 text-[10px] flex items-center gap-1.5">
                           <Check size={13} className="text-emerald-400" />
@@ -1043,25 +1043,18 @@ export default function AlbumDetailPage() {
                         </button>
                       </div>
 
-                      {/* Real Scannable QR Code */}
-                      <div className="flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-md">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(
-                            `${getAppBaseUrl()}/share/${shareSuccessToken}`
-                          )}&color=09090b&bgcolor=ffffff&qzone=2`}
-                          alt="Real Scannable Album Share QR Code"
-                          className="w-28 h-28 object-contain block select-none"
-                        />
+                      <div className="flex items-center gap-1.5 text-[9px] text-emerald-400/90 bg-emerald-500/10 px-2.5 py-1 rounded-lg">
+                        <Check size={10} className="shrink-0" />
+                        <span>Live Scannable QR Code above is now updated for this link.</span>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 pt-0.5">
                         <button
                           type="button"
-                          onClick={handleDownloadQr}
+                          onClick={() => handleCopyLink(`${getAppBaseUrl()}/share/${shareSuccessToken}`)}
                           className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[10px] flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
                         >
-                          <Download size={11} /> Save QR
+                          {copiedShareUrl ? <Check size={11} /> : <Copy size={11} />} {copiedShareUrl ? "Copied" : "Copy Link"}
                         </button>
                         <a
                           href={`${getAppBaseUrl()}/share/${shareSuccessToken}`}

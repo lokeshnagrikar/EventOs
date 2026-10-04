@@ -272,10 +272,24 @@ export default function AdvancedUploader({ albumId, onUploadComplete }: Advanced
                   
                   {/* Progress bar */}
                   <div className="flex items-center gap-3">
-                    <div className="h-1 flex-1 bg-zinc-900 rounded-full overflow-hidden">
-                      <div className="h-full bg-purple-550 rounded-full transition-all duration-300" style={{ width: `${item.progress}%` }} />
+                    <div className="h-2 flex-1 bg-zinc-800/90 border border-zinc-700/50 rounded-full overflow-hidden relative shadow-inner">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-300 relative",
+                          item.status === "FAILED"
+                            ? "bg-rose-500"
+                            : item.status === "SUCCESS"
+                            ? "bg-emerald-500"
+                            : "bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-400"
+                        )}
+                        style={{ width: `${Math.max(item.progress, 4)}%` }}
+                      >
+                        {item.status === "UPLOADING" && (
+                          <div className="absolute inset-0 bg-white/25 animate-pulse rounded-full" />
+                        )}
+                      </div>
                     </div>
-                    <span className="text-[9px] text-zinc-500 font-mono font-bold w-8 text-right">{item.progress}%</span>
+                    <span className="text-[10px] text-purple-400 font-mono font-extrabold w-9 text-right">{item.progress}%</span>
                   </div>
 
                   {/* Upload metrics speed / ETA */}

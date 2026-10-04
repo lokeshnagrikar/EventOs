@@ -257,6 +257,13 @@ const STAFF_ROLES = [
   "Production Runner"
 ];
 
+const getStaffInitials = (name?: string) => {
+  if (!name || typeof name !== "string") return "ST";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "ST";
+  return parts.map(p => p[0]).slice(0, 2).join("").toUpperCase();
+};
+
 export default function EventWorkspace({ eventId }: { eventId: string }) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -303,6 +310,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
   const [newStaffName, setNewStaffName] = useState("");
   const [newStaffRole, setNewStaffRole] = useState("Lead Planner");
   const [newStaffPhone, setNewStaffPhone] = useState("");
+  const [isCustomStaffMode, setIsCustomStaffMode] = useState(false);
 
   // Dynamic Invoices
   const [invoices, setInvoices] = useState<EventInvoice[]>([]);
@@ -387,7 +395,13 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       }
     }
   });
-  const teamMembers = teamData?.data || [];
+
+  const teamMembers: TeamMember[] = useMemo(() => {
+    if (!teamData) return [];
+    if (Array.isArray(teamData)) return teamData as any;
+    if (Array.isArray((teamData as any).data)) return (teamData as any).data;
+    return [];
+  }, [teamData]);
 
   // Parse notes JSON metadata
   useEffect(() => {
@@ -1788,50 +1802,74 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     <span className="text-[11px] text-zinc-500">Allocate workspace members or dedicated event runners below.</span>
                   </div>
                 ) : (
-                  staffAllocations.map((member) => (
-                    <div key={member.id} className="p-4 border border-zinc-850 bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-purple-950/40 border border-purple-800/40 flex items-center justify-center text-purple-300 font-black text-xs">
-                          {member.name.split(" ").map(n => n[0]).join("")}
+                  staffAllocations.map((member, idx) => {
+                    const memberName = member?.name || "Staff Member";
+                    const memberRole = member?.role || "Crew";
+                    const memberId = member?.id || `stf-${idx}`;
+                    return (
+                      <div key={memberId} className="p-4 border border-zinc-850 bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-full bg-purple-950/40 border border-purple-800/40 flex items-center justify-center text-purple-300 font-black text-xs shrink-0">
+                            {getStaffInitials(memberName)}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[9px] text-purple-400 block uppercase tracking-wider">{memberRole}</span>
+                            <span className="text-zinc-100 font-extrabold text-xs mt-0.5 block truncate">{memberName}</span>
+                            {member?.phone && <span className="text-[10px] text-zinc-500 font-normal">{member.phone}</span>}
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-[9px] text-purple-400 block uppercase tracking-wider">{member.role}</span>
-                          <span className="text-zinc-100 font-extrabold text-xs mt-0.5 block">{member.name}</span>
-                          {member.phone && <span className="text-[10px] text-zinc-500 font-normal">{member.phone}</span>}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteStaff(memberId, memberName)}
+                          className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 cursor-pointer shrink-0"
+                          title="Unassign"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleDeleteStaff(member.id, member.name)}
-                        className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 cursor-pointer"
-                        title="Unassign"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
 
               {/* Add / Allocate Staff Form */}
               <div className="p-4 bg-zinc-950/50 border border-zinc-850 rounded-xl space-y-3">
-                <span className="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Allocate Crew Member</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Allocate Crew Member</span>
+                  {teamMembers.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomStaffMode(!isCustomStaffMode)}
+                      className="text-[10px] text-purple-400 hover:text-purple-300 font-bold underline cursor-pointer"
+                    >
+                      {isCustomStaffMode ? "← Select from Team Directory" : "+ Enter Custom Name"}
+                    </button>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                  {teamMembers.length > 0 ? (
+                  {teamMembers.length > 0 && !isCustomStaffMode ? (
                     <select
                       value={newStaffName}
                       onChange={(e) => {
                         setNewStaffName(e.target.value);
-                        const member = teamMembers.find(m => `${m.firstName} ${m.lastName}`.trim() === e.target.value);
+                        const member = teamMembers.find(m => {
+                          const fullName = `${m.firstName || ""} ${m.lastName || ""}`.trim() || m.email || "";
+                          return fullName === e.target.value;
+                        });
                         if (member?.phone) setNewStaffPhone(member.phone);
                       }}
                       className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
                     >
                       <option value="">-- Select Team Member --</option>
-                      {teamMembers.map(m => (
-                        <option key={m.id} value={`${m.firstName} ${m.lastName}`.trim()}>
-                          {m.firstName} {m.lastName} ({m.role})
-                        </option>
-                      ))}
+                      {teamMembers.map(m => {
+                        const fullName = `${m.firstName || ""} ${m.lastName || ""}`.trim() || m.email || "Team Member";
+                        return (
+                          <option key={m.id} value={fullName}>
+                            {fullName} ({m.role || "Staff"})
+                          </option>
+                        );
+                      })}
                     </select>
                   ) : (
                     <input
@@ -1862,6 +1900,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                   />
 
                   <button
+                    type="button"
                     onClick={handleAddStaff}
                     className="py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold text-xs cursor-pointer shadow-md transition"
                   >
