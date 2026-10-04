@@ -14,6 +14,7 @@ import { LucideIcon, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useSidebarStore } from "@/store/sidebarStore";
 
 interface Breadcrumb {
   label: string;
@@ -45,7 +46,7 @@ export default function PageShell({
   const pathname = usePathname();
 
   const [mounted, setMounted] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, setIsCollapsed } = useSidebarStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [userName, setUserName] = useState("Admin Workspace");
@@ -60,8 +61,6 @@ export default function PageShell({
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedCollapsed = localStorage.getItem("sidebar_collapsed");
-      if (storedCollapsed) setIsCollapsed(storedCollapsed === "true");
       const storedName = localStorage.getItem("user_name");
       if (storedName) setUserName(storedName);
     }
@@ -79,9 +78,6 @@ export default function PageShell({
 
   const handleSetCollapsed = (collapsed: boolean) => {
     setIsCollapsed(collapsed);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sidebar_collapsed", String(collapsed));
-    }
   };
 
   const handleLogout = () => {
@@ -160,72 +156,76 @@ export default function PageShell({
         <main
           id="main-content"
           data-lenis-prevent
-          className={cn(
-            "flex-1 overflow-y-auto min-w-0 max-w-full overflow-x-hidden px-3 py-3.5 sm:px-6 sm:py-6 md:p-8 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto pb-28 md:pb-24 custom-scrollbar",
-            className
-          )}
+          className="flex-1 overflow-y-auto w-full min-w-0 overflow-x-hidden custom-scrollbar"
         >
-          {/* Page enter animation wrapper */}
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          <div
+            className={cn(
+              "px-3 py-3.5 sm:px-6 sm:py-6 md:p-8 space-y-4 sm:space-y-6 max-w-7xl w-full mx-auto pb-28 md:pb-24",
+              className
+            )}
           >
-          {/* Page header */}
-          {(title || breadcrumbs || actions) && (
+            {/* Page enter animation wrapper */}
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-zinc-800/80 pb-3.5 sm:pb-6 mb-3.5 sm:mb-6 pt-1"
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="min-w-0 flex-1">
-                {/* Breadcrumbs */}
-                {breadcrumbs && breadcrumbs.length > 0 && (
-                  <nav
-                    aria-label="Breadcrumb"
-                    className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-medium mb-2 sm:mb-3 tracking-wide overflow-x-auto no-scrollbar"
-                  >
-                    {breadcrumbs.map((crumb, idx) => (
-                      <React.Fragment key={idx}>
-                        {idx > 0 && (
-                          <ChevronRight size={12} className="text-zinc-600 shrink-0" />
-                        )}
-                        {crumb.href ? (
-                          <Link
-                            href={crumb.href}
-                            className="hover:text-white transition-colors truncate"
-                          >
-                            {crumb.label}
-                          </Link>
-                        ) : (
-                          <span className="text-zinc-400 truncate">{crumb.label}</span>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </nav>
-                )}
+              {/* Page header */}
+              {(title || breadcrumbs || actions) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                  className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-zinc-800/80 pb-3.5 sm:pb-6 mb-3.5 sm:mb-6 pt-1"
+                >
+                  <div className="min-w-0 flex-1">
+                    {/* Breadcrumbs */}
+                    {breadcrumbs && breadcrumbs.length > 0 && (
+                      <nav
+                        aria-label="Breadcrumb"
+                        className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-medium mb-2 sm:mb-3 tracking-wide overflow-x-auto no-scrollbar"
+                      >
+                        {breadcrumbs.map((crumb, idx) => (
+                          <React.Fragment key={idx}>
+                            {idx > 0 && (
+                              <ChevronRight size={12} className="text-zinc-600 shrink-0" />
+                            )}
+                            {crumb.href ? (
+                              <Link
+                                href={crumb.href}
+                                className="hover:text-white transition-colors truncate"
+                              >
+                                {crumb.label}
+                              </Link>
+                            ) : (
+                              <span className="text-zinc-400 truncate">{crumb.label}</span>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </nav>
+                    )}
 
-                {title && (
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white leading-snug truncate">
-                    {title}
-                  </h2>
-                )}
-                {subtitle && (
-                  <p className="text-[11px] sm:text-xs md:text-sm text-zinc-400 mt-1 sm:mt-2 font-normal leading-relaxed">
-                    {subtitle}
-                  </p>
-                )}
-              </div>
+                    {title && (
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white leading-snug truncate">
+                        {title}
+                      </h2>
+                    )}
+                    {subtitle && (
+                      <p className="text-[11px] sm:text-xs md:text-sm text-zinc-400 mt-1 sm:mt-2 font-normal leading-relaxed">
+                        {subtitle}
+                      </p>
+                    )}
+                  </div>
 
-              {actions && (
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0 w-full md:w-auto">{actions}</div>
+                  {actions && (
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0 w-full md:w-auto">{actions}</div>
+                  )}
+                </motion.div>
               )}
-            </motion.div>
-          )}
 
-          {children}
-          </motion.div>
+              {children}
+            </motion.div>
+          </div>
         </main>
       </div>
     </div>

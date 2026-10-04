@@ -145,15 +145,21 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
 
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
         {/* Brand Header */}
-        <div className="h-[60px] border-b border-slate-200/60 dark:border-white/[0.04] px-4 flex items-center justify-between shrink-0">
+        <div className={cn(
+          "h-[60px] border-b border-slate-200/60 dark:border-white/[0.04] flex items-center shrink-0 relative transition-all",
+          isCollapsed ? "px-2.5 justify-between" : "px-4 justify-between"
+        )}>
           <Link 
             href="/dashboard" 
             onClick={() => { if (onClose) onClose(); }}
             className="flex items-center gap-3 min-w-0"
           >
             {/* Logo mark */}
-            <div className="h-9 w-9 rounded-xl bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-sm">
-              <EventOsLogo size={30} animated={true} interactive={true} />
+            <div className={cn(
+              "rounded-xl bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-sm",
+              isCollapsed ? "h-8 w-8" : "h-9 w-9"
+            )}>
+              <EventOsLogo size={isCollapsed ? 24 : 30} animated={true} interactive={true} />
             </div>
             <AnimatePresence>
               {!isCollapsed && (
@@ -181,22 +187,27 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
               <X size={14} />
             </button>
           ) : (
-            <AnimatePresence>
-              {!isCollapsed && (
-                <motion.button
-                  key="collapse-btn"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.15 }}
+            <>
+              {!isCollapsed ? (
+                <button
                   onClick={() => setIsCollapsed(true)}
                   className="h-6 w-6 rounded-lg bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.07] border border-slate-200/80 dark:border-white/[0.05] text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shrink-0"
                   aria-label="Collapse sidebar"
+                  title="Collapse sidebar (<)"
                 >
                   <ChevronLeft size={12} />
-                </motion.button>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsCollapsed(false)}
+                  className="h-6 w-6 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:text-purple-300 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                  aria-label="Expand sidebar"
+                  title="Expand sidebar (>)"
+                >
+                  <ChevronRight size={13} />
+                </button>
               )}
-            </AnimatePresence>
+            </>
           )}
         </div>
 

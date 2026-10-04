@@ -232,7 +232,7 @@ export default function AdvancedUploader({ albumId, onUploadComplete }: Advanced
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={cn(
-          "border border-dashed rounded-2xl p-10 text-center flex flex-col items-center justify-center cursor-pointer transition-colors relative overflow-hidden group",
+          "border border-dashed rounded-2xl p-6 sm:p-10 text-center flex flex-col items-center justify-center cursor-pointer transition-colors relative overflow-hidden group",
           dragActive ? "border-purple-600 bg-purple-550/[0.01]" : "border-zinc-800 bg-[#141416]/20 hover:border-zinc-700/80"
         )}
       >
@@ -244,9 +244,14 @@ export default function AdvancedUploader({ albumId, onUploadComplete }: Advanced
           onChange={(e) => e.target.files && handleFiles(e.target.files)}
         />
         
-        <Upload size={32} className="text-zinc-650 group-hover:text-purple-400 transition-colors mb-3" />
-        <span className="text-xs text-zinc-300 font-extrabold">Drag & Drop media assets here or <span className="text-purple-400 group-hover:underline">browse</span></span>
-        <span className="text-[9.5px] text-zinc-550 mt-1.5">Supports RAW images, 4K MP4s, AVIF, and metadata extraction.</span>
+        <Upload size={28} className="sm:w-8 sm:h-8 text-zinc-500 group-hover:text-purple-400 transition-colors mb-2.5" />
+        <span className="text-xs text-zinc-300 font-extrabold">
+          <span className="hidden sm:inline">Drag & Drop media assets here or </span>
+          <span className="text-purple-400 group-hover:underline">Browse & upload files</span>
+        </span>
+        <span className="text-[9px] sm:text-[9.5px] text-zinc-500 mt-1 max-w-sm px-2">
+          Supports RAW images, 4K MP4s, AVIF, and metadata extraction.
+        </span>
       </div>
 
       {/* Upload queue list */}

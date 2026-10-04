@@ -32,7 +32,8 @@ import {
   Clock,
   Copy,
   Check,
-  ShieldCheck
+  ShieldCheck,
+  SlidersHorizontal
 } from "lucide-react";
 import AdvancedUploader from "@/components/gallery/AdvancedUploader";
 import MasonryGallery from "@/components/gallery/MasonryGallery";
@@ -117,7 +118,7 @@ export default function AlbumDetailPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   
   // Custom sidebar active tab: "specs" | "comments" | "sharing" | "recycle"
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<"specs" | "comments" | "sharing" | "recycle">("specs");
 
   // Selection states (for details side panel)
@@ -475,6 +476,9 @@ export default function AlbumDetailPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      setShowSidebar(true);
+    }
   }, []);
 
   if (!mounted) {
@@ -501,47 +505,73 @@ export default function AlbumDetailPage() {
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
 
       {/* Top Navbar */}
-      <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
-        <div className="flex items-center gap-3">
+      <nav className="h-14 sm:h-16 border-b border-zinc-800 bg-[#111113]/90 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between z-20 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={() => router.push("/gallery")}
-            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
+            className="h-8 w-8 shrink-0 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50 cursor-pointer"
             aria-label="Back to galleries"
           >
             <ArrowLeft size={16} />
           </button>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-sm max-w-[150px] sm:max-w-[200px] truncate">{album?.name || "Album Assets"}</span>
-            <span className="text-[9.5px] px-2 py-0.5 bg-zinc-800 rounded text-zinc-400 font-bold font-mono">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span className="font-bold text-xs sm:text-sm max-w-[100px] xs:max-w-[140px] sm:max-w-[220px] truncate">
+              {album?.name || "Album Assets"}
+            </span>
+            <span className="text-[9px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 bg-zinc-800/90 rounded text-zinc-400 font-bold font-mono shrink-0">
               {items.length} Files
             </span>
           </div>
         </div>
 
         {isStaff && (
-          <div className="flex items-center gap-2.5 text-xs">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs shrink-0">
             <button
+              type="button"
               onClick={() => setShowShareModal(true)}
-              className="flex items-center gap-1.5 h-8 px-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold transition-all shadow-md shadow-purple-600/10 cursor-pointer"
+              className="flex items-center gap-1.5 h-8 px-2.5 sm:px-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold transition-all shadow-md shadow-purple-600/10 cursor-pointer active:scale-95"
+              title="Share & QR Code"
             >
               <QrCode size={13} />
-              Share & QR Code
+              <span className="hidden sm:inline">Share & QR Code</span>
+              <span className="sm:hidden">Share</span>
             </button>
             
             <button
+              type="button"
               onClick={() => { setShowSidebar(true); setSidebarTab("recycle"); }}
-              className="flex items-center gap-1.5 h-8 px-3 border border-zinc-800 hover:border-amber-500/30 hover:bg-amber-500/5 text-zinc-450 hover:text-amber-400 rounded-xl font-bold transition-all"
+              className="flex items-center gap-1.5 h-8 px-2 sm:px-3 border border-zinc-800 hover:border-amber-500/30 hover:bg-amber-500/5 text-zinc-400 hover:text-amber-400 rounded-xl font-bold transition-all cursor-pointer active:scale-95"
+              title="Recycle Bin"
             >
               <FolderSync size={13} />
-              Recycle Bin ({deletedItems.length})
+              <span className="hidden md:inline">Recycle Bin ({deletedItems.length})</span>
+              <span className="md:hidden">({deletedItems.length})</span>
             </button>
 
             <button
+              type="button"
               onClick={() => setShowDeleteAlbumModal(true)}
-              className="flex items-center gap-1.5 h-8 px-3 border border-zinc-800 hover:border-red-500/30 hover:bg-red-500/5 text-zinc-450 hover:text-red-400 rounded-xl font-bold transition-all"
+              className="flex items-center gap-1 h-8 px-2 sm:px-3 border border-zinc-800 hover:border-red-500/30 hover:bg-red-500/5 text-zinc-400 hover:text-red-400 rounded-xl font-bold transition-all cursor-pointer active:scale-95"
+              title="Delete Album"
             >
               <Trash2 size={13} />
-              Delete
+              <span className="hidden sm:inline">Delete</span>
+            </button>
+
+            {/* Mobile & Desktop Details Panel Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowSidebar((prev) => !prev)}
+              className={cn(
+                "flex items-center justify-center h-8 w-8 rounded-xl border transition-all cursor-pointer active:scale-95",
+                showSidebar
+                  ? "bg-purple-600/25 border-purple-500/50 text-purple-300"
+                  : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
+              )}
+              title={showSidebar ? "Hide Details Panel" : "Show Details Panel (Specs, QR & Links)"}
+              aria-label="Toggle Details Panel"
+            >
+              <SlidersHorizontal size={13} />
             </button>
           </div>
         )}
@@ -551,16 +581,18 @@ export default function AlbumDetailPage() {
       <div className="flex-1 flex overflow-hidden">
         
         {/* Left Side: Masonry Grid + Uploader */}
-        <div className="flex-1 p-6 space-y-6 overflow-y-auto min-w-0">
+        <div className="flex-1 p-3.5 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto min-w-0">
           
           {/* Album summary bar */}
-          <div className="bg-[#111113]/70 backdrop-blur border border-zinc-800/80 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-lg shadow-black/20">
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-lg font-black text-white tracking-tight">{album?.name}</h1>
+          <div className="bg-[#111113]/70 backdrop-blur border border-zinc-800/80 p-3.5 sm:p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 shadow-lg shadow-black/20">
+            <div className="space-y-1 min-w-0 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                <h1 className="text-base sm:text-lg font-black text-white tracking-tight truncate max-w-full">
+                  {album?.name}
+                </h1>
                 <span
                   className={cn(
-                    "text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border flex items-center gap-1.5",
+                    "text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 sm:px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 shrink-0",
                     album?.visibility === "PUBLIC"
                       ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                       : "bg-amber-500/10 border-amber-500/30 text-amber-400"
@@ -575,21 +607,21 @@ export default function AlbumDetailPage() {
                   {album?.visibility === "PUBLIC" ? "Public • Downloads ON" : "Private • Locked"}
                 </span>
                 {album?.status && (
-                  <span className="text-[9px] font-mono px-2 py-0.5 bg-zinc-800/90 text-zinc-400 rounded-md border border-zinc-700/50">
+                  <span className="text-[8.5px] sm:text-[9px] font-mono px-2 py-0.5 bg-zinc-800/90 text-zinc-400 rounded-md border border-zinc-700/50 shrink-0">
                     {album.status}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-zinc-400 max-w-xl leading-relaxed break-words">
                 {album?.description || "No description set for this album."}
               </p>
             </div>
             
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto pt-1 sm:pt-0">
               {associatedEvent && (
                 <a
                   href={`/events/${associatedEvent.id}`}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-purple-955/20 hover:bg-purple-955/40 border border-purple-900/30 text-purple-400 hover:text-purple-300 rounded-xl text-[11px] font-bold transition-all shadow-sm"
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 bg-purple-955/20 hover:bg-purple-955/40 border border-purple-900/30 text-purple-400 hover:text-purple-300 rounded-xl text-[10.5px] sm:text-[11px] font-bold transition-all shadow-sm"
                 >
                   <Layers size={13} />
                   <span>Event Workspace</span>
@@ -599,7 +631,7 @@ export default function AlbumDetailPage() {
               <button
                 type="button"
                 onClick={() => setShowShareModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-[11px] font-bold transition-all shadow-md shadow-purple-600/15 cursor-pointer active:scale-95"
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-[10.5px] sm:text-[11px] font-bold transition-all shadow-md shadow-purple-600/15 cursor-pointer active:scale-95"
               >
                 <QrCode size={13} />
                 <span>Share & QR</span>
@@ -664,38 +696,54 @@ export default function AlbumDetailPage() {
 
         {/* Right Side Collapsible Sidebar Panel */}
         {showSidebar && (
-          <div className="w-80 shrink-0 border-l border-zinc-850 bg-[#0c0c0e]/90 backdrop-blur-md flex flex-col overflow-hidden text-xs text-zinc-350 select-none">
-            
-            {/* Tab navigation headers */}
-            <div className="flex border-b border-zinc-850 bg-zinc-950/20 p-1 gap-1">
-              {[
-                { key: "specs", label: "Specs", icon: Info },
-                { key: "comments", label: "Collaborate", icon: MessageSquare },
-                { key: "sharing", label: "Secure Share", icon: Share2 },
-                { key: "recycle", label: "Recycle", icon: FolderSync }
-              ].map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => setSidebarTab(tab.key as any)}
-                    className={cn(
-                      "flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1 font-bold text-[10px] transition-all",
-                      sidebarTab === tab.key ? "bg-zinc-900 border border-zinc-800 text-purple-400" : "text-zinc-550 hover:text-zinc-300"
-                    )}
-                    title={tab.label}
-                  >
-                    <Icon size={12} />
-                  </button>
-                );
-              })}
-              <button onClick={() => setShowSidebar(false)} className="p-1 text-zinc-500 hover:text-white">
-                <X size={14} />
-              </button>
-            </div>
+          <>
+            {/* Mobile Backdrop Overlay (only on mobile/tablet < lg) */}
+            <div
+              onClick={() => setShowSidebar(false)}
+              className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
+              aria-hidden="true"
+            />
 
-            {/* Tab contents wrapper */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+            {/* Sidebar Panel Container */}
+            <aside className="fixed inset-y-0 right-0 z-50 w-full sm:w-88 max-w-[88vw] lg:static lg:w-80 shrink-0 border-l border-zinc-850 bg-[#0c0c0e]/98 lg:bg-[#0c0c0e]/90 backdrop-blur-xl flex flex-col overflow-hidden text-xs text-zinc-350 select-none shadow-2xl lg:shadow-none animate-in slide-in-from-right duration-200">
+              
+              {/* Tab navigation headers */}
+              <div className="flex border-b border-zinc-850 bg-zinc-950/40 p-1.5 gap-1 shrink-0">
+                {[
+                  { key: "specs", label: "Specs", icon: Info },
+                  { key: "comments", label: "Collaborate", icon: MessageSquare },
+                  { key: "sharing", label: "Secure Share", icon: Share2 },
+                  { key: "recycle", label: "Recycle", icon: FolderSync }
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setSidebarTab(tab.key as any)}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1 font-bold text-[10px] transition-all cursor-pointer",
+                        sidebarTab === tab.key ? "bg-zinc-900 border border-zinc-800 text-purple-400" : "text-zinc-550 hover:text-zinc-300"
+                      )}
+                      title={tab.label}
+                    >
+                      <Icon size={12} />
+                      <span className="hidden sm:inline">{tab.label}</span>
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setShowSidebar(false)}
+                  className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 cursor-pointer transition-colors"
+                  aria-label="Close details panel"
+                  title="Close panel"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              {/* Tab contents wrapper */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
               
               {/* TAB A: SPECIFICATIONS EXIF METADATA */}
               {sidebarTab === "specs" && (
@@ -1117,8 +1165,9 @@ export default function AlbumDetailPage() {
                 </div>
               )}
 
-            </div>
-          </div>
+              </div>
+            </aside>
+          </>
         )}
 
       </div>

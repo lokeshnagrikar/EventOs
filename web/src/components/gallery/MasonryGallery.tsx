@@ -148,22 +148,22 @@ export default function MasonryGallery({
     <div className="space-y-6">
       
       {/* Selection Mode Header Bar */}
-      <div className="flex justify-between items-center bg-[#121214]/60 border border-zinc-850 p-3 rounded-2xl">
-        <div className="flex items-center gap-3 text-xs">
+      <div className="flex flex-wrap justify-between items-center bg-[#121214]/60 border border-zinc-850 p-2.5 sm:p-3 rounded-2xl gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 text-xs">
           <button
             onClick={() => {
               setSelectMode(!selectMode);
               setSelectedIds([]);
             }}
             className={cn(
-              "px-3.5 py-1.5 border rounded-xl font-bold transition-all",
+              "px-3 sm:px-3.5 py-1.5 border rounded-xl font-bold transition-all text-xs cursor-pointer",
               selectMode ? "bg-purple-950/20 border-purple-550/40 text-purple-400" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-850"
             )}
           >
             {selectMode ? "Exit Selection" : "Select Assets"}
           </button>
           {selectMode && (
-            <span className="font-extrabold text-zinc-400">{selectedIds.length} assets selected</span>
+            <span className="font-extrabold text-[11px] sm:text-xs text-zinc-400">{selectedIds.length} assets selected</span>
           )}
         </div>
 
@@ -209,9 +209,9 @@ export default function MasonryGallery({
       )}
 
       {/* Pinterest Masonry layout columns */}
-      <div className="flex gap-4">
+      <div className="flex gap-2.5 sm:gap-4">
         {columns.map((col, colIdx) => (
-          <div key={colIdx} className="flex-1 flex flex-col gap-4">
+          <div key={colIdx} className="flex-1 flex flex-col gap-2.5 sm:gap-4">
             {col.map((item) => {
               // Retrieve original overall index of this item
               const origIndex = items.findIndex((i) => i.id === item.id);

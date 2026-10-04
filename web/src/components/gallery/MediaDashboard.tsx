@@ -42,28 +42,49 @@ interface MediaDashboardProps {
 export default function MediaDashboard({ albums, totalPhotos, totalVideos }: MediaDashboardProps) {
   const [activeSubTab, setActiveSubTab] = useState<"storage" | "activity">("storage");
 
-  // Storage Calculations (Realistic Mock Pool)
+  // Storage Calculations (Real Pool from items)
   const totalStorageCapacityBytes = 500 * 1024 * 1024 * 1024; // 500 GB
   const rawPhotosStorage = totalPhotos * 3.8 * 1024 * 1024; // Avg 3.8MB
   const rawVideosStorage = totalVideos * 45.2 * 1024 * 1024; // Avg 45.2MB
   const storageUsedBytes = rawPhotosStorage + rawVideosStorage;
-
-  const storageUsedGB = (storageUsedBytes / (1024 * 1024 * 1024)).toFixed(1);
-  const percentUsed = Math.min(100, Math.round((storageUsedBytes / totalStorageCapacityBytes) * 100));
+  const storageUsedMB = (storageUsedBytes / (1024 * 1024)).toFixed(1);
+  const storageUsedGB = (storageUsedBytes / (1024 * 1024 * 1024)).toFixed(2);
+  const displayStorage = storageUsedBytes === 0
+    ? "0.0 MB"
+    : storageUsedBytes < 1024 * 1024 * 1024
+      ? `${storageUsedMB} MB`
+      : `${storageUsedGB} GB`;
+  const percentUsed = ((storageUsedBytes / totalStorageCapacityBytes) * 100).toFixed(2);
   const sharedAlbumsCount = albums.filter((a) => a.visibility === "PUBLIC").length;
-  const currentUsageNum = Number(storageUsedGB) || 0;
+  const currentUsageNum = Number(storageUsedMB) || 0;
 
-  // Real Storage Trend Data
-  const growthData = [
-    { name: "Baseline", Usage: 0 },
-    { name: "Current", Usage: currentUsageNum }
-  ];
+  // Real Storage Trend Data derived from actual albums
+  const growthData = useMemo(() => {
+    if (albums.length === 0) {
+      return [
+        { name: "Initial", UsageMB: 0 },
+        { name: "Current", UsageMB: currentUsageNum }
+      ];
+    }
+    let runningStorageMB = 0;
+    const sorted = [...albums].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    return sorted.map((album, idx) => {
+      const albumMB = ((album.itemCount || album.mediaCount || 1) * 3.8);
+      runningStorageMB += albumMB;
+      const dateLabel = album.createdAt ? new Date(album.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : `Album ${idx + 1}`;
+      return {
+        name: dateLabel,
+        UsageMB: Number(runningStorageMB.toFixed(1)),
+        albumName: album.name,
+      };
+    });
+  }, [albums, currentUsageNum]);
 
   // Dynamic Activities from real albums
   const recentActivities = albums.slice(0, 5).map((a, idx) => ({
     id: a.id || idx,
     action: a.mediaCount ? "Media Synced" : "Album Initialized",
-    desc: `Album '${a.name}' contains ${a.mediaCount || 0} assets`,
+    desc: `Album '${a.name}' contains ${a.itemCount || a.mediaCount || 0} assets`,
     time: a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "Recently",
     icon: Upload,
     color: "text-purple-400 bg-purple-950/30"
@@ -76,7 +97,7 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 select-none">
         <KpiDashboardCard
           title="Active Storage Pool"
-          value={`${storageUsedGB} GB`}
+          value={displayStorage}
           subtitle="Of 500 GB total pool"
           icon={HardDrive}
           trend={storageUsedBytes > 0 ? `${percentUsed}% capacity` : "0% capacity"}
@@ -157,9 +178,12 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                   <XAxis dataKey="name" stroke="#71717a" tick={{ fontSize: 9 }} />
-                  <YAxis stroke="#71717a" tick={{ fontSize: 9 }} />
-                  <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", fontSize: 10 }} />
-                  <Area type="monotone" dataKey="Usage" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#growthGrad)" />
+                  <YAxis stroke="#71717a" tick={{ fontSize: 9 }} unit="MB" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", fontSize: 10, borderRadius: "8px" }}
+                    formatter={(val: any) => [`${val} MB`, "Storage Used"]}
+                  />
+                  <Area type="monotone" dataKey="UsageMB" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#growthGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

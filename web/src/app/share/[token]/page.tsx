@@ -189,11 +189,51 @@ export default function PublicSharePage() {
     );
   };
 
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const getApiUrl = () => {
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+    if (process.env.NEXT_PUBLIC_API_BASE_URL) return process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (typeof window !== "undefined" && window.location.hostname.includes("eventosapp.in")) {
+      return "https://api.eventosapp.in/api/v1";
+    }
+    return api.defaults.baseURL || "https://api.eventosapp.in/api/v1";
+  };
+
   // Trigger backend streaming ZIP bulk download
   const handleBulkDownload = () => {
     if (!album || album.allowDownload === false) return;
+    setIsDownloading(true);
+    setDownloadError(null);
+    setDownloadQueue(["Bundling high-res assets into ZIP archive..."]);
+
     const query = passcode.trim() ? `?passcode=${encodeURIComponent(passcode.trim())}` : "";
-    window.location.href = `/api/v1/gallery/share/public/download/${token}${query}`;
+    const apiBase = getApiUrl().replace(/\/+$/, "");
+    const downloadEndpoint = `${apiBase}/gallery/share/public/download/${token}${query}`;
+
+    try {
+      const link = document.createElement("a");
+      link.href = downloadEndpoint;
+      link.setAttribute("download", `${album.name || "album"}.zip`);
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => {
+        setDownloadQueue(["ZIP download initiated!"]);
+        setTimeout(() => {
+          setDownloadQueue([]);
+          setIsDownloading(false);
+        }, 3000);
+      }, 1500);
+    } catch (err: any) {
+      console.error("Bulk download error:", err);
+      setDownloadQueue([]);
+      setIsDownloading(false);
+      setDownloadError("Could not initiate automatic zip. You can download individual photos directly.");
+    }
   };
 
   // Render loading state
@@ -325,9 +365,23 @@ export default function PublicSharePage() {
             {album.allowDownload !== false ? (
               <button
                 onClick={handleBulkDownload}
-                className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900/60 backdrop-blur border border-zinc-800 text-zinc-350 hover:text-white rounded-xl text-xs font-bold cursor-pointer transition-all active:scale-[0.98]"
+                disabled={isDownloading}
+                className={cn(
+                  "flex items-center gap-1.5 px-4 py-2 bg-zinc-900/60 backdrop-blur border border-zinc-800 text-zinc-350 hover:text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98]",
+                  isDownloading ? "opacity-75 cursor-wait" : "cursor-pointer"
+                )}
               >
-                <Download size={13} /> Download Album
+                {isDownloading ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin text-purple-400" />
+                    <span>Preparing ZIP...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={13} />
+                    <span>Download Album</span>
+                  </>
+                )}
               </button>
             ) : (
               <div
@@ -338,6 +392,11 @@ export default function PublicSharePage() {
               </div>
             )}
           </div>
+          {downloadError && (
+            <p className="text-[11px] text-amber-400 font-medium pt-1">
+              ⚠️ {downloadError}
+            </p>
+          )}
         </div>
       </div>
 
