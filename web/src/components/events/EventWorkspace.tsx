@@ -529,10 +529,13 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
   };
 
   const handleStatusChange = (newStatus: string) => {
-    api.put(`/events/${eventId}/status`, { status: newStatus }).then(() => {
+    api.patch(`/events/${eventId}/status`, { status: newStatus }).then(() => {
       queryClient.invalidateQueries({ queryKey: ["event", eventId] });
       logActivityAction(`Event status updated to ${STATUS_LABELS[newStatus] || newStatus}`, "STATUS");
       addToast(`Status updated to ${STATUS_LABELS[newStatus] || newStatus}`, "success");
+    }).catch(() => {
+      // Fallback to updating entire event if status patch is not permitted
+      triggerAutoSave();
     });
   };
 

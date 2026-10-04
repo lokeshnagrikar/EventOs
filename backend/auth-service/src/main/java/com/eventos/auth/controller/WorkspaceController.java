@@ -24,7 +24,7 @@ public class WorkspaceController {
     public ResponseEntity<?> getWorkspaceSettings() {
         UUID tenantId = getTenantId();
         Company company = workspaceService.getWorkspaceSettings(tenantId);
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("data", company);
@@ -37,7 +37,7 @@ public class WorkspaceController {
             @RequestBody Company updatedCompany) {
         UUID tenantId = getTenantId();
         Company company = workspaceService.updateWorkspaceSettings(tenantId, updatedCompany);
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("data", company);
@@ -49,7 +49,7 @@ public class WorkspaceController {
     public ResponseEntity<?> getWhatsAppSettings() {
         UUID tenantId = getTenantId();
         Company company = workspaceService.getWorkspaceSettings(tenantId);
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("data", company.getWhatsappConfig());
@@ -62,7 +62,7 @@ public class WorkspaceController {
             @RequestBody Map<String, Object> payload) {
         UUID tenantId = getTenantId();
         Company company = workspaceService.getWorkspaceSettings(tenantId);
-        
+
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String configJson = mapper.writeValueAsString(payload);
@@ -71,7 +71,7 @@ public class WorkspaceController {
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize WhatsApp configuration", e);
         }
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("message", "WhatsApp configuration saved successfully");
@@ -88,6 +88,8 @@ public class WorkspaceController {
             }
         }
         throw new org.springframework.web.server.ResponseStatusException(
+
                 org.springframework.http.HttpStatus.UNAUTHORIZED, "Tenant ID context is missing");
     }
+
 }
