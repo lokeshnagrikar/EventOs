@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -32,9 +32,12 @@ import {
   Pin,
   Tag,
   Info,
-  HardDrive
+  HardDrive,
+  QrCode,
+  Share2
 } from "lucide-react";
 import MediaDashboard from "@/components/gallery/MediaDashboard";
+import ShareQrModal from "@/components/gallery/ShareQrModal";
 import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
 import EmptyState from "@/components/ui/EmptyState";
@@ -72,6 +75,7 @@ export default function GalleryPage() {
   const [albumToDelete, setAlbumToDelete] = useState<string | null>(null);
   const [renamingAlbumId, setRenamingAlbumId] = useState<string | null>(null);
   const [renamedName, setRenamedName] = useState("");
+  const [sharingAlbum, setSharingAlbum] = useState<Album | null>(null);
 
   // Form State
   const [albumName, setAlbumName] = useState("");
@@ -318,6 +322,24 @@ export default function GalleryPage() {
     });
   };
 
+  const handleToggleArchive = (album: Album) => {
+    if (album.status === "ARCHIVED") {
+      updateAlbumMutation.mutate({
+        id: album.id,
+        payload: {
+          name: album.name,
+          description: album.description,
+          eventId: album.eventId || undefined,
+          coverImage: album.coverImage || undefined,
+          visibility: album.visibility,
+          status: "PUBLISHED"
+        }
+      });
+    } else {
+      archiveAlbumMutation.mutate(album.id);
+    }
+  };
+
   const totalAlbums = albums.length;
   const totalPhotos = Math.round(albums.reduce((sum, album) => sum + album.itemCount, 0) * 0.75);
   const totalVideos = Math.round(albums.reduce((sum, album) => sum + album.itemCount, 0) * 0.25);
@@ -425,13 +447,26 @@ export default function GalleryPage() {
                   isPinned={pinnedAlbumIds.includes(album.id)}
                   onPin={togglePin}
                   onDelete={(id) => setAlbumToDelete(id)}
-                  onArchive={(id) => archiveAlbumMutation.mutate(id)}
+                  onArchive={handleToggleArchive}
                   onDuplicate={(a) => duplicateAlbumMutation.mutate(a)}
                   onRename={(id) => {
                     setRenamingAlbumId(id);
                     setRenamedName(album.name);
                   }}
-                  onUpdateVisibility={(id, vis) => updateAlbumMutation.mutate({ id, payload: { ...album, visibility: vis } })}
+                  onShare={(a) => setSharingAlbum(a)}
+                  onUpdateVisibility={(id, vis) => {
+                    updateAlbumMutation.mutate({
+                      id,
+                      payload: {
+                        name: album.name,
+                        description: album.description,
+                        eventId: album.eventId || undefined,
+                        coverImage: album.coverImage || undefined,
+                        status: album.status,
+                        visibility: vis
+                      }
+                    });
+                  }}
                 />
               ))}
             </div>
@@ -479,17 +514,20 @@ export default function GalleryPage() {
                           </span>
                         </td>
                         <td className="p-4 font-mono">{new Date(album.createdAt).toLocaleDateString()}</td>
-                        <td className="p-4 text-right flex justify-end gap-3 items-center">
-                          <button onClick={() => togglePin(album.id)} className="text-zinc-550 hover:text-purple-400" title="Pin to top">
+                        <td className="p-4 text-right flex justify-end gap-2.5 items-center">
+                          <button onClick={() => setSharingAlbum(album)} className="text-zinc-550 hover:text-purple-400 p-1 hover:bg-zinc-800/60 rounded" title="Share & Live QR Code">
+                            <QrCode size={13} />
+                          </button>
+                          <button onClick={() => togglePin(album.id)} className="text-zinc-550 hover:text-purple-400 p-1 hover:bg-zinc-800/60 rounded" title="Pin to top">
                             <Pin size={13} className={pinnedAlbumIds.includes(album.id) ? "fill-purple-500 text-purple-400" : ""} />
                           </button>
-                          <button onClick={() => duplicateAlbumMutation.mutate(album)} className="text-zinc-500 hover:text-zinc-300" title="Duplicate">
+                          <button onClick={() => duplicateAlbumMutation.mutate(album)} className="text-zinc-500 hover:text-zinc-300 p-1 hover:bg-zinc-800/60 rounded" title="Duplicate">
                             <Copy size={13} />
                           </button>
-                          <button onClick={() => archiveAlbumMutation.mutate(album.id)} className="text-zinc-500 hover:text-zinc-350" title="Archive">
+                          <button onClick={() => handleToggleArchive(album)} className="text-zinc-500 hover:text-zinc-350 p-1 hover:bg-zinc-800/60 rounded" title={album.status === "ARCHIVED" ? "Publish" : "Archive"}>
                             <Archive size={13} />
                           </button>
-                          <button onClick={() => setAlbumToDelete(album.id)} className="text-zinc-555 hover:text-red-500" title="Delete">
+                          <button onClick={() => setAlbumToDelete(album.id)} className="text-zinc-555 hover:text-red-500 p-1 hover:bg-zinc-800/60 rounded" title="Delete">
                             <Trash2 size={13} />
                           </button>
                         </td>
@@ -517,13 +555,26 @@ export default function GalleryPage() {
                         isPinned={pinnedAlbumIds.includes(album.id)}
                         onPin={togglePin}
                         onDelete={(id) => setAlbumToDelete(id)}
-                        onArchive={(id) => archiveAlbumMutation.mutate(id)}
+                        onArchive={handleToggleArchive}
                         onDuplicate={(a) => duplicateAlbumMutation.mutate(a)}
                         onRename={(id) => {
                           setRenamingAlbumId(id);
                           setRenamedName(album.name);
                         }}
-                        onUpdateVisibility={(id, vis) => updateAlbumMutation.mutate({ id, payload: { ...album, visibility: vis } })}
+                        onShare={(a) => setSharingAlbum(a)}
+                        onUpdateVisibility={(id, vis) => {
+                          updateAlbumMutation.mutate({
+                            id,
+                            payload: {
+                              name: album.name,
+                              description: album.description,
+                              eventId: album.eventId || undefined,
+                              coverImage: album.coverImage || undefined,
+                              status: album.status,
+                              visibility: vis
+                            }
+                          });
+                        }}
                       />
                     ))}
                   </div>
@@ -637,6 +688,28 @@ export default function GalleryPage() {
           </div>
         </div>
       )}
+      {/* MODAL: SHARE & QR CODE */}
+      {sharingAlbum && (
+        <ShareQrModal
+          album={sharingAlbum}
+          isOpen={!!sharingAlbum}
+          onClose={() => setSharingAlbum(null)}
+          onUpdateVisibility={(vis) => {
+            updateAlbumMutation.mutate({
+              id: sharingAlbum.id,
+              payload: {
+                name: sharingAlbum.name,
+                description: sharingAlbum.description,
+                eventId: sharingAlbum.eventId || undefined,
+                coverImage: sharingAlbum.coverImage || undefined,
+                status: sharingAlbum.status,
+                visibility: vis
+              }
+            });
+            setSharingAlbum({ ...sharingAlbum, visibility: vis });
+          }}
+        />
+      )}
     </PageShell>
   );
 }
@@ -648,17 +721,30 @@ interface CardProps {
   isPinned: boolean;
   onPin: (id: string) => void;
   onDelete: (id: string) => void;
-  onArchive: (id: string) => void;
+  onArchive: (album: Album) => void;
   onDuplicate: (album: Album) => void;
   onRename: (id: string) => void;
   onUpdateVisibility: (id: string, vis: "PUBLIC" | "PRIVATE") => void;
+  onShare: (album: Album) => void;
 }
 
 function AlbumCard({
-  album, eventName, isPinned, onPin, onDelete, onArchive, onDuplicate, onRename, onUpdateVisibility
+  album, eventName, isPinned, onPin, onDelete, onArchive, onDuplicate, onRename, onUpdateVisibility, onShare
 }: CardProps) {
   const router = useRouter();
   const [showOptions, setShowOptions] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showOptions) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowOptions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showOptions]);
 
   const storageSize = useMemo(() => {
     return (album.itemCount * 3.8).toFixed(1);
@@ -667,11 +753,14 @@ function AlbumCard({
   return (
     <motion.div
       whileHover={{ y: -3 }}
-      className="group rounded-2xl border border-zinc-800 bg-[#141416]/45 hover:border-purple-500/25 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-[290px] shadow-md hover:shadow-lg relative"
+      className={cn(
+        "group rounded-2xl border border-zinc-800 bg-[#141416]/45 hover:border-purple-500/25 transition-all duration-300 cursor-pointer flex flex-col h-[290px] shadow-md hover:shadow-lg relative",
+        showOptions ? "z-30" : "z-10"
+      )}
       onClick={() => router.push(`/gallery/${album.id}`)}
     >
       {/* Cover Image */}
-      <div className="h-36 relative w-full bg-zinc-900 overflow-hidden flex items-center justify-center shrink-0 border-b border-zinc-850">
+      <div className="h-36 relative w-full bg-zinc-900 rounded-t-2xl overflow-hidden flex items-center justify-center shrink-0 border-b border-zinc-850">
         {album.thumbnailUrl || album.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={album.thumbnailUrl || album.coverImage} alt={album.name} className="object-cover h-full w-full group-hover:scale-102 transition-transform duration-500" />
@@ -707,27 +796,105 @@ function AlbumCard({
               {album.name}
             </h3>
             
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setShowOptions(!showOptions)} className="text-zinc-500 hover:text-white font-extrabold text-xs px-1 hover:bg-zinc-850 rounded cursor-pointer">&bull;&bull;&bull;</button>
+            <div className="relative" ref={dropdownRef} onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowOptions(!showOptions);
+                }}
+                className="text-zinc-400 hover:text-white font-extrabold text-sm px-2 py-0.5 hover:bg-zinc-800/80 rounded-lg cursor-pointer transition-colors"
+                title="Album options"
+              >
+                &bull;&bull;&bull;
+              </button>
               {showOptions && (
-                <div className="absolute right-0 top-6 w-32 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-1 z-35 space-y-0.5 text-[10px]">
-                  <button onClick={() => { onRename(album.id); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800 rounded-lg flex items-center gap-1 text-zinc-300 cursor-pointer">
-                    <Edit2 size={10} /> Rename
+                <div
+                  className="absolute right-0 top-7 w-48 bg-[#141417]/95 border border-purple-500/25 rounded-2xl shadow-2xl shadow-black/80 p-1.5 z-50 space-y-1 text-xs backdrop-blur-2xl ring-1 ring-white/5"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Share & QR Code Button - Glowing hero action */}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onShare(album); setShowOptions(false); }}
+                    className="w-full text-left px-2.5 py-2 bg-gradient-to-r from-purple-600/15 to-indigo-600/15 hover:from-purple-600/30 hover:to-indigo-600/30 border border-purple-500/30 hover:border-purple-500/50 rounded-xl flex items-center justify-between text-purple-200 font-bold group cursor-pointer transition-all shadow-sm"
+                  >
+                    <span className="flex items-center gap-2">
+                      <QrCode size={14} className="text-purple-400 group-hover:scale-110 transition-transform" />
+                      Share & QR Code
+                    </span>
+                    <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-300 font-mono tracking-wider">
+                      LIVE
+                    </span>
                   </button>
-                  <button onClick={() => { onPin(album.id); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800 rounded-lg flex items-center gap-1 text-zinc-350 cursor-pointer">
-                    <Pin size={10} /> {isPinned ? "Unpin" : "Pin"}
-                  </button>
-                  <button onClick={() => { onDuplicate(album); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800 rounded-lg flex items-center gap-1 text-zinc-300 cursor-pointer">
-                    <Copy size={10} /> Duplicate
-                  </button>
-                  <button onClick={() => { onArchive(album.id); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800 rounded-lg flex items-center gap-1 text-zinc-350 cursor-pointer">
-                    <Archive size={10} /> {album.status === "ARCHIVED" ? "Publish" : "Archive"}
-                  </button>
-                  <button onClick={() => { onUpdateVisibility(album.id, album.visibility === "PUBLIC" ? "PRIVATE" : "PUBLIC"); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800 rounded-lg flex items-center gap-1 text-zinc-355 cursor-pointer">
-                    {album.visibility === "PUBLIC" ? <EyeOff size={10} /> : <Eye size={10} />} Toggle Shared
-                  </button>
-                  <button onClick={() => { onDelete(album.id); setShowOptions(false); }} className="w-full text-left px-2.5 py-1.5 hover:bg-red-500/10 hover:text-red-400 rounded-lg flex items-center gap-1 text-red-500 cursor-pointer">
-                    <Trash2 size={10} /> Delete
+
+                  <div className="space-y-0.5 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onRename(album.id); setShowOptions(false); }}
+                      className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800/80 rounded-lg flex items-center gap-2 text-zinc-200 cursor-pointer transition-colors"
+                    >
+                      <Edit2 size={13} className="text-zinc-400" /> Rename Album
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onPin(album.id); setShowOptions(false); }}
+                      className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800/80 rounded-lg flex items-center gap-2 text-zinc-200 cursor-pointer transition-colors"
+                    >
+                      <Pin size={13} className={isPinned ? "text-purple-400 fill-purple-400" : "text-zinc-400"} /> {isPinned ? "Unpin from Top" : "Pin to Top"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onDuplicate(album); setShowOptions(false); }}
+                      className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800/80 rounded-lg flex items-center gap-2 text-zinc-200 cursor-pointer transition-colors"
+                    >
+                      <Copy size={13} className="text-zinc-400" /> Duplicate Album
+                    </button>
+                  </div>
+
+                  <div className="border-t border-zinc-800/80 my-1" />
+
+                  {/* Visibility & Download Permissions toggle */}
+                  <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUpdateVisibility(album.id, album.visibility === "PUBLIC" ? "PRIVATE" : "PUBLIC");
+                        setShowOptions(false);
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800/80 rounded-lg flex items-center justify-between text-zinc-200 cursor-pointer transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        {album.visibility === "PUBLIC" ? <EyeOff size={13} className="text-amber-400" /> : <Eye size={13} className="text-emerald-400" />}
+                        {album.visibility === "PUBLIC" ? "Make Private" : "Make Public"}
+                      </span>
+                      <span className={cn(
+                        "text-[8px] font-extrabold px-1.5 py-0.5 rounded",
+                        album.visibility === "PUBLIC" ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-800 text-zinc-400"
+                      )}>
+                        {album.visibility === "PUBLIC" ? "Downloads ON" : "Locked"}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onArchive(album); setShowOptions(false); }}
+                      className="w-full text-left px-2.5 py-1.5 hover:bg-zinc-800/80 rounded-lg flex items-center gap-2 text-zinc-200 cursor-pointer transition-colors"
+                    >
+                      <Archive size={13} className="text-zinc-400" /> {album.status === "ARCHIVED" ? "Publish Album" : "Archive Album"}
+                    </button>
+                  </div>
+
+                  <div className="border-t border-zinc-800/80 my-1" />
+
+                  {/* Delete */}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onDelete(album.id); setShowOptions(false); }}
+                    className="w-full text-left px-2.5 py-1.5 hover:bg-red-500/15 hover:text-red-300 rounded-lg flex items-center gap-2 text-red-400 cursor-pointer transition-colors"
+                  >
+                    <Trash2 size={13} /> Delete Album
                   </button>
                 </div>
               )}

@@ -189,6 +189,10 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
             let type: "info" | "success" | "warning" | "error" = "info";
             let category: any = "system";
 
+            const rawAuditDesc = String(logItem.payloadDiff || logItem.details || "");
+            const nameMatch = rawAuditDesc.match(/name=([^,)\n]+)/i) || rawAuditDesc.match(/"name"\s*:\s*"([^"]+)"/i);
+            const detectedName = nameMatch && nameMatch[1] ? nameMatch[1].trim() : "";
+
             if (isSuperAdminAction) {
               actorType = "SUPER_ADMIN";
               actorName = "SuperAdmin";
@@ -204,7 +208,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
             } else if (actionStr === "LOGIN_SUCCESS") {
               actorType = "SYSTEM";
               actorName = "Auth Guard";
-              title = "User Signed In";
+              title = "User Signed In Successfully";
               type = "success";
               category = "security";
             } else if (isSecurityAction) {
@@ -214,15 +218,49 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
               type = actionStr.includes("FAILURE") ? "error" : "info";
               category = "security";
             } else {
+              // Human-readable operational formatting (NO raw Java code dumps)
               actorType = "TEAM";
-              actorName = logItem.entityName ? `${logItem.entityName} Team` : "Team Member";
-              title = `${logItem.action ? logItem.action.replace(/_/g, " ") : "Entity Update"}: ${logItem.entityName || "Record"}`;
-              type = "info";
-              category = "event";
+              actorName = logItem.entityName ? `${logItem.entityName} Team` : "Operations Team";
+
+              if (String(logItem.entityName).toLowerCase() === "event") {
+                const eventDisplayName = detectedName ? `'${detectedName}'` : "Event";
+                if (actionStr.includes("CREATE")) {
+                  title = `Event Scheduled: ${detectedName || "New Event"}`;
+                  type = "success";
+                } else if (actionStr.includes("STATUS")) {
+                  title = `Status Updated: ${detectedName || "Event"}`;
+                  type = "info";
+                } else {
+                  title = `Event Updated: ${detectedName || "Event"}`;
+                  type = "info";
+                }
+                category = "event";
+              } else {
+                title = `${logItem.action ? logItem.action.replace(/_/g, " ") : "Entity Update"}: ${detectedName || logItem.entityName || "Record"}`;
+                type = "info";
+                category = "event";
+              }
             }
 
-            const rawAuditDesc = logItem.payloadDiff || logItem.details || `Operation logged for ${logItem.entityName || "Workspace"}.`;
-            const cleanAuditDesc = rawAuditDesc.replace(/under tenant:\s*[0-9a-fA-F-]{36}/gi, "in your workspace").trim();
+            // Clean, professional descriptions instead of raw database object strings
+            let cleanAuditDesc = "";
+            if (String(logItem.entityName).toLowerCase() === "event") {
+              const eventDisplayName = detectedName ? `'${detectedName}'` : "event";
+              if (actionStr.includes("CREATE")) {
+                cleanAuditDesc = `Event ${eventDisplayName} was scheduled in operations pipeline.`;
+              } else if (actionStr.includes("STATUS")) {
+                cleanAuditDesc = `Lifecycle stage changed for ${eventDisplayName}.`;
+              } else {
+                cleanAuditDesc = `Operational details updated for ${eventDisplayName}.`;
+              }
+            } else {
+              cleanAuditDesc = rawAuditDesc
+                .replace(/[A-Za-z0-9_]+\([a-zA-Z0-9_=,\s-]+\)/g, "")
+                .replace(/under tenant:\s*[0-9a-fA-F-]{36}/gi, "in your workspace")
+                .replace(/[0-9a-fA-F-]{36}/g, "")
+                .replace(/\s+/g, " ")
+                .trim() || `Activity recorded for ${logItem.entityName || "workspace"}.`;
+            }
 
             dynamicList.push({
               id,
@@ -232,7 +270,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
               timestamp: ts,
               unread: !readIds.has(id),
               type,
-              href: isSuperAdminAction ? "/settings" : "/activity",
+              href: isSuperAdminAction ? "/settings" : String(logItem.entityName).toLowerCase() === "event" ? "/events" : "/activity",
               category,
               actorType,
               actorName,
@@ -394,41 +432,20 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
       }
     }
 
-      // Fallback: If tenant is fresh / brand new with no records, provide real workspace onboarding status
-      if (dynamicList.length === 0) {
-        const defaultNotifs: NotificationItem[] = [
-          {
-            id: "sys-workspace-ready",
-            title: "Workspace Engine Active",
-            desc: "Your EventOS tenancy is configured and ready for live clients.",
-            time: "Just now",
-            timestamp: Date.now(),
-            unread: !readIds.has("sys-workspace-ready"),
-            type: "success",
-            href: "/dashboard",
-            category: "system",
-          },
-          {
-            id: "sys-billing-ready",
-            title: "Payment Gateway Initialized",
-            desc: "Stripe & UPI gateways active in ₹ INR for automated bookings.",
-            time: "1 hour ago",
-            timestamp: Date.now() - 3600000,
-            unread: !readIds.has("sys-billing-ready"),
-            type: "info",
-            href: "/settings",
-            category: "payment",
-          }
-        ];
-        defaultNotifs.forEach((d) => {
-          if (!dismissedIds.has(d.id)) dynamicList.push(d);
-        });
-      }
-
-      // 7. Merge Locally Emitted Realtime Notifications that were persisted
+      // Merge Locally Emitted Realtime Notifications that were persisted (filtering out any legacy test alerts)
       const storedRealtime = getStoredRealtimeNotifications();
       storedRealtime.forEach((rt) => {
         if (!rt.id || dismissedIds.has(rt.id)) return;
+        // Filter out legacy simulator / mock test alerts
+        if (
+          rt.id?.startsWith("sys-") ||
+          rt.title?.includes("Goa Gala") ||
+          rt.desc?.includes("Goa Gala") ||
+          rt.desc?.includes("INV-2026-904") ||
+          rt.desc?.includes("Taj Palace")
+        ) {
+          return;
+        }
         const ts = rt.timestamp || Date.now();
         dynamicList.push({
           id: rt.id,
@@ -465,6 +482,26 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
 
   // Real-Time Background polling every 12 seconds + initial load
   useEffect(() => {
+    // Purge legacy mock alerts from localStorage
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("eventos_realtime_notifications");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            const filtered = parsed.filter((item: any) =>
+              !item.id?.startsWith("sys-") &&
+              !item.title?.includes("Goa Gala") &&
+              !item.desc?.includes("Goa Gala") &&
+              !item.desc?.includes("INV-2026-904") &&
+              !item.desc?.includes("Taj Palace")
+            );
+            localStorage.setItem("eventos_realtime_notifications", JSON.stringify(filtered));
+          }
+        }
+      } catch {}
+    }
+
     fetchWorkspaceNotifications();
     const interval = setInterval(() => {
       fetchWorkspaceNotifications();
@@ -787,25 +824,7 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
                         )}
                         title="Sync latest notifications"
                       >
-                        <RefreshCw size={12} />
-                      </button>
-
-                      {/* Test Alert Simulator */}
-                      <button
-                        onClick={() => {
-                          const testEvents = [
-                            { title: "New Lead Logged! 📋", desc: "Varun & Priya requested pricing for Goa Gala 2026 (₹4,50,000).", type: "info" as const, href: "/crm", category: "lead" as const },
-                            { title: "UPI Payment Received! 💰", desc: "₹85,000 advance cleared for Invoice #INV-2026-904.", type: "success" as const, href: "/finance", category: "payment" as const },
-                            { title: "Run-of-Show Alert! ⏱️", desc: "Soundcheck completed for Taj Palace Ballroom 1.", type: "warning" as const, href: "/events", category: "event" as const },
-                            { title: "Proposal E-Signed! 🎉", desc: "Client accepted and e-signed Proposal #QT-2026-118.", type: "success" as const, href: "/quotes", category: "quote" as const },
-                          ];
-                          const randomEvt = testEvents[Math.floor(Math.random() * testEvents.length)];
-                          emitWorkspaceNotification(randomEvt);
-                        }}
-                        className="text-[10px] bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 px-2 py-1 rounded-lg font-bold transition-all cursor-pointer active:scale-95"
-                        title="Simulate Real-Time Incoming Notification Alert"
-                      >
-                        + Test Alert
+                        <RefreshCw size={13} />
                       </button>
                     </div>
                   </div>
