@@ -10,6 +10,7 @@ import { AnimatedMeshGradient } from "@/components/ui/AnimatedMeshGradient";
 import { LiquidMetalButton } from "@/components/landing/LiquidMetalButton";
 import { LiquidRippleHeading } from "@/components/landing/LiquidRippleHeading";
 import { StardustButton } from "@/components/landing/StardustButton";
+import { Magnetic } from "@/components/ui/Magnetic";
 
 const workflowSteps = [
   { step: "1", label: "Lead captured", icon: "solar:user-plus-bold-duotone", color: "text-purple-600 bg-purple-50 border-purple-200" },
@@ -121,17 +122,21 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
           className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto"
         >
           {/* Primary CTA: Liquid Metal Shader Button */}
-          <LiquidMetalButton
-            label="Book a Free Demo"
-            onClick={handleBookDemo}
-            width={204}
-            height={50}
-          />
+          <Magnetic strength={0.32}>
+            <LiquidMetalButton
+              label="Book a Free Demo"
+              onClick={handleBookDemo}
+              width={204}
+              height={50}
+            />
+          </Magnetic>
 
           {/* Secondary CTA: Frosted Glass Button */}
-          <StardustButton onClick={handleSeeHowItWorks}>
-            See How It Works
-          </StardustButton>
+          <Magnetic strength={0.28}>
+            <StardustButton onClick={handleSeeHowItWorks}>
+              See How It Works
+            </StardustButton>
+          </Magnetic>
         </motion.div>
 
         {/* Below CTA Reassurance Line */}

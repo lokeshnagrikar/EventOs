@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
+import { triggerConfetti } from "@/lib/confetti";
 
 interface WaitlistFormProps {
   onSuccess?: () => void;
@@ -51,6 +52,7 @@ export function WaitlistForm({ onSuccess, prefilledEmail = "" }: WaitlistFormPro
         setSpotNumber(data.spotNumber);
       }
       setSubmitted(true);
+      triggerConfetti({ particleCount: 110 });
       if (onSuccess) onSuccess();
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.");

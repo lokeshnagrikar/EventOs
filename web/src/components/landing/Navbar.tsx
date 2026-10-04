@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/authStore";
 import { EventOsLogo } from "@/components/ui/EventOsLogo";
 import { LiquidMetalButton } from "@/components/landing/LiquidMetalButton";
 import { LiquidMetalText } from "@/components/landing/LiquidMetalText";
+import { Magnetic } from "@/components/ui/Magnetic";
 
 interface NavbarProps {
   activeSection?: string;
@@ -238,13 +239,15 @@ export function Navbar({ activeSection }: NavbarProps) {
                     Login
                   </button>
 
-                  <LiquidMetalButton
-                    label="Book a Demo"
-                    onClick={handleBookDemo}
-                    width={144}
-                    height={38}
-                    colorTheme="purple"
-                  />
+                  <Magnetic strength={0.28}>
+                    <LiquidMetalButton
+                      label="Book a Demo"
+                      onClick={handleBookDemo}
+                      width={144}
+                      height={38}
+                      colorTheme="purple"
+                    />
+                  </Magnetic>
                 </>
               )}
             </div>

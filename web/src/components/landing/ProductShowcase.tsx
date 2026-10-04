@@ -61,6 +61,36 @@ export function ProductShowcase() {
   const [milestone2Paid, setMilestone2Paid] = useState(false);
   const [whatsappFollowupSent, setWhatsappFollowupSent] = useState(false);
   const [quoteSentState, setQuoteSentState] = useState(false);
+
+  // Interactive Line-Items Checker State
+  const [selectedItems, setSelectedItems] = useState<Record<number, boolean>>({
+    0: true,
+    1: true,
+    2: true,
+    3: true,
+  });
+
+  const quoteLineItems = [
+    { id: 0, item: "Floral Mandap & Grand Entry Scenography", category: "Decor & Scenography", qty: "1 Grand Set", amount: 650000 },
+    { id: 1, item: "JBL Line Array Sound & Stage Acoustics", category: "Audio Production", qty: "3 Days", amount: 250000 },
+    { id: 2, item: "40ft Curved LED Video Wall & Intelligent Rigging", category: "Lighting & Visuals", qty: "3 Days", amount: 170000 },
+    { id: 3, item: "VIP Hospitality Crew & PWA Gate Management", category: "Hospitality Crew", qty: "12 Staff", amount: 180000 },
+  ];
+
+  const subtotal = quoteLineItems.reduce((acc, it) => acc + (selectedItems[it.id] ? it.amount : 0), 0);
+  const gst18 = Math.round(subtotal * 0.18);
+  const quoteTotal = subtotal + gst18;
+  const bookingAdvance30 = Math.round(quoteTotal * 0.3);
+
+  const toggleLineItem = (id: number) => {
+    setSelectedItems((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      const newSubtotal = quoteLineItems.reduce((acc, it) => acc + (next[it.id] ? it.amount : 0), 0);
+      const newTotal = newSubtotal + Math.round(newSubtotal * 0.18);
+      triggerToast(`Live Recalculated: Total ₹${newTotal.toLocaleString("en-IN")} (incl. 18% GST)`);
+      return next;
+    });
+  };
   const [timelineItems, setTimelineItems] = useState([
     { id: 1, time: "08:00 AM", title: "Floral Mandap & Stage Scenography Ingress", crew: "Royal Decor Crew", location: "Banquets Lawn", status: "Completed" },
     { id: 2, time: "10:15 AM", title: "JBL Line Array Sound Check & Bass Leveling", crew: "BeatSync Audio", location: "Grand Ballroom", status: "Auto-Resolved" },
@@ -412,35 +442,102 @@ export function ProductShowcase() {
                       </button>
                     </div>
 
-                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
-                      {/* Quote items table */}
-                      <div className="space-y-2">
-                        {[
-                          { item: "Floral Mandap & Grand Entry Scenography", category: "Decor", qty: "1 Set", rate: "₹6,50,000" },
-                          { item: "JBL Line Array Sound + 40ft LED Curved Wall", category: "Production Tech", qty: "3 Days", rate: "₹4,20,000" },
-                          { item: "VIP Hospitality Crew & PWA Gate Management", category: "Hospitality Crew", qty: "12 Staff", rate: "₹1,80,000" },
-                        ].map((row, i) => (
-                          <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[#090D16] border border-slate-800/80 text-xs">
-                            <div className="min-w-0 pr-2">
-                              <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider block">{row.category}</span>
-                              <h4 className="font-bold text-white truncate">{row.item}</h4>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <span className="text-[10px] text-slate-400 block">{row.qty}</span>
-                              <span className="font-extrabold text-white font-mono">{row.rate}</span>
-                            </div>
-                          </div>
-                        ))}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3.5">
+                      {/* Interactive guidance tag */}
+                      <div className="flex items-center justify-between text-[11px] text-purple-300 bg-purple-950/40 border border-purple-800/40 px-3 py-1.5 rounded-xl">
+                        <span className="flex items-center gap-1.5 font-semibold">
+                          <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+                          <span>Interactive Simulator: Click any service below to toggle inclusion & watch live GST update</span>
+                        </span>
+                        <span className="font-mono text-[10px] text-purple-400 bg-purple-900/50 px-2 py-0.5 rounded">
+                          {Object.values(selectedItems).filter(Boolean).length}/{quoteLineItems.length} Selected
+                        </span>
                       </div>
 
-                      {/* GST Calculation Summary Bar */}
+                      {/* Interactive Quote items list */}
+                      <div className="space-y-2">
+                        {quoteLineItems.map((item) => {
+                          const isSelected = selectedItems[item.id];
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => toggleLineItem(item.id)}
+                              role="checkbox"
+                              aria-checked={isSelected}
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  toggleLineItem(item.id);
+                                }
+                              }}
+                              className={cn(
+                                "flex items-center justify-between p-3 rounded-xl border text-xs transition-all duration-200 cursor-pointer select-none",
+                                isSelected
+                                  ? "bg-[#090D16] border-purple-500/30 hover:border-purple-400/60 shadow-xs"
+                                  : "bg-slate-950/50 border-slate-800/50 opacity-50 hover:opacity-75"
+                              )}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                {/* Interactive Checkbox */}
+                                <div
+                                  className={cn(
+                                    "w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-colors",
+                                    isSelected
+                                      ? "bg-purple-600 border-purple-400 text-white shadow-xs shadow-purple-500/50"
+                                      : "border-slate-600 bg-slate-900"
+                                  )}
+                                >
+                                  {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                                </div>
+
+                                <div className="min-w-0">
+                                  <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider block">
+                                    {item.category}
+                                  </span>
+                                  <h4
+                                    className={cn(
+                                      "font-bold truncate transition-colors",
+                                      isSelected ? "text-white" : "text-slate-400 line-through"
+                                    )}
+                                  >
+                                    {item.item}
+                                  </h4>
+                                </div>
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <span className="text-[10px] text-slate-400 block">{item.qty}</span>
+                                <span
+                                  className={cn(
+                                    "font-extrabold font-mono transition-colors",
+                                    isSelected ? "text-white" : "text-slate-500 line-through"
+                                  )}
+                                >
+                                  ₹{item.amount.toLocaleString("en-IN")}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Dynamic GST Calculation Summary Bar */}
                       <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/30 flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-xs">
                         <div className="space-y-0.5">
-                          <span className="text-slate-300">Subtotal: ₹12,50,000 + <strong>18% GST (₹2,25,000)</strong></span>
-                          <p className="text-[11px] text-purple-300">Milestone: 30% Booking Advance = ₹4,42,500</p>
+                          <span className="text-slate-300">
+                            Subtotal: <strong className="text-white font-mono">₹{subtotal.toLocaleString("en-IN")}</strong> +{" "}
+                            <strong>18% GST (₹{gst18.toLocaleString("en-IN")})</strong>
+                          </span>
+                          <p className="text-[11px] text-purple-300 font-medium">
+                            Milestone: 30% Booking Advance = <strong className="font-mono text-purple-200">₹{bookingAdvance30.toLocaleString("en-IN")}</strong>
+                          </p>
                         </div>
                         <div className="text-right">
-                          <span className="text-base font-black text-white font-mono">Total: ₹14,75,000</span>
+                          <span className="text-xs text-slate-400 block">Total Quotation Value</span>
+                          <span className="text-base sm:text-lg font-black text-emerald-400 font-mono">
+                            ₹{quoteTotal.toLocaleString("en-IN")}
+                          </span>
                         </div>
                       </div>
                     </div>
