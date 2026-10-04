@@ -264,6 +264,15 @@ const getStaffInitials = (name?: string) => {
   return parts.map(p => p[0]).slice(0, 2).join("").toUpperCase();
 };
 
+const formatRoleName = (role: any): string => {
+  if (!role) return "Staff";
+  if (typeof role === "string") return role;
+  if (typeof role === "object") {
+    return role.name || role.title || role.role || "Staff";
+  }
+  return String(role);
+};
+
 export default function EventWorkspace({ eventId }: { eventId: string }) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -627,7 +636,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     const newStaff: StaffAllocation = {
       id: `stf-${Date.now()}`,
       name: newStaffName.trim(),
-      role: newStaffRole,
+      role: formatRoleName(newStaffRole),
       phone: newStaffPhone.trim()
     };
     const updated = [...staffAllocations, newStaff];
@@ -1804,7 +1813,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                 ) : (
                   staffAllocations.map((member, idx) => {
                     const memberName = member?.name || "Staff Member";
-                    const memberRole = member?.role || "Crew";
+                    const memberRole = formatRoleName(member?.role);
                     const memberId = member?.id || `stf-${idx}`;
                     return (
                       <div key={memberId} className="p-4 border border-zinc-850 bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4">
@@ -1866,7 +1875,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                         const fullName = `${m.firstName || ""} ${m.lastName || ""}`.trim() || m.email || "Team Member";
                         return (
                           <option key={m.id} value={fullName}>
-                            {fullName} ({m.role || "Staff"})
+                            {fullName} ({formatRoleName(m.role)})
                           </option>
                         );
                       })}
