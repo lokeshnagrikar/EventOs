@@ -29,11 +29,15 @@ import {
   Download,
   ShieldAlert,
   FolderSync,
-  Clock
+  Clock,
+  Copy,
+  Check,
+  ShieldCheck
 } from "lucide-react";
 import AdvancedUploader from "@/components/gallery/AdvancedUploader";
 import MasonryGallery from "@/components/gallery/MasonryGallery";
 import EXIFLightbox from "@/components/gallery/EXIFLightbox";
+import ShareQrModal from "@/components/gallery/ShareQrModal";
 import { cn, getAppBaseUrl } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/lib/toastStore";
@@ -48,6 +52,8 @@ interface Album {
   thumbnailUrl?: string;
   coverImage?: string;
   createdAt: string;
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  visibility?: "PUBLIC" | "PRIVATE";
 }
 
 interface GalleryItem {
@@ -129,7 +135,9 @@ export default function AlbumDetailPage() {
   const [sharePasscode, setSharePasscode] = useState("");
   const [shareExpiryHours, setShareExpiryHours] = useState("168");
   const [shareDownloadAllowed, setShareDownloadAllowed] = useState(true);
-  const [shareSuccessToken, setShareSuccessToken] = useState("");
+  const [shareSuccessToken, setShareSuccessToken] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copiedShareUrl, setCopiedShareUrl] = useState(false);
 
   // 1. Fetch Album metadata
   const { data: albumResponse, isLoading: albumLoading, error: albumError } = useQuery<{ data: Album }>({
@@ -336,6 +344,64 @@ export default function AlbumDetailPage() {
     }
   });
 
+  const updateVisibilityMutation = useMutation({
+    mutationFn: async (vis: "PUBLIC" | "PRIVATE") => {
+      if (!album) return;
+      const response = await api.put(`/gallery/albums/${id}`, {
+        name: album.name,
+        description: album.description,
+        eventId: album.eventId || undefined,
+        coverImage: album.coverImage || undefined,
+        status: album.status || "PUBLISHED",
+        visibility: vis
+      });
+      return response.data;
+    },
+    onSuccess: (res, vis) => {
+      queryClient.invalidateQueries({ queryKey: ["album", id] });
+      addToast(`Album visibility set to ${vis} ✓`, "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || "Failed to update visibility";
+      addToast(msg, "error");
+    }
+  });
+
+  const activeToken = shareSuccessToken || (shareLinks.length > 0 ? shareLinks[0].token : null);
+  const currentShareUrl = activeToken
+    ? `${getAppBaseUrl()}/share/${activeToken}`
+    : `${getAppBaseUrl()}/gallery/${id}`;
+
+  const currentQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(
+    currentShareUrl
+  )}&color=09090b&bgcolor=ffffff&qzone=2`;
+
+  const handleCopyLink = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedShareUrl(true);
+    addToast("Share link copied to clipboard!", "success");
+    setTimeout(() => setCopiedShareUrl(false), 2000);
+  };
+
+  const handleDownloadQr = async () => {
+    try {
+      const res = await fetch(currentQrCodeUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${(album?.name || "album").replace(/[^a-z0-9]/gi, "_").toLowerCase()}_qrcode.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      addToast("QR Code PNG downloaded!", "success");
+    } catch {
+      window.open(currentQrCodeUrl, "_blank");
+      addToast("QR Code opened in new tab", "info");
+    }
+  };
+
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentInput.trim() || !activeDetailItem) return;
@@ -455,11 +521,11 @@ export default function AlbumDetailPage() {
         {isStaff && (
           <div className="flex items-center gap-2.5 text-xs">
             <button
-              onClick={() => { setShowSidebar(true); setSidebarTab("sharing"); }}
-              className="flex items-center gap-1.5 h-8 px-3 border border-zinc-800 hover:border-purple-500/30 hover:bg-purple-500/5 text-zinc-450 hover:text-purple-400 rounded-xl font-bold transition-all"
+              onClick={() => setShowShareModal(true)}
+              className="flex items-center gap-1.5 h-8 px-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold transition-all shadow-md shadow-purple-600/10 cursor-pointer"
             >
-              <Share2 size={13} />
-              Share Album
+              <QrCode size={13} />
+              Share & QR Code
             </button>
             
             <button
@@ -488,23 +554,57 @@ export default function AlbumDetailPage() {
         <div className="flex-1 p-6 space-y-6 overflow-y-auto min-w-0">
           
           {/* Album summary bar */}
-          <div className="bg-[#111113]/40 border border-zinc-800/60 p-4.5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-base font-extrabold text-zinc-200">{album?.name}</h1>
-              <p className="text-[11px] text-zinc-450 mt-1 max-w-xl leading-relaxed">
-                {album?.description || "No description set."}
+          <div className="bg-[#111113]/70 backdrop-blur border border-zinc-800/80 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-lg shadow-black/20">
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 className="text-lg font-black text-white tracking-tight">{album?.name}</h1>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border flex items-center gap-1.5",
+                    album?.visibility === "PUBLIC"
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                      : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      album?.visibility === "PUBLIC" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
+                    )}
+                  />
+                  {album?.visibility === "PUBLIC" ? "Public • Downloads ON" : "Private • Locked"}
+                </span>
+                {album?.status && (
+                  <span className="text-[9px] font-mono px-2 py-0.5 bg-zinc-800/90 text-zinc-400 rounded-md border border-zinc-700/50">
+                    {album.status}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
+                {album?.description || "No description set for this album."}
               </p>
             </div>
-            {associatedEvent && (
-              <a
-                href={`/events/${associatedEvent.id}`}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-955/20 hover:bg-purple-955/40 border border-purple-900/30 text-purple-400 hover:text-purple-300 rounded-xl text-[10.5px] font-bold transition-all"
+            
+            <div className="flex items-center gap-2 shrink-0">
+              {associatedEvent && (
+                <a
+                  href={`/events/${associatedEvent.id}`}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-purple-955/20 hover:bg-purple-955/40 border border-purple-900/30 text-purple-400 hover:text-purple-300 rounded-xl text-[11px] font-bold transition-all shadow-sm"
+                >
+                  <Layers size={13} />
+                  <span>Event Workspace</span>
+                  <ExternalLink size={10} />
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowShareModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-[11px] font-bold transition-all shadow-md shadow-purple-600/15 cursor-pointer active:scale-95"
               >
-                <Layers size={12} />
-                <span>Event Workspace</span>
-                <ExternalLink size={10} />
-              </a>
-            )}
+                <QrCode size={13} />
+                <span>Share & QR</span>
+              </button>
+            </div>
           </div>
 
           {/* Cloudinary Drag & Drop Uploader */}
@@ -704,53 +804,128 @@ export default function AlbumDetailPage() {
               {/* TAB C: SECURE SHARING SETTINGS */}
               {sidebarTab === "sharing" && (
                 <div className="space-y-4">
-                  <div className="border-b border-zinc-850 pb-2">
-                    <span className="text-[9px] text-zinc-550 font-black uppercase">Secure Link Engine</span>
+                  <div className="border-b border-zinc-850 pb-2 flex items-center justify-between">
+                    <span className="text-[9px] text-zinc-550 font-black uppercase tracking-wider">Secure Link Engine</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowShareModal(true)}
+                      className="text-[9.5px] font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Maximize2 size={11} /> Full Portal
+                    </button>
                   </div>
 
-                  <form onSubmit={handleCreateShareLink} className="space-y-3">
+                  {/* Real Scannable QR Code Card */}
+                  <div className="flex flex-col items-center justify-center p-4 bg-zinc-950/70 border border-zinc-800/90 rounded-2xl space-y-3 shadow-inner">
+                    <div className="p-2 bg-white rounded-xl shadow-xl border border-zinc-700/50">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={currentQrCodeUrl}
+                        alt="Real Scannable Album QR Code"
+                        className="w-28 h-28 object-contain block select-none"
+                      />
+                    </div>
+                    <div className="text-center space-y-1">
+                      <span className="text-[9px] font-mono text-purple-400 uppercase tracking-widest font-black block">
+                        Live Scannable QR Code
+                      </span>
+                      <p className="text-[10px] text-zinc-400">Scan with any phone camera to access album</p>
+                    </div>
+
+                    <div className="flex gap-2 w-full pt-1">
+                      <button
+                        type="button"
+                        onClick={handleDownloadQr}
+                        className="flex-1 py-1.5 bg-purple-650 hover:bg-purple-700 text-white rounded-lg font-bold text-[10.5px] flex items-center justify-center gap-1.5 transition-all shadow cursor-pointer active:scale-95"
+                      >
+                        <Download size={12} /> Save QR PNG
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyLink(currentShareUrl)}
+                        className="flex-1 py-1.5 bg-zinc-850 hover:bg-zinc-750 text-zinc-200 border border-zinc-750 rounded-lg font-bold text-[10.5px] flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                      >
+                        {copiedShareUrl ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                        {copiedShareUrl ? "Copied!" : "Copy Link"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Visibility & Download Permissions Banner */}
+                  <div className={cn(
+                    "p-3 rounded-xl border text-[10px] space-y-1.5",
+                    album?.visibility === "PUBLIC"
+                      ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                      : "bg-amber-500/10 border-amber-500/25 text-amber-400"
+                  )}>
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold flex items-center gap-1.5">
+                        {album?.visibility === "PUBLIC" ? <ShieldCheck size={14} /> : <ShieldAlert size={14} />}
+                        {album?.visibility === "PUBLIC" ? "Public Album (Downloads ON)" : "Private Album (Downloads Locked)"}
+                      </div>
+                      {isStaff && (
+                        <button
+                          type="button"
+                          onClick={() => updateVisibilityMutation.mutate(album?.visibility === "PUBLIC" ? "PRIVATE" : "PUBLIC")}
+                          className="text-[9px] underline font-bold cursor-pointer hover:text-white"
+                        >
+                          {album?.visibility === "PUBLIC" ? "Make Private" : "Make Public"}
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-zinc-400 text-[9.5px] leading-relaxed">
+                      {album?.visibility === "PUBLIC"
+                        ? "Public visitors can browse photos and download the full album archive."
+                        : "Private mode blocks external guest viewing and downloads."}
+                    </p>
+                  </div>
+
+                  {/* Create New Secure Link Form */}
+                  <form onSubmit={handleCreateShareLink} className="space-y-3 pt-1">
+                    <div className="flex items-center justify-between border-b border-zinc-850/60 pb-1.5">
+                      <span className="text-[9.5px] font-black uppercase text-zinc-400">Generate New Token</span>
+                    </div>
+
                     <div className="space-y-1">
-                      <label className="text-[8px] text-zinc-550 uppercase font-black">Link Expiration</label>
+                      <label className="text-[8.5px] text-zinc-550 uppercase font-black">Link Expiration</label>
                       <select
                         value={shareExpiryHours}
                         onChange={(e) => setShareExpiryHours(e.target.value)}
-                        className="w-full px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300"
+                        className="w-full px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 font-bold"
                       >
-                        <option value="24">24 Hours</option>
-                        <option value="168">7 Days</option>
-                        <option value="0">Never Expire</option>
+                        <option value="24">24 Hours (1 Day)</option>
+                        <option value="168">7 Days (1 Week)</option>
+                        <option value="720">30 Days (1 Month)</option>
+                        <option value="0">Never Expire (Permanent)</option>
                       </select>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[8px] text-zinc-550 uppercase font-black">Access Passcode Lock</label>
+                      <label className="text-[8.5px] text-zinc-550 uppercase font-black">Access Passcode Lock (Optional)</label>
                       <input
                         type="text"
-                        placeholder="Optional passcode lock..."
+                        placeholder="e.g. 2026VIP"
                         value={sharePasscode}
                         onChange={(e) => setSharePasscode(e.target.value)}
-                        className="w-full px-2.5 py-1.5 bg-[#121214] border border-zinc-800 rounded-lg text-white font-mono"
+                        className="w-full px-2.5 py-1.5 bg-[#121214] border border-zinc-800 rounded-lg text-white font-mono text-xs focus:border-purple-500 outline-none"
                       />
                     </div>
 
-                    <div className="flex items-center gap-2 py-1">
+                    <div className="flex items-center justify-between py-1">
+                      <span className="font-bold text-zinc-300 text-[10px]">Allow High-Res Downloads</span>
                       <input
                         type="checkbox"
-                        id="allow-download-check"
                         checked={shareDownloadAllowed}
                         onChange={(e) => setShareDownloadAllowed(e.target.checked)}
-                        className="accent-purple-600 rounded"
+                        className="accent-purple-600 rounded h-4 w-4"
                       />
-                      <label htmlFor="allow-download-check" className="font-bold text-zinc-400 text-[10px] cursor-pointer">
-                        Allow High-Res Downloads
-                      </label>
                     </div>
 
                     <div className="space-y-2 py-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-zinc-300 text-[10px]">Overlay Studio Watermark</span>
                         <input
                           type="checkbox"
-                          id="watermark-check"
                           checked={shareWatermark}
                           onChange={(e) => {
                             setShareWatermark(e.target.checked);
@@ -758,15 +933,12 @@ export default function AlbumDetailPage() {
                               setShareWatermarkText(defaultAgencyName);
                             }
                           }}
-                          className="accent-purple-600 rounded"
+                          className="accent-purple-600 rounded h-4 w-4"
                         />
-                        <label htmlFor="watermark-check" className="font-bold text-zinc-400 text-[10px] cursor-pointer">
-                          Overlay Studio Watermark
-                        </label>
                       </div>
 
                       {shareWatermark && (
-                        <div className="space-y-1 pl-5">
+                        <div className="space-y-1">
                           <label className="text-[8px] text-zinc-500 uppercase font-black tracking-wider">
                             Watermark Text (Agency Name)
                           </label>
@@ -777,24 +949,123 @@ export default function AlbumDetailPage() {
                             onChange={(e) => setShareWatermarkText(e.target.value)}
                             className="w-full px-2.5 py-1.5 bg-[#121214] border border-zinc-800 rounded-lg text-white font-mono text-xs focus:border-purple-500 outline-none"
                           />
-                          <p className="text-[8px] text-zinc-500">Diagonal overlay applied to preview media until payment is cleared.</p>
                         </div>
                       )}
                     </div>
 
-                    <button type="submit" className="w-full py-1.5 bg-purple-650 hover:bg-purple-700 text-white font-bold rounded-lg transition-colors shadow">
-                      Generate share token
+                    <button
+                      type="submit"
+                      disabled={createShareLinkMutation.isPending}
+                      className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      {createShareLinkMutation.isPending ? <Loader2 size={13} className="animate-spin" /> : <Share2 size={13} />}
+                      {createShareLinkMutation.isPending ? "Generating..." : "Generate Share Token"}
                     </button>
                   </form>
 
+                  {/* Newly Generated Secure Link Success Banner with Real QR Code */}
                   {shareSuccessToken && (
-                    <div className="p-3 bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 rounded-xl space-y-2 text-center">
-                      <p className="text-[10px] font-bold">Secure Link Generated Successfully!</p>
-                      <p className="font-mono text-[9px] break-all select-all block bg-zinc-950 p-1.5 rounded text-zinc-300">
-                        {typeof window !== "undefined" && `${getAppBaseUrl()}/share/${shareSuccessToken}`}
-                      </p>
-                      <div className="h-20 w-20 mx-auto bg-white p-1 rounded border border-zinc-800 flex items-center justify-center mt-2 shadow">
-                        <QrCode size={64} className="text-black" />
+                    <div className="p-3.5 bg-gradient-to-b from-emerald-500/15 to-emerald-950/20 border border-emerald-500/30 rounded-2xl space-y-3 shadow-lg animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-emerald-400 text-[10px] flex items-center gap-1.5">
+                          <Check size={13} className="text-emerald-400" />
+                          Secure Link Generated Successfully!
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShareSuccessToken(null)}
+                          className="text-zinc-500 hover:text-zinc-300 p-0.5 cursor-pointer"
+                          title="Dismiss"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+
+                      <div className="p-2 bg-black/60 rounded-xl border border-zinc-800 flex items-center justify-between gap-2">
+                        <span className="font-mono text-[9px] text-zinc-300 truncate select-all">
+                          {`${getAppBaseUrl()}/share/${shareSuccessToken}`}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyLink(`${getAppBaseUrl()}/share/${shareSuccessToken}`)}
+                          className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg shrink-0 cursor-pointer"
+                          title="Copy Link"
+                        >
+                          {copiedShareUrl ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                        </button>
+                      </div>
+
+                      {/* Real Scannable QR Code */}
+                      <div className="flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-md">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(
+                            `${getAppBaseUrl()}/share/${shareSuccessToken}`
+                          )}&color=09090b&bgcolor=ffffff&qzone=2`}
+                          alt="Real Scannable Album Share QR Code"
+                          className="w-28 h-28 object-contain block select-none"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleDownloadQr}
+                          className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[10px] flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                        >
+                          <Download size={11} /> Save QR
+                        </button>
+                        <a
+                          href={`${getAppBaseUrl()}/share/${shareSuccessToken}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-750 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                        >
+                          <ExternalLink size={11} /> Open Link
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Active Tokens List */}
+                  {shareLinks.length > 0 && (
+                    <div className="space-y-2 border-t border-zinc-850 pt-3">
+                      <span className="text-[9px] font-black uppercase text-zinc-500 block">
+                        Active Share Tokens ({shareLinks.length})
+                      </span>
+                      <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                        {shareLinks.map((link) => (
+                          <div
+                            key={link.id}
+                            className="p-2 bg-zinc-900/60 border border-zinc-800 rounded-lg flex items-center justify-between gap-2 text-[10px]"
+                          >
+                            <div className="truncate">
+                              <span className="font-mono text-purple-400 truncate block">.../share/{link.token.substring(0, 10)}...</span>
+                              <span className="text-[8px] text-zinc-550">
+                                {link.expiresAt ? `Exp: ${new Date(link.expiresAt).toLocaleDateString()}` : "Permanent"}
+                                {link.passwordProtected && " • 🔒 Protected"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleCopyLink(`${getAppBaseUrl()}/share/${link.token}`)}
+                                className="p-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded cursor-pointer"
+                                title="Copy Token URL"
+                              >
+                                <Copy size={11} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => revokeShareLinkMutation.mutate(link.id)}
+                                className="p-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded cursor-pointer"
+                                title="Revoke Token"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -890,6 +1161,23 @@ export default function AlbumDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* SHARE & LIVE SCANNABLE QR CODE MODAL */}
+      {showShareModal && album && (
+        <ShareQrModal
+          album={{
+            id: album.id,
+            name: album.name,
+            description: album.description,
+            itemCount: album.itemCount || items.length,
+            visibility: album.visibility || "PUBLIC",
+            status: album.status || "PUBLISHED"
+          }}
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          onUpdateVisibility={(vis) => updateVisibilityMutation.mutate(vis)}
+        />
       )}
 
     </div>

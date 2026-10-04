@@ -10,7 +10,22 @@ import {
   ArrowRight,
   Command,
   ChevronRight,
-  LogIn
+  LogIn,
+  RotateCcw,
+  Bot,
+  Zap,
+  ShieldCheck,
+  QrCode,
+  Image as ImageIcon,
+  DollarSign,
+  Calendar,
+  Layers,
+  FileText,
+  Users,
+  Settings,
+  HelpCircle,
+  Clock,
+  CheckCircle2
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -34,18 +49,27 @@ const DotLottieReact = dynamic(
   }
 );
 
-// Routes where AI Assistant must be completely hidden (onboarding / internal setup)
+// ── ROUTES WHERE AI ASSISTANT MUST BE COMPLETELY HIDDEN ─────────────────────
+// 1. /share: Public guest photo viewing & downloads (external guests & couples scan QR here - must be 100% clean)
+// 2. /portal: Client guest portal
+// 3. /onboarding, /workspace-select: Linear setup flows
+// 4. /superadmin: Master superadmin console
+// 5. Auth single-focus utility flows
 const HIDDEN_ROUTES = [
+  "/share",
+  "/portal",
   "/forgot-password",
   "/reset-password",
   "/verify-email",
   "/accept-invite",
   "/onboarding",
   "/workspace-select",
-  "/superadmin/login"
+  "/superadmin",
+  "/design-system-demo",
+  "/api"
 ];
 
-// Public landing & marketing routes
+// Public marketing & informational routes
 const PUBLIC_MARKETING_ROUTES = [
   "/",
   "/about",
@@ -62,7 +86,12 @@ const PUBLIC_MARKETING_ROUTES = [
   "/founder-story",
   "/customers",
   "/demo",
-  "/blog"
+  "/blog",
+  "/terms-and-conditions",
+  "/privacy-policy",
+  "/refund-policy",
+  "/cancellation-policy",
+  "/shipping-policy"
 ];
 
 function isHiddenRoute(pathname: string): boolean {
@@ -102,17 +131,17 @@ function renderFormattedText(text: string) {
     const lines = para.split("\n");
     if (lines.length > 1 || lines[0].trim().startsWith("•") || lines[0].trim().startsWith("- ")) {
       return (
-        <div key={pIdx} className="space-y-2 my-2">
+        <div key={pIdx} className="space-y-1.5 my-2">
           {lines.map((line, lIdx) => {
             const trimmed = line.trim();
             const isBullet = trimmed.startsWith("•") || trimmed.startsWith("- ");
             const content = isBullet ? trimmed.replace(/^[•\-]\s*/, "") : line;
             return (
-              <div key={lIdx} className={isBullet ? "flex items-start gap-2.5 pl-1" : ""}>
+              <div key={lIdx} className={isBullet ? "flex items-start gap-2 pl-0.5" : ""}>
                 {isBullet && (
                   <span className="h-1.5 w-1.5 rounded-full bg-purple-400 mt-2 shrink-0 shadow-[0_0_8px_rgba(192,132,252,0.8)]" />
                 )}
-                <span className="leading-relaxed text-slate-100 text-[13px]">
+                <span className="leading-relaxed text-slate-100 text-[12.5px]">
                   {parseBoldText(content)}
                 </span>
               </div>
@@ -122,7 +151,7 @@ function renderFormattedText(text: string) {
       );
     }
     return (
-      <p key={pIdx} className="mb-2 last:mb-0 leading-relaxed text-slate-100 text-[13px]">
+      <p key={pIdx} className="mb-2 last:mb-0 leading-relaxed text-slate-100 text-[12.5px]">
         {parseBoldText(para)}
       </p>
     );
@@ -167,6 +196,14 @@ export default function AiAssistant() {
   const containerRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input automatically when opened
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 150);
+    }
+  }, [isOpen]);
 
   // Determine mode: Public Concierge vs Authenticated Workspace Co-pilot
   const isPublicMode = useMemo(() => {
@@ -182,25 +219,54 @@ export default function AiAssistant() {
   const pageContext = useMemo(() => {
     const path = pathname.toLowerCase();
     if (path === "/login") {
-      return { name: "Account Login", module: "Auth AI", role: "Access Specialist" };
+      return { name: "Account Login", module: "Auth AI", role: "Access Specialist", icon: LogIn };
     }
     if (path === "/register") {
-      return { name: "Agency Registration", module: "Auth AI", role: "Onboarding Specialist" };
+      return { name: "Agency Registration", module: "Auth AI", role: "Onboarding Specialist", icon: Sparkles };
     }
     if (isPublicMode) {
-      return { name: "EventOS Concierge", module: "Public AI", role: "Product Specialist" };
+      return { name: "EventOS Concierge", module: "Public AI", role: "Product Specialist", icon: Bot };
     }
-    if (path.startsWith("/crm")) return { name: "CRM / Leads", module: "CRM AI", role: "Sales Co-pilot" };
-    if (path.startsWith("/events") || path.startsWith("/bookings")) return { name: "Events Planning", module: "Event AI", role: "Operations Co-pilot" };
-    if (path.startsWith("/quotes")) return { name: "Quotes & Proposals", module: "Quote AI", role: "Pricing Co-pilot" };
-    if (path.startsWith("/gallery")) return { name: "Media Galleries", module: "Gallery AI", role: "Media Co-pilot" };
-    if (path.startsWith("/finance") || path.startsWith("/invoices") || path.startsWith("/payments") || path.startsWith("/calculator")) {
-      return { name: "Finance & Billing", module: "Finance AI", role: "Finance Co-pilot" };
+    if (path.startsWith("/crm") || path.startsWith("/leads")) {
+      return { name: "CRM / Leads", module: "CRM AI", role: "Sales Co-pilot", icon: Users };
     }
-    if (path.startsWith("/settings")) return { name: "Settings & System", module: "Settings AI", role: "Admin Co-pilot" };
-    if (path.startsWith("/reports")) return { name: "Reports & Analytics", module: "Analytics AI", role: "BI Co-pilot" };
-    if (path.startsWith("/chat")) return { name: "Workspace Chat", module: "Collab AI", role: "Team Co-pilot" };
-    return { name: "Dashboard", module: "Overview", role: "Executive Co-pilot" };
+    if (path.startsWith("/events") || path.startsWith("/bookings")) {
+      return { name: "Events Planning", module: "Event AI", role: "Operations Co-pilot", icon: Calendar };
+    }
+    if (path.startsWith("/quotes")) {
+      return { name: "Quotes & Proposals", module: "Quote AI", role: "Pricing Co-pilot", icon: FileText };
+    }
+    if (path.startsWith("/gallery")) {
+      return { name: "Media Galleries", module: "Gallery AI", role: "Media & QR Co-pilot", icon: ImageIcon };
+    }
+    if (path.startsWith("/finance") || path.startsWith("/invoices") || path.startsWith("/payments")) {
+      return { name: "Finance & UPI", module: "Finance AI", role: "Finance Co-pilot", icon: DollarSign };
+    }
+    if (path.startsWith("/tasks")) {
+      return { name: "Tasks & Milestones", module: "Task AI", role: "Workflow Co-pilot", icon: CheckCircle2 };
+    }
+    if (path.startsWith("/clients")) {
+      return { name: "Client Directory", module: "Client AI", role: "Client Co-pilot", icon: Users };
+    }
+    if (path.startsWith("/vendors")) {
+      return { name: "Vendor Management", module: "Vendor AI", role: "Vendor Co-pilot", icon: Layers };
+    }
+    if (path.startsWith("/settings")) {
+      return { name: "Settings & System", module: "Settings AI", role: "Admin Co-pilot", icon: Settings };
+    }
+    if (path.startsWith("/reports") || path.startsWith("/analytics")) {
+      return { name: "Reports & Analytics", module: "Analytics AI", role: "BI Co-pilot", icon: Zap };
+    }
+    if (path.startsWith("/chat")) {
+      return { name: "Workspace Chat", module: "Collab AI", role: "Team Co-pilot", icon: Bot };
+    }
+    if (path.startsWith("/calculator") || path.startsWith("/quote-calculator")) {
+      return { name: "Quote Estimator", module: "Calculator AI", role: "Pricing Estimator", icon: FileText };
+    }
+    if (path.startsWith("/help")) {
+      return { name: "Help Center", module: "Help AI", role: "Support Specialist", icon: HelpCircle };
+    }
+    return { name: "Dashboard", module: "Overview", role: "Executive Co-pilot", icon: Sparkles };
   }, [pathname, isPublicMode]);
 
   // Generate context-aware suggestions
@@ -208,7 +274,7 @@ export default function AiAssistant() {
     const path = pathname.toLowerCase();
     if (path === "/login") {
       return [
-        { label: "How to sign in with Google SSO?", action: () => handleSendText("How do I sign in with Google SSO?") },
+        { label: "Sign in with Google SSO", action: () => handleSendText("How do I sign in with Google SSO?") },
         { label: "Forgot password / recovery", action: () => handleSendText("How do I reset my password?") },
         { label: "Create new agency account", action: () => handleSendText("How do I create a new agency account?") },
         { label: "Explore features & pricing", action: () => handleSendText("What are the pricing plans and features?") }
@@ -216,70 +282,90 @@ export default function AiAssistant() {
     }
     if (path === "/register") {
       return [
-        { label: "What is in the 14-Day Free Trial?", action: () => handleSendText("What is included in the 14-day free trial?") },
-        { label: "Can I sign up with Google SSO?", action: () => handleSendText("How do I sign up with Google SSO?") },
-        { label: "I already have an account", action: () => handleSendText("I already have an account, take me to login") },
+        { label: "14-Day Free Trial features", action: () => handleSendText("What is included in the 14-day free trial?") },
+        { label: "Founding Cohort (50% Off)", action: () => handleSendText("How do I join the founding cohort of 25 agencies?") },
+        { label: "Sign up with Google SSO", action: () => handleSendText("How do I sign up with Google SSO?") },
         { label: "Which plan should I choose?", action: () => handleSendText("Which plan is best for my agency?") }
       ];
     }
     if (isPublicMode) {
       return [
-        { label: "Founding Beta Cohort (50% Off)", action: () => handleSendText("How do I join the founding cohort of 25 agencies?") },
-        { label: "Talk with Founder Lokesh", action: () => handleSendText("Who is the founder of EventOS?") },
-        { label: "What are the core features?", action: () => handleSendText("What are the core features of EventOS?") },
-        { label: "Explore pricing & plans", action: () => handleSendText("What are your pricing plans?") }
+        { label: "Core features overview", action: () => handleSendText("What are the core features of EventOS?") },
+        { label: "Pricing & Plans", action: () => handleSendText("What are your pricing plans?") },
+        { label: "Founding Cohort (50% Off)", action: () => handleSendText("How do I join the founding cohort of 25 agencies?") },
+        { label: "Talk with Founder Lokesh", action: () => handleSendText("Who is the founder of EventOS?") }
       ];
     }
 
-    if (pageContext.module === "CRM AI") {
+    if (pageContext.module === "Gallery AI") {
       return [
-        { label: "How to qualify & score leads?", action: () => handleSendText("How does lead scoring work in EventOS?") },
-        { label: "Tips for converting leads into quotes", action: () => handleSendText("How do I convert an active lead into a proposal quote?") }
-      ];
-    }
-    if (pageContext.module === "Quote AI") {
-      return [
-        { label: "Proposal best practices", action: () => handleSendText("How do I create a high-converting wedding proposal?") },
-        { label: "Configuring GST & milestones", action: () => handleSendText("How do payment milestones and GST work in quotes?") }
-      ];
-    }
-    if (pageContext.module === "Event AI") {
-      return [
-        { label: "Create a visual timeline", action: () => handleSendText("How to build a multi-day event timeline?") },
-        { label: "Manage event ingress & vendors", action: () => handleSendText("How to assign tasks and vendor ingress?") }
+        { label: "Public vs Private album rules", action: () => handleSendText("Can guests download photos if the album is private?") },
+        { label: "Live Scannable QR Codes", action: () => handleSendText("How do live QR codes work for guests to access albums?") },
+        { label: "Save QR PNG & Print", action: () => handleSendText("How can I download the QR code PNG to print on table cards?") },
+        { label: "Watermark & Passcode lock", action: () => handleSendText("How to protect albums with agency watermark and passcode?") }
       ];
     }
     if (pageContext.module === "Finance AI") {
       return [
-        { label: "Generate dynamic UPI QR Code", action: () => handleSendText("How to generate instant UPI QR code for client?") },
-        { label: "Review outstanding receivables", action: () => handleSendText("Where can I track pending client payments?") }
+        { label: "Dynamic UPI QR generation", action: () => handleSendText("How to generate instant dynamic UPI QR for client payments?") },
+        { label: "Track overdue receivables", action: () => handleSendText("Where can I track overdue client advances and balances?") },
+        { label: "Record offline Cash/NEFT", action: () => handleSendText("How do I record offline Cash or bank transfer advances?") }
       ];
     }
-    if (pageContext.module === "Gallery AI") {
+    if (pageContext.module === "Event AI") {
       return [
-        { label: "Client proofing link guide", action: () => handleSendText("How to share password-protected client proofing galleries?") },
-        { label: "Organize album sub-folders", action: () => handleSendText("How to organize ceremony albums like Sangeet and Haldi?") }
+        { label: "Build wedding timeline (Haldi/Sangeet)", action: () => handleSendText("How to build a multi-day wedding ceremony timeline?") },
+        { label: "Vendor ingress & crew check-in", action: () => handleSendText("How to manage vendor ingress checklists and crew arrivals?") },
+        { label: "Day-of cue sheets", action: () => handleSendText("How do I print or share day-of cue sheets with coordinators?") }
+      ];
+    }
+    if (pageContext.module === "Quote AI") {
+      return [
+        { label: "Proposal line-item structures", action: () => handleSendText("How to structure catering, decor, and AV line items in quotes?") },
+        { label: "18% GST & milestone splits", action: () => handleSendText("How do 18% GST and milestone payments work in EventOS?") },
+        { label: "Client e-sign approval link", action: () => handleSendText("How do clients digitally approve quotes with e-signatures?") }
+      ];
+    }
+    if (pageContext.module === "CRM AI") {
+      return [
+        { label: "Lead qualification scoring", action: () => handleSendText("How does automated lead scoring work in EventOS?") },
+        { label: "Convert lead to formal quote", action: () => handleSendText("How do I convert an active lead into a proposal quote?") },
+        { label: "Import leads via CSV/Excel", action: () => handleSendText("How can I import my existing leads into EventOS?") }
+      ];
+    }
+    if (pageContext.module === "Task AI") {
+      return [
+        { label: "Assign coordinator tasks", action: () => handleSendText("How to delegate tasks and track deadlines?") },
+        { label: "Milestone dependencies", action: () => handleSendText("How to set task milestones for event days?") }
+      ];
+    }
+    if (pageContext.module === "Settings AI") {
+      return [
+        { label: "Meta WhatsApp Cloud API", action: () => handleSendText("How to configure WhatsApp Cloud API for automated alerts?") },
+        { label: "Custom CNAME domain (White-Label)", action: () => handleSendText("How to connect our custom domain like clients.myagency.com?") },
+        { label: "Invite team & set RBAC roles", action: () => handleSendText("How do I invite team members and set permissions?") }
       ];
     }
     return [
-      { label: "Core feature testing walkthrough", action: () => handleSendText("Guide me through the 5 core steps of EventOS") },
-      { label: "How to invite team members", action: () => handleSendText("How do I invite team members and set roles?") }
+      { label: "Core 5-step walkthrough", action: () => handleSendText("Guide me through the 5 core steps of EventOS") },
+      { label: "Invite coordinators & team", action: () => handleSendText("How do I invite team members and set roles?") },
+      { label: "Setup GST & UPI Gateway", action: () => handleSendText("How to configure agency GST and UPI payment settings?") }
     ];
   };
 
   // Welcome message when context or drawer opens
-  useEffect(() => {
+  const initializeChat = () => {
     let welcomeText = "";
     const path = pathname.toLowerCase();
     if (path === "/login") {
-      welcomeText = "Welcome to **EventOS**! 🔐\n\nI am your **Access Specialist**. I can help you sign in, guide you with **Google SSO**, or help you reset a forgotten password.\n\nHow can I help you access your account?";
+      welcomeText = "Welcome to **EventOS**! 🔐\n\nI am your **Access Specialist**. I can help you sign in, guide you with **Google SSO**, or help you recover your password.\n\nHow can I assist your access today?";
     } else if (path === "/register") {
-      welcomeText = "Welcome to **EventOS**! ✨\n\nReady to elevate your event agency? Apply for our **Founding Agency Cohort (Private Beta)** — limited to 25 agencies with a **50% lifetime price lock** and direct 1-on-1 founder onboarding.\n\nNeed help choosing a plan or signing up with Google SSO?";
+      welcomeText = "Welcome to **EventOS**! ✨\n\nReady to elevate your event agency? Join our **Founding Agency Cohort (Private Beta)** — limited to 25 agencies with a **50% lifetime price lock** and direct 1-on-1 founder onboarding with Lokesh.\n\nNeed help choosing a plan or signing up with Google SSO?";
     } else if (isPublicMode) {
-      welcomeText = "Welcome to **EventOS**! ✨\n\nI am your **EventOS AI Concierge**. We built EventOS from Nagpur, India to replace chaotic WhatsApp groups and manual Excel quotes with a unified operating system for wedding & event agencies.\n\n• **Private Beta Active**: Limited to **25 Founding Agencies** with **50% lifetime price lock**.\n• **Founder Direct**: Built by **Lokesh Nagrikar** ([@solo.founder.ai](https://www.instagram.com/solo.founder.ai/)).\n\nWhat would you like to know about EventOS?";
+      welcomeText = "Welcome to **EventOS**! ✨\n\nI am your **EventOS AI Concierge**. We built EventOS to replace chaotic WhatsApp groups and manual Excel quotes with a unified operating system for wedding & event agencies.\n\n• **Private Beta Active**: Limited to **25 Founding Agencies** with **50% lifetime price lock**.\n• **Founder Direct**: Built by **Lokesh Nagrikar** ([@solo.founder.ai](https://www.instagram.com/solo.founder.ai/)).\n\nAsk me anything about features, pricing, or day-of workflows!";
     } else {
       const name = user?.firstName || "Partner";
-      welcomeText = `Hello, **${name}**! 👋\n\nI am your **EventOS Co-pilot** for **${pageContext.name}** (${pageContext.role}).\n\nI can help you build run-of-show cue sheets, generate GST proposals, verify UPI milestone advances, or organize vendor ingress.\n\nWhat would you like to do?`;
+      welcomeText = `Hello, **${name}**! 👋\n\nI am your **EventOS Co-pilot** for **${pageContext.name}** (${pageContext.role}).\n\nI can assist you with live workflows, guidance on album sharing & real QR codes, GST quote generation, or tracking vendor operations.\n\nHow can I help you today?`;
     }
 
     setMessages([
@@ -291,21 +377,28 @@ export default function AiAssistant() {
         suggestions: getContextSuggestions()
       }
     ]);
-  }, [pageContext, isPublicMode, isOpen, pathname]);
+  };
 
-  // Keyboard shortcut toggle (Ctrl + Space / Cmd + Space)
+  useEffect(() => {
+    initializeChat();
+  }, [pageContext.module, isPublicMode, pathname]);
+
+  // Keyboard shortcut toggle (Ctrl + Space / Cmd + Space or Esc to close)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.code === "Space") {
         e.preventDefault();
         setIsOpen((prev) => !prev);
       }
+      if (e.key === "Escape" && isOpen) {
+        setIsOpen(false);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [isOpen]);
 
-  // Robust Auto-Scroll: scroll smoothly to bottom when messages or typing changes
+  // Auto-Scroll to bottom smoothly
   useEffect(() => {
     if (!isOpen) return;
     const timer = setTimeout(() => {
@@ -335,7 +428,7 @@ export default function AiAssistant() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  // 1. Hide on login, register, forgot-password, onboarding, etc.
+  // 1. CRITICAL: Completely hide on excluded routes like /share (guest photo viewer), /portal, etc.
   if (isHiddenRoute(pathname)) {
     return null;
   }
@@ -357,7 +450,7 @@ export default function AiAssistant() {
     setIsTyping(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       const q = text.toLowerCase();
       let aiResponse = "";
       let actionBtn: Message["actionBtn"] = undefined;
@@ -391,7 +484,7 @@ export default function AiAssistant() {
         } else if (q.includes("register") || q.includes("sign up") || q.includes("create account") || q.includes("trial")) {
           aiResponse =
             "**EventOS 14-Day Free Trial:**\n\n" +
-            "• Includes full unrestricted access to CRM, Interactive Proposal Builder, Day-of Timelines, and Photo Galleries.\n" +
+            "• Includes full unrestricted access to CRM, Interactive Proposal Builder, Day-of Timelines, and Media Galleries.\n" +
             "• **Zero credit card required** to begin.\n" +
             "• Get your entire event agency onboarded in under 60 seconds!";
           actionBtn = { label: "Start Free 14-Day Trial", href: "/register" };
@@ -399,10 +492,6 @@ export default function AiAssistant() {
             { label: "Explore pricing plans", action: () => handleSendText("What are the pricing plans?") },
             { label: "Sign in with existing account", action: () => handleSendText("I want to sign in") }
           ];
-        } else if (q.includes("sign in") || q.includes("login") || q.includes("log in")) {
-          aiResponse =
-            "**Sign In to Your Workspace:**\n\n" +
-            "• Enter your work email and password or use **Continue with Google** to access your dashboard, active events, and team communications.";
         } else if (q.includes("founder") || q.includes("lokesh") || q.includes("instagram") || q.includes("who built") || q.includes("creator") || q.includes("solo")) {
           aiResponse =
             "**Meet the Founder of EventOS:**\n\n" +
@@ -446,35 +535,16 @@ export default function AiAssistant() {
             "2. **Interactive Proposal Builder**: Multi-tier itemized packages, automated 18% GST calculation, and digital e-signatures.\n" +
             "3. **Event Operations & Timeline**: Multi-day ceremony timelines (Sangeet, Haldi, Reception) with vendor ingress checklists.\n" +
             "4. **Smart Finance & UPI Desk**: Instant dynamic UPI QR codes (GPay, PhonePe, Paytm) and automated invoice tracking.\n" +
-            "5. **Client Proofing Galleries**: High-speed photo delivery with client favorites selection and PIN locks.";
+            "5. **Client Proofing Galleries**: High-speed photo delivery with real scannable QR codes, client favorites selection, and PIN locks.";
           actionBtn = { label: "Explore Solutions", href: "/solutions" };
           nextSuggestions = [
             { label: "Book a live demo", action: () => handleSendText("I want to book a live demo") },
             { label: "Compare pricing plans", action: () => handleSendText("What are the pricing plans?") }
           ];
-        } else if (q.includes("white-label") || q.includes("domain") || q.includes("branding") || q.includes("logo")) {
-          aiResponse =
-            "**Enterprise White-Labeling in EventOS:**\n\n" +
-            "• **Custom CNAME Domain**: Serve the entire client portal under your brand (e.g. `clients.youragency.com`).\n" +
-            "• **Brand Identity**: Upload custom logos, set primary luxury brand colors, and customize invoice templates.\n" +
-            "• **Zero Watermark**: Remove all EventOS badges from proposal PDFs, emails, and client-facing galleries.";
-          actionBtn = { label: "Learn About Enterprise", href: "/pricing" };
-        } else if (q.includes("demo") || q.includes("call") || q.includes("sales")) {
-          aiResponse =
-            "We would love to show you a live interactive walkthrough of EventOS tailored to your agency's wedding & corporate workflow!\n\n" +
-            "Click below to reserve your 20-minute 1-on-1 session with our product specialist:";
-          actionBtn = { label: "Schedule Live Demo", href: "/book-demo" };
-        } else if (q.includes("invoice") || q.includes("lead") || q.includes("wedding") || q.includes("client") || q.includes("payment")) {
-          // Prevent any leak or mock data queries on the public landing page!
-          aiResponse =
-            "**Security Notice:**\n\n" +
-            "All client information, invoices, and event records are strictly encrypted and protected within individual agency workspaces.\n\n" +
-            "If you already have an agency account, please **Sign In** to view and manage your workspace.";
-          actionBtn = { label: "Sign In to EventOS", href: "/login", icon: LogIn };
         } else {
           aiResponse =
             "**EventOS** is India's premier Operating System built specifically for wedding planners, event coordinators, and creative agencies.\n\n" +
-            "We automate everything from initial lead intake to signed quotes, day-of timelines, and high-speed photo delivery.";
+            "We automate everything from initial lead intake to signed quotes, day-of timelines, real QR code photo sharing, and high-speed delivery.";
           actionBtn = { label: "Book a Demo", href: "/book-demo" };
           nextSuggestions = [
             { label: "View Pricing", action: () => handleSendText("What are the pricing tiers?") },
@@ -484,7 +554,7 @@ export default function AiAssistant() {
       }
 
       // ==========================================
-      // B. AUTHENTICATED WORKSPACE CO-PILOT RESPONSES (Real guidance, zero mock hallucination)
+      // B. AUTHENTICATED WORKSPACE CO-PILOT RESPONSES (Context-Rich & Actionable)
       // ==========================================
       else {
         // Try live AI generation via Gemini first
@@ -502,82 +572,137 @@ export default function AiAssistant() {
           console.warn("[AiAssistant] Live generation failed, using workspace fallback:", e);
         }
 
-        // Smart Action Button & Suggestion Mapping based on query/response context
-        if (q.includes("lead") || q.includes("crm")) {
-          actionBtn = { label: "Open CRM / Leads Desk", href: "/crm" };
+        // 1. GALLERY & QR CODE RULES
+        if (q.includes("qr") || q.includes("download") || q.includes("private") || q.includes("public") || q.includes("watermark") || q.includes("proofing") || q.includes("album") || q.includes("photo")) {
+          actionBtn = { label: "Open Media Gallery", href: "/gallery", icon: ImageIcon };
           nextSuggestions = [
-            { label: "How to create a quote?", action: () => handleSendText("How do I generate a quote from a lead?") }
+            { label: "Public vs Private album rules", action: () => handleSendText("Explain the difference between Public and Private albums") },
+            { label: "How to save QR Code PNG", action: () => handleSendText("How do I download the QR Code PNG?") }
+          ];
+          if (!liveGenerated) {
+            if (q.includes("private") || q.includes("download") || q.includes("public") || q.includes("rule")) {
+              aiResponse =
+                "**Album Visibility & Download Security Rules:**\n\n" +
+                "• **PUBLIC Mode (Downloads ON)**:\n" +
+                "  - Guests scanning the QR code or opening the link can freely browse memories and click **'Download Album'** to get high-resolution photos.\n" +
+                "  - Best for finalized event galleries shared with wedding attendees.\n\n" +
+                "• **PRIVATE Mode (Downloads Locked)**:\n" +
+                "  - Blocks public downloads and restricts unauthenticated guest access.\n" +
+                "  - Only agency operators or authorized clients with a token/passcode can preview.\n" +
+                "  - Ideal during photo editing, proofing, or before final payment clearance.\n\n" +
+                "💡 *You can toggle visibility in 1 click from the top header or sidebar!*";
+            } else if (q.includes("qr") || q.includes("scan") || q.includes("print")) {
+              aiResponse =
+                "**Live Scannable QR Codes for Guests:**\n\n" +
+                "• **Real High-Resolution QR**: Generated instantly via high-contrast scannable API (`api.qrserver.com`).\n" +
+                "• **Universal Scan**: Compatible with any mobile phone camera, Google Lens, or scanner.\n" +
+                "• **Save QR PNG**: Click **'Save QR PNG'** to download the clean graphic file for printing on table stands, welcome cards, or display stands.\n" +
+                "• **Share Tokens**: Generate custom expiration tokens (e.g. 7 days) with optional passcode locks and agency watermark overlays.";
+            } else {
+              aiResponse =
+                "**Media Gallery & Proofing Engine:**\n\n" +
+                "• **Fast Cloudinary Storage**: Upload RAW, 4K MP4s, AVIF, and JPG assets effortlessly.\n" +
+                "• **Live QR Distribution**: Instant QR codes for wedding tables and reception screens.\n" +
+                "• **Watermark Protection**: Automatically stamp your agency name until client milestone invoices are cleared.\n" +
+                "• **Recycle Bin**: 30-day recovery retention for soft-deleted assets.";
+            }
+          }
+        }
+
+        // 2. FINANCE & PAYMENTS
+        else if (q.includes("finance") || q.includes("payment") || q.includes("upi") || q.includes("invoice") || q.includes("gst") || q.includes("advance") || q.includes("unpaid")) {
+          actionBtn = { label: "Open Finance Desk", href: "/finance", icon: DollarSign };
+          nextSuggestions = [
+            { label: "Generate Dynamic UPI QR", action: () => handleSendText("How to generate instant dynamic UPI QR for client payments?") },
+            { label: "Open Invoices Desk", action: () => { router.push("/invoices"); setIsOpen(false); } }
           ];
           if (!liveGenerated) {
             aiResponse =
-              "**CRM Pipeline Guidance:**\n\n" +
-              "• To log a new client inquiry, click **'+ New Lead'** in your CRM desk.\n" +
-              "• You can filter leads by stage (*New, Qualified, Proposal Sent, Won, Lost*).\n" +
-              "• When a client approves your pitch, convert the lead directly into a formal Proposal Quote with 1 click.";
+              "**Smart Finance & UPI Desk:**\n\n" +
+              "• **Instant Dynamic UPI QR**: Generates scannable UPI codes (GPay, PhonePe, Paytm, BHIM) with exact invoice amount & agency VPA.\n" +
+              "• **Milestone Advances**: Typical structure: 30% on quote approval, 50% on vendor ingress, 20% on album delivery.\n" +
+              "• **Automated 18% GST**: Compliant tax invoices with automated line-item calculation and downloadable sales reports.\n" +
+              "• **Outstanding Tracking**: Filter pending receivables and send 1-click WhatsApp payment reminders.";
           }
-        } else if (q.includes("quote") || q.includes("proposal")) {
-          actionBtn = { label: "Open Quotes Desk", href: "/quotes" };
+        }
+
+        // 3. EVENTS & DAY-OF TIMELINES
+        else if (q.includes("event") || q.includes("timeline") || q.includes("schedule") || q.includes("wedding") || q.includes("cue") || q.includes("ingress") || q.includes("ceremony")) {
+          actionBtn = { label: "Open Events & Calendar", href: "/events", icon: Calendar };
           nextSuggestions = [
-            { label: "Setup Payment Engine", action: () => handleSendText("How do I setup payments?") }
+            { label: "Build multi-day timeline", action: () => handleSendText("How to build a multi-day wedding ceremony timeline?") },
+            { label: "Vendor ingress checklist", action: () => handleSendText("How to manage vendor ingress checklists and crew arrivals?") }
           ];
           if (!liveGenerated) {
             aiResponse =
-              "**Quote & Proposal Engine:**\n\n" +
-              "• Build itemized packages with Catering, Decor, AV Lighting, and Stage Effects.\n" +
-              "• Automatic 18% GST and custom discounts are computed in real-time.\n" +
-              "• You can share a secure client approval link for digital sign-off and milestone clearing.";
+              "**Event Operations & Day-of Timeline:**\n\n" +
+              "• **Multi-Day Itinerary**: Create dedicated segments for Haldi, Mehendi, Sangeet, Muhurtham, and Reception.\n" +
+              "• **Day-of Cue Sheets**: Synchronize sound, stage lighting, bridal entry music, and catering timings.\n" +
+              "• **Vendor Ingress Checklists**: Assign arrival times and gate passes to decorators, sound technicians, and florists.\n" +
+              "• **Coordinator Dispatch**: Delegate sub-tasks with real-time status updates.";
           }
-        } else if (q.includes("event") || q.includes("timeline") || q.includes("schedule") || q.includes("wedding")) {
-          actionBtn = { label: "Open Events & Calendar", href: "/events" };
-          if (!liveGenerated) {
-            aiResponse =
-              "**Event & Operations Desk:**\n\n" +
-              "• Manage your confirmed bookings, venue ingress times, and ceremony milestones.\n" +
-              "• Set up multi-day itineraries for Sangeet, Haldi, Vows, and Reception.\n" +
-              "• To view all your real confirmed calendar bookings, click below:";
-          }
-        } else if (q.includes("invoice") || q.includes("payment") || q.includes("upi") || q.includes("unpaid")) {
-          actionBtn = { label: "Open Finance Hub", href: "/finance" };
+        }
+
+        // 4. QUOTES & PROPOSALS
+        else if (q.includes("quote") || q.includes("proposal") || q.includes("estimate") || q.includes("pricing") || q.includes("line item")) {
+          actionBtn = { label: "Open Quotes Desk", href: "/quotes", icon: FileText };
           nextSuggestions = [
-            { label: "Open Invoices", action: () => { router.push("/invoices"); setIsOpen(false); } },
-            { label: "Open Payments Desk", action: () => { router.push("/payments"); setIsOpen(false); } }
+            { label: "Proposal line-item structures", action: () => handleSendText("How to structure catering, decor, and AV line items in quotes?") },
+            { label: "Client digital e-signatures", action: () => handleSendText("How do clients digitally approve quotes with e-signatures?") }
           ];
           if (!liveGenerated) {
             aiResponse =
-              "**Finance & Collections:**\n\n" +
-              "• To inspect real outstanding balances, check your **Invoices Desk**.\n" +
-              "• You can generate instant **Dynamic UPI QR Codes** directly on the Payments page for client payments (GPay/PhonePe/Paytm).\n" +
-              "• Review settlements and tax liabilities under the unified Finance Hub.";
+              "**Interactive Proposal & Quote Builder:**\n\n" +
+              "• **Itemized Categories**: Group items under Decor & Design, Catering & F&B, Sound & Lighting, and Production.\n" +
+              "• **Tiered Packages**: Present Silver, Gold, and Royal package options to maximize average contract value.\n" +
+              "• **Digital E-Signatures**: Clients can sign quotes directly on mobile or desktop to lock their booking.\n" +
+              "• **Instant WhatsApp Sharing**: Send proposal links directly via WhatsApp Cloud API.";
           }
-        } else if (q.includes("gallery") || q.includes("photo")) {
-          actionBtn = { label: "Open Media Gallery", href: "/gallery" };
+        }
+
+        // 5. CRM & LEADS
+        else if (q.includes("lead") || q.includes("crm") || q.includes("inquiry") || q.includes("convert") || q.includes("pipeline")) {
+          actionBtn = { label: "Open CRM Desk", href: "/crm", icon: Users };
+          nextSuggestions = [
+            { label: "Lead scoring formula", action: () => handleSendText("How does automated lead scoring work in EventOS?") },
+            { label: "Convert lead to quote", action: () => handleSendText("How do I convert an active lead into a proposal quote?") }
+          ];
           if (!liveGenerated) {
             aiResponse =
-              "**Media Gallery & Proofing:**\n\n" +
-              "• Upload and deliver high-resolution wedding albums organized by ceremony.\n" +
-              "• Enable client selection proofing with download PIN locks and custom watermarking.";
+              "**CRM & Lead Pipeline:**\n\n" +
+              "• **Smart Lead Intake**: Capture inquiries from website forms, Instagram ads, or manual walk-ins.\n" +
+              "• **Automated Scoring**: Leads are scored based on budget, guest count, and event date urgency.\n" +
+              "• **1-Click Conversion**: Convert qualified leads directly into formal proposal drafts without re-entering details.\n" +
+              "• **Activity Timeline**: Log client calls, WhatsApp discussions, and venue visit notes in one place.";
           }
-        } else if (q.includes("team") || q.includes("member") || q.includes("user")) {
-          actionBtn = { label: "Open Team Settings", href: "/settings?tab=team" };
+        }
+
+        // 6. TEAM, ROLES & SETTINGS
+        else if (q.includes("setting") || q.includes("team") || q.includes("member") || q.includes("whatsapp") || q.includes("domain") || q.includes("rbac") || q.includes("cname")) {
+          actionBtn = { label: "Open Settings Center", href: "/settings", icon: Settings };
+          nextSuggestions = [
+            { label: "WhatsApp Cloud API setup", action: () => handleSendText("How to configure WhatsApp Cloud API for automated alerts?") },
+            { label: "Custom CNAME white-label", action: () => handleSendText("How to connect our custom domain like clients.myagency.com?") }
+          ];
           if (!liveGenerated) {
             aiResponse =
-              "**Team & Governance:**\n\n" +
-              "• You can invite team members and coordinators under **Settings -> Users & Teams**.\n" +
-              "• Configure granular role-based access control (RBAC) to ensure assistants only see assigned events.";
+              "**Agency Configuration & Settings:**\n\n" +
+              "• **Team & Permissions**: Invite coordinators, photographers, and accountants with custom RBAC access.\n" +
+              "• **Meta WhatsApp Cloud API**: Connect official WhatsApp business number for automated cue sheet dispatch and alerts.\n" +
+              "• **White-Labeling**: Host the client portal on your agency's domain (e.g. `clients.yourbrand.com`).\n" +
+              "• **Payment Gateways**: Configure Razorpay, Stripe, and direct UPI VPAs for automated collections.";
           }
-        } else if (q.includes("setting") || q.includes("whatsapp") || q.includes("domain") || q.includes("gateway")) {
-          actionBtn = { label: "Open Settings Center", href: "/settings" };
-          if (!liveGenerated) {
-            aiResponse =
-              "**Enterprise Configuration:**\n\n" +
-              "Manage all 20 agency configuration settings including Meta WhatsApp API, Razorpay/Stripe gateways, Custom CNAME domain, and GST rules in the Settings center.";
-          }
-        } else {
+        }
+
+        // 7. DEFAULT WORKSPACE FALLBACK
+        else {
           if (!liveGenerated) {
             aiResponse =
               `**${pageContext.role} Insight:**\n\n` +
-              `I am actively synchronized with your workspace. You can ask me how to manage any workflow, generate quotes, track payments, or navigate to any feature.\n\n` +
-              `What operational task would you like guidance on?`;
+              `I am synchronized with your active workspace for **${pageContext.name}**.\n\n` +
+              `• Ask me how to generate quotes, track Day-of timelines, or manage photo galleries with real QR codes.\n` +
+              `• I can also guide you on UPI payments, WhatsApp API configurations, and team roles.\n\n` +
+              `What specific workflow would you like to streamline?`;
           }
           nextSuggestions = getContextSuggestions();
         }
@@ -602,31 +727,49 @@ export default function AiAssistant() {
 
   return (
     <>
-      {/* ── 1. FLOATING ANIMATED ROBOT MASCOT TRIGGER (Vibrant Electric Sapphire & Azure Shift) ────────────────── */}
-      <motion.button
-        whileHover={{ scale: 1.12, y: -4 }}
-        whileTap={{ scale: 0.94 }}
-        onClick={() => setIsOpen((prev) => !prev)}
+      {/* ── 1. SLEEK FLOATING AI COPILOT TRIGGER (Modern Glass Capsule & Mascot) ── */}
+      <div
         className={cn(
-          "ai-trigger-btn fixed right-4 sm:right-6 w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center z-[9990] group cursor-pointer focus:outline-none select-none drop-shadow-[0_10px_24px_rgba(37,99,235,0.35)] transition-all duration-300 print:hidden print-hidden",
+          "fixed right-4 sm:right-6 z-[9990] flex items-center gap-2 select-none print:hidden print-hidden transition-all duration-300",
           isCookieBannerOpen ? "bottom-44 sm:bottom-6" : "bottom-5 sm:bottom-6"
         )}
-        data-print-hide="true"
-        title="EventOS AI Assistant (Cmd + Space)"
-        aria-label="Open EventOS AI Assistant"
       >
-        {/* Subtle organic ambient pulse beneath the mascot - neat, crisp, and no fuzzy washed-out halo */}
-        <div className="absolute inset-2 bg-gradient-to-tr from-blue-600/30 via-indigo-600/25 to-cyan-500/20 rounded-full blur-md opacity-40 group-hover:opacity-75 transition-opacity -z-10" />
+        <motion.button
+          whileHover={{ scale: 1.08, y: -2 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="ai-trigger-btn flex items-center gap-2 p-1.5 sm:p-2 bg-[#0c1024]/90 hover:bg-[#121634]/95 border border-purple-500/30 hover:border-purple-400/60 rounded-full shadow-[0_10px_35px_rgba(88,28,135,0.35),0_0_20px_rgba(59,130,246,0.2)] backdrop-blur-xl group cursor-pointer transition-all duration-200"
+          title="EventOS AI Copilot (Cmd + Space)"
+          aria-label="Open EventOS AI Copilot"
+        >
+          {/* Animated Mascot Bot */}
+          <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-gradient-to-tr from-purple-600/30 via-blue-600/20 to-cyan-500/20 p-1 relative overflow-hidden">
+            <DotLottieReact
+              src={CHATBOT_LOTTIE_URL}
+              loop
+              autoplay
+              className="w-full h-full object-contain pointer-events-none filter drop-shadow-md"
+            />
+            {/* Live Status Indicator Dot */}
+            <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-[#0c1024] animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
+          </div>
 
-        <div className="w-full h-full flex items-center justify-center p-0.5 lottie-theme-bot">
-          <DotLottieReact
-            src={CHATBOT_LOTTIE_URL}
-            loop
-            autoplay
-            className="w-full h-full object-contain pointer-events-none filter drop-shadow-md"
-          />
-        </div>
-      </motion.button>
+          {/* Floating Pill Label */}
+          <div className="hidden sm:flex flex-col items-start pr-3">
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-xs text-white tracking-tight group-hover:text-purple-300 transition-colors">
+                AI Copilot
+              </span>
+              <span className="text-[9px] px-1.5 py-0.2 bg-purple-500/20 border border-purple-400/30 rounded text-purple-300 font-mono font-bold">
+                {pageContext.module.split(" ")[0]}
+              </span>
+            </div>
+            <span className="text-[9.5px] text-zinc-400 font-medium flex items-center gap-1">
+              <span>⌘ Space</span>
+            </span>
+          </div>
+        </motion.button>
+      </div>
 
       {/* ── 2. ULTRA GLASSMORHPIC DRAWER PANEL ─────────────────────────────────── */}
       <AnimatePresence>
@@ -635,25 +778,25 @@ export default function AiAssistant() {
             initial={{ opacity: 0, scale: 0.94, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 16 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            transition={{ type: "spring", stiffness: 420, damping: 32 }}
             ref={containerRef}
             data-print-hide="true"
             className={cn(
-              "fixed right-3 sm:right-6 w-[calc(100vw-24px)] sm:w-[430px] h-[520px] sm:h-[590px] max-h-[calc(100dvh-120px)] bg-[#090d1f]/95 dark:bg-[#060813]/98 border border-blue-500/25 dark:border-white/[0.12] rounded-[28px] shadow-[0_30px_90px_rgba(0,0,0,0.8),0_0_50px_rgba(37,99,235,0.22),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-[36px] backdrop-saturate-[1.9] flex flex-col overflow-hidden z-[9999] font-sans antialiased print:hidden print-hidden",
+              "fixed right-3 sm:right-6 w-[calc(100vw-24px)] sm:w-[440px] h-[540px] sm:h-[620px] max-h-[calc(100dvh-100px)] bg-[#080b18]/95 dark:bg-[#060813]/98 border border-purple-500/30 dark:border-white/[0.12] rounded-[28px] shadow-[0_30px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(147,51,234,0.2),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-[36px] flex flex-col overflow-hidden z-[9999] font-sans antialiased print:hidden print-hidden",
               isCookieBannerOpen ? "bottom-52 sm:bottom-24" : "bottom-20 sm:bottom-24"
             )}
           >
-            {/* Top Accent Gradient Line with Glow */}
-            <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 w-full shrink-0 shadow-[0_0_12px_rgba(59,130,246,0.6)]" />
+            {/* Top Accent Gradient Line */}
+            <div className="h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 w-full shrink-0 shadow-[0_0_12px_rgba(168,85,247,0.7)]" />
 
-            {/* Ambient Inner Glass Light Blobs */}
-            <div className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-blue-600/20 blur-[70px] -z-10" />
-            <div className="pointer-events-none absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-indigo-600/20 blur-[70px] -z-10" />
+            {/* Ambient Background Glows */}
+            <div className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-purple-600/20 blur-[75px] -z-10" />
+            <div className="pointer-events-none absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-blue-600/20 blur-[75px] -z-10" />
 
             {/* Glassmorphic Header Bar */}
-            <div className="px-5 py-3.5 border-b border-white/[0.08] dark:border-blue-500/20 bg-white/[0.04] dark:bg-black/30 backdrop-blur-xl flex items-center justify-between z-10 shrink-0">
+            <div className="px-5 py-3.5 border-b border-white/[0.08] dark:border-purple-500/20 bg-white/[0.03] dark:bg-black/30 backdrop-blur-xl flex items-center justify-between z-10 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 flex items-center justify-center shrink-0 lottie-theme-bot">
+                <div className="h-9 w-9 flex items-center justify-center shrink-0 rounded-xl bg-purple-600/20 border border-purple-500/30 p-0.5">
                   <DotLottieReact
                     src={CHATBOT_LOTTIE_URL}
                     loop
@@ -663,27 +806,34 @@ export default function AiAssistant() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-black text-xs text-white tracking-tight drop-shadow-sm">
+                    <h3 className="font-extrabold text-xs text-white tracking-tight">
                       {isPublicMode ? (isAuthRoute ? pageContext.name : "EventOS Concierge") : "EventOS Co-pilot"}
                     </h3>
-                    <span className="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/40 text-[9px] font-black text-blue-300 font-mono tracking-wider uppercase shadow-[0_0_10px_rgba(59,130,246,0.25)]">
-                      {isPublicMode ? pageContext.role : pageContext.role}
+                    <span className="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/40 text-[9px] font-black text-purple-300 font-mono tracking-wider uppercase">
+                      {pageContext.role}
                     </span>
                   </div>
-                  <p className="text-[10px] text-blue-200/70 font-medium flex items-center gap-1.5 mt-0.5">
+                  <p className="text-[10px] text-zinc-400 font-medium flex items-center gap-1.5 mt-0.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
-                    {isPublicMode ? (isAuthRoute ? "Authentication & Workspace Access" : "Product Specialist & Onboarding") : pageContext.name}
+                    <span>{isPublicMode ? (isAuthRoute ? "Authentication & Access" : "Product & Onboarding") : `${pageContext.name} • Online`}</span>
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="hidden sm:inline-flex items-center gap-1 text-[9.5px] text-blue-200/60 bg-white/[0.06] border border-white/[0.1] px-2 py-0.5 rounded-md font-mono select-none">
-                  <Command size={9} /> Space
-                </span>
+              <div className="flex items-center gap-1.5">
                 <button
+                  type="button"
+                  onClick={initializeChat}
+                  className="h-7 w-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+                  title="Reset conversation"
+                  aria-label="Reset conversation"
+                >
+                  <RotateCcw size={13} />
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsOpen(false)}
-                  className="h-7 w-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-blue-200 hover:text-white flex items-center justify-center transition cursor-pointer"
+                  className="h-7 w-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer"
                   aria-label="Close Assistant"
                 >
                   <X size={14} />
@@ -691,7 +841,24 @@ export default function AiAssistant() {
               </div>
             </div>
 
-            {/* ── Chat Messages Body (Fixed Scroll with data-lenis-prevent & custom scrollbar) ── */}
+            {/* Quick Context Chips Ribbon */}
+            <div className="px-4 py-2 border-b border-white/[0.05] bg-black/20 flex items-center gap-1.5 overflow-x-auto scrollbar-none z-10 shrink-0">
+              <span className="text-[9px] font-black uppercase tracking-wider text-purple-400 shrink-0 flex items-center gap-1">
+                <Sparkles size={10} /> Quick Ask:
+              </span>
+              {getContextSuggestions().slice(0, 3).map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={chip.action}
+                  className="px-2.5 py-1 rounded-full bg-white/[0.05] hover:bg-purple-500/20 border border-white/[0.08] hover:border-purple-400/50 text-[10px] text-zinc-300 hover:text-white font-medium shrink-0 transition cursor-pointer"
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+
+            {/* ── Chat Messages Body ── */}
             <div
               ref={chatContainerRef}
               data-lenis-prevent
@@ -702,17 +869,17 @@ export default function AiAssistant() {
                 <div
                   key={msg.id}
                   className={cn(
-                    "flex gap-3 max-w-[88%]",
+                    "flex gap-2.5 max-w-[90%]",
                     msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
                   )}
                 >
                   {/* Sender Avatar */}
                   <div
                     className={cn(
-                      "h-7 w-7 flex items-center justify-center shrink-0 mt-0.5",
+                      "h-7 w-7 flex items-center justify-center shrink-0 mt-0.5 rounded-full overflow-hidden",
                       msg.sender === "user"
-                        ? "rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30"
-                        : "lottie-theme-bot"
+                        ? "bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30"
+                        : "bg-purple-600/20 border border-purple-500/30 p-0.5"
                     )}
                   >
                     {msg.sender === "user" ? (
@@ -731,28 +898,32 @@ export default function AiAssistant() {
                     {/* Glassmorphic Message Card Bubble */}
                     <div
                       className={cn(
-                        "p-4 text-[13px] leading-relaxed relative overflow-hidden font-sans transition-all",
+                        "p-3.5 text-[12.5px] leading-relaxed relative overflow-hidden font-sans transition-all",
                         msg.sender === "user"
-                          ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white rounded-[22px] rounded-tr-sm shadow-[0_6px_20px_rgba(37,99,235,0.35)] border border-blue-400/30"
-                          : "bg-white/[0.06] dark:bg-white/[0.05] border border-white/[0.12] dark:border-blue-500/25 text-white rounded-[22px] rounded-tl-sm shadow-[0_6px_25px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-2xl relative overflow-hidden"
+                          ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white rounded-[20px] rounded-tr-sm shadow-[0_6px_20px_rgba(147,51,234,0.35)] border border-purple-400/30"
+                          : "bg-white/[0.05] dark:bg-white/[0.04] border border-white/[0.1] dark:border-purple-500/25 text-white rounded-[20px] rounded-tl-sm shadow-[0_6px_25px_rgba(0,0,0,0.3)] backdrop-blur-2xl relative overflow-hidden"
                       )}
                     >
-                      {/* Subtle Glass Card Highlight Reflection */}
                       {msg.sender !== "user" && (
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] via-transparent to-transparent pointer-events-none" />
                       )}
 
                       {renderFormattedText(msg.text)}
 
-                      {/* Direct Navigation Action Button (Zero fake data) */}
+                      {/* Direct Navigation Action Button */}
                       {msg.actionBtn && (
-                        <div className="mt-3 pt-2.5 border-t border-white/[0.1] dark:border-blue-500/20">
+                        <div className="mt-3 pt-2.5 border-t border-white/[0.1] dark:border-purple-500/20">
                           <button
+                            type="button"
                             onClick={() => {
-                              router.push(msg.actionBtn!.href);
-                              setIsOpen(false);
+                              if (msg.actionBtn!.href.startsWith("http")) {
+                                window.open(msg.actionBtn!.href, "_blank");
+                              } else {
+                                router.push(msg.actionBtn!.href);
+                                setIsOpen(false);
+                              }
                             }}
-                            className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-xs shadow-[0_4px_16px_rgba(37,99,235,0.4)] border border-blue-400/30 transition-all cursor-pointer"
+                            className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-xs shadow-md border border-purple-400/30 transition-all cursor-pointer active:scale-95"
                           >
                             {msg.actionBtn.icon ? (
                               <msg.actionBtn.icon size={13} />
@@ -765,22 +936,23 @@ export default function AiAssistant() {
                       )}
                     </div>
 
-                    <span className="text-[9.5px] text-blue-200/50 font-medium block pl-1">
+                    <span className="text-[9.5px] text-zinc-500 font-medium block pl-1">
                       {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
 
-                    {/* Glass Capsule Suggestion Chips */}
+                    {/* Capsule Suggestion Chips */}
                     {msg.sender === "ai" && msg.suggestions && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
                         {msg.suggestions.map((sug, i) => (
                           <button
                             key={i}
+                            type="button"
                             onClick={sug.action}
-                            className="px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-blue-500/20 border border-blue-500/25 hover:border-blue-400/60 text-blue-100 hover:text-white transition-all cursor-pointer text-[11px] font-bold flex items-center gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_4px_20px_rgba(37,99,235,0.3)] backdrop-blur-md group"
+                            className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-400/50 text-zinc-300 hover:text-white transition-all cursor-pointer text-[11px] font-semibold flex items-center gap-1.5 shadow-sm group"
                           >
-                            <Sparkles size={11} className="text-blue-400 group-hover:scale-110 group-hover:text-cyan-300 transition-all" />
+                            <Sparkles size={11} className="text-purple-400 group-hover:scale-110 transition-transform" />
                             <span>{sug.label}</span>
-                            <ChevronRight size={11} className="text-blue-300/50 group-hover:text-blue-300 group-hover:translate-x-0.5 transition-all ml-auto" />
+                            <ChevronRight size={10} className="text-zinc-500 group-hover:text-purple-300 ml-auto" />
                           </button>
                         ))}
                       </div>
@@ -791,8 +963,8 @@ export default function AiAssistant() {
 
               {/* Typing animation */}
               {isTyping && (
-                <div className="flex gap-3 max-w-[80%] mr-auto">
-                  <div className="h-7 w-7 flex items-center justify-center shrink-0 lottie-theme-bot">
+                <div className="flex gap-2.5 max-w-[80%] mr-auto">
+                  <div className="h-7 w-7 flex items-center justify-center shrink-0 rounded-full bg-purple-600/20 border border-purple-500/30 p-0.5">
                     <DotLottieReact
                       src={CHATBOT_LOTTIE_URL}
                       loop
@@ -800,10 +972,10 @@ export default function AiAssistant() {
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <div className="px-4 py-3 bg-white/[0.06] border border-blue-500/20 rounded-[20px] rounded-tl-sm flex items-center gap-1.5 backdrop-blur-xl shadow-md">
-                    <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <span className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <span className="h-1.5 w-1.5 bg-indigo-400 rounded-full animate-bounce" />
+                  <div className="px-4 py-2.5 bg-white/[0.06] border border-purple-500/20 rounded-[18px] rounded-tl-sm flex items-center gap-1.5 backdrop-blur-xl shadow-md">
+                    <span className="h-1.5 w-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-bounce" />
                   </div>
                 </div>
               )}
@@ -813,9 +985,10 @@ export default function AiAssistant() {
             </div>
 
             {/* Glassmorphic Input Bar */}
-            <div className="p-3.5 border-t border-white/[0.08] dark:border-blue-500/20 bg-white/[0.02] dark:bg-black/40 backdrop-blur-xl z-10 shrink-0">
-              <div className="flex items-center gap-2 bg-white/[0.06] dark:bg-black/50 border border-blue-500/30 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/30 focus-within:shadow-[0_0_25px_rgba(59,130,246,0.35)] rounded-full px-4 py-2 transition-all shadow-inner backdrop-blur-xl">
+            <div className="p-3.5 border-t border-white/[0.08] dark:border-purple-500/20 bg-white/[0.02] dark:bg-black/40 backdrop-blur-xl z-10 shrink-0">
+              <div className="flex items-center gap-2 bg-white/[0.05] dark:bg-black/50 border border-purple-500/30 focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-400/25 rounded-full px-4 py-1.5 transition-all shadow-inner backdrop-blur-xl">
                 <input
+                  ref={inputRef}
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -824,18 +997,23 @@ export default function AiAssistant() {
                   }}
                   placeholder={
                     isPublicMode
-                      ? (isAuthRoute ? "Ask about login, Google SSO, or accounts..." : "Ask about features, pricing, or demo...")
-                      : `Ask ${pageContext.name} Co-pilot...`
+                      ? (isAuthRoute ? "Ask about sign-in, Google SSO, or accounts..." : "Ask about features, pricing, or trial...")
+                      : `Ask ${pageContext.name} Co-pilot (e.g. QR codes, GST, timelines)...`
                   }
-                  className="flex-1 bg-transparent py-1 text-xs text-white placeholder-blue-200/50 outline-none font-medium"
+                  className="flex-1 bg-transparent py-1 text-xs text-white placeholder-zinc-500 outline-none font-medium"
                 />
                 <button
+                  type="button"
                   onClick={() => handleSendText(input)}
-                  className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:scale-105 active:scale-95 text-white flex items-center justify-center shrink-0 transition cursor-pointer shadow-[0_4px_14px_rgba(37,99,235,0.4)] border border-blue-400/30"
+                  className="h-7 w-7 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-105 active:scale-95 text-white flex items-center justify-center shrink-0 transition cursor-pointer shadow-md border border-purple-400/30"
                   aria-label="Send message"
                 >
-                  <Send size={13} />
+                  <Send size={12} />
                 </button>
+              </div>
+              <div className="flex items-center justify-between px-3 pt-2 text-[9px] text-zinc-500">
+                <span>Enter to send • Esc to close</span>
+                <span className="font-mono text-purple-400/80">EventOS AI Copilot v2.4</span>
               </div>
             </div>
           </motion.div>

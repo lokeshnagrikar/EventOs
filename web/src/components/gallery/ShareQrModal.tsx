@@ -142,15 +142,23 @@ export default function ShareQrModal({
     setTimeout(() => setCopiedLink(false), 2200);
   };
 
-  const handleDownloadQr = () => {
-    const a = document.createElement("a");
-    a.href = qrCodeUrl;
-    a.download = `${album.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_qrcode.png`;
-    a.target = "_blank";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    addToast("QR Code download started!", "success");
+  const handleDownloadQr = async () => {
+    try {
+      const res = await fetch(qrCodeUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${album.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_qrcode.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      addToast("QR Code PNG downloaded!", "success");
+    } catch {
+      window.open(qrCodeUrl, "_blank");
+      addToast("QR Code opened in new tab", "info");
+    }
   };
 
   const isPrivate = album.visibility === "PRIVATE";
