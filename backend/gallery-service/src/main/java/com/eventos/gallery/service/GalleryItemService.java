@@ -34,8 +34,9 @@ public class GalleryItemService {
         org.springframework.web.reactive.function.client.WebClient.builder()
             .clientConnector(new org.springframework.http.client.reactive.ReactorClientHttpConnector(
                 reactor.netty.http.client.HttpClient.create()
-                    .followRedirect(false)
+                    .followRedirect(true)
             ))
+            .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(50 * 1024 * 1024))
             .build();
 
     private final GalleryItemRepository galleryItemRepository;
@@ -334,23 +335,53 @@ public class GalleryItemService {
         return mapToResponseDto(saved);
     }
 
+    public boolean isValidMediaDownloadUrl(String urlString) {
+        if (urlString == null || urlString.trim().isEmpty()) {
+            return false;
+        }
+        if (cloudinaryService.isValidCloudinaryUrl(urlString)) {
+            return true;
+        }
+        // Also permit trusted mock / stock media providers (Unsplash, Mixkit) over HTTPS with no userinfo or traversal
+        try {
+            java.net.URI uri = java.net.URI.create(urlString.trim());
+            if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getUserInfo() != null) {
+                return false;
+            }
+            if (uri.getPort() != -1 && uri.getPort() != 443) {
+                return false;
+            }
+            String host = uri.getHost();
+            if (host != null) {
+                String hostLower = host.toLowerCase();
+                if (hostLower.equals("images.unsplash.com") || hostLower.equals("assets.mixkit.co")) {
+                    String path = uri.getPath();
+                    return path != null && !path.contains("..") && !path.contains("@");
+                }
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
     public byte[] downloadFileBytes(String urlString) {
         if (urlString == null || urlString.trim().isEmpty() || urlString.startsWith("mock_")) {
             return "mock media content bytes".getBytes();
         }
 
-        if (!cloudinaryService.isValidCloudinaryUrl(urlString)) {
+        if (!isValidMediaDownloadUrl(urlString)) {
             throw new SecurityException("SSRF blocked: Media download URL is not on the trusted Cloudinary domain");
         }
 
         try {
             return webClient.get()
                     .uri(urlString)
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("Accept", "*/*")
                     .retrieve()
                     .bodyToMono(byte[].class)
-                    .block(java.time.Duration.ofSeconds(10));
+                    .block(java.time.Duration.ofSeconds(30));
         } catch (Exception e) {
-            log.error("WebClient download failed for trusted Cloudinary URL {}. Error: {}", urlString, e.getMessage());
+            log.error("WebClient download failed for trusted media URL {}. Error: {}", urlString, e.getMessage());
             throw new RuntimeException("HTTP download failed: " + e.getMessage(), e);
         }
     }

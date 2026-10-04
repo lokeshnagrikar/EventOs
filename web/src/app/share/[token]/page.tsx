@@ -201,11 +201,54 @@ export default function PublicSharePage() {
     return api.defaults.baseURL || "https://api.eventosapp.in/api/v1";
   };
 
-  // Trigger backend streaming ZIP bulk download
-  const handleBulkDownload = () => {
+  const downloadMediaFile = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) throw new Error("Fetch failed");
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename || "photo.jpg";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+    } catch {
+      // Fallback
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.download = filename || "photo.jpg";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
+  // Trigger backend streaming ZIP bulk download or direct media download
+  const handleBulkDownload = async () => {
     if (!album || album.allowDownload === false) return;
     setIsDownloading(true);
     setDownloadError(null);
+
+    // If album has only 1 item, download the single media file directly
+    if (album.items && album.items.length === 1) {
+      setDownloadQueue(["Downloading high-resolution image..."]);
+      try {
+        await downloadMediaFile(album.items[0].url, album.items[0].name || `${album.name}.jpg`);
+        setDownloadQueue(["Download started!"]);
+      } catch (err: any) {
+        setDownloadError("Download failed. Please try saving individual photo.");
+      } finally {
+        setTimeout(() => {
+          setDownloadQueue([]);
+          setIsDownloading(false);
+        }, 1500);
+      }
+      return;
+    }
+
     setDownloadQueue(["Bundling high-res assets into ZIP archive..."]);
 
     const query = passcode.trim() ? `?passcode=${encodeURIComponent(passcode.trim())}` : "";
@@ -465,15 +508,16 @@ export default function PublicSharePage() {
                   <div className="flex justify-between items-center gap-2">
                     <p className="text-[10px] text-zinc-150 font-semibold truncate flex-1">{item.name}</p>
                     {album.allowDownload !== false && (
-                      <a
-                        href={item.url}
-                        download={item.name}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-6 w-6 rounded bg-black/60 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadMediaFile(item.url, item.name);
+                        }}
+                        className="h-6 w-6 rounded bg-black/60 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer"
                         title="Download"
                       >
                         <Download size={11} />
-                      </a>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -525,14 +569,13 @@ export default function PublicSharePage() {
                   {isSlideshowPlaying ? <Pause size={14} className="animate-pulse" /> : <Play size={14} />}
                 </button>
                 {album.allowDownload !== false && (
-                  <a
-                    href={items[lightboxIndex].url}
-                    download={items[lightboxIndex].name}
-                    className="h-9 w-9 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white transition-all shadow"
+                  <button
+                    onClick={() => downloadMediaFile(items[lightboxIndex].url, items[lightboxIndex].name)}
+                    className="h-9 w-9 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white transition-all shadow cursor-pointer"
                     title="Download File"
                   >
                     <Download size={14} />
-                  </a>
+                  </button>
                 )}
                 <button
                   onClick={closeLightbox}

@@ -19,6 +19,8 @@ import java.util.UUID;
 @RequestMapping("/albums")
 public class AlbumController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AlbumController.class);
+
     private final AlbumService albumService;
     private final com.eventos.gallery.service.GalleryItemService galleryItemService;
 
@@ -200,16 +202,17 @@ public class AlbumController {
                         }
                         entryNames.add(name);
 
-                        java.util.zip.ZipEntry zipEntry = new java.util.zip.ZipEntry(name);
-                        zipOut.putNextEntry(zipEntry);
-
                         try {
                             byte[] fileBytes = galleryItemService.downloadFileBytes(item.getUrl());
-                            zipOut.write(fileBytes);
+                            if (fileBytes != null && fileBytes.length > 0) {
+                                java.util.zip.ZipEntry zipEntry = new java.util.zip.ZipEntry(name);
+                                zipOut.putNextEntry(zipEntry);
+                                zipOut.write(fileBytes);
+                                zipOut.closeEntry();
+                            }
                         } catch (Exception e) {
-                            zipOut.write(("Failed to download media item: " + item.getName() + " (URL: " + item.getUrl() + "). Error: " + e.getMessage()).getBytes());
+                            log.error("Failed to download media item: {} (URL: {}). Error: {}", item.getName(), item.getUrl(), e.getMessage());
                         }
-                        zipOut.closeEntry();
                     }
                     zipOut.finish();
                 }

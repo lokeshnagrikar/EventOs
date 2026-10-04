@@ -21,6 +21,8 @@ import java.util.UUID;
 @RequestMapping("/share")
 public class ShareLinkController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShareLinkController.class);
+
     private final ShareLinkService shareLinkService;
 
     public ShareLinkController(ShareLinkService shareLinkService) {
@@ -189,17 +191,17 @@ public class ShareLinkController {
                         }
                         entryNames.add(name);
 
-                        java.util.zip.ZipEntry zipEntry = new java.util.zip.ZipEntry(name);
-                        zipOut.putNextEntry(zipEntry);
-
                         try {
                             byte[] fileBytes = shareLinkService.downloadFileBytes(item.getUrl());
-                            zipOut.write(fileBytes);
+                            if (fileBytes != null && fileBytes.length > 0) {
+                                java.util.zip.ZipEntry zipEntry = new java.util.zip.ZipEntry(name);
+                                zipOut.putNextEntry(zipEntry);
+                                zipOut.write(fileBytes);
+                                zipOut.closeEntry();
+                            }
                         } catch (Exception e) {
-                            zipOut.write(("Failed to download media item: " + item.getName() + " (URL: " + item.getUrl()
-                                    + "). Error: " + e.getMessage()).getBytes());
+                            log.error("Failed to download media item: {} (URL: {}). Error: {}", item.getName(), item.getUrl(), e.getMessage());
                         }
-                        zipOut.closeEntry();
                     }
                     zipOut.finish();
                 }
