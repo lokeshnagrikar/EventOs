@@ -19,7 +19,6 @@ import {
 import { cn } from "@/lib/utils";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
-import { Magnetic } from "@/components/ui/Magnetic";
 import {
   PRICING_PLANS,
   COMPARISON_MATRIX,
@@ -386,19 +385,17 @@ export function Pricing() {
 
                 {/* Card CTA Button */}
                 <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 mt-2">
-                  <Magnetic strength={0.25} className="w-full">
-                    <button
-                      onClick={() => handleCtaClick(plan)}
-                      className={cn(
-                        "w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm",
-                        plan.popular
-                          ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white hover:brightness-110 active:scale-[0.98] shadow-purple-500/25"
-                          : "bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98]"
-                      )}
-                    >
-                      <span>{plan.cta}</span>
-                    </button>
-                  </Magnetic>
+                  <button
+                    onClick={() => handleCtaClick(plan)}
+                    className={cn(
+                      "w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm",
+                      plan.popular
+                        ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white hover:brightness-110 active:scale-[0.98] shadow-purple-500/25"
+                        : "bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98]"
+                    )}
+                  >
+                    <span>{plan.cta}</span>
+                  </button>
                   <p
                     className={cn(
                       "text-[10px] text-center font-medium mt-1.5",

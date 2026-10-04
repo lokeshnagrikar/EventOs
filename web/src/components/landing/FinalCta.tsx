@@ -7,7 +7,6 @@ import { ArrowRight, Sparkles, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import { useAuthModalStore } from "@/store/authModalStore";
 import { ShinyButton } from "@/components/ui/ShinyButton";
-import { Magnetic } from "@/components/ui/Magnetic";
 
 export function FinalCta() {
   const router = useRouter();
@@ -65,26 +64,22 @@ export function FinalCta() {
             {/* Two-Button CTA Hierarchy */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               {/* Primary CTA: Book a Free Demo with Shiny Shimmer Effect */}
-              <Magnetic strength={0.32}>
-                <ShinyButton
-                  onClick={handleBookDemo}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 group"
-                >
-                  <span>Book a Free Demo</span>
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </ShinyButton>
-              </Magnetic>
+              <ShinyButton
+                onClick={handleBookDemo}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 group"
+              >
+                <span>Book a Free Demo</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </ShinyButton>
 
               {/* Secondary CTA: Start 14-Day Free Trial */}
-              <Magnetic strength={0.28}>
-                <button
-                  type="button"
-                  onClick={handleStartTrial}
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 text-sm sm:text-base font-bold transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-[0.97]"
-                >
-                  <span>Start 14-Day Free Trial</span>
-                </button>
-              </Magnetic>
+              <button
+                type="button"
+                onClick={handleStartTrial}
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/20 text-sm sm:text-base font-bold transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-[0.97]"
+              >
+                <span>Start 14-Day Free Trial</span>
+              </button>
             </div>
 
             {/* Reassurance Strip */}
