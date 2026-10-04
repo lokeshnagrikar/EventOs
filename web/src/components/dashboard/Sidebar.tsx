@@ -147,22 +147,28 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
         {/* Brand Header */}
         <div className={cn(
           "h-[60px] border-b border-slate-200/60 dark:border-white/[0.04] flex items-center shrink-0 relative transition-all",
-          isCollapsed ? "px-2.5 justify-between" : "px-4 justify-between"
+          isCollapsed ? "justify-center px-2" : "justify-between px-4"
         )}>
-          <Link 
-            href="/dashboard" 
-            onClick={() => { if (onClose) onClose(); }}
-            className="flex items-center gap-3 min-w-0"
-          >
-            {/* Logo mark */}
-            <div className={cn(
-              "rounded-xl bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-sm",
-              isCollapsed ? "h-8 w-8" : "h-9 w-9"
-            )}>
-              <EventOsLogo size={isCollapsed ? 24 : 30} animated={true} interactive={true} />
-            </div>
-            <AnimatePresence>
-              {!isCollapsed && (
+          {isCollapsed ? (
+            <button
+              onClick={() => setIsCollapsed(false)}
+              className="h-10 w-10 rounded-xl bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] hover:border-purple-500/50 flex items-center justify-center transition-all active:scale-95 shadow-sm group cursor-pointer"
+              title="Click to expand sidebar"
+              aria-label="Expand sidebar"
+            >
+              <EventOsLogo size={28} animated={true} interactive={true} />
+            </button>
+          ) : (
+            <Link 
+              href="/dashboard" 
+              onClick={() => { if (onClose) onClose(); }}
+              className="flex items-center gap-3 min-w-0"
+            >
+              {/* Logo mark */}
+              <div className="h-9 w-9 rounded-xl bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-sm">
+                <EventOsLogo size={30} animated={true} interactive={true} />
+              </div>
+              <AnimatePresence>
                 <motion.div
                   key="brand-text"
                   initial={{ opacity: 0, x: -8 }}
@@ -174,9 +180,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
                   <span className="font-black text-[13px] text-slate-900 dark:text-white tracking-tight leading-none">EventOS</span>
                   <span className="text-[9px] text-purple-600 dark:text-purple-400 font-extrabold tracking-[0.12em] uppercase mt-[3px]">Enterprise</span>
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </Link>
+              </AnimatePresence>
+            </Link>
+          )}
 
           {onClose ? (
             <button
@@ -187,27 +193,16 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
               <X size={14} />
             </button>
           ) : (
-            <>
-              {!isCollapsed ? (
-                <button
-                  onClick={() => setIsCollapsed(true)}
-                  className="h-6 w-6 rounded-lg bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.07] border border-slate-200/80 dark:border-white/[0.05] text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shrink-0"
-                  aria-label="Collapse sidebar"
-                  title="Collapse sidebar (<)"
-                >
-                  <ChevronLeft size={12} />
-                </button>
-              ) : (
-                <button
-                  onClick={() => setIsCollapsed(false)}
-                  className="h-6 w-6 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:text-purple-300 flex items-center justify-center transition-all cursor-pointer shrink-0"
-                  aria-label="Expand sidebar"
-                  title="Expand sidebar (>)"
-                >
-                  <ChevronRight size={13} />
-                </button>
-              )}
-            </>
+            !isCollapsed && (
+              <button
+                onClick={() => setIsCollapsed(true)}
+                className="h-6 w-6 rounded-lg bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.07] border border-slate-200/80 dark:border-white/[0.05] text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar (<)"
+              >
+                <ChevronLeft size={12} />
+              </button>
+            )
           )}
         </div>
 
@@ -216,7 +211,10 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
           data-lenis-prevent
           role="navigation"
           aria-label="Main navigation"
-          className="flex-1 overflow-y-auto py-2.5 sidebar-scrollbar pr-0.5"
+          className={cn(
+            "flex-1 overflow-y-auto py-2.5",
+            isCollapsed ? "no-scrollbar px-1" : "sidebar-scrollbar pr-0.5"
+          )}
         >
           {MENU_SECTIONS.map((section, sectionIdx) => {
             const visibleItems = section.items.filter(isItemVisible);
