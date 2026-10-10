@@ -4,6 +4,18 @@ import path from "path";
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../"),
   reactStrictMode: true,
+  compress: true,
+  poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "@radix-ui/react-avatar",
+      "@radix-ui/react-slot",
+      "@tanstack/react-query",
+      "framer-motion",
+    ],
+  },
   images: {
     domains: ["images.unsplash.com", "res.cloudinary.com"],
   },

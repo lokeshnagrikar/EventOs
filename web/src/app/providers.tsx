@@ -4,31 +4,36 @@ import React, { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { analytics } from "@/lib/analytics";
-import AiAssistant from "@/components/AiAssistant";
-import SmartSearch from "@/components/SmartSearch";
-import { SessionTimeoutHandler } from "@/components/auth/SessionTimeoutHandler";
 import { SocketProvider } from "@/context/SocketContext";
 import Lenis from "lenis";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { useAuthStore } from "@/store/authStore";
 import { useBillingStore } from "@/store/billingStore";
-import LimitExceededModal from "@/components/ui/LimitExceededModal";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
-import ProductTourSpotlight from "@/components/onboarding/ProductTourSpotlight";
-import HelpSearch from "@/components/help/HelpSearch";
-import { AuthModal } from "@/components/auth/AuthModal";
-import { ExitIntent } from "@/components/landing/ExitIntent";
 import OfflineBanner from "@/components/ui/OfflineBanner";
-import CelebrationOverlay from "@/components/onboarding/CelebrationOverlay";
-import ContextualHelp from "@/components/help/ContextualHelp";
 import PWAProvider from "@/components/PWAProvider";
 
-
-
-
-import { LogoutConfirmationModal } from "@/components/auth/LogoutConfirmationModal";
+// ── CODE-SPLIT & LAZY-LOAD HEAVY OVERLAYS TO ACCELERATE INITIAL PAGE LOAD ──
+const AiAssistant = dynamic(() => import("@/components/AiAssistant"), { ssr: false });
+const SmartSearch = dynamic(() => import("@/components/SmartSearch"), { ssr: false });
+const SessionTimeoutHandler = dynamic(
+  () => import("@/components/auth/SessionTimeoutHandler").then((m) => m.SessionTimeoutHandler),
+  { ssr: false }
+);
+const LimitExceededModal = dynamic(() => import("@/components/ui/LimitExceededModal"), { ssr: false });
+const OnboardingWizard = dynamic(() => import("@/components/onboarding/OnboardingWizard"), { ssr: false });
+const ProductTourSpotlight = dynamic(() => import("@/components/onboarding/ProductTourSpotlight"), { ssr: false });
+const HelpSearch = dynamic(() => import("@/components/help/HelpSearch"), { ssr: false });
+const AuthModal = dynamic(() => import("@/components/auth/AuthModal").then((m) => m.AuthModal), { ssr: false });
+const LogoutConfirmationModal = dynamic(
+  () => import("@/components/auth/LogoutConfirmationModal").then((m) => m.LogoutConfirmationModal),
+  { ssr: false }
+);
+const ExitIntent = dynamic(() => import("@/components/landing/ExitIntent").then((m) => m.ExitIntent), { ssr: false });
+const CelebrationOverlay = dynamic(() => import("@/components/onboarding/CelebrationOverlay"), { ssr: false });
+const ContextualHelp = dynamic(() => import("@/components/help/ContextualHelp"), { ssr: false });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
