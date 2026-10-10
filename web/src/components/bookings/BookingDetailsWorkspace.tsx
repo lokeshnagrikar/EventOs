@@ -199,15 +199,15 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
     const collectionLogs = auditLogs.filter((a) => a.action === "PAYMENT_COLLECTED");
     if (collectionLogs.length > 0) {
       return collectionLogs.map((log) => {
-        const match = log.description?.match(/\(\+INR\s*([0-9.]+)\)/i) || log.description?.match(/to\s+INR\s*([0-9.]+)/i);
+        const match = log.details?.match(/\(\+INR\s*([0-9.]+)\)/i) || log.details?.match(/to\s+INR\s*([0-9.]+)/i);
         const amountStr = match ? Number(match[1]).toLocaleString() : null;
         return {
           id: log.id,
           code: `TXN-PAY-${log.id.slice(0, 6).toUpperCase()}`,
-          title: `Installment Payment (${log.userEmail ? log.userEmail.split("@")[0] : "Staff"})`,
+          title: `Installment Payment (${log.changedBy ? log.changedBy.split("@")[0] : "Staff"})`,
           date: new Date(log.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }),
           amount: amountStr ? `₹${amountStr}` : `+Logged`,
-          description: log.description,
+          description: log.details,
         };
       });
     }
