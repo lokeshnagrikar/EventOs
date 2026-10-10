@@ -670,20 +670,29 @@ public class BookingService {
     }
 
     public BookingTimelineEvent addTimelineEvent(UUID bookingId, CreateBookingTimelineEventDto dto, UUID tenantId) {
-        getBookingById(bookingId, tenantId);
+        Booking booking = getBookingById(bookingId, tenantId);
 
         BookingTimelineEvent milestone = BookingTimelineEvent.builder()
-                .bookingId(bookingId)
                 .tenantId(tenantId)
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .eventDate(dto.getEventDate())
-                .status(dto.getStatus())
+                .status(dto.getStatus() != null && !dto.getStatus().isBlank() ? dto.getStatus() : "PENDING")
                 .build();
 
         milestone.setTenantId(tenantId);
 
-        BookingTimelineEvent saved = bookingTimelineEventRepository.save(milestone);
+        if (booking.getTimelineEvents() == null) {
+            booking.setTimelineEvents(new ArrayList<>());
+        }
+        booking.getTimelineEvents().add(milestone);
+
+        Booking updatedBooking = bookingRepository.save(booking);
+
+        BookingTimelineEvent saved = updatedBooking.getTimelineEvents().stream()
+                .filter(m -> dto.getTitle().equals(m.getTitle()))
+                .reduce((first, second) -> second)
+                .orElse(milestone);
         
         logAudit(bookingId, tenantId, "MILESTONE_ADDED", "New timeline milestone added: " + dto.getTitle(), getRequestingUserEmail());
         

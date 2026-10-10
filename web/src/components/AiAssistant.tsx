@@ -28,26 +28,10 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import dynamic from "next/dynamic";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import { generateAIResponse } from "@/lib/aiProvider";
-
-const CHATBOT_LOTTIE_URL = "https://lottie.host/81c78ae8-59f5-4e19-bc6c-b7c5ba867ffd/Id8PQ7Y2HD.lottie";
-
-const DotLottieReact = dynamic(
-  () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
-  {
-    ssr: false,
-    loading: () => (
-      <img
-        src="/chatbot-animated.gif"
-        alt="EventOS AI"
-        className="w-full h-full object-contain pointer-events-none lottie-theme-bot"
-      />
-    ),
-  }
-);
+import { ProfessionalAiIcon } from "@/components/ui/ProfessionalAiIcon";
 
 // ── ROUTES WHERE AI ASSISTANT MUST BE COMPLETELY HIDDEN ─────────────────────
 // 1. /share: Public guest photo viewing & downloads (external guests & couples scan QR here - must be 100% clean)
@@ -735,27 +719,23 @@ export default function AiAssistant() {
         )}
       >
         <motion.button
-          whileHover={{ scale: 1.08, y: -2 }}
-          whileTap={{ scale: 0.94 }}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="ai-trigger-btn flex items-center gap-2 p-1.5 sm:p-2 bg-[#0c1024]/90 hover:bg-[#121634]/95 border border-purple-500/30 hover:border-purple-400/60 rounded-full shadow-[0_10px_35px_rgba(88,28,135,0.35),0_0_20px_rgba(59,130,246,0.2)] backdrop-blur-xl group cursor-pointer transition-all duration-200"
+          className="ai-trigger-btn flex items-center gap-2.5 p-1.5 sm:py-2 sm:pl-2 sm:pr-4 bg-[#0c1024]/90 hover:bg-[#121634]/95 border border-purple-500/30 hover:border-purple-400/60 rounded-full shadow-[0_10px_35px_rgba(88,28,135,0.35),0_0_20px_rgba(59,130,246,0.2)] backdrop-blur-xl group cursor-pointer transition-all duration-200"
           title="EventOS AI Copilot (Cmd + Space)"
           aria-label="Open EventOS AI Copilot"
         >
-          {/* Animated Mascot Bot */}
-          <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-gradient-to-tr from-purple-600/30 via-blue-600/20 to-cyan-500/20 p-1 relative overflow-hidden">
-            <DotLottieReact
-              src={CHATBOT_LOTTIE_URL}
-              loop
-              autoplay
-              className="w-full h-full object-contain pointer-events-none filter drop-shadow-md"
-            />
-            {/* Live Status Indicator Dot */}
-            <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-[#0c1024] animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-          </div>
+          {/* Professional Vector AI Orb */}
+          <ProfessionalAiIcon
+            variant="launcher"
+            size={42}
+            showGlow
+            showLiveDot
+          />
 
           {/* Floating Pill Label */}
-          <div className="hidden sm:flex flex-col items-start pr-3">
+          <div className="hidden sm:flex flex-col items-start pr-1">
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-xs text-white tracking-tight group-hover:text-purple-300 transition-colors">
                 AI Copilot
@@ -796,14 +776,7 @@ export default function AiAssistant() {
             {/* Glassmorphic Header Bar */}
             <div className="px-5 py-3.5 border-b border-white/[0.08] dark:border-purple-500/20 bg-white/[0.03] dark:bg-black/30 backdrop-blur-xl flex items-center justify-between z-10 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 flex items-center justify-center shrink-0 rounded-xl bg-purple-600/20 border border-purple-500/30 p-0.5">
-                  <DotLottieReact
-                    src={CHATBOT_LOTTIE_URL}
-                    loop
-                    autoplay
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+                <ProfessionalAiIcon variant="header" size={20} />
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-extrabold text-xs text-white tracking-tight">
@@ -874,25 +847,13 @@ export default function AiAssistant() {
                   )}
                 >
                   {/* Sender Avatar */}
-                  <div
-                    className={cn(
-                      "h-7 w-7 flex items-center justify-center shrink-0 mt-0.5 rounded-full overflow-hidden",
-                      msg.sender === "user"
-                        ? "bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30"
-                        : "bg-purple-600/20 border border-purple-500/30 p-0.5"
-                    )}
-                  >
-                    {msg.sender === "user" ? (
+                  {msg.sender === "user" ? (
+                    <div className="h-7 w-7 flex items-center justify-center shrink-0 mt-0.5 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30">
                       <User size={12} />
-                    ) : (
-                      <DotLottieReact
-                        src={CHATBOT_LOTTIE_URL}
-                        loop
-                        autoplay
-                        className="w-full h-full object-contain"
-                      />
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <ProfessionalAiIcon variant="avatar" size={16} className="mt-0.5" />
+                  )}
 
                   <div className="space-y-2 flex-1 min-w-0">
                     {/* Glassmorphic Message Card Bubble */}
@@ -964,14 +925,7 @@ export default function AiAssistant() {
               {/* Typing animation */}
               {isTyping && (
                 <div className="flex gap-2.5 max-w-[80%] mr-auto">
-                  <div className="h-7 w-7 flex items-center justify-center shrink-0 rounded-full bg-purple-600/20 border border-purple-500/30 p-0.5">
-                    <DotLottieReact
-                      src={CHATBOT_LOTTIE_URL}
-                      loop
-                      autoplay
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
+                  <ProfessionalAiIcon variant="avatar" size={16} className="mt-0.5" />
                   <div className="px-4 py-2.5 bg-white/[0.06] border border-purple-500/20 rounded-[18px] rounded-tl-sm flex items-center gap-1.5 backdrop-blur-xl shadow-md">
                     <span className="h-1.5 w-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
                     <span className="h-1.5 w-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]" />

@@ -194,6 +194,38 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
     return all.filter((inv) => inv.bookingId === bookingId);
   }, [invoicesResponse, bookingId]);
 
+  // 6. Dynamic Payment Transactions from live Audit Logs
+  const paymentTransactions = useMemo(() => {
+    const collectionLogs = auditLogs.filter((a) => a.action === "PAYMENT_COLLECTED");
+    if (collectionLogs.length > 0) {
+      return collectionLogs.map((log) => {
+        const match = log.description?.match(/\(\+INR\s*([0-9.]+)\)/i) || log.description?.match(/to\s+INR\s*([0-9.]+)/i);
+        const amountStr = match ? Number(match[1]).toLocaleString() : null;
+        return {
+          id: log.id,
+          code: `TXN-PAY-${log.id.slice(0, 6).toUpperCase()}`,
+          title: `Installment Payment (${log.userEmail ? log.userEmail.split("@")[0] : "Staff"})`,
+          date: new Date(log.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }),
+          amount: amountStr ? `₹${amountStr}` : `+Logged`,
+          description: log.description,
+        };
+      });
+    }
+    if (booking && booking.paidAmount > 0) {
+      return [
+        {
+          id: "initial-deposit",
+          code: `TXN-INIT-${booking.bookingNumber}`,
+          title: "Initial Advance / Deposit Payment",
+          date: new Date(booking.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }),
+          amount: `₹${booking.paidAmount.toLocaleString()}`,
+          description: "Initial booking confirmation deposit",
+        },
+      ];
+    }
+    return [];
+  }, [auditLogs, booking]);
+
   // ── MUTATIONS ──
   const updateStatusMutation = useMutation({
     mutationFn: async (status: string) => {
@@ -641,16 +673,26 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                 </div>
 
                 <div className="space-y-2.5">
-                  {/* Let's mock transaction receipts based on the paidAmount, or allow logging in local payments state */}
-                  <div className="p-3.5 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between">
-                    <div>
-                      <h4 className="font-extrabold text-xs text-zinc-200">TXN-DEPOSIT-001</h4>
-                      <span className="text-[9px] text-zinc-550 font-bold flex items-center gap-1 mt-0.5">
-                        <Clock size={9} /> Logged Deposit Payment
-                      </span>
+                  {paymentTransactions.map((txn) => (
+                    <div key={txn.id} className="p-3.5 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-extrabold text-xs text-zinc-200">{txn.code}</h4>
+                          <span className="text-[10px] text-zinc-400 font-medium">{txn.title}</span>
+                        </div>
+                        <span className="text-[9px] text-zinc-550 font-bold flex items-center gap-1 mt-0.5">
+                          <Clock size={9} /> {txn.date}
+                        </span>
+                      </div>
+                      <span className="font-mono font-black text-emerald-450 text-xs">{txn.amount}</span>
                     </div>
-                    <span className="font-mono font-black text-emerald-450 text-xs">₹{booking.paidAmount.toLocaleString()}</span>
-                  </div>
+                  ))}
+
+                  {paymentTransactions.length === 0 && (
+                    <p className="text-xs text-zinc-550 italic py-6 text-center">
+                      No payment transactions recorded yet. Use the "Collect Installment Payment" form to log receipts.
+                    </p>
+                  )}
                 </div>
               </motion.div>
             )}
