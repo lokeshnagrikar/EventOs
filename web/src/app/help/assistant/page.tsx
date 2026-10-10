@@ -19,7 +19,23 @@ import { cn } from "@/lib/utils";
 import PageShell from "@/components/ui/PageShell";
 import { ARTICLES, FAQS, Article } from "@/lib/helpData";
 import { generateAIResponse } from "@/lib/aiProvider";
-import { ProfessionalAiIcon } from "@/components/ui/ProfessionalAiIcon";
+import dynamic from "next/dynamic";
+
+const CHATBOT_LOTTIE_URL = "https://lottie.host/81c78ae8-59f5-4e19-bc6c-b7c5ba867ffd/Id8PQ7Y2HD.lottie";
+
+const DotLottieReact = dynamic(
+  () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
+  {
+    ssr: false,
+    loading: () => (
+      <img
+        src="/chatbot.png"
+        alt="AI Assistant"
+        className="w-full h-full object-contain"
+      />
+    ),
+  }
+);
 
 interface ChatMessage {
   id: string;
@@ -152,7 +168,14 @@ export default function AiAssistantPage() {
         
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-md">
-          <ProfessionalAiIcon variant="header" size={20} />
+          <div className="h-10 w-10 flex items-center justify-center shrink-0 lottie-theme-bot">
+            <DotLottieReact
+              src={CHATBOT_LOTTIE_URL}
+              loop
+              autoplay
+              className="w-full h-full object-contain"
+            />
+          </div>
           <div>
             <h2 className="text-xs font-bold uppercase text-slate-900 dark:text-white tracking-wider">EventOS AI Support</h2>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider">Always online • 100% Automated</p>
@@ -173,13 +196,23 @@ export default function AiAssistantPage() {
                   className={cn("flex gap-3 max-w-[85%]", isAi ? "mr-auto" : "ml-auto flex-row-reverse")}
                 >
                   {/* Avatar */}
-                  {isAi ? (
-                    <ProfessionalAiIcon variant="avatar" size={16} />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                  <div className={cn(
+                    "h-8 w-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden",
+                    isAi 
+                      ? "bg-purple-600/20 border border-purple-500/30 p-0.5 lottie-theme-bot" 
+                      : "bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                  )}>
+                    {isAi ? (
+                      <DotLottieReact
+                        src={CHATBOT_LOTTIE_URL}
+                        loop
+                        autoplay
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
                       <User size={14} />
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {/* Bubble */}
                   <div className="space-y-3">
@@ -236,7 +269,14 @@ export default function AiAssistantPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex gap-3 mr-auto"
               >
-                <ProfessionalAiIcon variant="avatar" size={16} />
+                <div className="h-8 w-8 flex items-center justify-center shrink-0 lottie-theme-bot">
+                  <DotLottieReact
+                    src={CHATBOT_LOTTIE_URL}
+                    loop
+                    autoplay
+                    className="w-full h-full object-contain"
+                  />
+                </div>
                 <div className="px-4 py-3 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 flex items-center gap-2 shadow-xs">
                   <Loader2 size={12} className="animate-spin text-purple-600" />
                   <span className="text-[10.5px] font-bold tracking-wide">AI is searching docs...</span>
