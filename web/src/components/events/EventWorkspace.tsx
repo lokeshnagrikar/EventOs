@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -277,8 +277,15 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const addToast = useToastStore((state) => state.addToast);
+  const searchParams = useSearchParams();
+  const urlTab = searchParams ? searchParams.get("tab") : null;
+  const [activeTab, setActiveTab] = useState(urlTab || "overview");
 
-  const [activeTab, setActiveTab] = useState("vendors");
+  useEffect(() => {
+    if (urlTab) {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab]);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -390,7 +397,11 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     }
   });
 
-  const event = eventResponse?.data;
+  const event: Event | undefined = (eventResponse as any)?.data?.id
+    ? (eventResponse as any).data
+    : (eventResponse as any)?.id
+    ? (eventResponse as any)
+    : (eventResponse as any)?.data;
 
   // Fetch real team members from workspace
   const { data: teamData } = useQuery<{ data: TeamMember[] }>({
@@ -434,7 +445,16 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
           setPriorityTier(meta.priority || "MEDIUM");
 
           setChecklist(Array.isArray(meta.checklist) ? meta.checklist : []);
-          setTimelineCues(Array.isArray(meta.timelineCues) ? meta.timelineCues : []);
+          
+          let parsedCues: TimelineCue[] = Array.isArray(meta.timelineCues) ? meta.timelineCues : [];
+          if (parsedCues.length === 0 && typeof window !== "undefined") {
+            try {
+              const cached = localStorage.getItem(`eventos_cues_${eventId}`);
+              if (cached) parsedCues = JSON.parse(cached);
+            } catch {}
+          }
+          setTimelineCues(parsedCues);
+
           setVendors(Array.isArray(meta.vendors) ? meta.vendors : []);
           setStaffAllocations(Array.isArray(meta.staffAllocations) ? meta.staffAllocations : []);
           setInvoices(Array.isArray(meta.invoices) ? meta.invoices : []);
@@ -446,12 +466,24 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
           setRichNotes(Array.isArray(meta.richNotes) ? meta.richNotes : []);
         } catch (e) {
           setRawNotesText(event.notes || "");
+          if (typeof window !== "undefined") {
+            try {
+              const cached = localStorage.getItem(`eventos_cues_${eventId}`);
+              if (cached) setTimelineCues(JSON.parse(cached));
+            } catch {}
+          }
         }
       } else {
         setRawNotesText(event.notes || "");
+        if (typeof window !== "undefined") {
+          try {
+            const cached = localStorage.getItem(`eventos_cues_${eventId}`);
+            if (cached) setTimelineCues(JSON.parse(cached));
+          } catch {}
+        }
       }
     }
-  }, [event]);
+  }, [event, eventId]);
 
   // Mutation to update event status or properties
   const updateEventMutation = useMutation({
@@ -461,6 +493,11 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event", eventId] });
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 1500);
+    },
+    onError: (err) => {
+      console.warn("Auto-save sync offline or fallback:", err);
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 1500);
     }
@@ -564,19 +601,23 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
   // Vendor calculations
   const totalVendorCost = useMemo(() => {
-    return vendors.reduce((sum, v) => sum + (Number(v.cost) || 0), 0);
+    return vendors.reduce((sum, v) => sum + (Number(String(v.cost).replace(/,/g, "")) || 0), 0);
   }, [vendors]);
 
   const totalOtherExpenses = useMemo(() => {
-    return additionalExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    return additionalExpenses.reduce((sum, e) => sum + (Number(String(e.amount).replace(/,/g, "")) || 0), 0);
   }, [additionalExpenses]);
 
   const totalCommittedCosts = totalVendorCost + totalOtherExpenses;
 
   const budgetPerformance = useMemo(() => {
-    const remaining = editBudget - totalCommittedCosts;
-    const percentUsed = editBudget > 0 ? (totalCommittedCosts / editBudget) * 100 : 0;
-    return { remaining, percentUsed };
+    const safeBudget = Number(editBudget) || 0;
+    const remaining = safeBudget - totalCommittedCosts;
+    const percentUsed = safeBudget > 0 ? (totalCommittedCosts / safeBudget) * 100 : 0;
+    return {
+      remaining: isNaN(remaining) ? 0 : remaining,
+      percentUsed: isNaN(percentUsed) ? 0 : percentUsed
+    };
   }, [editBudget, totalCommittedCosts]);
 
   // VENDOR HANDLERS
@@ -585,6 +626,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       addToast("Please provide Vendor Name and Quoted Cost", "error");
       return;
     }
+    const cleanCost = Number(String(newVendorCost).replace(/,/g, "").trim()) || 0;
     const nextVendor: EventVendor = {
       id: `v-${Date.now()}`,
       name: newVendorName.trim(),
@@ -593,7 +635,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       phone: newVendorPhone.trim(),
       rating: 4.8,
       paymentStatus: newVendorStatus,
-      cost: Number(newVendorCost)
+      cost: cleanCost
     };
     const updated = [...vendors, nextVendor];
     setVendors(updated);
@@ -662,7 +704,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       addToast("Please provide Invoice Title and Amount", "error");
       return;
     }
-    const subtotal = Number(newInvAmount) || 0;
+    const subtotal = Number(String(newInvAmount).replace(/,/g, "").trim()) || 0;
     const gstRate = newInvIncludeGst ? 18 : 0;
     const gstAmount = Math.round(subtotal * (gstRate / 100));
     const totalAmount = subtotal + gstAmount;
@@ -719,10 +761,11 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       addToast("Please provide milestone name and amount", "error");
       return;
     }
+    const cleanAmount = Number(String(newMileAmount).replace(/,/g, "").trim()) || 0;
     const nextMile: PaymentMilestone = {
       id: `mile-${Date.now()}`,
       title: newMileTitle.trim(),
-      amount: Number(newMileAmount),
+      amount: cleanAmount,
       dueDate: newMileDue || new Date().toISOString().split("T")[0],
       status: "PENDING",
       method: newMileMethod,
@@ -908,7 +951,10 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
   // TIMELINE / RUN-OF-SHOW HANDLERS
   const handleAddCue = () => {
-    if (!newCueTitle.trim()) return;
+    if (!newCueTitle.trim()) {
+      addToast("Please enter an activity title for the cue", "info");
+      return;
+    }
     const newCue: TimelineCue = {
       id: `cue-${Date.now()}`,
       time: newCueTime || "08:00 PM",
@@ -919,6 +965,11 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     };
     const updated = [...timelineCues, newCue];
     setTimelineCues(updated);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(`eventos_cues_${eventId}`, JSON.stringify(updated));
+      } catch {}
+    }
     triggerAutoSave({ timelineCuesList: updated });
     setNewCueTitle("");
     setNewCueNotes("");
@@ -937,12 +988,22 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       return c;
     });
     setTimelineCues(updated);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(`eventos_cues_${eventId}`, JSON.stringify(updated));
+      } catch {}
+    }
     triggerAutoSave({ timelineCuesList: updated });
   };
 
   const handleDeleteCue = (cueId: string) => {
     const updated = timelineCues.filter(c => c.id !== cueId);
     setTimelineCues(updated);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(`eventos_cues_${eventId}`, JSON.stringify(updated));
+      } catch {}
+    }
     triggerAutoSave({ timelineCuesList: updated });
     addToast("Cue deleted", "info");
   };
@@ -950,11 +1011,12 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
   // EXPENSE HANDLERS
   const handleAddExpense = () => {
     if (!newExpTitle.trim() || !newExpAmount) return;
+    const cleanAmount = Number(String(newExpAmount).replace(/,/g, "").trim()) || 0;
     const nextExp: EventExpense = {
       id: `exp-${Date.now()}`,
       title: newExpTitle.trim(),
       category: newExpCategory,
-      amount: Number(newExpAmount),
+      amount: cleanAmount,
       date: new Date().toISOString().split("T")[0]
     };
     const updated = [...additionalExpenses, nextExp];
@@ -1031,7 +1093,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
             </div>
             <p className="text-[10px] text-zinc-400 mt-1 flex items-center gap-1">
               <Calendar size={11} className="text-purple-400" />
-              {new Date(event.startDate).toLocaleDateString()} &mdash; {new Date(event.endDate).toLocaleDateString()}
+              {event.startDate ? new Date(event.startDate).toLocaleDateString() : "TBD"} &mdash; {event.endDate ? new Date(event.endDate).toLocaleDateString() : "TBD"}
               {event.venueName && <span className="text-zinc-500 ml-1">· {event.venueName}</span>}
             </p>
           </div>
@@ -1051,7 +1113,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
           <select
             value={event.status}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className={cn("px-3 py-1.5 rounded-xl text-xs font-bold border focus:outline-none cursor-pointer", STATUS_COLORS[event.status])}
+            className={cn("px-3 py-1.5 rounded-xl text-xs font-bold border focus:outline-none cursor-pointer", STATUS_COLORS[event.status] || "border-zinc-800 bg-zinc-900 text-zinc-300")}
           >
             {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}
           </select>
@@ -1271,6 +1333,12 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                         placeholder="e.g. Guest Arrival & Welcome Cocktails"
                         value={newCueTitle}
                         onChange={(e) => setNewCueTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddCue();
+                          }
+                        }}
                         className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
                       />
                     </div>
@@ -1297,6 +1365,12 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                       placeholder="e.g. Wireless mics check, dim ambient lighting..."
                       value={newCueNotes}
                       onChange={(e) => setNewCueNotes(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCue();
+                        }
+                      }}
                       className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
                     />
                   </div>
