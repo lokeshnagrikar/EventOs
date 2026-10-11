@@ -33,9 +33,11 @@ export default function EventDetailPage() {
         </div>
       </nav>
 
-      {/* Main Workspace Workspace details grid */}
+      {/* Main Workspace details grid */}
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full overflow-auto z-10">
-        <EventWorkspace eventId={eventId} />
+        <React.Suspense fallback={<div className="text-zinc-500 text-xs p-6">Loading workspace...</div>}>
+          <EventWorkspace eventId={eventId} />
+        </React.Suspense>
       </main>
     </div>
   );
