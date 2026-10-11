@@ -38,15 +38,15 @@ export function FloatingDock() {
       const currentScrollY = activeLenis ? activeLenis.scroll : window.scrollY;
       const lastScrollY = lastScrollYRef.current;
 
-      // Only show after scrolling past 350px (Navbar controls 0-350px)
-      if (currentScrollY > 350) {
-        if (currentScrollY > lastScrollY) {
-          setVisible(false); // scrolling down
-        } else {
-          setVisible(true); // scrolling up / idle
-        }
+      // Auto-hide when reaching near the bottom footer
+      const isNearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+
+      // In Hero section (<= 260px): Dock is hidden
+      // In all other sections (> 260px): Dock is visible
+      if (currentScrollY > 260 && !isNearBottom) {
+        setVisible(true);
       } else {
-        setVisible(false); // near top of page (Navbar is active)
+        setVisible(false);
       }
 
       // Sync active section boundaries
@@ -71,12 +71,9 @@ export function FloatingDock() {
       const activeLenis = (window as any).lenis;
       if (activeLenis) {
         const onLenisScroll = (e: any) => {
-          if (e.scroll > 350) {
-            if (e.direction === 1) {
-              setVisible(false);
-            } else {
-              setVisible(true);
-            }
+          const isNearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+          if (e.scroll > 260 && !isNearBottom) {
+            setVisible(true);
           } else {
             setVisible(false);
           }
@@ -193,7 +190,7 @@ export function FloatingDock() {
           transition={{ type: "spring", stiffness: 220, damping: 28 }}
           onMouseMove={(e) => mouseX.set(e.clientX)}
           onMouseLeave={() => mouseX.set(Infinity)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-auto flex items-end h-[60px] gap-2.5 sm:gap-3 px-3.5 pb-2 rounded-[22px] border border-white/70 bg-white/80 backdrop-blur-[35px] backdrop-saturate-[2.0] shadow-[0_20px_45px_rgba(15,23,42,0.12),0_0_0_1px_rgba(255,255,255,0.9),inset_0_1px_2px_rgba(255,255,255,1)]"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-auto hidden md:flex items-end h-[60px] gap-2.5 sm:gap-3 px-3.5 pb-2 rounded-[22px] border border-white/70 bg-white/80 backdrop-blur-[35px] backdrop-saturate-[2.0] shadow-[0_20px_45px_rgba(15,23,42,0.12),0_0_0_1px_rgba(255,255,255,0.9),inset_0_1px_2px_rgba(255,255,255,1)]"
         >
           {/* Top reflection line simulating macOS 3D glass shelf highlight */}
           <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />

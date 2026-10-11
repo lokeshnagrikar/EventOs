@@ -24,6 +24,8 @@ export function Navbar({ activeSection }: NavbarProps) {
   const { isAuthenticated, user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const capsuleRef = useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: -999, y: -999 });
@@ -46,14 +48,38 @@ export function Navbar({ activeSection }: NavbarProps) {
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const activeLenis = (window as any).lenis;
+      const currentScrollY = activeLenis ? activeLenis.scroll : window.scrollY;
       setScrolled(currentScrollY > 20);
+
+      const lastScrollY = lastScrollYRef.current;
+      const scrollDiff = currentScrollY - lastScrollY;
+
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        // Mobile behavior: show near top or when user scrolls up
+        if (currentScrollY <= 120 || isOpen || scrollDiff < -8) {
+          setNavVisible(true);
+        } else if (scrollDiff > 8) {
+          setNavVisible(false);
+        }
+      } else {
+        // Desktop: Navbar is visible ONLY in Hero section (<= 260px).
+        // Beyond Hero section, Navbar hides and FloatingDock takes over navigation!
+        if (currentScrollY <= 260 || isOpen) {
+          setNavVisible(true);
+        } else {
+          setNavVisible(false);
+        }
+      }
+
+      lastScrollYRef.current = currentScrollY;
     };
 
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isOpen]);
 
   useEffect(() => {
     setIsOpen(false);
@@ -111,7 +137,12 @@ export function Navbar({ activeSection }: NavbarProps) {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 w-full pt-3 px-3 sm:px-4 pointer-events-none transition-all duration-300">
+      <header
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 w-full pt-3 px-3 sm:px-4 pointer-events-none transition-all duration-300 transform",
+          navVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+        )}
+      >
         <div className="w-full max-w-6xl mx-auto flex flex-col gap-2 pointer-events-none">
           {/* Main Floating Navbar Capsule */}
           <div
@@ -132,16 +163,17 @@ export function Navbar({ activeSection }: NavbarProps) {
             {/* Top specular sheen */}
             <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-purple-400/60 to-transparent pointer-events-none" />
 
-            {/* Subtle radial mouse hover glow */}
-            <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none z-0">
-              <div
-                className="absolute inset-0 transition-opacity duration-300"
-                style={{
-                  opacity: isHovered ? 1 : 0,
-                  background: `radial-gradient(140px circle at ${mousePos.x}px ${mousePos.y}px, rgba(168, 85, 247, 0.16) 0%, transparent 100%)`,
-                }}
-              />
-            </div>
+            {/* Subtle radial mouse hover glow - only mounted on hover to prevent SSR style mismatch */}
+            {isHovered && (
+              <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none z-0">
+                <div
+                  className="absolute inset-0 transition-opacity duration-300"
+                  style={{
+                    background: `radial-gradient(140px circle at ${mousePos.x}px ${mousePos.y}px, rgba(168, 85, 247, 0.16) 0%, transparent 100%)`,
+                  }}
+                />
+              </div>
+            )}
 
             {/* Logo */}
             <div
