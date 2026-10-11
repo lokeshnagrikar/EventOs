@@ -520,8 +520,8 @@ export default function AiAssistant() {
           aiResponse =
             "**EventOS Transparent Pricing Plans:**\n\n" +
             "• **Starter (₹1,999/mo)**: For solo planners & boutique studios. Up to 5 active events, 2 team seats, 20 GB storage, AI Quote Generator, and digital proposals.\n" +
-            "• **Professional (₹5,999/mo)**: Most popular choice! For growing agencies. Up to 20 active events/mo, 5 team seats, 100 GB storage, AI Timeline Generator, vendor tracking, and WhatsApp/SMS alerts.\n" +
-            "• **Agency (₹11,999/mo)**: For high-volume productions. Unlimited active events, unlimited seats, 500+ GB storage, full White-Label Client Portal, and custom domain.\n\n" +
+            "• **Professional (₹4,999/mo)**: Most popular choice! For growing agencies. Up to 20 active events/mo, 5 team seats, 100 GB storage, AI Timeline Generator, vendor tracking, and WhatsApp/SMS alerts.\n" +
+            "• **Agency (₹12,999/mo)**: For high-volume productions. Unlimited active events, unlimited seats, 500+ GB storage, full White-Label Client Portal, and custom domain.\n\n" +
             "💡 *Annual billing saves ~20% across all plans!*";
           actionBtn = { label: "View Detailed Pricing Table", href: "/pricing" };
           nextSuggestions = [
