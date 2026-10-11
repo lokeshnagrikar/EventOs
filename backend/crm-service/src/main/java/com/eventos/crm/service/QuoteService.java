@@ -753,4 +753,31 @@ public class QuoteService {
                 .items(itemDtos)
                 .build();
     }
+
+    public void deleteQuote(UUID id, UUID tenantId) {
+        Quote quote = getQuoteById(id, tenantId);
+        if (!isAdminOrOwner() && !isManager()) {
+            throw new AccessDeniedException("Only admins, owners, and managers can delete quotations.");
+        }
+        // Strict financial and audit safeguard: Only DRAFT quotations can be deleted.
+        if (quote.getStatus() != QuoteStatus.DRAFT) {
+            throw new IllegalStateException("Only DRAFT quotations can be deleted. Sent, Viewed, or Accepted proposals are legally preserved audit records.");
+        }
+        quoteRepository.delete(quote);
+        log.info("Successfully deleted draft quote {} for tenant {}", quote.getQuoteNumber(), tenantId);
+    }
+
+    public Quote reassignLead(UUID quoteId, UUID newLeadId, UUID tenantId) {
+        Quote quote = getQuoteById(quoteId, tenantId);
+        if (!isAdminOrOwner() && !isManager()) {
+            throw new AccessDeniedException("Only admins, owners, and managers can reassign quotations.");
+        }
+        Lead lead = leadRepository.findByIdAndTenantIdAndIsDeletedFalse(newLeadId, tenantId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Target lead not found or has been archived"));
+        quote.setLeadId(newLeadId);
+        Quote saved = quoteRepository.save(quote);
+        log.info("Reassigned quote {} to lead {} for tenant {}", quote.getQuoteNumber(), newLeadId, tenantId);
+        return saved;
+    }
 }

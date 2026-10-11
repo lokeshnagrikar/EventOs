@@ -337,6 +337,30 @@ public class QuoteController {
                 .body(pdfBytes);
     }
 
+    @Operation(summary = "Delete quotation", description = "Deletes a draft quotation. Sent, Viewed, or Accepted quotes cannot be deleted for audit and legal compliance.")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
+    public ResponseEntity<?> deleteQuote(@PathVariable UUID id) {
+        UUID tenantId = getTenantId();
+        quoteService.deleteQuote(id, tenantId);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Quotation deleted successfully"));
+    }
+
+    @Operation(summary = "Reassign quotation to lead", description = "Re-links an unassigned or archived quotation to an active CRM lead.")
+    @PatchMapping("/{id}/reassign")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
+    public ResponseEntity<?> reassignQuote(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body) {
+        String leadIdStr = body.get("leadId");
+        if (leadIdStr == null || leadIdStr.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "leadId is required");
+        }
+        UUID tenantId = getTenantId();
+        Quote updated = quoteService.reassignLead(id, UUID.fromString(leadIdStr), tenantId);
+        return ResponseEntity.ok(Map.of("success", true, "data", updated));
+    }
+
     // ─── Public Endpoints (Client Proposal Portal — Whitelisted in API Gateway) ───
 
     @Operation(summary = "Public — Get quote details", description = "Allows clients to view a proposal via public share token or ID without logging in.")

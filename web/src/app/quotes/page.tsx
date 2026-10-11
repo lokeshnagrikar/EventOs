@@ -92,8 +92,12 @@ export default function QuotesPage() {
   const leads = leadsResponse?.data || [];
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const getLeadName = (leadId: string) => {
-    return leads.find((l) => l.id === leadId)?.name || "Unassigned Lead";
+  const getLeadInfo = (leadId: string) => {
+    const found = leads.find((l) => l.id === leadId);
+    if (found) {
+      return { name: found.name, isArchived: false };
+    }
+    return { name: "Archived Lead", isArchived: true };
   };
 
   const handleDownloadPdf = async (e: React.MouseEvent, q: Quote) => {
@@ -229,9 +233,21 @@ export default function QuotesPage() {
                         {q.status}
                       </span>
                     </div>
-                    <h3 className="font-bold text-base text-zinc-100 group-hover:text-purple-400 transition-colors leading-tight line-clamp-1">
-                      {getLeadName(q.leadId)}
-                    </h3>
+                    {(() => {
+                      const leadInfo = getLeadInfo(q.leadId);
+                      return (
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-base text-zinc-100 group-hover:text-purple-400 transition-colors leading-tight line-clamp-1">
+                            {leadInfo.name}
+                          </h3>
+                          {leadInfo.isArchived && (
+                            <span className="shrink-0 text-[8.5px] font-bold font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/25" title="Associated CRM lead was archived or detached">
+                              Archived Lead
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <p className="text-[10px] text-zinc-500 font-semibold">{templateLabel}</p>
                   </div>
 

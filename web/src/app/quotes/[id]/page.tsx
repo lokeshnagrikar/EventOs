@@ -27,7 +27,8 @@ import {
   Lock,
   UserCheck,
   ChevronRight,
-  Loader2
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { cn, getAppBaseUrl } from "@/lib/utils";
 
@@ -92,6 +93,9 @@ export default function QuoteDetailPage() {
   const [showSignModal, setShowSignModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
+  const [showReassignModal, setShowReassignModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState("");
   const [signerName, setSignerName] = useState("");
   const [signerTitle, setSignerTitle] = useState("Client Sponsor");
   const [feedbackText, setFeedbackText] = useState("");
@@ -120,7 +124,18 @@ export default function QuoteDetailPage() {
 
   const lead = leadResponse?.data;
 
-  // 3. Fetch Associated Booking if ACCEPTED
+  // 3. Fetch All Active Leads for Reassigning
+  const { data: allLeadsResponse } = useQuery<{ data: Lead[] }>({
+    queryKey: ["activeLeadsForReassign"],
+    queryFn: async () => {
+      const response = await api.get("/crm/leads");
+      return response.data;
+    }
+  });
+
+  const activeLeads = allLeadsResponse?.data || [];
+
+  // 4. Fetch Associated Booking if ACCEPTED
   const { data: bookingResponse } = useQuery<{ data: { id: string; bookingNumber: string } }>({
     queryKey: ["bookingByQuote", quoteId],
     queryFn: async () => {
@@ -131,6 +146,39 @@ export default function QuoteDetailPage() {
   });
 
   const booking = bookingResponse?.data;
+
+  // Mutation to reassign quotation to another active lead
+  const reassignLeadMutation = useMutation({
+    mutationFn: async (newLeadId: string) => {
+      const response = await api.patch(`/crm/quotes/${quoteId}/reassign`, { leadId: newLeadId });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["lead"] });
+      setShowReassignModal(false);
+      setErrorText("");
+    },
+    onError: (err: any) => {
+      setErrorText(err.response?.data?.error?.message || err.response?.data?.message || "Failed to reassign lead.");
+    }
+  });
+
+  // Mutation to delete draft quotation
+  const deleteQuoteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.delete(`/crm/quotes/${quoteId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      router.push("/quotes");
+    },
+    onError: (err: any) => {
+      setErrorText(err.response?.data?.error?.message || err.response?.data?.message || "Failed to delete quote.");
+    }
+  });
 
   // Mutation to mark quote as SENT
   const sendQuoteMutation = useMutation({
@@ -430,6 +478,31 @@ export default function QuoteDetailPage() {
             </>
           )}
 
+          {/* Reassign Lead Action */}
+          <button
+            onClick={() => {
+              setSelectedLeadId(quote.leadId || "");
+              setShowReassignModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/80 hover:bg-zinc-850 rounded-xl text-xs font-bold text-zinc-300 transition cursor-pointer"
+            title="Link this quote to an active CRM lead"
+          >
+            <UserCheck size={13} className="text-purple-400" />
+            <span>Link Lead</span>
+          </button>
+
+          {/* Delete Draft Quote (Strictly enabled only for DRAFT quotes) */}
+          {quote.status === "DRAFT" && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-xs font-bold transition cursor-pointer"
+              title="Delete this draft quote"
+            >
+              <Trash2 size={13} />
+              <span>Delete Draft</span>
+            </button>
+          )}
+
           {quote.status === "ACCEPTED" && booking && (
             <button
               onClick={() => router.push(`/bookings/${booking.id}`)}
@@ -451,6 +524,38 @@ export default function QuoteDetailPage() {
             <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-center gap-2 print:hidden">
               <AlertCircle size={14} />
               <span>{errorText}</span>
+            </div>
+          )}
+
+          {/* Informational Alert if Associated Lead was deleted or unassigned */}
+          {!lead && (
+            <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs print:hidden shadow-lg shadow-amber-500/5">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                  <AlertCircle size={18} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-amber-300">CRM Lead Record is Archived / Detached</span>
+                    <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      Audit Preserved
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    This quotation&apos;s itemized pricing, PDF contract, and legal terms are securely retained. You can link this proposal to any active CRM lead anytime.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedLeadId("");
+                  setShowReassignModal(true);
+                }}
+                className="px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95"
+              >
+                <UserCheck size={13} />
+                <span>Link Active Lead</span>
+              </button>
             </div>
           )}
 
@@ -799,6 +904,123 @@ export default function QuoteDetailPage() {
               >
                 {copiedLink ? <CheckCircle size={15} className="text-emerald-400" /> : <Copy size={15} />}
                 <span>{copiedLink ? "Web Link Copied to Clipboard!" : "Copy Web Proposal Link"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reassign to Active Lead Modal ── */}
+      {showReassignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="w-full max-w-md p-6 bg-[#0E0E11] border border-zinc-800 rounded-2xl shadow-2xl text-white space-y-5 relative">
+            <button
+              onClick={() => setShowReassignModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition cursor-pointer"
+            >
+              <XIcon size={16} />
+            </button>
+
+            <div className="space-y-1.5">
+              <span className="text-[9px] text-purple-400 font-extrabold uppercase tracking-widest block font-mono">
+                CRM Relationship Linker
+              </span>
+              <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
+                <UserCheck size={18} className="text-purple-400" />
+                Link Quotation to Active Lead
+              </h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Connect quotation <strong className="text-zinc-200 font-mono">#{quote?.quoteNumber}</strong> to an active client inquiry. All line items, grand totals (₹{quote?.total?.toLocaleString("en-IN")}), and PDF terms will be instantly synced.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider block">
+                Select Active CRM Lead:
+              </label>
+
+              {activeLeads.length === 0 ? (
+                <div className="p-4 rounded-xl border border-zinc-850 bg-zinc-900/50 text-center text-xs text-zinc-500">
+                  No active CRM leads found in this workspace. Please create or restore a lead in the CRM pipeline first.
+                </div>
+              ) : (
+                <select
+                  value={selectedLeadId}
+                  onChange={(e) => setSelectedLeadId(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white font-medium text-xs focus:outline-none focus:border-purple-500 transition cursor-pointer"
+                >
+                  <option value="">-- Choose Lead from CRM --</option>
+                  {activeLeads.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name} {l.contact?.email ? `(${l.contact.email})` : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowReassignModal(false)}
+                className="px-4 py-2 border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!selectedLeadId || reassignLeadMutation.isPending}
+                onClick={() => reassignLeadMutation.mutate(selectedLeadId)}
+                className="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-md shadow-purple-600/20 disabled:opacity-50 cursor-pointer"
+              >
+                {reassignLeadMutation.isPending ? "Linking..." : "Confirm Link"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Draft Quote Confirmation Modal ── */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="w-full max-w-sm p-6 bg-[#0E0E11] border border-red-500/20 rounded-2xl shadow-2xl text-white space-y-5 relative">
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition cursor-pointer"
+            >
+              <XIcon size={16} />
+            </button>
+
+            <div className="space-y-2 text-center pt-2">
+              <div className="h-12 w-12 mx-auto rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shadow-inner">
+                <Trash2 size={22} />
+              </div>
+              <h3 className="text-base font-black tracking-tight text-white">
+                Delete Draft Quotation?
+              </h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Are you sure you want to permanently delete quotation <strong className="text-zinc-200 font-mono">#{quote?.quoteNumber}</strong>?
+              </p>
+              <div className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 text-[11px] text-zinc-500 font-medium">
+                Note: Only unsent DRAFT proposals can be deleted. Sent or accepted proposals are permanently preserved for legal tax & audit integrity.
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 py-2.5 border border-zinc-800 hover:bg-zinc-900 text-zinc-300 font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteQuoteMutation.isPending}
+                onClick={() => deleteQuoteMutation.mutate()}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-xs transition shadow-md shadow-red-600/20 cursor-pointer disabled:opacity-50"
+              >
+                {deleteQuoteMutation.isPending ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>
