@@ -20,7 +20,8 @@ import {
   AlertCircle,
   HelpCircle,
   QrCode,
-  Loader2
+  Loader2,
+  ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -395,6 +396,18 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
         </div>
 
         <div className="flex items-center gap-3 text-xs">
+          {booking.contractUrl && (
+            <a
+              href={booking.contractUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-[10px] font-extrabold shadow-md shadow-purple-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <FileText size={12} />
+              View Contract PDF
+              <ExternalLink size={10} />
+            </a>
+          )}
           <span className="text-zinc-500 font-bold uppercase tracking-wider">Status:</span>
           <select
             value={booking.status}
@@ -463,6 +476,40 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                 <span className="text-[9px] text-zinc-550 uppercase font-bold">Installment Progress</span>
                 <p className="text-[10px] text-zinc-400 mt-0.5">Cleared contract ratios</p>
               </div>
+            </div>
+
+            {/* Contract Document Card */}
+            <div className="border-t border-zinc-850/60 pt-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] text-zinc-500 uppercase font-black block">Contract Agreement</span>
+                {booking.contractUrl ? (
+                  <span className="text-[8px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                    ATTACHED
+                  </span>
+                ) : (
+                  <span className="text-[8px] font-extrabold text-zinc-500 bg-zinc-800/40 border border-zinc-800 px-1.5 py-0.5 rounded">
+                    NOT ATTACHED
+                  </span>
+                )}
+              </div>
+              {booking.contractUrl ? (
+                <a
+                  href={booking.contractUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between p-2.5 bg-zinc-900/80 hover:bg-zinc-850 border border-zinc-800 hover:border-purple-500/40 rounded-xl transition-all group"
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <FileText size={14} className="text-purple-400 shrink-0" />
+                    <span className="text-[10px] font-bold text-zinc-200 truncate group-hover:text-purple-300">
+                      View Contract PDF
+                    </span>
+                  </div>
+                  <ExternalLink size={11} className="text-zinc-500 group-hover:text-purple-400 shrink-0" />
+                </a>
+              ) : (
+                <p className="text-[10px] text-zinc-500 italic">No contract PDF linked to this booking.</p>
+              )}
             </div>
 
             {/* Collect Payment form */}
@@ -564,6 +611,17 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                         <div className="truncate">
                           <span className={cn("font-bold text-xs block truncate", m.status === "COMPLETED" && "line-through text-zinc-500")}>{m.title}</span>
                           {m.description && <span className="text-[10px] text-zinc-500 block truncate">{m.description}</span>}
+                          {booking.contractUrl && m.title.toLowerCase().includes("contract") && (
+                            <a
+                              href={booking.contractUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-purple-400 hover:text-purple-300 underline"
+                            >
+                              <FileText size={10} /> View Signed Contract <ExternalLink size={9} />
+                            </a>
+                          )}
                         </div>
                       </div>
                       <span className="text-[10px] text-zinc-400 font-mono font-bold shrink-0">

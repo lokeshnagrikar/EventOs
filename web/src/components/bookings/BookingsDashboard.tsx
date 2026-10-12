@@ -775,13 +775,29 @@ export default function BookingsDashboard() {
                   <label className="text-[9px] text-zinc-500 uppercase font-black">Contract PDF URL (Optional)</label>
                   <span className="text-[9px] text-zinc-500">Auto-filled if booked via Quote</span>
                 </div>
-                <input 
-                  type="url" 
-                  value={contractUrl} 
-                  onChange={(e) => setContractUrl(e.target.value)} 
-                  placeholder="https://res.cloudinary.com/... or leave blank"
-                  className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none" 
-                />
+                <div className="relative">
+                  <input 
+                    type="url" 
+                    value={contractUrl} 
+                    onChange={(e) => setContractUrl(e.target.value)} 
+                    placeholder="https://res.cloudinary.com/... or leave blank"
+                    className="w-full px-3 py-2 pr-20 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none" 
+                  />
+                  {contractUrl && (
+                    <button
+                      type="button"
+                      onClick={() => window.open(contractUrl, "_blank")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/30 rounded text-[9px] font-bold transition-colors"
+                    >
+                      Test Link
+                    </button>
+                  )}
+                </div>
+                <p className="text-[9px] text-zinc-500">
+                  {contractUrl 
+                    ? "✨ Contract milestone will automatically be marked as COMPLETED." 
+                    : "You can paste a Cloudinary, Google Drive, or S3 signed PDF link."}
+                </p>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-zinc-850">

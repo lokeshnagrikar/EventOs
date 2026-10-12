@@ -73,9 +73,19 @@ export default function BookingCard({ booking, eventName, index }: BookingCardPr
       {/* Header row */}
       <div className="space-y-2">
         <div className="flex justify-between items-center">
-          <span className="text-[9px] font-mono bg-zinc-850 text-zinc-400 px-2 py-0.5 rounded font-black">
-            {booking.bookingNumber}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] font-mono bg-zinc-850 text-zinc-400 px-2 py-0.5 rounded font-black">
+              {booking.bookingNumber}
+            </span>
+            {booking.contractUrl && (
+              <span
+                className="px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] font-bold flex items-center gap-0.5"
+                title="Contract PDF Attached"
+              >
+                <FileText size={9} /> PDF
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1.5">
             <span className={cn("px-2 py-0.5 border rounded text-[8px] font-black uppercase tracking-wider", paymentStatusLabel.color)}>
               {paymentStatusLabel.label}
@@ -144,6 +154,18 @@ export default function BookingCard({ booking, eventName, index }: BookingCardPr
           >
             <FileText size={13} />
           </button>
+          {booking.contractUrl && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(booking.contractUrl, "_blank");
+              }}
+              className="p-2 bg-purple-950/60 hover:bg-purple-900 text-purple-300 rounded-xl border border-purple-500/30 transition-colors"
+              title="Open Contract PDF"
+            >
+              <FileText size={13} className="text-purple-400" />
+            </button>
+          )}
           <button
             onClick={(e) => { e.stopPropagation(); router.push(`/bookings/${booking.id}?tab=payments`); }}
             className="p-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-xl border border-zinc-800 transition-colors"
