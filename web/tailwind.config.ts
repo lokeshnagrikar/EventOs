@@ -56,7 +56,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "sans-serif"],
-        heading: ["'Clash Display'", "var(--font-heading)", "sans-serif"],
+        heading: ["var(--font-heading)", "'Outfit'", "sans-serif"],
         clash: ["'Clash Display'", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },

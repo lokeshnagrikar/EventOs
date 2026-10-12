@@ -60,7 +60,7 @@ export function AuthModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
           onClick={handleBackdropClick}
           className={cn(
             "fixed inset-0 z-[100] flex",
@@ -68,10 +68,10 @@ export function AuthModal() {
           )}
         >
           <motion.div
-            initial={isMobile ? { opacity: 0, y: 12 } : { opacity: 0, scale: 0.96, y: 8 }}
+            initial={isMobile ? { opacity: 0, y: 16 } : { opacity: 0, scale: 0.95, y: 12 }}
             animate={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }}
-            exit={isMobile ? { opacity: 0, y: 12 } : { opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            exit={isMobile ? { opacity: 0, y: 16 } : { opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             ref={modalRef}
             className={cn(
               "w-full z-10",

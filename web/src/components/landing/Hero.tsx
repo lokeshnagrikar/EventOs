@@ -8,7 +8,7 @@ import { Calendar, ArrowRight, CheckCircle2, Play, Sparkles } from "lucide-react
 import { analytics } from "@/lib/analytics";
 import { AnimatedMeshGradient } from "@/components/ui/AnimatedMeshGradient";
 import { LiquidMetalButton } from "@/components/landing/LiquidMetalButton";
-import { LiquidRippleHeading } from "@/components/landing/LiquidRippleHeading";
+import { SpecularHeading } from "@/components/landing/SpecularHeading";
 import { StardustButton } from "@/components/landing/StardustButton";
 
 const workflowSteps = [
@@ -100,7 +100,7 @@ export function Hero({ preloaderActive = false }: { preloaderActive?: boolean })
           transition={{ duration: 0.5, delay: 0.08 }}
           className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight font-heading max-w-4xl text-balance leading-[1.12]"
         >
-          <LiquidRippleHeading />
+          <SpecularHeading />
         </motion.h1>
 
         {/* Supporting Copy */}

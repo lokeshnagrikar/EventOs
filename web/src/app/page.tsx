@@ -173,9 +173,9 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
     <>
       <div
         className={cn(
-          "min-h-screen bg-[#FAF9F6] text-slate-900 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-600 selection:text-white transition-opacity duration-500 ease-out",
+          "min-h-screen bg-[#FAF9F6] text-slate-900 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-600 selection:text-white transition-[opacity,filter] duration-300 ease-out",
           preloaderActive ? "opacity-0" : "opacity-100",
-          isAuthModalOpen ? "blur-md scale-[0.99] pointer-events-none" : ""
+          isAuthModalOpen ? "blur-[2px] pointer-events-none" : ""
         )}
       >
         {/* 1. Sticky Navigation */}
