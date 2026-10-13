@@ -400,8 +400,8 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
   const event: Event | undefined = (eventResponse as any)?.data?.id
     ? (eventResponse as any).data
     : (eventResponse as any)?.id
-    ? (eventResponse as any)
-    : (eventResponse as any)?.data;
+      ? (eventResponse as any)
+      : (eventResponse as any)?.data;
 
   // Fetch real team members from workspace
   const { data: teamData } = useQuery<{ data: TeamMember[] }>({
@@ -423,65 +423,166 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     return [];
   }, [teamData]);
 
+  // Persistent state reference tracking the absolute latest state across async boundaries & rapid calls
+  const stateRef = useRef({
+    name: "",
+    type: "WEDDING",
+    startDate: "",
+    endDate: "",
+    location: "",
+    venueName: "",
+    venueAddress: "",
+    guestCount: 0,
+    budget: 0,
+    notesText: "",
+    dressCode: "Black Tie Optional",
+    theme: "Vintage Royal",
+    priority: "MEDIUM" as "HIGH" | "MEDIUM" | "LOW",
+    checklist: [] as ChecklistItem[],
+    timelineCues: [] as TimelineCue[],
+    vendors: [] as EventVendor[],
+    staffAllocations: [] as StaffAllocation[],
+    invoices: [] as EventInvoice[],
+    paymentMilestones: [] as PaymentMilestone[],
+    galleryAssets: [] as EventAsset[],
+    guests: [] as EventGuest[],
+    additionalExpenses: [] as EventExpense[],
+    activityFeed: [] as EventActivity[],
+    richNotes: [] as RichNote[]
+  });
+  const hasUnsavedChangesRef = useRef(false);
+  const isLoadedRef = useRef(false);
+  const currentEventIdRef = useRef(eventId);
+
   // Parse notes JSON metadata
   useEffect(() => {
+    if (currentEventIdRef.current !== eventId) {
+      currentEventIdRef.current = eventId;
+      isLoadedRef.current = false;
+      hasUnsavedChangesRef.current = false;
+    }
+
     if (event) {
-      setEditName(event.name || "");
-      setEditType(event.type || "WEDDING");
-      setEditLocation(event.location || "");
-      setEditVenueName(event.venueName || "");
-      setEditVenueAddress(event.venueAddress || "");
-      setEditGuestCount(event.guestCount || 0);
-      setEditBudget(event.budget || 0);
-      setEditStartDate(event.startDate ? event.startDate.substring(0, 16) : "");
-      setEditEndDate(event.endDate ? event.endDate.substring(0, 16) : "");
+      // If already loaded and user has unsaved modifications in progress, do not clobber with refetch
+      if (isLoadedRef.current && hasUnsavedChangesRef.current) {
+        return;
+      }
+      isLoadedRef.current = true;
+
+      let parsedCues: TimelineCue[] = [];
+      let parsedChecklist: ChecklistItem[] = [];
+      let parsedVendors: EventVendor[] = [];
+      let parsedStaff: StaffAllocation[] = [];
+      let parsedInvoices: EventInvoice[] = [];
+      let parsedMilestones: PaymentMilestone[] = [];
+      let parsedAssets: EventAsset[] = [];
+      let parsedGuests: EventGuest[] = [];
+      let parsedExpenses: EventExpense[] = [];
+      let parsedActivity: EventActivity[] = [];
+      let parsedNotes: RichNote[] = [];
+      let parsedDressCode = "Black Tie Optional";
+      let parsedTheme = "Vintage Royal";
+      let parsedPriority: "HIGH" | "MEDIUM" | "LOW" = "MEDIUM";
+      let parsedNotesText = "";
 
       if (event.notes && event.notes.startsWith("{")) {
         try {
           const meta = JSON.parse(event.notes);
-          setRawNotesText(meta.notesText || "");
-          setDressCode(meta.dressCode || "Black Tie Optional");
-          setThemeName(meta.theme || "Vintage Royal");
-          setPriorityTier(meta.priority || "MEDIUM");
-
-          setChecklist(Array.isArray(meta.checklist) ? meta.checklist : []);
-          
-          let parsedCues: TimelineCue[] = Array.isArray(meta.timelineCues) ? meta.timelineCues : [];
-          if (parsedCues.length === 0 && typeof window !== "undefined") {
-            try {
-              const cached = localStorage.getItem(`eventos_cues_${eventId}`);
-              if (cached) parsedCues = JSON.parse(cached);
-            } catch {}
-          }
-          setTimelineCues(parsedCues);
-
-          setVendors(Array.isArray(meta.vendors) ? meta.vendors : []);
-          setStaffAllocations(Array.isArray(meta.staffAllocations) ? meta.staffAllocations : []);
-          setInvoices(Array.isArray(meta.invoices) ? meta.invoices : []);
-          setPaymentMilestones(Array.isArray(meta.paymentMilestones) ? meta.paymentMilestones : []);
-          setGalleryAssets(Array.isArray(meta.galleryAssets) ? meta.galleryAssets : []);
-          setGuests(Array.isArray(meta.guests) ? meta.guests : []);
-          setAdditionalExpenses(Array.isArray(meta.additionalExpenses) ? meta.additionalExpenses : []);
-          setActivityFeed(Array.isArray(meta.activityFeed) ? meta.activityFeed : []);
-          setRichNotes(Array.isArray(meta.richNotes) ? meta.richNotes : []);
+          parsedNotesText = meta.notesText || "";
+          parsedDressCode = meta.dressCode || "Black Tie Optional";
+          parsedTheme = meta.theme || "Vintage Royal";
+          parsedPriority = meta.priority || "MEDIUM";
+          parsedChecklist = Array.isArray(meta.checklist) ? meta.checklist : [];
+          parsedCues = Array.isArray(meta.timelineCues) ? meta.timelineCues : [];
+          parsedVendors = Array.isArray(meta.vendors) ? meta.vendors : [];
+          parsedStaff = Array.isArray(meta.staffAllocations) ? meta.staffAllocations : [];
+          parsedInvoices = Array.isArray(meta.invoices) ? meta.invoices : [];
+          parsedMilestones = Array.isArray(meta.paymentMilestones) ? meta.paymentMilestones : [];
+          parsedAssets = Array.isArray(meta.galleryAssets) ? meta.galleryAssets : [];
+          parsedGuests = Array.isArray(meta.guests) ? meta.guests : [];
+          parsedExpenses = Array.isArray(meta.additionalExpenses) ? meta.additionalExpenses : [];
+          parsedActivity = Array.isArray(meta.activityFeed) ? meta.activityFeed : [];
+          parsedNotes = Array.isArray(meta.richNotes) ? meta.richNotes : [];
         } catch (e) {
-          setRawNotesText(event.notes || "");
-          if (typeof window !== "undefined") {
-            try {
-              const cached = localStorage.getItem(`eventos_cues_${eventId}`);
-              if (cached) setTimelineCues(JSON.parse(cached));
-            } catch {}
-          }
+          parsedNotesText = event.notes || "";
         }
       } else {
-        setRawNotesText(event.notes || "");
-        if (typeof window !== "undefined") {
+        parsedNotesText = event.notes || "";
+      }
+
+      // Check localStorage for any cached cues if DB list is currently empty
+      if (typeof window !== "undefined") {
+        if (parsedCues.length === 0) {
           try {
             const cached = localStorage.getItem(`eventos_cues_${eventId}`);
-            if (cached) setTimelineCues(JSON.parse(cached));
-          } catch {}
+            if (cached) parsedCues = JSON.parse(cached);
+          } catch { }
         }
       }
+
+      const initialName = event.name || "";
+      const initialType = event.type || "WEDDING";
+      const initialLocation = event.location || "";
+      const initialVenueName = event.venueName || "";
+      const initialVenueAddress = event.venueAddress || "";
+      const initialGuestCount = event.guestCount || parsedGuests.length || 0;
+      const initialBudget = event.budget || 0;
+      const initialStart = event.startDate ? event.startDate.substring(0, 16) : "";
+      const initialEnd = event.endDate ? event.endDate.substring(0, 16) : "";
+
+      setEditName(initialName);
+      setEditType(initialType);
+      setEditLocation(initialLocation);
+      setEditVenueName(initialVenueName);
+      setEditVenueAddress(initialVenueAddress);
+      setEditGuestCount(initialGuestCount);
+      setEditBudget(initialBudget);
+      setEditStartDate(initialStart);
+      setEditEndDate(initialEnd);
+
+      setRawNotesText(parsedNotesText);
+      setDressCode(parsedDressCode);
+      setThemeName(parsedTheme);
+      setPriorityTier(parsedPriority);
+      setChecklist(parsedChecklist);
+      setTimelineCues(parsedCues);
+      setVendors(parsedVendors);
+      setStaffAllocations(parsedStaff);
+      setInvoices(parsedInvoices);
+      setPaymentMilestones(parsedMilestones);
+      setGalleryAssets(parsedAssets);
+      setGuests(parsedGuests);
+      setAdditionalExpenses(parsedExpenses);
+      setActivityFeed(parsedActivity);
+      setRichNotes(parsedNotes);
+
+      // Populate stateRef with the loaded values
+      stateRef.current = {
+        name: initialName,
+        type: initialType,
+        startDate: initialStart,
+        endDate: initialEnd,
+        location: initialLocation,
+        venueName: initialVenueName,
+        venueAddress: initialVenueAddress,
+        guestCount: initialGuestCount,
+        budget: initialBudget,
+        notesText: parsedNotesText,
+        dressCode: parsedDressCode,
+        theme: parsedTheme,
+        priority: parsedPriority,
+        checklist: parsedChecklist,
+        timelineCues: parsedCues,
+        vendors: parsedVendors,
+        staffAllocations: parsedStaff,
+        invoices: parsedInvoices,
+        paymentMilestones: parsedMilestones,
+        galleryAssets: parsedAssets,
+        guests: parsedGuests,
+        additionalExpenses: parsedExpenses,
+        activityFeed: parsedActivity,
+        richNotes: parsedNotes
+      };
     }
   }, [event, eventId]);
 
@@ -491,101 +592,87 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       const response = await api.put(`/events/${eventId}`, payload);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["event", eventId] });
+    onSuccess: (responseData) => {
+      hasUnsavedChangesRef.current = false;
+      const updatedEvent = (responseData as any)?.data || responseData;
+      if (updatedEvent && updatedEvent.id) {
+        queryClient.setQueryData(["event", eventId], { data: updatedEvent });
+      }
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 1500);
     },
     onError: (err) => {
       console.warn("Auto-save sync offline or fallback:", err);
+      hasUnsavedChangesRef.current = false;
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 1500);
     }
   });
 
-  const triggerAutoSave = (updatedFields: Partial<{
-    name: string;
-    type: string;
-    startDate: string;
-    endDate: string;
-    location: string;
-    venueName: string;
-    venueAddress: string;
-    guestCount: number;
-    budget: number;
-    notesText: string;
-    checklistList: ChecklistItem[];
-    timelineCuesList: TimelineCue[];
-    vendorsList: EventVendor[];
-    staffList: StaffAllocation[];
-    invoicesList: EventInvoice[];
-    milestonesList: PaymentMilestone[];
-    galleryList: EventAsset[];
-    guestsList: EventGuest[];
-    expensesList: EventExpense[];
-    activityList: EventActivity[];
-    notesList: RichNote[];
-  }> = {}) => {
+  const triggerAutoSave = (overrides?: Partial<typeof stateRef.current>) => {
+    if (overrides) {
+      Object.assign(stateRef.current, overrides);
+    }
+    hasUnsavedChangesRef.current = true;
     setSaveStatus("saving");
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
 
     saveTimeoutRef.current = setTimeout(() => {
-      const mergedName = updatedFields.name !== undefined ? updatedFields.name : editName;
-      const mergedType = updatedFields.type !== undefined ? updatedFields.type : editType;
-      const mergedStart = updatedFields.startDate !== undefined ? updatedFields.startDate : editStartDate;
-      const mergedEnd = updatedFields.endDate !== undefined ? updatedFields.endDate : editEndDate;
-      const mergedLoc = updatedFields.location !== undefined ? updatedFields.location : editLocation;
-      const mergedVenue = updatedFields.venueName !== undefined ? updatedFields.venueName : editVenueName;
-      const mergedAddr = updatedFields.venueAddress !== undefined ? updatedFields.venueAddress : editVenueAddress;
-      const mergedGuests = updatedFields.guestCount !== undefined ? updatedFields.guestCount : editGuestCount;
-      const mergedBudget = updatedFields.budget !== undefined ? updatedFields.budget : editBudget;
-
+      const current = stateRef.current;
       const metaPayload = {
-        notesText: updatedFields.notesText !== undefined ? updatedFields.notesText : rawNotesText,
-        dressCode,
-        theme: themeName,
-        priority: priorityTier,
-        checklist: updatedFields.checklistList !== undefined ? updatedFields.checklistList : checklist,
-        timelineCues: updatedFields.timelineCuesList !== undefined ? updatedFields.timelineCuesList : timelineCues,
-        vendors: updatedFields.vendorsList !== undefined ? updatedFields.vendorsList : vendors,
-        staffAllocations: updatedFields.staffList !== undefined ? updatedFields.staffList : staffAllocations,
-        invoices: updatedFields.invoicesList !== undefined ? updatedFields.invoicesList : invoices,
-        paymentMilestones: updatedFields.milestonesList !== undefined ? updatedFields.milestonesList : paymentMilestones,
-        galleryAssets: updatedFields.galleryList !== undefined ? updatedFields.galleryList : galleryAssets,
-        guests: updatedFields.guestsList !== undefined ? updatedFields.guestsList : guests,
-        additionalExpenses: updatedFields.expensesList !== undefined ? updatedFields.expensesList : additionalExpenses,
-        activityFeed: updatedFields.activityList !== undefined ? updatedFields.activityList : activityFeed,
-        richNotes: updatedFields.notesList !== undefined ? updatedFields.notesList : richNotes
+        notesText: current.notesText,
+        dressCode: current.dressCode,
+        theme: current.theme,
+        priority: current.priority,
+        checklist: current.checklist,
+        timelineCues: current.timelineCues,
+        vendors: current.vendors,
+        staffAllocations: current.staffAllocations,
+        invoices: current.invoices,
+        paymentMilestones: current.paymentMilestones,
+        galleryAssets: current.galleryAssets,
+        guests: current.guests,
+        additionalExpenses: current.additionalExpenses,
+        activityFeed: current.activityFeed,
+        richNotes: current.richNotes
       };
 
       const payload = {
-        name: mergedName,
-        type: mergedType,
-        startDate: mergedStart ? new Date(mergedStart).toISOString() : new Date().toISOString(),
-        endDate: mergedEnd ? new Date(mergedEnd).toISOString() : new Date().toISOString(),
-        location: mergedLoc,
-        venueName: mergedVenue,
-        venueAddress: mergedAddr,
-        guestCount: Number(mergedGuests) || 0,
-        budget: Number(mergedBudget) || 0,
+        name: current.name || editName,
+        type: current.type || editType,
+        startDate: current.startDate ? new Date(current.startDate).toISOString() : new Date().toISOString(),
+        endDate: current.endDate ? new Date(current.endDate).toISOString() : new Date().toISOString(),
+        location: current.location,
+        venueName: current.venueName,
+        venueAddress: current.venueAddress,
+        guestCount: Number(current.guestCount) || 0,
+        budget: Number(current.budget) || 0,
         notes: JSON.stringify(metaPayload)
       };
+
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(`eventos_cues_${eventId}`, JSON.stringify(current.timelineCues));
+          localStorage.setItem(`eventos_meta_${eventId}`, JSON.stringify(metaPayload));
+        } catch { }
+      }
 
       updateEventMutation.mutate(payload);
     }, 600);
   };
 
-  // Activity Logger Helper
-  const logActivityAction = (text: string, category: string = "OPERATION") => {
+  // Activity Logger Helper - merges action and activity cleanly
+  const logActivityAction = (text: string, category: string = "OPERATION", additionalOverrides?: Partial<typeof stateRef.current>) => {
     const newEntry: EventActivity = {
-      id: `act-${Date.now()}`,
+      id: `act-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       text,
       timestamp: new Date().toISOString(),
       category
     };
-    const updated = [newEntry, ...activityFeed];
+    const updated = [newEntry, ...stateRef.current.activityFeed];
     setActivityFeed(updated);
-    triggerAutoSave({ activityList: updated });
+    stateRef.current.activityFeed = updated;
+    triggerAutoSave({ activityFeed: updated, ...(additionalOverrides || {}) });
   };
 
   const handleStatusChange = (newStatus: string) => {
@@ -637,35 +724,38 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       paymentStatus: newVendorStatus,
       cost: cleanCost
     };
-    const updated = [...vendors, nextVendor];
+    const updated = [...stateRef.current.vendors, nextVendor];
     setVendors(updated);
+    stateRef.current.vendors = updated;
     setNewVendorName("");
     setNewVendorCost("");
     setNewVendorPhone("");
-    triggerAutoSave({ vendorsList: updated });
-    logActivityAction(`Vendor "${nextVendor.name}" (${nextVendor.category}) mapped at ₹${nextVendor.cost.toLocaleString()}`, "VENDOR");
+    logActivityAction(`Vendor "${nextVendor.name}" (${nextVendor.category}) mapped at ₹${nextVendor.cost.toLocaleString()}`, "VENDOR", { vendors: updated });
     addToast(`Mapped vendor ${nextVendor.name} successfully`, "success");
   };
 
   const handleDeleteVendor = (id: string, name: string) => {
-    const updated = vendors.filter(v => v.id !== id);
+    const updated = stateRef.current.vendors.filter(v => v.id !== id);
     setVendors(updated);
-    triggerAutoSave({ vendorsList: updated });
-    logActivityAction(`Removed vendor "${name}" from event roster`, "VENDOR");
+    stateRef.current.vendors = updated;
+    logActivityAction(`Removed vendor "${name}" from event roster`, "VENDOR", { vendors: updated });
     addToast(`Removed ${name}`, "info");
   };
 
   const handleCycleVendorPayment = (id: string) => {
-    const updated = vendors.map(v => {
+    let vendorName = "";
+    let nextStatus = "UNPAID";
+    const updated = stateRef.current.vendors.map(v => {
       if (v.id === id) {
-        const nextStatus = v.paymentStatus === "UNPAID" ? "PARTIAL" : v.paymentStatus === "PARTIAL" ? "PAID" : "UNPAID";
-        logActivityAction(`Updated payment status of ${v.name} to ${nextStatus}`, "FINANCE");
+        nextStatus = v.paymentStatus === "UNPAID" ? "PARTIAL" : v.paymentStatus === "PARTIAL" ? "PAID" : "UNPAID";
+        vendorName = v.name;
         return { ...v, paymentStatus: nextStatus as any };
       }
       return v;
     });
     setVendors(updated);
-    triggerAutoSave({ vendorsList: updated });
+    stateRef.current.vendors = updated;
+    logActivityAction(`Updated payment status of ${vendorName} to ${nextStatus}`, "FINANCE", { vendors: updated });
     addToast("Vendor payment status updated", "success");
   };
 
@@ -681,20 +771,20 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       role: formatRoleName(newStaffRole),
       phone: newStaffPhone.trim()
     };
-    const updated = [...staffAllocations, newStaff];
+    const updated = [...stateRef.current.staffAllocations, newStaff];
     setStaffAllocations(updated);
+    stateRef.current.staffAllocations = updated;
     setNewStaffName("");
     setNewStaffPhone("");
-    triggerAutoSave({ staffList: updated });
-    logActivityAction(`Assigned ${newStaff.name} as ${newStaff.role}`, "STAFF");
+    logActivityAction(`Assigned ${newStaff.name} as ${newStaff.role}`, "STAFF", { staffAllocations: updated });
     addToast(`Assigned ${newStaff.name} to crew`, "success");
   };
 
   const handleDeleteStaff = (id: string, name: string) => {
-    const updated = staffAllocations.filter(s => s.id !== id);
+    const updated = stateRef.current.staffAllocations.filter(s => s.id !== id);
     setStaffAllocations(updated);
-    triggerAutoSave({ staffList: updated });
-    logActivityAction(`Unassigned ${name} from crew`, "STAFF");
+    stateRef.current.staffAllocations = updated;
+    logActivityAction(`Unassigned ${name} from crew`, "STAFF", { staffAllocations: updated });
     addToast(`Unassigned ${name}`, "info");
   };
 
@@ -711,7 +801,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
     const nextInvoice: EventInvoice = {
       id: `inv-${Date.now()}`,
-      invoiceNumber: `INV-${new Date().getFullYear()}-${String(invoices.length + 1).padStart(3, "0")}`,
+      invoiceNumber: `INV-${new Date().getFullYear()}-${String(stateRef.current.invoices.length + 1).padStart(3, "0")}`,
       title: newInvTitle.trim(),
       subtotal,
       gstRate,
@@ -722,36 +812,39 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       createdAt: new Date().toISOString()
     };
 
-    const updated = [nextInvoice, ...invoices];
+    const updated = [nextInvoice, ...stateRef.current.invoices];
     setInvoices(updated);
+    stateRef.current.invoices = updated;
     setNewInvTitle("");
     setNewInvAmount("");
     setNewInvDueDate("");
     setShowInvoiceModal(false);
-    triggerAutoSave({ invoicesList: updated });
-    logActivityAction(`Generated invoice ${nextInvoice.invoiceNumber} (${nextInvoice.title}) for ₹${nextInvoice.totalAmount.toLocaleString()}`, "INVOICE");
+    logActivityAction(`Generated invoice ${nextInvoice.invoiceNumber} (${nextInvoice.title}) for ₹${nextInvoice.totalAmount.toLocaleString()}`, "INVOICE", { invoices: updated });
     addToast(`Invoice ${nextInvoice.invoiceNumber} created`, "success");
   };
 
   const handleToggleInvoiceStatus = (id: string) => {
-    const updated = invoices.map(inv => {
+    let invNum = "";
+    let nextStatus = "DRAFT";
+    const updated = stateRef.current.invoices.map(inv => {
       if (inv.id === id) {
-        const nextStatus = inv.status === "DRAFT" ? "SENT" : inv.status === "SENT" ? "CLEARED" : "DRAFT";
-        logActivityAction(`Marked invoice ${inv.invoiceNumber} as ${nextStatus}`, "INVOICE");
+        nextStatus = inv.status === "DRAFT" ? "SENT" : inv.status === "SENT" ? "CLEARED" : "DRAFT";
+        invNum = inv.invoiceNumber;
         return { ...inv, status: nextStatus as any };
       }
       return inv;
     });
     setInvoices(updated);
-    triggerAutoSave({ invoicesList: updated });
+    stateRef.current.invoices = updated;
+    logActivityAction(`Marked invoice ${invNum} as ${nextStatus}`, "INVOICE", { invoices: updated });
     addToast("Invoice status updated", "success");
   };
 
   const handleDeleteInvoice = (id: string, num: string) => {
-    const updated = invoices.filter(inv => inv.id !== id);
+    const updated = stateRef.current.invoices.filter(inv => inv.id !== id);
     setInvoices(updated);
-    triggerAutoSave({ invoicesList: updated });
-    logActivityAction(`Deleted invoice ${num}`, "INVOICE");
+    stateRef.current.invoices = updated;
+    logActivityAction(`Deleted invoice ${num}`, "INVOICE", { invoices: updated });
     addToast(`Deleted invoice ${num}`, "info");
   };
 
@@ -771,36 +864,39 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       method: newMileMethod,
       referenceNo: newMileRef.trim()
     };
-    const updated = [...paymentMilestones, nextMile];
+    const updated = [...stateRef.current.paymentMilestones, nextMile];
     setPaymentMilestones(updated);
+    stateRef.current.paymentMilestones = updated;
     setNewMileTitle("");
     setNewMileAmount("");
     setNewMileDue("");
     setNewMileRef("");
-    triggerAutoSave({ milestonesList: updated });
-    logActivityAction(`Added payment milestone "${nextMile.title}" for ₹${nextMile.amount.toLocaleString()}`, "PAYMENT");
+    logActivityAction(`Added payment milestone "${nextMile.title}" for ₹${nextMile.amount.toLocaleString()}`, "PAYMENT", { paymentMilestones: updated });
     addToast(`Payment milestone logged`, "success");
   };
 
   const handleToggleMilestone = (id: string) => {
-    const updated = paymentMilestones.map(m => {
+    let mTitle = "";
+    let nextStatus = "PENDING";
+    const updated = stateRef.current.paymentMilestones.map(m => {
       if (m.id === id) {
-        const nextStatus = m.status === "PENDING" ? "RECEIVED" : "PENDING";
-        logActivityAction(`Marked payment milestone "${m.title}" as ${nextStatus}`, "PAYMENT");
+        nextStatus = m.status === "PENDING" ? "RECEIVED" : "PENDING";
+        mTitle = m.title;
         return { ...m, status: nextStatus as any, paidAt: nextStatus === "RECEIVED" ? new Date().toISOString() : undefined };
       }
       return m;
     });
     setPaymentMilestones(updated);
-    triggerAutoSave({ milestonesList: updated });
+    stateRef.current.paymentMilestones = updated;
+    logActivityAction(`Marked payment milestone "${mTitle}" as ${nextStatus}`, "PAYMENT", { paymentMilestones: updated });
     addToast("Milestone updated", "success");
   };
 
   const handleDeleteMilestone = (id: string, title: string) => {
-    const updated = paymentMilestones.filter(m => m.id !== id);
+    const updated = stateRef.current.paymentMilestones.filter(m => m.id !== id);
     setPaymentMilestones(updated);
-    triggerAutoSave({ milestonesList: updated });
-    logActivityAction(`Removed milestone "${title}"`, "PAYMENT");
+    stateRef.current.paymentMilestones = updated;
+    logActivityAction(`Removed milestone "${title}"`, "PAYMENT", { paymentMilestones: updated });
     addToast("Milestone removed", "info");
   };
 
@@ -817,13 +913,13 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       url: newAssetUrl.trim(),
       uploadedAt: new Date().toISOString()
     };
-    const updated = [nextAsset, ...galleryAssets];
+    const updated = [nextAsset, ...stateRef.current.galleryAssets];
     setGalleryAssets(updated);
+    stateRef.current.galleryAssets = updated;
     setNewAssetTitle("");
     setNewAssetUrl("");
     setShowAddAssetModal(false);
-    triggerAutoSave({ galleryList: updated });
-    logActivityAction(`Uploaded gallery visual "${nextAsset.title}" (${nextAsset.category})`, "GALLERY");
+    logActivityAction(`Uploaded gallery visual "${nextAsset.title}" (${nextAsset.category})`, "GALLERY", { galleryAssets: updated });
     addToast("Visual asset saved to workspace gallery", "success");
   };
 
@@ -844,10 +940,10 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
   };
 
   const handleDeleteAsset = (id: string, title: string) => {
-    const updated = galleryAssets.filter(a => a.id !== id);
+    const updated = stateRef.current.galleryAssets.filter(a => a.id !== id);
     setGalleryAssets(updated);
-    triggerAutoSave({ galleryList: updated });
-    logActivityAction(`Deleted visual asset "${title}"`, "GALLERY");
+    stateRef.current.galleryAssets = updated;
+    logActivityAction(`Deleted visual asset "${title}"`, "GALLERY", { galleryAssets: updated });
     addToast("Visual asset removed", "info");
   };
 
@@ -865,19 +961,20 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       tableNo: newGuestTable.trim() || "Unassigned",
       dietary: newGuestDietary
     };
-    const updated = [nextGuest, ...guests];
+    const updated = [nextGuest, ...stateRef.current.guests];
     setGuests(updated);
+    stateRef.current.guests = updated;
     setEditGuestCount(updated.length);
+    stateRef.current.guestCount = updated.length;
     setNewGuestName("");
     setNewGuestPhone("");
     setNewGuestTable("");
-    triggerAutoSave({ guestsList: updated, guestCount: updated.length });
-    logActivityAction(`Logged guest "${nextGuest.name}" (RSVP: ${nextGuest.rsvp})`, "GUESTS");
+    logActivityAction(`Logged guest "${nextGuest.name}" (RSVP: ${nextGuest.rsvp})`, "GUESTS", { guests: updated, guestCount: updated.length });
     addToast(`Guest ${nextGuest.name} added`, "success");
   };
 
   const handleCycleRsvp = (id: string) => {
-    const updated = guests.map(g => {
+    const updated = stateRef.current.guests.map(g => {
       if (g.id === id) {
         const nextRsvp = g.rsvp === "CONFIRMED" ? "PENDING" : g.rsvp === "PENDING" ? "DECLINED" : "CONFIRMED";
         return { ...g, rsvp: nextRsvp as any };
@@ -885,15 +982,18 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       return g;
     });
     setGuests(updated);
-    triggerAutoSave({ guestsList: updated });
+    stateRef.current.guests = updated;
+    triggerAutoSave({ guests: updated });
     addToast("RSVP updated", "success");
   };
 
   const handleDeleteGuest = (id: string, name: string) => {
-    const updated = guests.filter(g => g.id !== id);
+    const updated = stateRef.current.guests.filter(g => g.id !== id);
     setGuests(updated);
+    stateRef.current.guests = updated;
     setEditGuestCount(updated.length);
-    triggerAutoSave({ guestsList: updated, guestCount: updated.length });
+    stateRef.current.guestCount = updated.length;
+    logActivityAction(`Removed guest "${name}"`, "GUESTS", { guests: updated, guestCount: updated.length });
     addToast(`Removed ${name}`, "info");
   };
 
@@ -907,13 +1007,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       tableNo: "General Seating",
       dietary: "STANDARD"
     }));
-    const updated = [...guests, ...newItems];
+    const updated = [...stateRef.current.guests, ...newItems];
     setGuests(updated);
+    stateRef.current.guests = updated;
     setEditGuestCount(updated.length);
+    stateRef.current.guestCount = updated.length;
     setBulkGuestText("");
     setShowBulkPaste(false);
-    triggerAutoSave({ guestsList: updated, guestCount: updated.length });
-    logActivityAction(`Imported ${newItems.length} guests from bulk registry`, "GUESTS");
+    logActivityAction(`Imported ${newItems.length} guests from bulk registry`, "GUESTS", { guests: updated, guestCount: updated.length });
     addToast(`Imported ${newItems.length} guests`, "success");
   };
 
@@ -923,23 +1024,24 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     const nextCheck: ChecklistItem = {
       id: Date.now().toString(),
       text: newCheckText.trim(),
-      assignedStaff: newCheckStaff || (staffAllocations[0]?.name || "Lead Planner"),
+      assignedStaff: newCheckStaff || (stateRef.current.staffAllocations[0]?.name || "Lead Planner"),
       dueDate: newCheckDue || new Date().toISOString().split("T")[0],
       priority: newCheckPriority,
       completed: false
     };
-    const updated = [...checklist, nextCheck];
+    const updated = [...stateRef.current.checklist, nextCheck];
     setChecklist(updated);
+    stateRef.current.checklist = updated;
     setNewCheckText("");
-    triggerAutoSave({ checklistList: updated });
-    logActivityAction(`Added checklist task: "${nextCheck.text}"`, "TASK");
+    logActivityAction(`Added checklist task: "${nextCheck.text}"`, "TASK", { checklist: updated });
     addToast("Checklist task logged", "success");
   };
 
   const handleDeleteCheckItem = (id: string) => {
-    const updated = checklist.filter(c => c.id !== id);
+    const updated = stateRef.current.checklist.filter(c => c.id !== id);
     setChecklist(updated);
-    triggerAutoSave({ checklistList: updated });
+    stateRef.current.checklist = updated;
+    logActivityAction(`Removed checklist task`, "TASK", { checklist: updated });
     addToast("Task removed", "info");
   };
 
@@ -963,48 +1065,37 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       status: "PENDING",
       notes: newCueNotes.trim()
     };
-    const updated = [...timelineCues, newCue];
+    const updated = [...stateRef.current.timelineCues, newCue];
     setTimelineCues(updated);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(`eventos_cues_${eventId}`, JSON.stringify(updated));
-      } catch {}
-    }
-    triggerAutoSave({ timelineCuesList: updated });
+    stateRef.current.timelineCues = updated;
     setNewCueTitle("");
     setNewCueNotes("");
     setShowAddCue(false);
-    logActivityAction(`Logged timeline cue: "${newCue.title}" at ${newCue.time}`, "TIMELINE");
+    logActivityAction(`Logged timeline cue: "${newCue.title}" at ${newCue.time}`, "TIMELINE", { timelineCues: updated });
     addToast("Timeline cue logged to Run-of-Show", "success");
   };
 
   const handleToggleCueStatus = (cueId: string) => {
-    const updated = timelineCues.map(c => {
+    let cueTitle = "";
+    let nextStatus = "PENDING";
+    const updated = stateRef.current.timelineCues.map(c => {
       if (c.id === cueId) {
-        const nextStatus = c.status === "PENDING" ? "IN_PROGRESS" : c.status === "IN_PROGRESS" ? "COMPLETED" : "PENDING";
-        logActivityAction(`Cue "${c.title}" status changed to ${nextStatus}`, "TIMELINE");
+        nextStatus = c.status === "PENDING" ? "IN_PROGRESS" : c.status === "IN_PROGRESS" ? "COMPLETED" : "PENDING";
+        cueTitle = c.title;
         return { ...c, status: nextStatus as any };
       }
       return c;
     });
     setTimelineCues(updated);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(`eventos_cues_${eventId}`, JSON.stringify(updated));
-      } catch {}
-    }
-    triggerAutoSave({ timelineCuesList: updated });
+    stateRef.current.timelineCues = updated;
+    logActivityAction(`Cue "${cueTitle}" status changed to ${nextStatus}`, "TIMELINE", { timelineCues: updated });
   };
 
   const handleDeleteCue = (cueId: string) => {
-    const updated = timelineCues.filter(c => c.id !== cueId);
+    const updated = stateRef.current.timelineCues.filter(c => c.id !== cueId);
     setTimelineCues(updated);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(`eventos_cues_${eventId}`, JSON.stringify(updated));
-      } catch {}
-    }
-    triggerAutoSave({ timelineCuesList: updated });
+    stateRef.current.timelineCues = updated;
+    logActivityAction(`Removed timeline cue`, "TIMELINE", { timelineCues: updated });
     addToast("Cue deleted", "info");
   };
 
@@ -1019,19 +1110,20 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       amount: cleanAmount,
       date: new Date().toISOString().split("T")[0]
     };
-    const updated = [...additionalExpenses, nextExp];
+    const updated = [...stateRef.current.additionalExpenses, nextExp];
     setAdditionalExpenses(updated);
+    stateRef.current.additionalExpenses = updated;
     setNewExpTitle("");
     setNewExpAmount("");
-    triggerAutoSave({ expensesList: updated });
-    logActivityAction(`Added operational expense "${nextExp.title}" for ₹${nextExp.amount.toLocaleString()}`, "FINANCE");
+    logActivityAction(`Added operational expense "${nextExp.title}" for ₹${nextExp.amount.toLocaleString()}`, "FINANCE", { additionalExpenses: updated });
     addToast("Expense line item added", "success");
   };
 
   const handleDeleteExpense = (id: string) => {
-    const updated = additionalExpenses.filter(e => e.id !== id);
+    const updated = stateRef.current.additionalExpenses.filter(e => e.id !== id);
     setAdditionalExpenses(updated);
-    triggerAutoSave({ expensesList: updated });
+    stateRef.current.additionalExpenses = updated;
+    logActivityAction(`Removed expense line item`, "FINANCE", { additionalExpenses: updated });
     addToast("Expense removed", "info");
   };
 
@@ -1044,17 +1136,19 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       isPinned: false,
       createdAt: new Date().toISOString()
     };
-    const updated = [nextNote, ...richNotes];
+    const updated = [nextNote, ...stateRef.current.richNotes];
     setRichNotes(updated);
+    stateRef.current.richNotes = updated;
     setNewNoteText("");
-    triggerAutoSave({ notesList: updated });
+    triggerAutoSave({ richNotes: updated });
     addToast("Note saved", "success");
   };
 
   const handleDeleteNote = (id: string) => {
-    const updated = richNotes.filter(n => n.id !== id);
+    const updated = stateRef.current.richNotes.filter(n => n.id !== id);
     setRichNotes(updated);
-    triggerAutoSave({ notesList: updated });
+    stateRef.current.richNotes = updated;
+    triggerAutoSave({ richNotes: updated });
     addToast("Note removed", "info");
   };
 
@@ -1146,7 +1240,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
             <div className="md:col-span-2 space-y-6">
               <div className="p-5 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
                 <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pb-2 border-b border-zinc-900">Basic Information</h3>
-                
+
                 <div className="space-y-1.5">
                   <label className="text-zinc-500 font-bold block">Event Title</label>
                   <input
@@ -1233,13 +1327,13 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
             <div className="space-y-6">
               <div className="p-5 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
                 <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pb-2 border-b border-zinc-900">Event Specs</h3>
-                
+
                 <div className="space-y-1">
                   <span className="text-zinc-500 font-bold block text-[10px]">Dress Code</span>
                   <input
                     type="text"
                     value={dressCode}
-                    onChange={(e) => { setDressCode(e.target.value); triggerAutoSave(); }}
+                    onChange={(e) => { setDressCode(e.target.value); triggerAutoSave({ dressCode: e.target.value }); }}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none text-xs"
                   />
                 </div>
@@ -1248,7 +1342,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                   <input
                     type="text"
                     value={themeName}
-                    onChange={(e) => { setThemeName(e.target.value); triggerAutoSave(); }}
+                    onChange={(e) => { setThemeName(e.target.value); triggerAutoSave({ theme: e.target.value }); }}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none text-xs"
                   />
                 </div>
@@ -1256,7 +1350,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                   <span className="text-zinc-500 font-bold block text-[10px]">Priority Tier</span>
                   <select
                     value={priorityTier}
-                    onChange={(e) => { setPriorityTier(e.target.value as any); triggerAutoSave(); }}
+                    onChange={(e) => { setPriorityTier(e.target.value as any); triggerAutoSave({ priority: e.target.value as any }); }}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none text-xs"
                   >
                     <option value="HIGH">High Priority (VIP)</option>
@@ -1410,8 +1504,8 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                         cue.status === "COMPLETED"
                           ? "bg-zinc-950/40 border-zinc-900 opacity-80"
                           : cue.status === "IN_PROGRESS"
-                          ? "bg-purple-950/20 border-purple-500/40 shadow-lg shadow-purple-950/20"
-                          : "bg-[#141416]/70 border-zinc-850"
+                            ? "bg-purple-950/20 border-purple-500/40 shadow-lg shadow-purple-950/20"
+                            : "bg-[#141416]/70 border-zinc-850"
                       )}
                     >
                       <div className="flex items-start md:items-center gap-4">
@@ -1666,10 +1760,10 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => {
-                            const updated = checklist.map(tk => tk.id === t.id ? { ...tk, completed: !tk.completed } : tk);
+                            const updated = stateRef.current.checklist.map(tk => tk.id === t.id ? { ...tk, completed: !tk.completed } : tk);
                             setChecklist(updated);
-                            triggerAutoSave({ checklistList: updated });
-                            logActivityAction(`Task "${t.text}" marked as ${!t.completed ? "COMPLETED" : "INCOMPLETE"}`, "TASK");
+                            stateRef.current.checklist = updated;
+                            logActivityAction(`Task "${t.text}" marked as ${!t.completed ? "COMPLETED" : "INCOMPLETE"}`, "TASK", { checklist: updated });
                           }}
                           className={cn(
                             "h-4 w-4 rounded border flex items-center justify-center transition-all cursor-pointer",

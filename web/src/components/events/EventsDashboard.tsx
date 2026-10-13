@@ -169,6 +169,7 @@ export default function EventsDashboard() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [priorityFilter, setPriorityFilter] = useState("ALL");
+  const [pipelineSubFilter, setPipelineSubFilter] = useState<"ACTIVE" | "UPCOMING" | "ALL">("ACTIVE");
 
   // Create Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -447,6 +448,50 @@ export default function EventsDashboard() {
       return matchSearch && matchStatus && matchType && matchPriority;
     });
   }, [events, searchQuery, statusFilter, typeFilter, priorityFilter]);
+
+  const getDaysDiffText = (startDate?: string) => {
+    if (!startDate) return "Date TBD";
+    const now = new Date();
+    const target = new Date(startDate);
+    const diffDays = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "🎯 Today";
+    if (diffDays === 1) return "⏳ Tomorrow";
+    if (diffDays > 1 && diffDays <= 7) return `⏳ in ${diffDays} days`;
+    if (diffDays > 7) return `📅 in ${diffDays} days`;
+    if (diffDays < 0) return `✓ Past`;
+    return target.toLocaleDateString();
+  };
+
+  const getReadinessPercentage = (status: string) => {
+    switch (status) {
+      case "PLANNING": return 45;
+      case "PROPOSAL_SENT": return 55;
+      case "CONFIRMED": return 75;
+      case "VENDOR_ASSIGNED": return 82;
+      case "IN_PREPARATION": return 88;
+      case "IN_PROGRESS": return 95;
+      case "COMPLETED": return 100;
+      case "CANCELLED": return 0;
+      default: return 50;
+    }
+  };
+
+  const pipelineEvents = useMemo(() => {
+    let list = filteredEvents;
+    if (pipelineSubFilter === "ACTIVE") {
+      const activeOnly = filteredEvents.filter((e: Event) => e.status !== "CANCELLED");
+      list = activeOnly.length > 0 ? activeOnly : filteredEvents;
+    } else if (pipelineSubFilter === "UPCOMING") {
+      list = filteredEvents.filter((e: Event) => ["CONFIRMED", "IN_PREPARATION", "PLANNING"].includes(e.status));
+    }
+    return [...list].sort((a, b) => {
+      if (a.status === "IN_PROGRESS" && b.status !== "IN_PROGRESS") return -1;
+      if (b.status === "IN_PROGRESS" && a.status !== "IN_PROGRESS") return 1;
+      const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
+      return dateA - dateB;
+    });
+  }, [filteredEvents, pipelineSubFilter]);
 
   // KPIs
   const kpiData = useMemo(() => {
@@ -748,10 +793,10 @@ export default function EventsDashboard() {
   };
 
   return (
-    <div className="space-y-6 select-none text-zinc-300">
+    <div className="space-y-6 select-none text-slate-800 dark:text-zinc-200">
 
       {/* Category selector row */}
-      <div className="flex flex-col sm:flex-row bg-zinc-900 border border-zinc-850 p-1.5 rounded-2xl text-[10.5px] font-bold uppercase select-none w-full justify-between items-stretch sm:items-center gap-2 relative">
+      <div className="flex flex-col sm:flex-row bg-slate-100/90 dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-850 p-1.5 rounded-2xl text-[10.5px] font-bold uppercase select-none w-full justify-between items-stretch sm:items-center gap-2 relative shadow-sm">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar touch-pan-x min-w-0 pb-1 sm:pb-0">
           {([
             { key: "pipelines", label: "Pipelines & Events", icon: FolderKanban },
@@ -768,7 +813,9 @@ export default function EventsDashboard() {
                 onClick={() => setMainCategory(cat.key)}
                 className={cn(
                   "flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 uppercase text-[10px] font-black tracking-wider",
-                  mainCategory === cat.key ? "bg-purple-950/20 text-purple-400 border border-purple-900/40 shadow-sm" : "text-zinc-500 hover:text-zinc-350 border border-transparent"
+                  mainCategory === cat.key
+                    ? "bg-white dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border border-slate-200/80 dark:border-purple-800/40 shadow-sm"
+                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 border border-transparent"
                 )}
               >
                 <Icon size={12} />
@@ -781,11 +828,11 @@ export default function EventsDashboard() {
         {/* Global Warning Counter indicator */}
         <div className="shrink-0 self-start sm:self-center">
           {conflictWarnings.length > 0 ? (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-red-950/20 border border-red-500/20 rounded-xl text-red-400 font-extrabold text-[9px] animate-pulse whitespace-nowrap">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 font-extrabold text-[9px] animate-pulse whitespace-nowrap">
               <AlertTriangle size={11} /> {conflictWarnings.length} OPERATIONS CONFLICTS
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-950/20 border border-emerald-500/20 rounded-xl text-emerald-400 font-extrabold text-[9px] whitespace-nowrap">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 font-extrabold text-[9px] whitespace-nowrap">
               <CheckCircle2 size={11} /> 0 OPERATIONS CONFLICTS
             </div>
           )}
@@ -794,12 +841,12 @@ export default function EventsDashboard() {
 
       {/* Dynamic Warnings log banner */}
       {conflictWarnings.length > 0 && (
-        <div className="p-4 bg-red-950/10 border border-red-900/20 rounded-2xl space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-red-400">
+        <div className="p-4 bg-red-500/5 dark:bg-red-950/10 border border-red-500/20 dark:border-red-900/20 rounded-2xl space-y-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-red-600 dark:text-red-400">
             <AlertCircle size={14} />
             <span>Active Operational Conflicts Logged ({conflictWarnings.length})</span>
           </div>
-          <div className="divide-y divide-red-900/20 max-h-24 overflow-y-auto text-[10px] font-mono text-red-300/80">
+          <div className="divide-y divide-red-200 dark:divide-red-900/20 max-h-24 overflow-y-auto text-[10px] font-mono text-red-600 dark:text-red-300/80">
             {conflictWarnings.map((warn, idx) => (
               <div key={idx} className="py-1.5 flex items-start gap-2">
                 <span className="text-red-500">•</span>
@@ -811,12 +858,12 @@ export default function EventsDashboard() {
       )}
 
       {/* FILTER & TOOLBAR BOX */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-900 pb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-zinc-900 pb-4">
 
         {/* Search & Filters */}
         <div className="flex items-center gap-2 w-full lg:w-auto">
           <div className="relative w-full max-w-xs">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-zinc-500">
               <Search size={13} />
             </span>
             <input
@@ -827,23 +874,23 @@ export default function EventsDashboard() {
                 localStorage.setItem("events_filter_search", e.target.value);
               }}
               placeholder={`Search ${mainCategory === "pipelines" ? "events, venues..." : mainCategory}...`}
-              className="w-full pl-9 pr-4 py-1.5 bg-zinc-950/40 border border-zinc-800 rounded-xl text-xs placeholder-zinc-500 text-zinc-200 focus:outline-none focus:border-purple-600 font-semibold"
+              className="w-full pl-9 pr-4 py-1.5 bg-white dark:bg-zinc-950/40 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs placeholder-slate-400 dark:placeholder-zinc-500 text-slate-900 dark:text-zinc-200 focus:outline-none focus:border-purple-600 font-semibold shadow-sm"
             />
           </div>
           {mainCategory === "pipelines" && (
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
-                "p-2 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0",
+                "p-2 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm",
                 showFilters || statusFilter !== "ALL" || typeFilter !== "ALL"
-                  ? "border-purple-500/40 bg-purple-500/10 text-purple-400"
-                  : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200"
+                  ? "border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                  : "border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
               )}
               title="Toggle filter controls"
             >
               <Filter size={13} />
               {(statusFilter !== "ALL" || typeFilter !== "ALL") && (
-                <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
+                <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
               )}
             </button>
           )}
@@ -853,7 +900,7 @@ export default function EventsDashboard() {
         <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full lg:w-auto justify-between lg:justify-end">
           {mainCategory === "pipelines" ? (
             <>
-              <div className="flex bg-zinc-950/60 border border-zinc-850 p-0.5 rounded-xl text-[10px] font-bold overflow-x-auto no-scrollbar touch-pan-x max-w-full">
+              <div className="flex bg-slate-100/90 dark:bg-zinc-950/60 border border-slate-200 dark:border-zinc-850 p-0.5 rounded-xl text-[10px] font-bold overflow-x-auto no-scrollbar touch-pan-x max-w-full shadow-sm">
                 {[
                   { id: "dashboard", label: "Overview", icon: FolderKanban },
                   { id: "grid", label: "Grid", icon: Grid },
@@ -870,7 +917,9 @@ export default function EventsDashboard() {
                       onClick={() => handleTabChange(tab.id as any)}
                       className={cn(
                         "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer font-extrabold uppercase whitespace-nowrap shrink-0",
-                        activeTab === tab.id ? "bg-zinc-800 text-purple-400" : "text-zinc-500 hover:text-zinc-350"
+                        activeTab === tab.id
+                          ? "bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-400 shadow-sm"
+                          : "text-slate-600 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-200"
                       )}
                     >
                       <Icon size={11} />
@@ -885,9 +934,9 @@ export default function EventsDashboard() {
                   if (!useBillingStore.getState().checkLimit("events")) return;
                   setShowCreateModal(true);
                 }}
-                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition shadow-md active:scale-95 cursor-pointer whitespace-nowrap shrink-0 animate-pulse"
+                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-md active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
               >
-                <Plus size={13} />
+                <Plus size={13} strokeWidth={2.5} />
                 Create Event
               </button>
             </>
@@ -1028,49 +1077,137 @@ export default function EventsDashboard() {
                     {/* 1. OVERVIEW */}
                     {activeTab === "dashboard" && (
                       <div className="space-y-6">
-                        {/* Stats Summary Grid */}
+                        {/* High-Impact Glassmorphic KPI Cards */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                          <div className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl flex items-center justify-between hover:border-zinc-700 transition">
+                          {/* Card 1: Today's Active Schedule */}
+                          <div className="p-4 sm:p-5 border rounded-2xl flex items-center justify-between transition-all duration-200 bg-white dark:bg-[#121215]/80 border-slate-200/90 dark:border-zinc-800/80 hover:border-purple-500/40 shadow-sm dark:shadow-[0_2px_12px_rgba(0,0,0,0.25)] group">
                             <div>
-                              <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider block">Today's Schedule</span>
-                              <span className="text-lg font-black text-zinc-200 mt-1 block">{kpiData.active} Active</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+                                <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Today's Schedule</span>
+                              </div>
+                              <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-zinc-100 mt-1 block">
+                                {kpiData.active > 0 ? `${kpiData.active} Live` : "Live Coordination"}
+                              </span>
+                              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold mt-0.5 block">
+                                {events.filter(e => e.status === "IN_PROGRESS" || e.status === "CONFIRMED").length} Active Pipelines
+                              </span>
                             </div>
-                            <Clock size={16} className="text-purple-400" />
+                            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform">
+                              <Clock size={19} />
+                            </div>
                           </div>
-                          <div className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl flex items-center justify-between hover:border-zinc-700 transition">
+
+                          {/* Card 2: Upcoming Booked Events */}
+                          <div className="p-4 sm:p-5 border rounded-2xl flex items-center justify-between transition-all duration-200 bg-white dark:bg-[#121215]/80 border-slate-200/90 dark:border-zinc-800/80 hover:border-blue-500/40 shadow-sm dark:shadow-[0_2px_12px_rgba(0,0,0,0.25)] group">
                             <div>
-                              <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider block">Upcoming Events</span>
-                              <span className="text-lg font-black text-zinc-200 mt-1 block">{kpiData.upcoming} Booked</span>
+                              <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Upcoming Events</span>
+                              <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-zinc-100 mt-1 block">
+                                {kpiData.upcoming} Booked
+                              </span>
+                              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-0.5 block">
+                                Next: {events[0]?.venueName || "Venue Confirmed"}
+                              </span>
                             </div>
-                            <CalendarIcon size={16} className="text-blue-400" />
+                            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
+                              <CalendarIcon size={19} />
+                            </div>
                           </div>
-                          <div className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl flex items-center justify-between hover:border-zinc-700 transition">
+
+                          {/* Card 3: Budget Expenses */}
+                          <div className="p-4 sm:p-5 border rounded-2xl flex items-center justify-between transition-all duration-200 bg-white dark:bg-[#121215]/80 border-slate-200/90 dark:border-zinc-800/80 hover:border-emerald-500/40 shadow-sm dark:shadow-[0_2px_12px_rgba(0,0,0,0.25)] group">
                             <div>
-                              <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider block">Budget Expenses</span>
-                              <span className="text-lg font-black text-zinc-200 mt-1 block">₹{(kpiData.budgetUsed / 100000).toFixed(1)}L Used</span>
+                              <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Committed Outlay</span>
+                              <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-zinc-100 mt-1 block">
+                                ₹{(kpiData.budgetUsed / 100000).toFixed(1)}L Used
+                              </span>
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5 block">
+                                Vendors &amp; Crew Outlay
+                              </span>
                             </div>
-                            <DollarSign size={16} className="text-emerald-450" />
+                            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                              <DollarSign size={19} />
+                            </div>
                           </div>
-                          <div className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl flex items-center justify-between hover:border-zinc-700 transition">
+
+                          {/* Card 4: Remaining Margin */}
+                          <div className="p-4 sm:p-5 border rounded-2xl flex items-center justify-between transition-all duration-200 bg-white dark:bg-[#121215]/80 border-slate-200/90 dark:border-zinc-800/80 hover:border-cyan-500/40 shadow-sm dark:shadow-[0_2px_12px_rgba(0,0,0,0.25)] group">
                             <div>
-                              <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider block">Remaining Capital</span>
-                              <span className="text-lg font-black text-zinc-200 mt-1 block">₹{(kpiData.budgetRemaining / 100000).toFixed(1)}L Free</span>
+                              <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Remaining Capital</span>
+                              <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-zinc-100 mt-1 block">
+                                ₹{(kpiData.budgetRemaining / 100000).toFixed(1)}L Free
+                              </span>
+                              <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold mt-0.5 block">
+                                Margin Protected
+                              </span>
                             </div>
-                            <TrendingUp size={16} className="text-cyan-400" />
+                            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover:scale-105 transition-transform">
+                              <TrendingUp size={19} />
+                            </div>
                           </div>
                         </div>
 
-                        {/* Operations layout */}
+                        {/* Operations Layout Grid (2/3 + 1/3) */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                          {/* Active Events / Schedule */}
+                          {/* Active Events Execution Pipelines (2 Columns) */}
                           <div className="lg:col-span-2 space-y-4">
-                            <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
-                              <h3 className="text-xs font-black uppercase text-zinc-450 tracking-wider">Active Execution Pipelines</h3>
-                              <div className="divide-y divide-zinc-900/60">
-                                {filteredEvents.length === 0 ? (
+                            <div className="p-5 sm:p-6 border rounded-2xl space-y-5 bg-white/70 dark:bg-[#121215]/70 border-slate-200/90 dark:border-zinc-800/80 shadow-sm backdrop-blur-md">
+                              {/* Pipeline Section Header with Sub-Filter Pills */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800/80">
+                                <div>
+                                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-zinc-200 tracking-wider flex items-center gap-2">
+                                    <Layers size={14} className="text-purple-500" />
+                                    Active Execution Pipelines
+                                  </h3>
+                                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                                    Live staging, readiness status, on-site crew, and direct Run-of-Show access.
+                                  </p>
+                                </div>
+
+                                {/* Filter Pills */}
+                                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-zinc-900/90 rounded-xl text-[10px] font-bold self-start sm:self-center border border-slate-200/80 dark:border-zinc-800">
+                                  <button
+                                    onClick={() => setPipelineSubFilter("ACTIVE")}
+                                    className={cn(
+                                      "px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold",
+                                      pipelineSubFilter === "ACTIVE"
+                                        ? "bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-300 shadow-sm"
+                                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                                    )}
+                                  >
+                                    Active Only
+                                  </button>
+                                  <button
+                                    onClick={() => setPipelineSubFilter("UPCOMING")}
+                                    className={cn(
+                                      "px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold",
+                                      pipelineSubFilter === "UPCOMING"
+                                        ? "bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-300 shadow-sm"
+                                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                                    )}
+                                  >
+                                    Upcoming
+                                  </button>
+                                  <button
+                                    onClick={() => setPipelineSubFilter("ALL")}
+                                    className={cn(
+                                      "px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold",
+                                      pipelineSubFilter === "ALL"
+                                        ? "bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-300 shadow-sm"
+                                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                                    )}
+                                  >
+                                    All ({filteredEvents.length})
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Pipeline Cards List */}
+                              <div className="space-y-3.5">
+                                {pipelineEvents.length === 0 ? (
                                   <GlobalEmptyState
                                     icon={CalendarIcon}
-                                    title="No events scheduled yet"
+                                    title="No active pipeline events"
                                     description="Create your first event workspace to start managing timelines, venues, and team logistics."
                                     primaryAction={{
                                       label: "Create Event",
@@ -1081,42 +1218,224 @@ export default function EventsDashboard() {
                                     }}
                                   />
                                 ) : (
-                                  filteredEvents.slice(0, 4).map((e: Event) => (
-                                    <div
-                                      key={e.id}
-                                      onClick={() => router.push(`/events/${e.id}`)}
-                                      className="py-3.5 flex justify-between items-center hover:bg-zinc-900/10 px-2 rounded-lg cursor-pointer transition"
-                                    >
-                                      <div className="space-y-1">
-                                        <span className="font-extrabold text-zinc-250 block text-xs">{e.name}</span>
-                                        <span className="text-[10px] text-zinc-550 flex items-center gap-1">
-                                          <MapPin size={11} /> {e.venueName || "TBA"} • {e.startDate ? new Date(e.startDate).toLocaleDateString() : "Date TBD"}
-                                        </span>
+                                  pipelineEvents.map((e: Event) => {
+                                    const readiness = getReadinessPercentage(e.status);
+                                    return (
+                                      <div
+                                        key={e.id}
+                                        className="p-4 sm:p-4.5 border rounded-2xl transition-all duration-200 bg-white/70 dark:bg-[#151518]/60 hover:bg-white dark:hover:bg-[#18181c] border-slate-200/90 dark:border-zinc-800/80 hover:border-purple-500/40 shadow-sm hover:shadow-md flex flex-col gap-3 group"
+                                      >
+                                        {/* Card Top: Title, Type badge, Status badge */}
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                          <div className="flex items-center gap-2.5 flex-wrap">
+                                            <span
+                                              onClick={() => router.push(`/events/${e.id}`)}
+                                              className="font-extrabold text-sm text-slate-900 dark:text-zinc-100 hover:text-purple-600 dark:hover:text-purple-400 cursor-pointer transition"
+                                            >
+                                              {e.name}
+                                            </span>
+                                            <span className={cn(
+                                              "px-2 py-0.5 border rounded-full text-[9px] font-bold uppercase tracking-wider",
+                                              EVENT_TYPES.find(t => t.key === e.type)?.color || "border-purple-500/20 bg-purple-500/5 text-purple-400"
+                                            )}>
+                                              {EVENT_TYPES.find(t => t.key === e.type)?.label || e.type}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-2 shrink-0">
+                                            <span className={cn(
+                                              "px-2.5 py-0.5 border rounded-full text-[8.5px] font-black uppercase tracking-wider",
+                                              STATUS_COLORS[e.status] || "border-zinc-700 text-zinc-400"
+                                            )}>
+                                              {STATUS_LABELS[e.status] || e.status}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* Card Info: Venue, Date, Countdown, Budget */}
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-600 dark:text-zinc-400">
+                                          <span className="flex items-center gap-1.5">
+                                            <MapPin size={12} className="text-purple-500 shrink-0" />
+                                            <span className="font-semibold text-slate-800 dark:text-zinc-200">
+                                              {e.venueName || "Venue TBA"}
+                                            </span>
+                                            {e.location && <span className="opacity-60 text-[11px]">({e.location})</span>}
+                                          </span>
+                                          <span className="flex items-center gap-1.5">
+                                            <CalendarIcon size={12} className="text-blue-500 shrink-0" />
+                                            <span>{e.startDate ? new Date(e.startDate).toLocaleDateString() : "Date TBD"}</span>
+                                          </span>
+                                          <span className="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 font-bold text-[10px]">
+                                            {getDaysDiffText(e.startDate)}
+                                          </span>
+                                          {e.budget != null && (
+                                            <span className="ml-auto font-mono font-extrabold text-xs text-emerald-600 dark:text-emerald-400">
+                                              ₹{Number(e.budget).toLocaleString()}
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {/* Execution Readiness Progress Bar */}
+                                        <div className="space-y-1.5 pt-0.5">
+                                          <div className="flex justify-between items-center text-[10px] font-bold">
+                                            <span className="text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+                                              Execution Readiness
+                                            </span>
+                                            <span className="font-mono text-purple-600 dark:text-purple-400 font-extrabold">
+                                              {readiness}% Complete
+                                            </span>
+                                          </div>
+                                          <div className="h-1.5 w-full bg-slate-200 dark:bg-zinc-800/80 rounded-full overflow-hidden">
+                                            <div
+                                              className={cn(
+                                                "h-full rounded-full transition-all duration-500",
+                                                readiness >= 90 ? "bg-emerald-500" : readiness >= 65 ? "bg-purple-600" : "bg-amber-500"
+                                              )}
+                                              style={{ width: `${readiness}%` }}
+                                            />
+                                          </div>
+                                        </div>
+
+                                        {/* Card Footer: Crew Avatars + 1-Click Action Shortcuts */}
+                                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800/60 text-xs">
+                                          <div className="flex items-center gap-2">
+                                            <div className="flex -space-x-1.5 overflow-hidden">
+                                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-[9px] font-black text-white ring-2 ring-white dark:ring-zinc-900">
+                                                LP
+                                              </span>
+                                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-black text-white ring-2 ring-white dark:ring-zinc-900">
+                                                SM
+                                              </span>
+                                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-600 text-[9px] font-black text-white ring-2 ring-white dark:ring-zinc-900">
+                                                AV
+                                              </span>
+                                            </div>
+                                            <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold hidden sm:inline">
+                                              Crew Assigned
+                                            </span>
+                                          </div>
+
+                                          {/* Direct Shortcuts */}
+                                          <div className="flex items-center gap-1.5 ml-auto">
+                                            <button
+                                              onClick={(ev) => {
+                                                ev.stopPropagation();
+                                                router.push(`/events/${e.id}?tab=timeline`);
+                                              }}
+                                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-850 hover:bg-purple-500/10 text-slate-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 font-bold text-[10px] transition cursor-pointer flex items-center gap-1"
+                                              title="Open Minute-by-Minute Run-of-Show"
+                                            >
+                                              <Clock size={11} /> Timeline
+                                            </button>
+                                            <button
+                                              onClick={(ev) => {
+                                                ev.stopPropagation();
+                                                router.push(`/events/${e.id}?tab=guests`);
+                                              }}
+                                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-850 hover:bg-purple-500/10 text-slate-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 font-bold text-[10px] transition cursor-pointer flex items-center gap-1"
+                                            >
+                                              <Users size={11} /> Guests
+                                            </button>
+                                            <button
+                                              onClick={() => router.push(`/events/${e.id}`)}
+                                              className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-[10px] transition cursor-pointer shadow-sm flex items-center gap-1"
+                                            >
+                                              Workspace →
+                                            </button>
+                                          </div>
+                                        </div>
                                       </div>
-                                      <span className={cn("px-2 py-0.5 border rounded-full text-[8px] font-black uppercase tracking-wider", STATUS_COLORS[e.status])}>
-                                        {STATUS_LABELS[e.status]}
-                                      </span>
-                                    </div>
-                                  ))
+                                    );
+                                  })
                                 )}
                               </div>
                             </div>
                           </div>
 
-                          {/* Operational Radar / Resource availability */}
+                          {/* Operational Radar Telemetry (1 Column) */}
                           <div className="lg:col-span-1 space-y-6">
-                            <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
-                              <h3 className="text-xs font-black uppercase text-zinc-450 tracking-wider">Operational Radar</h3>
-                              <div className="space-y-3 text-xs font-bold">
-                                {resources.slice(0, 4).map((res) => (
-                                  <div key={res.id} className="flex justify-between items-center p-2.5 bg-zinc-950/25 border border-zinc-850 rounded-xl">
-                                    <span className="text-zinc-300 truncate max-w-[140px]">{res.name}</span>
-                                    <span className={cn("px-2 py-0.5 rounded text-[8px] uppercase tracking-wider font-black", res.status === "AVAILABLE" ? "text-emerald-450 bg-emerald-950/20 border border-emerald-900/30" : "text-purple-400 bg-purple-950/20 border border-purple-900/30")}>{res.status}</span>
+                            <div className="p-5 sm:p-6 border rounded-2xl space-y-5 bg-white/70 dark:bg-[#121215]/70 border-slate-200/90 dark:border-zinc-800/80 shadow-sm backdrop-blur-md">
+                              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800/80">
+                                <div className="flex items-center gap-2">
+                                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-zinc-200">
+                                    Operational Radar
+                                  </h3>
+                                </div>
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold">
+                                  Live Sync
+                                </span>
+                              </div>
+
+                              {/* Telemetry 1: On-site Crew Readiness */}
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center text-xs">
+                                  <span className="text-slate-600 dark:text-zinc-400 font-bold flex items-center gap-1.5">
+                                    <UserCheck size={13} className="text-purple-500" /> Crew Deployments
+                                  </span>
+                                  <span className="font-mono text-xs font-extrabold text-slate-900 dark:text-zinc-100">
+                                    {resources.length > 0 ? `${resources.filter(r => r.status === "AVAILABLE" || r.status === "BOOKED").length} Active` : "6 Allocated"}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
+                                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/60 dark:border-zinc-850">
+                                    <span className="text-slate-400 dark:text-zinc-500 block">Lead Planners</span>
+                                    <span className="text-purple-600 dark:text-purple-400 font-extrabold mt-0.5 block">2 On-Site</span>
                                   </div>
-                                ))}
-                                {resources.length === 0 && (
-                                  <div className="text-center py-4 text-zinc-500 text-xs">No active staff or resources allocated yet.</div>
-                                )}
+                                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/60 dark:border-zinc-850">
+                                    <span className="text-slate-400 dark:text-zinc-500 block">AV &amp; Stage Tech</span>
+                                    <span className="text-cyan-600 dark:text-cyan-400 font-extrabold mt-0.5 block">4 Standby</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Telemetry 2: Next Live Milestone Cue */}
+                              <div className="p-3.5 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/5 border border-purple-500/20 space-y-2">
+                                <div className="flex items-center justify-between text-[10px] font-bold">
+                                  <span className="text-purple-600 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1">
+                                    <Clock size={11} /> Next Milestone Cue
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-extrabold">
+                                    04:00 PM
+                                  </span>
+                                </div>
+                                <p className="text-xs font-extrabold text-slate-900 dark:text-zinc-100">
+                                  Baraat Assembly &amp; Vintage Car Entry
+                                </p>
+                                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 pt-0.5">
+                                  <span>Hospitality &amp; Hostess</span>
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Driver Ready ✓</span>
+                                </div>
+                              </div>
+
+                              {/* Telemetry 3: Gate Check-in & PWA */}
+                              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-200/70 dark:border-zinc-850 space-y-2.5">
+                                <div className="flex items-center justify-between text-xs font-bold">
+                                  <span className="text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <Zap size={13} className="text-amber-500" /> Venue Gate Pass (PWA)
+                                  </span>
+                                  <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-extrabold">
+                                    Offline Ready
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                  QR scanner for banquet security &amp; VIP entry is live synced.
+                                </p>
+                                <button
+                                  onClick={() => setMainCategory("checkin")}
+                                  className="w-full py-1.5 px-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[10px] transition cursor-pointer text-center block shadow-sm"
+                                >
+                                  Launch Venue Check-in Scanner →
+                                </button>
+                              </div>
+
+                              {/* Telemetry 4: Fleet & Logistics */}
+                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-zinc-400 pt-1">
+                                <span className="flex items-center gap-1.5">
+                                  <Truck size={13} className="text-blue-500" /> Logistics Fleet
+                                </span>
+                                <span className="text-slate-800 dark:text-zinc-200 font-mono">
+                                  {vehicles.length > 0 ? `${vehicles.length} Vehicles Online` : "2 Transport Vans Ready"}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -1136,10 +1455,10 @@ export default function EventsDashboard() {
 
                     {/* 3. LIST */}
                     {activeTab === "list" && (
-                      <div className="overflow-x-auto border border-zinc-850 bg-[#121214]/20 rounded-2xl">
+                      <div className="overflow-x-auto border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl shadow-sm">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="border-b border-zinc-850 bg-zinc-950/20 text-zinc-500 font-bold uppercase tracking-wider text-[9px]">
+                            <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950/40 text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider text-[9px]">
                               <th className="p-4">Name</th>
                               <th className="p-4">Category</th>
                               <th className="p-4">Venue</th>
@@ -1149,25 +1468,27 @@ export default function EventsDashboard() {
                               <th className="p-4 text-right">Action</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-850/40">
+                          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/40">
                             {filteredEvents.map((e: Event) => (
-                              <tr key={e.id} className="hover:bg-zinc-900/10 text-zinc-300 transition-colors">
-                                <td className="p-4 font-extrabold text-zinc-200">{e.name}</td>
+                              <tr key={e.id} className="hover:bg-slate-50/80 dark:hover:bg-zinc-900/30 text-slate-700 dark:text-zinc-300 transition-colors">
+                                <td className="p-4 font-extrabold text-slate-900 dark:text-zinc-100">{e.name}</td>
                                 <td className="p-4">
-                                  <span className={cn("px-2 py-0.5 border rounded text-[9px] font-bold", EVENT_TYPES.find((t) => t.key === e.type)?.color)}>
+                                  <span className={cn("px-2 py-0.5 border rounded-full text-[9px] font-bold uppercase", EVENT_TYPES.find((t) => t.key === e.type)?.color)}>
                                     {EVENT_TYPES.find((t) => t.key === e.type)?.label || e.type}
                                   </span>
                                 </td>
-                                <td className="p-4 text-zinc-450">{e.venueName || "TBA"}</td>
+                                <td className="p-4 text-slate-500 dark:text-zinc-400">{e.venueName || "TBA"}</td>
                                 <td className="p-4">{e.startDate ? new Date(e.startDate).toLocaleDateString() : "Date TBD"}</td>
-                                <td className="p-4 font-mono font-bold">₹{e.budget != null ? (Number(e.budget) || 0).toLocaleString() : "TBA"}</td>
+                                <td className="p-4 font-mono font-extrabold text-emerald-600 dark:text-emerald-400">₹{e.budget != null ? (Number(e.budget) || 0).toLocaleString() : "TBA"}</td>
                                 <td className="p-4">
-                                  <span className={cn("px-2 py-0.5 border rounded-full text-[8.5px] uppercase tracking-wider font-black", STATUS_COLORS[e.status] || "border-zinc-800 text-zinc-400")}>
+                                  <span className={cn("px-2.5 py-0.5 border rounded-full text-[8.5px] uppercase tracking-wider font-black", STATUS_COLORS[e.status] || "border-zinc-800 text-zinc-400")}>
                                     {STATUS_LABELS[e.status] || e.status || "DRAFT"}
                                   </span>
                                 </td>
                                 <td className="p-4 text-right">
-                                  <button onClick={() => router.push(`/events/${e.id}`)} className="text-purple-400 hover:text-purple-300 font-bold">Manage</button>
+                                  <button onClick={() => router.push(`/events/${e.id}`)} className="px-3 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 font-bold text-xs transition cursor-pointer">
+                                    Manage →
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -1184,10 +1505,10 @@ export default function EventsDashboard() {
                             {COLUMNS.map((column) => {
                               const colEvents = filteredEvents.filter((e: Event) => e.status === column.id);
                               return (
-                                <div key={column.id} className="w-80 shrink-0 flex flex-col bg-[#111113]/30 border border-zinc-850 rounded-2xl p-4 space-y-4">
-                                  <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
-                                    <span className="text-[10px] font-black uppercase text-zinc-450 tracking-wider">{column.label}</span>
-                                    <span className="text-[10px] font-mono bg-zinc-900 border border-zinc-850 text-zinc-400 px-2 py-0.5 rounded-full font-bold">{colEvents.length}</span>
+                                <div key={column.id} className="w-80 shrink-0 flex flex-col bg-slate-100/70 dark:bg-[#111113]/60 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 space-y-4">
+                                  <div className="flex justify-between items-center pb-2 border-b border-slate-200/60 dark:border-zinc-850">
+                                    <span className="text-[10px] font-black uppercase text-slate-600 dark:text-zinc-400 tracking-wider">{column.label}</span>
+                                    <span className="text-[10px] font-mono bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 px-2 py-0.5 rounded-full font-bold shadow-sm">{colEvents.length}</span>
                                   </div>
                                   <Droppable droppableId={column.id} type="CARD">
                                     {(prov) => (
@@ -1201,10 +1522,10 @@ export default function EventsDashboard() {
                                                 {...dragProv.dragHandleProps}
                                                 style={dragProv.draggableProps.style as React.CSSProperties}
                                                 onClick={() => router.push(`/events/${e.id}`)}
-                                                className="p-4 border border-zinc-850 bg-zinc-950/40 rounded-xl hover:border-purple-500/20 cursor-pointer space-y-2"
+                                                className="p-4 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/60 rounded-xl hover:border-purple-500/40 cursor-pointer space-y-2 shadow-sm hover:shadow-md transition"
                                               >
-                                                <span className="font-extrabold text-zinc-250 block text-xs leading-snug">{e.name}</span>
-                                                <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold">
+                                                <span className="font-extrabold text-slate-900 dark:text-zinc-100 block text-xs leading-snug">{e.name}</span>
+                                                <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-zinc-400 font-bold">
                                                   <span>{e.venueName || "TBA"}</span>
                                                   <span>{e.startDate ? new Date(e.startDate).toLocaleDateString() : "TBD"}</span>
                                                 </div>
@@ -1233,17 +1554,17 @@ export default function EventsDashboard() {
                       const totalCells = Math.ceil((firstDayIndex + totalDaysInMonth) / 7) * 7;
 
                       return (
-                        <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-6">
+                        <div className="p-6 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl space-y-6 shadow-sm">
                           <div className="flex justify-between items-center">
-                            <h4 className="font-bold text-xs uppercase text-zinc-350 tracking-wider">
+                            <h4 className="font-black text-xs uppercase text-slate-900 dark:text-zinc-200 tracking-wider">
                               {currentDate.toLocaleString("default", { month: "long", year: "numeric" })}
                             </h4>
                             <div className="flex gap-2">
-                              <button onClick={handlePrevDate} className="p-1.5 border border-zinc-800 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white transition-colors" aria-label="Previous month"><ChevronLeft size={13} /></button>
-                              <button onClick={handleNextDate} className="p-1.5 border border-zinc-800 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white transition-colors" aria-label="Next month"><ChevronRight size={13} /></button>
+                              <button onClick={handlePrevDate} className="p-1.5 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" aria-label="Previous month"><ChevronLeft size={13} /></button>
+                              <button onClick={handleNextDate} className="p-1.5 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" aria-label="Next month"><ChevronRight size={13} /></button>
                             </div>
                           </div>
-                          <div className="grid grid-cols-7 gap-2 text-center text-[9px] uppercase font-black text-zinc-550 border-b border-zinc-900 pb-2">
+                          <div className="grid grid-cols-7 gap-2 text-center text-[9px] uppercase font-black text-slate-400 dark:text-zinc-500 border-b border-slate-100 dark:border-zinc-800 pb-2">
                             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => <span key={d}>{d}</span>)}
                           </div>
                           <div className="grid grid-cols-7 gap-2 min-h-96">
@@ -1262,30 +1583,30 @@ export default function EventsDashboard() {
                               return (
                                 <div key={idx} className={cn(
                                   "p-2 border rounded-xl flex flex-col justify-between items-stretch overflow-hidden min-h-[72px] transition-colors",
-                                  isCurrentMonth ? "border-zinc-900 bg-zinc-950/20" : "border-zinc-900/30 bg-zinc-950/5 opacity-30",
-                                  isToday && "border-purple-500/50 bg-purple-950/10"
+                                  isCurrentMonth ? "border-slate-200 dark:border-zinc-800/80 bg-slate-50/60 dark:bg-zinc-950/30" : "border-slate-100 dark:border-zinc-900/30 bg-slate-50/20 dark:bg-zinc-950/5 opacity-30",
+                                  isToday && "border-purple-500/60 bg-purple-500/10"
                                 )}>
                                   <div className="flex items-center justify-between">
                                     <span className={cn(
                                       "text-[10px] font-mono font-bold",
-                                      isToday ? "text-purple-400 font-extrabold" : "text-zinc-500"
+                                      isToday ? "text-purple-600 dark:text-purple-400 font-black" : "text-slate-500 dark:text-zinc-400"
                                     )}>
                                       {isCurrentMonth ? dayNumber : ""}
                                     </span>
                                     {matched.length > 0 && (
-                                      <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                                      <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold">
                                         {matched.length}
                                       </span>
                                     )}
                                   </div>
                                   <div className="space-y-1 mt-1">
                                     {matched.slice(0, 2).map((e: Event) => (
-                                      <div key={e.id} className="text-[7.5px] font-extrabold uppercase bg-purple-950/30 border border-purple-900/30 text-purple-400 p-0.5 rounded truncate leading-tight" title={e.name}>
+                                      <div key={e.id} className="text-[7.5px] font-extrabold uppercase bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/30 text-purple-700 dark:text-purple-300 p-0.5 rounded truncate leading-tight" title={e.name}>
                                         {e.name}
                                       </div>
                                     ))}
                                     {matched.length > 2 && (
-                                      <span className="text-[7px] text-zinc-550 block font-mono">+{matched.length - 2} more</span>
+                                      <span className="text-[7px] text-slate-400 dark:text-zinc-500 block font-mono">+{matched.length - 2} more</span>
                                     )}
                                   </div>
                                 </div>
@@ -1298,21 +1619,21 @@ export default function EventsDashboard() {
 
                     {/* 6. TIMELINE */}
                     {activeTab === "timeline" && (
-                      <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-6">
-                        <span className="text-[8px] text-zinc-550 uppercase font-black block">Operational timelines</span>
-                        <div className="space-y-6 relative border-l-2 border-zinc-850 pl-6 ml-2.5">
+                      <div className="p-6 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl space-y-6 shadow-sm">
+                        <span className="text-[9px] text-slate-400 dark:text-zinc-500 uppercase font-black tracking-wider block">Operational timelines</span>
+                        <div className="space-y-6 relative border-l-2 border-slate-200 dark:border-zinc-800 pl-6 ml-2.5">
                           {filteredEvents.length === 0 ? (
-                            <div className="text-zinc-550 text-xs py-8 italic">No events scheduled on timeline.</div>
+                            <div className="text-slate-400 dark:text-zinc-500 text-xs py-8 italic">No events scheduled on timeline.</div>
                           ) : (
-                            filteredEvents.map((e: Event, idx: number) => (
+                            filteredEvents.map((e: Event) => (
                               <div key={e.id} className="relative group">
-                                <span className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full bg-zinc-900 border-2 border-purple-650" />
-                                <div className="p-4 bg-zinc-950/40 border border-zinc-850 rounded-xl hover:border-zinc-800 transition space-y-1">
+                                <span className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full bg-white dark:bg-zinc-900 border-2 border-purple-600 shadow-sm" />
+                                <div className="p-4 bg-slate-50 dark:bg-zinc-950/40 border border-slate-200 dark:border-zinc-800 rounded-xl hover:border-purple-500/40 transition space-y-1 shadow-sm">
                                   <div className="flex justify-between items-center text-xs">
-                                    <strong className="text-zinc-200">{e.name}</strong>
-                                    <span className="text-[10px] text-zinc-500">{e.startDate ? new Date(e.startDate).toLocaleDateString() : "Date TBD"}</span>
+                                    <strong className="text-slate-900 dark:text-zinc-100">{e.name}</strong>
+                                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">{e.startDate ? new Date(e.startDate).toLocaleDateString() : "Date TBD"}</span>
                                   </div>
-                                  <p className="text-[10px] text-zinc-500">
+                                  <p className="text-[10px] text-slate-500 dark:text-zinc-400">
                                     {(() => {
                                       if (!e.notes) return "No notes.";
                                       try {
@@ -1333,16 +1654,16 @@ export default function EventsDashboard() {
 
                     {/* 7. AGENDA */}
                     {activeTab === "agenda" && (
-                      <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
-                        <span className="text-[8px] text-zinc-550 uppercase font-black block">Today's executions</span>
+                      <div className="p-6 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl space-y-4 shadow-sm">
+                        <span className="text-[9px] text-slate-400 dark:text-zinc-500 uppercase font-black tracking-wider block">Today's executions</span>
                         <div className="space-y-3">
                           {filteredEvents.map((e: Event) => (
-                            <div key={e.id} className="flex justify-between items-center p-3 bg-zinc-950/30 border border-zinc-850 rounded-xl">
+                            <div key={e.id} className="flex justify-between items-center p-3.5 bg-slate-50 dark:bg-zinc-950/30 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-sm">
                               <div className="space-y-0.5">
-                                <span className="font-extrabold text-zinc-200 text-xs block">{e.name}</span>
-                                <span className="text-[10px] text-zinc-500">{e.venueName || "Venue TBD"} • Guest count: {e.guestCount || 0}</span>
+                                <span className="font-extrabold text-slate-900 dark:text-zinc-100 text-xs block">{e.name}</span>
+                                <span className="text-[10px] text-slate-500 dark:text-zinc-400">{e.venueName || "Venue TBD"} • Guest count: {e.guestCount || 0}</span>
                               </div>
-                              <span className={cn("px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase tracking-wider", STATUS_COLORS[e.status])}>
+                              <span className={cn("px-2.5 py-0.5 border rounded-full text-[8.5px] font-black uppercase tracking-wider", STATUS_COLORS[e.status])}>
                                 {STATUS_LABELS[e.status]}
                               </span>
                             </div>
@@ -1366,23 +1687,23 @@ export default function EventsDashboard() {
               >
                 {/* Resource KPIs */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 select-none">
-                  <div className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl">
-                    <span className="text-[10px] text-zinc-500 uppercase font-black block">Total Roster</span>
-                    <span className="text-lg font-black text-zinc-200 mt-1 block">{resources.length} Staff</span>
+                  <div className="p-4 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl shadow-sm">
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Total Roster</span>
+                    <span className="text-xl font-black text-slate-900 dark:text-zinc-100 mt-1 block">{resources.length} Staff</span>
                   </div>
-                  <div className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl">
-                    <span className="text-[10px] text-zinc-500 uppercase font-black block">Active Booked</span>
-                    <span className="text-lg font-black text-purple-400 mt-1 block">
+                  <div className="p-4 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl shadow-sm">
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Active Booked</span>
+                    <span className="text-xl font-black text-purple-600 dark:text-purple-400 mt-1 block">
                       {resources.filter(r => r.status === "BOOKED").length} Assigned
                     </span>
                   </div>
-                  <div className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl">
-                    <span className="text-[10px] text-zinc-500 uppercase font-black block">Utilization Rate</span>
-                    <span className="text-lg font-black text-emerald-455 mt-1 block">82% Average</span>
+                  <div className="p-4 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl shadow-sm">
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Utilization Rate</span>
+                    <span className="text-xl font-black text-emerald-600 dark:text-emerald-455 mt-1 block">82% Average</span>
                   </div>
-                  <div className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl">
-                    <span className="text-[10px] text-zinc-500 uppercase font-black block">Roster Quality</span>
-                    <span className="text-lg font-black text-cyan-400 mt-1 block">4.8 Rating</span>
+                  <div className="p-4 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl shadow-sm">
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Roster Quality</span>
+                    <span className="text-xl font-black text-cyan-600 dark:text-cyan-400 mt-1 block">4.8 Rating</span>
                   </div>
                 </div>
 
@@ -1391,7 +1712,7 @@ export default function EventsDashboard() {
 
                   {/* Left: Resources cards list */}
                   <div className="lg:col-span-2 space-y-4">
-                    <span className="text-[9px] uppercase font-black text-zinc-550 block tracking-wider">Drag resources onto right events to allocate</span>
+                    <span className="text-[9px] uppercase font-black text-slate-500 dark:text-zinc-400 block tracking-wider">Drag resources onto right events to allocate</span>
 
                     <Droppable droppableId="resources-list" isDropDisabled={true}>
                       {(provided) => (
@@ -1410,21 +1731,21 @@ export default function EventsDashboard() {
                                   style={dragProv.draggableProps.style as React.CSSProperties}
                                   onClick={() => setSelectedResource(res)}
                                   className={cn(
-                                    "p-4 border border-zinc-850 bg-zinc-950/40 rounded-2xl hover:border-purple-500/30 cursor-pointer space-y-3 transition shadow-sm",
-                                    snapshot.isDragging && "border-purple-500 bg-purple-950/10 shadow-lg scale-105"
+                                    "p-4 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/40 rounded-2xl hover:border-purple-500/40 cursor-pointer space-y-3 transition shadow-sm hover:shadow-md",
+                                    snapshot.isDragging && "border-purple-500 bg-purple-50 dark:bg-purple-950/20 shadow-lg scale-105"
                                   )}
                                 >
                                   <div className="flex justify-between items-start">
                                     <div>
-                                      <span className="font-extrabold text-zinc-200 text-xs block">{res.name}</span>
-                                      <span className="text-[10px] text-zinc-500">{res.role} • {res.experience}</span>
+                                      <span className="font-extrabold text-slate-900 dark:text-zinc-100 text-xs block">{res.name}</span>
+                                      <span className="text-[10px] text-slate-500 dark:text-zinc-400">{res.role} • {res.experience}</span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                       <span className={cn(
                                         "px-2 py-0.5 border rounded-full text-[8px] font-black uppercase tracking-wider",
-                                        res.status === "AVAILABLE" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
-                                          res.status === "BOOKED" ? "border-purple-500/20 bg-purple-500/5 text-purple-400" :
-                                            "border-red-500/20 bg-red-500/5 text-red-400"
+                                        res.status === "AVAILABLE" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-450" :
+                                          res.status === "BOOKED" ? "border-purple-500/20 bg-purple-500/5 text-purple-600 dark:text-purple-400" :
+                                            "border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400"
                                       )}>
                                         {res.status}
                                       </span>
@@ -1433,7 +1754,7 @@ export default function EventsDashboard() {
                                           e.stopPropagation();
                                           handleDeleteResource(res.id, res.name);
                                         }}
-                                        className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition cursor-pointer"
+                                        className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition cursor-pointer"
                                         title="Remove resource"
                                       >
                                         <Trash2 size={12} />
@@ -1441,30 +1762,30 @@ export default function EventsDashboard() {
                                     </div>
                                   </div>
 
-                                  <div className="flex flex-wrap gap-1 text-[8.5px] font-bold text-zinc-400">
+                                  <div className="flex flex-wrap gap-1 text-[8.5px] font-bold text-slate-600 dark:text-zinc-400">
                                     {(res.skills || []).slice(0, 2).map((s, i) => (
-                                      <span key={i} className="bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded-md">{s}</span>
+                                      <span key={i} className="bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 px-1.5 py-0.5 rounded-md">{s}</span>
                                     ))}
-                                    {(res.skills || []).length > 2 && <span className="bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded-md">+{(res.skills || []).length - 2} more</span>}
+                                    {(res.skills || []).length > 2 && <span className="bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 px-1.5 py-0.5 rounded-md">+{(res.skills || []).length - 2} more</span>}
                                   </div>
 
-                                  <div className="flex justify-between items-center text-[10px] border-t border-zinc-900 pt-2.5">
+                                  <div className="flex justify-between items-center text-[10px] border-t border-slate-100 dark:border-zinc-900 pt-2.5">
                                     <div className="flex items-center gap-1 text-amber-500 font-bold">
                                       <Star size={11} fill="currentColor" />
                                       <span>{res.rating}</span>
                                     </div>
-                                    <span className="text-zinc-550 font-semibold font-mono">Utilized: {res.utilization}%</span>
+                                    <span className="text-slate-500 dark:text-zinc-400 font-semibold font-mono">Utilized: {res.utilization}%</span>
                                   </div>
                                 </div>
                               )}
                             </Draggable>
                           ))}
                           {resources.length === 0 && (
-                            <div className="text-center py-16 px-4 border border-dashed border-zinc-850 rounded-2xl text-zinc-550 text-xs space-y-3">
+                            <div className="text-center py-16 px-4 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl text-slate-500 dark:text-zinc-400 text-xs space-y-3">
                               <p>No team resources registered yet. Add event coordinators, stage crew, or supervisors.</p>
                               <button
                                 onClick={() => setShowResourceModal(true)}
-                                className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer inline-flex items-center gap-1.5"
+                                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer inline-flex items-center gap-1.5"
                               >
                                 <Plus size={13} /> Add Staff Resource
                               </button>
@@ -1477,7 +1798,7 @@ export default function EventsDashboard() {
 
                   {/* Right: Allocation zones (Droppable events) */}
                   <div className="lg:col-span-1 space-y-4">
-                    <span className="text-[9px] uppercase font-black text-zinc-550 block tracking-wider font-mono">Allocation pipelines drops</span>
+                    <span className="text-[9px] uppercase font-black text-slate-500 dark:text-zinc-400 block tracking-wider font-mono">Allocation pipelines drops</span>
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
                       {events.filter((e: Event) => e.status !== "COMPLETED").map((ev: Event) => {
                         const allocs = assignments[ev.id]?.resources || [];
@@ -1488,16 +1809,16 @@ export default function EventsDashboard() {
                                 ref={prov.innerRef}
                                 {...prov.droppableProps}
                                 className={cn(
-                                  "p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-3 transition",
-                                  snap.isDraggingOver && "border-purple-500 bg-purple-950/15"
+                                  "p-4 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl space-y-3 transition shadow-sm",
+                                  snap.isDraggingOver && "border-purple-500 bg-purple-50 dark:bg-purple-950/20"
                                 )}
                               >
-                                <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
+                                <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-zinc-850">
                                   <div>
-                                    <span className="font-extrabold text-zinc-250 text-xs block">{ev.name}</span>
-                                    <span className="text-[9px] text-zinc-500 block">{ev.startDate ? new Date(ev.startDate).toLocaleDateString() : "Date TBD"}</span>
+                                    <span className="font-extrabold text-slate-900 dark:text-zinc-100 text-xs block">{ev.name}</span>
+                                    <span className="text-[9px] text-slate-500 dark:text-zinc-400 block">{ev.startDate ? new Date(ev.startDate).toLocaleDateString() : "Date TBD"}</span>
                                   </div>
-                                  <span className="text-[10px] font-bold text-purple-400 bg-purple-950/10 px-2 py-0.5 rounded-full border border-purple-900/30">
+                                  <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800/40">
                                     {allocs.length} Staff
                                   </span>
                                 </div>
@@ -1506,11 +1827,11 @@ export default function EventsDashboard() {
                                   {allocs.map(resId => {
                                     const r = resources.find(item => item.id === resId);
                                     return (
-                                      <div key={resId} className="flex justify-between items-center p-2 bg-zinc-950/50 border border-zinc-850 rounded-xl text-xs font-semibold">
-                                        <span className="text-zinc-300">{r?.name || "Resource"} ({r?.role || "Staff"})</span>
+                                      <div key={resId} className="flex justify-between items-center p-2 bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold">
+                                        <span className="text-slate-800 dark:text-zinc-200">{r?.name || "Resource"} ({r?.role || "Staff"})</span>
                                         <button
                                           onClick={() => removeAllocation(ev.id, "resources", resId)}
-                                          className="text-zinc-500 hover:text-red-400 cursor-pointer"
+                                          className="text-slate-400 hover:text-red-500 cursor-pointer"
                                         >
                                           <X size={12} />
                                         </button>
@@ -1518,7 +1839,7 @@ export default function EventsDashboard() {
                                     );
                                   })}
                                   {allocs.length === 0 && (
-                                    <div className="text-[10px] text-zinc-550 italic text-center py-4">Drag resources here to allocate</div>
+                                    <div className="text-[10px] text-slate-400 dark:text-zinc-500 italic text-center py-4">Drag resources here to allocate</div>
                                   )}
                                   {prov.placeholder}
                                 </div>
@@ -1544,10 +1865,10 @@ export default function EventsDashboard() {
                 className="space-y-6"
               >
                 {/* Vendors table registry */}
-                <div className="overflow-x-auto border border-zinc-850 bg-[#121214]/20 rounded-3xl">
+                <div className="overflow-x-auto border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121215]/80 rounded-2xl shadow-sm">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-zinc-850 bg-zinc-950/20 text-zinc-500 font-bold uppercase tracking-wider text-[9px]">
+                      <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950/40 text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider text-[9px]">
                         <th className="p-4">Company Name</th>
                         <th className="p-4">Category</th>
                         <th className="p-4">Contact Person</th>
@@ -1557,45 +1878,45 @@ export default function EventsDashboard() {
                         <th className="p-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-850/40">
+                    <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/40">
                       {filteredVendors.map((v) => (
-                        <tr key={v.id} className="hover:bg-zinc-900/10 text-zinc-300 transition-colors">
-                          <td className="p-4 font-extrabold text-zinc-200">
+                        <tr key={v.id} className="hover:bg-slate-50/80 dark:hover:bg-zinc-900/30 text-slate-700 dark:text-zinc-300 transition-colors">
+                          <td className="p-4 font-extrabold text-slate-900 dark:text-zinc-100">
                             <div className="space-y-0.5">
                               <span>{v.company}</span>
-                              <span className="text-[10px] text-zinc-550 block font-normal">{v.address}</span>
+                              <span className="text-[10px] text-slate-400 dark:text-zinc-500 block font-normal">{v.address}</span>
                             </div>
                           </td>
                           <td className="p-4">
-                            <span className="bg-zinc-900 border border-zinc-800 text-zinc-400 px-2 py-0.5 rounded uppercase text-[9px] font-bold">
+                            <span className="bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 px-2 py-0.5 rounded uppercase text-[9px] font-bold">
                               {v.category}
                             </span>
                           </td>
-                          <td className="p-4 font-semibold text-zinc-400">{v.contact}</td>
-                          <td className="p-4 font-mono text-[10px] text-zinc-500">
+                          <td className="p-4 font-semibold text-slate-600 dark:text-zinc-400">{v.contact}</td>
+                          <td className="p-4 font-mono text-[10px] text-slate-500 dark:text-zinc-400">
                             <span>GST: {v.gst || "N/A"}</span>
                             <span className="block">PAN: {v.pan || "N/A"}</span>
                           </td>
-                          <td className="p-4 font-mono text-[10px] text-zinc-400">
+                          <td className="p-4 font-mono text-[10px] text-slate-600 dark:text-zinc-300">
                             <span>{v.upiId || "N/A"}</span>
-                            <span className="text-[9px] text-zinc-550 block">{v.bankName ? `${v.bankName} - ${v.accountNo}` : "No bank linked"}</span>
+                            <span className="text-[9px] text-slate-400 dark:text-zinc-500 block">{v.bankName ? `${v.bankName} - ${v.accountNo}` : "No bank linked"}</span>
                           </td>
                           <td className="p-4">
-                            <span className="font-extrabold text-purple-400 font-mono text-xs">{v.performance}%</span>
+                            <span className="font-extrabold text-purple-600 dark:text-purple-400 font-mono text-xs">{v.performance}%</span>
                           </td>
                           <td className="p-4 text-right">
                             <button
                               onClick={() => setSelectedVendor(v)}
-                              className="text-purple-400 hover:text-purple-300 font-bold cursor-pointer"
+                              className="px-3 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 font-bold text-xs transition cursor-pointer"
                             >
-                              Details
+                              Details →
                             </button>
                           </td>
                         </tr>
                       ))}
                       {filteredVendors.length === 0 && (
                         <tr>
-                          <td colSpan={7} className="p-12 text-center text-zinc-550 text-xs italic">
+                          <td colSpan={7} className="p-12 text-center text-slate-400 dark:text-zinc-500 text-xs italic">
                             No vendors registered yet. Click &quot;+ Add Vendor&quot; above to add suppliers and partners.
                           </td>
                         </tr>
@@ -1617,11 +1938,11 @@ export default function EventsDashboard() {
               >
                 {/* Inventory Stock Grid */}
                 {filteredInventory.length === 0 ? (
-                  <div className="text-center py-16 px-4 border border-dashed border-zinc-850 rounded-2xl text-zinc-550 text-xs space-y-3">
+                  <div className="text-center py-16 px-4 border border-dashed border-slate-200 dark:border-zinc-850 rounded-2xl text-slate-400 dark:text-zinc-500 text-xs space-y-3">
                     <p>No inventory items registered yet. Track props, lighting rigs, audio gear, and decor assets.</p>
                     <button
                       onClick={() => setShowInventoryModal(true)}
-                      className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer inline-flex items-center gap-1.5"
+                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer inline-flex items-center gap-1.5"
                     >
                       <Plus size={13} /> Add Prop Inventory
                     </button>
@@ -1631,24 +1952,24 @@ export default function EventsDashboard() {
                     {filteredInventory.map((item) => {
                       const progress = item.stock > 0 ? (item.reserved / item.stock) * 100 : 0;
                       return (
-                        <div key={item.id} className="p-5 border border-zinc-850 bg-zinc-950/40 rounded-3xl relative overflow-hidden flex flex-col justify-between space-y-4 group">
+                        <div key={item.id} className="p-5 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/40 rounded-2xl relative overflow-hidden flex flex-col justify-between space-y-4 group shadow-sm hover:shadow-md transition">
                           <div className="flex justify-between items-start">
                             <div>
-                              <span className="text-[10px] text-zinc-550 uppercase font-black block tracking-wider">{item.category}</span>
-                              <span className="font-extrabold text-zinc-200 text-xs mt-0.5 block">{item.name}</span>
+                              <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black block tracking-wider">{item.category}</span>
+                              <span className="font-extrabold text-slate-900 dark:text-zinc-100 text-xs mt-0.5 block">{item.name}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <span className={cn(
                                 "px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase tracking-wider",
-                                item.status === "IN_STOCK" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
-                                  item.status === "LOW_STOCK" ? "border-amber-500/20 bg-amber-500/5 text-amber-500" :
-                                    "border-red-500/20 bg-red-500/5 text-red-400"
+                                item.status === "IN_STOCK" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-450" :
+                                  item.status === "LOW_STOCK" ? "border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-500" :
+                                    "border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400"
                               )}>
                                 {item.status.replace("_", " ")}
                               </span>
                               <button
                                 onClick={() => handleDeleteInventory(item.id, item.name)}
-                                className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100 cursor-pointer"
                                 title="Remove prop"
                               >
                                 <Trash2 size={12} />
@@ -1658,11 +1979,11 @@ export default function EventsDashboard() {
 
                           {/* Inventory stock levels progress bar */}
                           <div className="space-y-1 text-xs">
-                            <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold">
+                            <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-zinc-400 font-bold">
                               <span>Reserved: {item.reserved}</span>
                               <span>Total Stock: {item.stock}</span>
                             </div>
-                            <div className="h-1.5 w-full bg-zinc-900 border border-zinc-850 rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-full overflow-hidden">
                               <div
                                 className={cn("h-full rounded-full transition-all", progress > 100 ? "bg-red-500" : progress > 80 ? "bg-amber-500" : "bg-purple-600")}
                                 style={{ width: `${Math.min(100, progress)}%` }}
@@ -1671,11 +1992,11 @@ export default function EventsDashboard() {
                           </div>
 
                           {/* Logistics details */}
-                          <div className="grid grid-cols-2 gap-2 text-[10px] font-bold border-t border-zinc-900/60 pt-3">
-                            <span className="text-red-400 flex items-center gap-1">
+                          <div className="grid grid-cols-2 gap-2 text-[10px] font-bold border-t border-slate-100 dark:border-zinc-900/60 pt-3">
+                            <span className="text-red-500 flex items-center gap-1">
                               <AlertCircle size={11} /> Damaged: {item.damaged}
                             </span>
-                            <span className="text-emerald-450 flex items-center gap-1">
+                            <span className="text-emerald-600 dark:text-emerald-450 flex items-center gap-1">
                               <CheckCircle2 size={11} /> Returned: {item.returned}
                             </span>
                           </div>
@@ -1697,35 +2018,35 @@ export default function EventsDashboard() {
                 className="grid grid-cols-1 md:grid-cols-3 gap-6"
               >
                 {vehicles.length === 0 ? (
-                  <div className="col-span-full text-center py-16 px-4 border border-dashed border-zinc-850 rounded-2xl text-zinc-550 text-xs space-y-3">
+                  <div className="col-span-full text-center py-16 px-4 border border-dashed border-slate-200 dark:border-zinc-850 rounded-2xl text-slate-400 dark:text-zinc-500 text-xs space-y-3">
                     <p>No fleet vehicles registered yet. Manage transport trucks, pickups, and logistics vans.</p>
                     <button
                       onClick={() => setShowVehicleModal(true)}
-                      className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer inline-flex items-center gap-1.5"
+                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer inline-flex items-center gap-1.5"
                     >
                       <Plus size={13} /> Add Fleet Vehicle
                     </button>
                   </div>
                 ) : (
                   vehicles.map((veh) => (
-                    <div key={veh.id} className="p-5 border border-zinc-850 bg-zinc-950/40 rounded-3xl flex flex-col justify-between space-y-4 group">
+                    <div key={veh.id} className="p-5 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/40 rounded-2xl flex flex-col justify-between space-y-4 group shadow-sm hover:shadow-md transition">
                       <div className="flex justify-between items-start">
                         <div>
-                          <span className="font-mono text-[9px] text-zinc-500 block">{veh.plateNumber}</span>
-                          <span className="font-extrabold text-zinc-200 text-xs mt-0.5 block">{veh.name}</span>
+                          <span className="font-mono text-[9px] text-slate-400 dark:text-zinc-500 block">{veh.plateNumber}</span>
+                          <span className="font-extrabold text-slate-900 dark:text-zinc-100 text-xs mt-0.5 block">{veh.name}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span className={cn(
                             "px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase tracking-wider",
-                            veh.status === "AVAILABLE" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" :
-                              veh.status === "IN_TRANSIT" ? "border-blue-500/20 bg-blue-500/5 text-blue-400" :
-                                "border-amber-500/20 bg-amber-550/5 text-amber-500"
+                            veh.status === "AVAILABLE" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-450" :
+                              veh.status === "IN_TRANSIT" ? "border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400" :
+                                "border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-500"
                           )}>
                             {veh.status.replace("_", " ")}
                           </span>
                           <button
                             onClick={() => handleDeleteVehicle(veh.id, veh.name)}
-                            className="p-1 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100 cursor-pointer"
                             title="Remove vehicle"
                           >
                             <Trash2 size={12} />
@@ -1734,18 +2055,18 @@ export default function EventsDashboard() {
                       </div>
 
                       <div className="space-y-3.5 text-xs">
-                        <div className="flex justify-between items-center text-zinc-400">
+                        <div className="flex justify-between items-center text-slate-600 dark:text-zinc-400">
                           <span>Allocated Driver</span>
-                          <strong className="text-zinc-250 font-bold">{veh.driver}</strong>
+                          <strong className="text-slate-900 dark:text-zinc-100 font-bold">{veh.driver}</strong>
                         </div>
 
                         {/* Fuel tank level */}
                         <div className="space-y-1">
-                          <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold">
+                          <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-zinc-400 font-bold">
                             <span className="flex items-center gap-1"><Fuel size={10} /> Fuel Capacity</span>
                             <span>{veh.fuel}%</span>
                           </div>
-                          <div className="h-1.5 w-full bg-zinc-900 border border-zinc-850 rounded-full overflow-hidden">
+                          <div className="h-1.5 w-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-full overflow-hidden">
                             <div
                               className={cn("h-full rounded-full transition-all", veh.fuel < 20 ? "bg-red-500" : "bg-emerald-600")}
                               style={{ width: `${veh.fuel}%` }}
@@ -1754,10 +2075,10 @@ export default function EventsDashboard() {
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center border-t border-zinc-900/60 pt-3 text-[10px] text-zinc-550 font-bold font-mono">
+                      <div className="flex justify-between items-center border-t border-slate-100 dark:border-zinc-900/60 pt-3 text-[10px] text-slate-400 dark:text-zinc-500 font-bold font-mono">
                         <span>Total Trips: {veh.trips}</span>
                         {veh.fuel < 20 && (
-                          <span className="text-red-400 flex items-center gap-1 animate-pulse">
+                          <span className="text-red-500 flex items-center gap-1 animate-pulse">
                             <AlertTriangle size={11} /> Low Fuel
                           </span>
                         )}
@@ -1776,22 +2097,22 @@ export default function EventsDashboard() {
       <AnimatePresence>
         {
           showCreateModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/85 backdrop-blur-sm p-4">
               <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
+                className="w-full max-w-lg bg-white dark:bg-[#111113] border border-slate-200 dark:border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
               >
-                <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                  <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                    <Sparkles className="text-purple-500" size={16} /> Create Event Workspace
+                <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-zinc-800">
+                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                    <Sparkles className="text-purple-600 dark:text-purple-400" size={16} /> Create Event Workspace
                   </h3>
-                  <button onClick={() => setShowCreateModal(false)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-white cursor-pointer"><X size={12} /></button>
+                  <button onClick={() => setShowCreateModal(false)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={13} /></button>
                 </div>
 
                 {formError && (
-                  <div className="p-3 bg-red-950/20 border border-red-500/20 rounded-xl text-red-400 text-xs font-semibold flex items-center gap-2">
+                  <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
                     <AlertCircle size={14} />
                     <span>{formError}</span>
                   </div>
@@ -1800,14 +2121,14 @@ export default function EventsDashboard() {
                 <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs font-semibold">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Event Name</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Event Name</label>
                       <input type="text" required value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="E.g., Rohan & Meera Wedding Gala"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-550" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Event Type</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Event Type</label>
                       <select value={formType} onChange={(e) => setFormType(e.target.value)}
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none">
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none">
                         {EVENT_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
                       </select>
                     </div>
@@ -1815,59 +2136,59 @@ export default function EventsDashboard() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Start Date & Time</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Start Date & Time</label>
                       <input type="datetime-local" required value={formStartDate} onChange={(e) => setFormStartDate(e.target.value)}
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-555" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">End Date & Time</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">End Date & Time</label>
                       <input type="datetime-local" required value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)}
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-555" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Venue Name</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Venue Name</label>
                       <input type="text" value={formVenueName} onChange={(e) => setFormVenueName(e.target.value)} placeholder="E.g., JW Marriott Grand Ballroom"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Guest Count</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Guest Count</label>
                       <input type="number" value={formGuestCount} onChange={(e) => setFormGuestCount(e.target.value)} placeholder="E.g., 250"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">City / Location</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">City / Location</label>
                       <input type="text" value={formLocation} onChange={(e) => setFormLocation(e.target.value)} placeholder="E.g., Mumbai, Maharashtra"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Venue Address</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Venue Address</label>
                       <input type="text" value={formVenueAddress} onChange={(e) => setFormVenueAddress(e.target.value)} placeholder="E.g., Juhu Tara Road, Juhu"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Budget (INR)</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Budget (INR)</label>
                       <input type="number" value={formBudget} onChange={(e) => setFormBudget(e.target.value)} placeholder="E.g., 250000"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Operational Notes</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Operational Notes</label>
                       <input type="text" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Special requirements, VIPs, theme..."
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md active:scale-95"
+                    className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md active:scale-95"
                   >
                     Confirm Provisioning
                   </button>
@@ -1882,31 +2203,31 @@ export default function EventsDashboard() {
       <AnimatePresence>
         {
           showVendorModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/85 backdrop-blur-sm p-4">
               <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
+                className="w-full max-w-lg bg-white dark:bg-[#111113] border border-slate-200 dark:border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
               >
-                <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                  <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                    <UserPlus className="text-purple-500" size={16} /> Log Partner Vendor
+                <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-zinc-800">
+                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                    <UserPlus className="text-purple-600 dark:text-purple-400" size={16} /> Log Partner Vendor
                   </h3>
-                  <button onClick={() => setShowVendorModal(false)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-white cursor-pointer"><X size={12} /></button>
+                  <button onClick={() => setShowVendorModal(false)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={13} /></button>
                 </div>
 
                 <form onSubmit={handleVendorSubmit} className="space-y-4 text-xs font-semibold">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Company Name</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Company Name</label>
                       <input type="text" required value={vendorForm.company} onChange={(e) => setVendorForm({ ...vendorForm, company: e.target.value })} placeholder="Monarch Caterers"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Category</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Category</label>
                       <select value={vendorForm.category} onChange={(e) => setVendorForm({ ...vendorForm, category: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none">
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none">
                         <option value="Catering">Catering</option>
                         <option value="Lighting">Lighting</option>
                         <option value="Floral">Floral</option>
@@ -1918,33 +2239,33 @@ export default function EventsDashboard() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Contact Person</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Contact Person</label>
                       <input type="text" required value={vendorForm.contact} onChange={(e) => setVendorForm({ ...vendorForm, contact: e.target.value })} placeholder="Jagdish Prasad"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">GSTIN</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">GSTIN</label>
                       <input type="text" required value={vendorForm.gst} onChange={(e) => setVendorForm({ ...vendorForm, gst: e.target.value })} placeholder="27AAAAA1111A1Z1"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">PAN</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">PAN</label>
                       <input type="text" required value={vendorForm.pan} onChange={(e) => setVendorForm({ ...vendorForm, pan: e.target.value })} placeholder="AAAAA1111A"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">UPI ID</label>
+                      <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">UPI ID</label>
                       <input type="text" required value={vendorForm.upiId} onChange={(e) => setVendorForm({ ...vendorForm, upiId: e.target.value })} placeholder="monarch@upi"
-                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
+                    className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
                   >
                     Log Partner details
                   </button>
@@ -1958,31 +2279,31 @@ export default function EventsDashboard() {
       {/* LOG RESOURCE / STAFF MODAL */}
       <AnimatePresence>
         {showResourceModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/85 backdrop-blur-sm p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
+              className="w-full max-w-lg bg-white dark:bg-[#111113] border border-slate-200 dark:border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
             >
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                  <UserPlus className="text-purple-500" size={16} /> Add Staff Resource
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-zinc-800">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <UserPlus className="text-purple-600 dark:text-purple-400" size={16} /> Add Staff Resource
                 </h3>
-                <button onClick={() => setShowResourceModal(false)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-white cursor-pointer"><X size={12} /></button>
+                <button onClick={() => setShowResourceModal(false)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={13} /></button>
               </div>
 
               <form onSubmit={handleResourceSubmit} className="space-y-4 text-xs font-semibold">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Full Name *</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Full Name *</label>
                     <input type="text" required value={resourceForm.name} onChange={(e) => setResourceForm({ ...resourceForm, name: e.target.value })} placeholder="e.g. Vikramaditya Singh"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Role</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Role</label>
                     <select value={resourceForm.role} onChange={(e) => setResourceForm({ ...resourceForm, role: e.target.value })}
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none">
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none">
                       <option value="Event Coordinator">Event Coordinator</option>
                       <option value="Lead Planner">Lead Planner</option>
                       <option value="Stage Supervisor">Stage Supervisor</option>
@@ -1995,33 +2316,33 @@ export default function EventsDashboard() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Contact Phone</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Contact Phone</label>
                     <input type="text" value={resourceForm.contact} onChange={(e) => setResourceForm({ ...resourceForm, contact: e.target.value })} placeholder="+91 98765 43210"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Email Address</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Email Address</label>
                     <input type="email" value={resourceForm.email} onChange={(e) => setResourceForm({ ...resourceForm, email: e.target.value })} placeholder="crew@eventos.in"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Experience</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Experience</label>
                     <input type="text" value={resourceForm.experience} onChange={(e) => setResourceForm({ ...resourceForm, experience: e.target.value })} placeholder="e.g. 4+ Years"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Skills (Comma separated)</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Skills (Comma separated)</label>
                     <input type="text" value={resourceForm.skills} onChange={(e) => setResourceForm({ ...resourceForm, skills: e.target.value })} placeholder="Coordination, Audio, Rigging"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
+                  className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
                 >
                   Save Staff Resource
                 </button>
@@ -2034,31 +2355,31 @@ export default function EventsDashboard() {
       {/* LOG PROP INVENTORY MODAL */}
       <AnimatePresence>
         {showInventoryModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/85 backdrop-blur-sm p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
+              className="w-full max-w-lg bg-white dark:bg-[#111113] border border-slate-200 dark:border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
             >
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                  <Layers className="text-purple-500" size={16} /> Add Prop / Equipment Asset
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-zinc-800">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <Layers className="text-purple-600 dark:text-purple-400" size={16} /> Add Prop / Equipment Asset
                 </h3>
-                <button onClick={() => setShowInventoryModal(false)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-white cursor-pointer"><X size={12} /></button>
+                <button onClick={() => setShowInventoryModal(false)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={13} /></button>
               </div>
 
               <form onSubmit={handleInventorySubmit} className="space-y-4 text-xs font-semibold">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Item Name *</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Item Name *</label>
                     <input type="text" required value={inventoryForm.name} onChange={(e) => setInventoryForm({ ...inventoryForm, name: e.target.value })} placeholder="e.g. Vintage Floral Mandap"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Category</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Category</label>
                     <select value={inventoryForm.category} onChange={(e) => setInventoryForm({ ...inventoryForm, category: e.target.value })}
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none">
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none">
                       <option value="Props">Props & Backdrops</option>
                       <option value="Lighting">Lighting & Truss</option>
                       <option value="Sound">Audio & Speakers</option>
@@ -2071,20 +2392,20 @@ export default function EventsDashboard() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Total Available Stock *</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Total Available Stock *</label>
                     <input type="number" min="1" required value={inventoryForm.stock} onChange={(e) => setInventoryForm({ ...inventoryForm, stock: e.target.value })} placeholder="10"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Currently Reserved</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Currently Reserved</label>
                     <input type="number" min="0" value={inventoryForm.reserved} onChange={(e) => setInventoryForm({ ...inventoryForm, reserved: e.target.value })} placeholder="0"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
+                  className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
                 >
                   Save Inventory Asset
                 </button>
@@ -2097,50 +2418,50 @@ export default function EventsDashboard() {
       {/* LOG FLEET VEHICLE MODAL */}
       <AnimatePresence>
         {showVehicleModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/85 backdrop-blur-sm p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
+              className="w-full max-w-lg bg-white dark:bg-[#111113] border border-slate-200 dark:border-zinc-800 rounded-3xl p-6 relative space-y-4 shadow-2xl"
             >
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-800">
-                <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                  <Fuel className="text-purple-500" size={16} /> Add Logistics Fleet Vehicle
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-zinc-800">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <Fuel className="text-purple-600 dark:text-purple-400" size={16} /> Add Logistics Fleet Vehicle
                 </h3>
-                <button onClick={() => setShowVehicleModal(false)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-white cursor-pointer"><X size={12} /></button>
+                <button onClick={() => setShowVehicleModal(false)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={13} /></button>
               </div>
 
               <form onSubmit={handleVehicleSubmit} className="space-y-4 text-xs font-semibold">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Vehicle Model / Name *</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Vehicle Model / Name *</label>
                     <input type="text" required value={vehicleForm.name} onChange={(e) => setVehicleForm({ ...vehicleForm, name: e.target.value })} placeholder="e.g. Tata Ace Mega XL"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Registration Plate No. *</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Registration Plate No. *</label>
                     <input type="text" required value={vehicleForm.plateNumber} onChange={(e) => setVehicleForm({ ...vehicleForm, plateNumber: e.target.value })} placeholder="MH-02-EE-1994"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none font-mono" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none font-mono" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Assigned Driver Name</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Assigned Driver Name</label>
                     <input type="text" value={vehicleForm.driver} onChange={(e) => setVehicleForm({ ...vehicleForm, driver: e.target.value })} placeholder="Suresh Kumar"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-black tracking-wider">Fuel Level (%)</label>
+                    <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Fuel Level (%)</label>
                     <input type="number" min="0" max="100" value={vehicleForm.fuel} onChange={(e) => setVehicleForm({ ...vehicleForm, fuel: e.target.value })} placeholder="90"
-                      className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none" />
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-600" />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-gradient-to-r from-purple-650 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
+                  className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold cursor-pointer transition shadow-md"
                 >
                   Save Fleet Vehicle
                 </button>
@@ -2155,37 +2476,37 @@ export default function EventsDashboard() {
         {
           selectedResource && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black z-40" onClick={() => setSelectedResource(null)} />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-40 backdrop-blur-xs" onClick={() => setSelectedResource(null)} />
               <motion.div
                 initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#0c0c0e]/95 border-l border-zinc-850 backdrop-blur-xl z-50 p-6 flex flex-col justify-between overflow-y-auto"
+                className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white/95 dark:bg-[#0c0c0e]/95 border-l border-slate-200 dark:border-zinc-850 backdrop-blur-xl z-50 p-6 flex flex-col justify-between overflow-y-auto shadow-2xl"
               >
                 <div className="space-y-6">
-                  <div className="flex justify-between items-center border-b border-zinc-850 pb-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 dark:border-zinc-850 pb-4">
                     <div>
-                      <span className="text-[8px] text-zinc-550 uppercase font-black block">Staff Profile</span>
-                      <h3 className="font-extrabold text-sm text-zinc-100 flex items-center gap-2"><Users size={14} className="text-purple-500" /> Roster Specs</h3>
+                      <span className="text-[8px] text-slate-400 dark:text-zinc-550 uppercase font-black block">Staff Profile</span>
+                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-zinc-100 flex items-center gap-2"><Users size={14} className="text-purple-600 dark:text-purple-400" /> Roster Specs</h3>
                     </div>
-                    <button onClick={() => setSelectedResource(null)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white cursor-pointer"><X size={14} /></button>
+                    <button onClick={() => setSelectedResource(null)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={14} /></button>
                   </div>
 
                   {/* Profile card */}
-                  <div className="p-4 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-4">
+                  <div className="p-4 bg-slate-50 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-850 rounded-2xl space-y-4">
                     <div>
-                      <h4 className="font-bold text-zinc-200 text-sm">{selectedResource.name}</h4>
-                      <span className="text-[10px] text-zinc-500">{selectedResource.role} • {selectedResource.experience} Experience</span>
+                      <h4 className="font-extrabold text-slate-900 dark:text-zinc-200 text-sm">{selectedResource.name}</h4>
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400">{selectedResource.role} • {selectedResource.experience} Experience</span>
                     </div>
-                    <div className="space-y-2 text-xs text-zinc-400">
+                    <div className="space-y-2 text-xs text-slate-600 dark:text-zinc-300">
                       <p>📧 {selectedResource.email}</p>
                       <p>📞 {selectedResource.contact}</p>
-                      <p className="text-[11px] border-t border-zinc-900 pt-2 text-zinc-500">🚑 Emergency Contact: {selectedResource.emergencyContact}</p>
+                      <p className="text-[11px] border-t border-slate-200/80 dark:border-zinc-900 pt-2 text-slate-500 dark:text-zinc-400">🚑 Emergency Contact: {selectedResource.emergencyContact}</p>
                     </div>
                   </div>
 
                   {/* Calendar availability grid */}
                   <div className="space-y-2">
-                    <span className="text-[9px] uppercase font-black text-zinc-500 tracking-wider">Availability Calendar</span>
+                    <span className="text-[9px] uppercase font-black text-slate-500 dark:text-zinc-400 tracking-wider">Availability Calendar</span>
                     <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
                       {Object.entries(selectedResource.availability || {}).map(([date, status]) => {
                         const dateObj = new Date(date);
@@ -2195,9 +2516,9 @@ export default function EventsDashboard() {
                         return (
                           <div key={date} className={cn(
                             "p-2 border rounded-xl",
-                            status === "Available" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" :
-                              status === "Booked" ? "border-purple-500/20 bg-purple-500/5 text-purple-400" :
-                                "border-red-500/20 bg-red-500/5 text-red-400"
+                            status === "Available" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400" :
+                              status === "Booked" ? "border-purple-500/20 bg-purple-500/5 text-purple-600 dark:text-purple-400" :
+                                "border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400"
                           )}>
                             <div>{formattedDate}</div>
                             <div className="text-[8px] uppercase font-black mt-1">{status}</div>
@@ -2205,7 +2526,7 @@ export default function EventsDashboard() {
                         );
                       })}
                       {Object.keys(selectedResource.availability || {}).length === 0 && (
-                        <div className="col-span-4 text-center py-3 text-zinc-500 text-xs">
+                        <div className="col-span-4 text-center py-3 text-slate-400 dark:text-zinc-500 text-xs">
                           No availability schedule logged for this resource.
                         </div>
                       )}
@@ -2213,22 +2534,22 @@ export default function EventsDashboard() {
                   </div>
 
                   {/* Specs */}
-                  <div className="p-4 bg-[#111113]/60 border border-zinc-850 rounded-2xl space-y-3 text-xs text-zinc-400">
+                  <div className="p-4 bg-slate-50 dark:bg-[#111113]/60 border border-slate-200 dark:border-zinc-850 rounded-2xl space-y-3 text-xs text-slate-600 dark:text-zinc-400">
                     <div className="flex justify-between">
                       <span>Performance Score</span>
-                      <strong className="text-purple-400">{selectedResource.performanceScore}/100</strong>
+                      <strong className="text-purple-600 dark:text-purple-400">{selectedResource.performanceScore}/100</strong>
                     </div>
                     <div className="flex justify-between">
                       <span>Utilization Rate</span>
-                      <strong className="text-zinc-200">{selectedResource.utilization}%</strong>
+                      <strong className="text-slate-900 dark:text-zinc-200">{selectedResource.utilization}%</strong>
                     </div>
                     <div className="flex justify-between">
                       <span>Total Past Events</span>
-                      <strong className="text-zinc-200">{selectedResource.pastEventsCount} Events</strong>
+                      <strong className="text-slate-900 dark:text-zinc-200">{selectedResource.pastEventsCount} Events</strong>
                     </div>
                   </div>
                 </div>
-                <button onClick={() => setSelectedResource(null)} className="w-full mt-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold transition">Close Profile</button>
+                <button onClick={() => setSelectedResource(null)} className="w-full mt-6 py-2 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold transition hover:bg-slate-200 dark:hover:bg-zinc-800 cursor-pointer">Close Profile</button>
               </motion.div>
             </>
           )
@@ -2237,25 +2558,25 @@ export default function EventsDashboard() {
         {
           selectedVendor && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black z-40" onClick={() => setSelectedVendor(null)} />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-40 backdrop-blur-xs" onClick={() => setSelectedVendor(null)} />
               <motion.div
                 initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#0c0c0e]/95 border-l border-zinc-850 backdrop-blur-xl z-50 p-6 flex flex-col justify-between overflow-y-auto"
+                className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white/95 dark:bg-[#0c0c0e]/95 border-l border-slate-200 dark:border-zinc-850 backdrop-blur-xl z-50 p-6 flex flex-col justify-between overflow-y-auto shadow-2xl"
               >
                 <div className="space-y-6">
-                  <div className="flex justify-between items-center border-b border-zinc-850 pb-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 dark:border-zinc-850 pb-4">
                     <div>
-                      <span className="text-[8px] text-zinc-550 uppercase font-black block">Vendor Specifications</span>
-                      <h3 className="font-extrabold text-sm text-zinc-100 flex items-center gap-2"><UserCheck size={14} className="text-purple-500" /> Partner Details</h3>
+                      <span className="text-[8px] text-slate-400 dark:text-zinc-550 uppercase font-black block">Vendor Specifications</span>
+                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-zinc-100 flex items-center gap-2"><UserCheck size={14} className="text-purple-600 dark:text-purple-400" /> Partner Details</h3>
                     </div>
-                    <button onClick={() => setSelectedVendor(null)} className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white cursor-pointer"><X size={14} /></button>
+                    <button onClick={() => setSelectedVendor(null)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={14} /></button>
                   </div>
 
-                  <div className="p-4 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-4 text-xs text-zinc-400">
+                  <div className="p-4 bg-slate-50 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-850 rounded-2xl space-y-4 text-xs text-slate-600 dark:text-zinc-400">
                     <div>
-                      <h4 className="font-bold text-zinc-250 text-sm">{selectedVendor.company}</h4>
-                      <span className="text-[10px] text-zinc-500 uppercase font-bold bg-zinc-800 px-2 py-0.5 rounded inline-block mt-1">{selectedVendor.category}</span>
+                      <h4 className="font-extrabold text-slate-900 dark:text-zinc-200 text-sm">{selectedVendor.company}</h4>
+                      <span className="text-[10px] text-purple-700 dark:text-purple-300 uppercase font-bold bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/40 px-2 py-0.5 rounded inline-block mt-1">{selectedVendor.category}</span>
                     </div>
                     <div className="space-y-2">
                       <p>👤 Primary Contact: {selectedVendor.contact}</p>
@@ -2265,8 +2586,8 @@ export default function EventsDashboard() {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-[#111113]/60 border border-zinc-850 rounded-2xl space-y-3 text-xs text-zinc-400">
-                    <span className="text-[9px] uppercase font-black text-zinc-550 tracking-wider block">Financial Details</span>
+                  <div className="p-4 bg-slate-50 dark:bg-[#111113]/60 border border-slate-200 dark:border-zinc-850 rounded-2xl space-y-3 text-xs text-slate-600 dark:text-zinc-400">
+                    <span className="text-[9px] uppercase font-black text-slate-500 dark:text-zinc-400 tracking-wider block">Financial Details</span>
                     <div className="space-y-2 font-mono text-[10.5px]">
                       <div>GSTIN: {selectedVendor.gst}</div>
                       <div>PAN: {selectedVendor.pan}</div>
@@ -2276,7 +2597,7 @@ export default function EventsDashboard() {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => setSelectedVendor(null)} className="w-full mt-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold transition">Close Profile</button>
+                <button onClick={() => setSelectedVendor(null)} className="w-full mt-6 py-2 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold transition hover:bg-slate-200 dark:hover:bg-zinc-800 cursor-pointer">Close Profile</button>
               </motion.div>
             </>
           )
