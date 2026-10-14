@@ -554,8 +554,11 @@ export default function BookingsDashboard() {
                   <BookingCard key={b.id} booking={b} eventName={getEventName(b.eventId)} index={idx} />
                 ))}
                 {filteredBookings.length === 0 && <EmptyState />}
-                {/* LIST TABLE VIEW */}
-                {activeTab === "list" && (
+              </motion.div>
+            )}
+
+            {/* LIST TABLE VIEW */}
+            {activeTab === "list" && (
                   <motion.div
                     key="list"
                     initial={{ opacity: 0, y: 10 }}

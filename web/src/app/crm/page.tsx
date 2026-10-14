@@ -949,6 +949,8 @@ export default function CrmPage() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
               )}
 
               {/* KANBAN VIEW */}
