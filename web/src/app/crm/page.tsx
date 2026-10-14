@@ -636,7 +636,19 @@ export default function CrmPage() {
     const followups = filteredLeads.filter(l => {
       if (l.notes && l.notes.startsWith("{")) {
         try {
-          const parsed = JSON.parse(  const headerActions = (
+          const parsed = JSON.parse(l.notes);
+          return !!parsed.followUpDate || !!parsed.reminder;
+        } catch {
+          return false;
+        }
+      }
+      return false;
+    }).length;
+
+    return { total, active, pipelineVal, wonCount, lostCount, convRate, avgDeal, followups };
+  }, [filteredLeads]);
+
+  const headerActions = (
     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
       {duplicateGroups.length > 0 && (
         <button

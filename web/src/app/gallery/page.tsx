@@ -363,23 +363,23 @@ export default function GalleryPage() {
       <MediaDashboard albums={albums} totalPhotos={totalPhotos} totalVideos={totalVideos} />
 
       {/* Filters Desk */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 border-b border-zinc-850 pb-4 select-none">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 border-b border-slate-200/90 dark:border-white/[0.08] pb-4 select-none">
         <div className="flex flex-wrap items-center gap-3 w-full lg:max-w-2xl">
           <div className="relative flex-1 min-w-[200px]">
-            <Search size={14} className="absolute left-3 top-2.5 text-zinc-550" />
+            <Search size={14} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
             <input
               type="text"
               placeholder="Search albums..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-[#121214]/60 border border-zinc-805 focus:border-purple-650 rounded-xl text-xs text-white focus:outline-none transition-colors"
+              className="w-full pl-9 pr-4 py-1.5 bg-white dark:bg-[#121214]/60 border border-slate-200 dark:border-zinc-805 focus:border-purple-600 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none transition-colors font-medium shadow-sm"
             />
           </div>
           
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold"
+            className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-300 rounded-xl text-xs font-bold shadow-sm focus:outline-none focus:border-purple-600"
           >
             <option value="ALL">All Status</option>
             <option value="PUBLISHED">Published</option>
@@ -390,7 +390,7 @@ export default function GalleryPage() {
           <select
             value={visibilityFilter}
             onChange={(e) => setVisibilityFilter(e.target.value as any)}
-            className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold"
+            className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-300 rounded-xl text-xs font-bold shadow-sm focus:outline-none focus:border-purple-600"
           >
             <option value="ALL">All Visibility</option>
             <option value="PUBLIC">Public</option>
@@ -402,29 +402,29 @@ export default function GalleryPage() {
           <select
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value)}
-            className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-bold focus:outline-none"
+            className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-300 rounded-xl text-xs font-bold shadow-sm focus:outline-none focus:border-purple-600"
           >
             <option value="RECENT">Recently Uploaded</option>
             <option value="NAME">Album Name</option>
             <option value="PHOTOS_COUNT">Photos Volume</option>
           </select>
 
-          <div className="flex bg-zinc-900 border border-zinc-850 p-0.5 rounded-xl text-xs">
+          <div className="flex bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 p-0.5 rounded-xl text-xs shadow-sm">
             <button
               onClick={() => setViewMode("GRID")}
-              className={cn("px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold cursor-pointer", viewMode === "GRID" ? "bg-zinc-800 text-purple-400" : "text-zinc-550")}
+              className={cn("px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold cursor-pointer", viewMode === "GRID" ? "bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-400 shadow-sm" : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200")}
             >
               <Grid size={13} /> Grid
             </button>
             <button
               onClick={() => setViewMode("LIST")}
-              className={cn("px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold cursor-pointer", viewMode === "LIST" ? "bg-zinc-800 text-purple-400" : "text-zinc-550")}
+              className={cn("px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold cursor-pointer", viewMode === "LIST" ? "bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-400 shadow-sm" : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200")}
             >
               <List size={13} /> List
             </button>
             <button
               onClick={() => setViewMode("TIMELINE")}
-              className={cn("px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold cursor-pointer", viewMode === "TIMELINE" ? "bg-zinc-800 text-purple-400" : "text-zinc-550")}
+              className={cn("px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 font-bold cursor-pointer", viewMode === "TIMELINE" ? "bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-400 shadow-sm" : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200")}
             >
               <Clock size={13} /> Timeline
             </button>
@@ -754,20 +754,20 @@ function AlbumCard({
     <motion.div
       whileHover={{ y: -3 }}
       className={cn(
-        "group rounded-2xl border border-zinc-800 bg-[#141416]/45 hover:border-purple-500/25 transition-all duration-300 cursor-pointer flex flex-col h-[290px] shadow-md hover:shadow-lg relative",
+        "group rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#141416]/45 hover:border-purple-500/30 transition-all duration-300 cursor-pointer flex flex-col h-[290px] shadow-sm hover:shadow-xl hover:shadow-purple-500/5 relative backdrop-blur-md overflow-hidden",
         showOptions ? "z-30" : "z-10"
       )}
       onClick={() => router.push(`/gallery/${album.id}`)}
     >
       {/* Cover Image */}
-      <div className="h-36 relative w-full bg-zinc-900 rounded-t-2xl overflow-hidden flex items-center justify-center shrink-0 border-b border-zinc-850">
+      <div className="h-36 relative w-full bg-slate-100 dark:bg-zinc-900 rounded-t-2xl overflow-hidden flex items-center justify-center shrink-0 border-b border-slate-200/90 dark:border-zinc-850">
         {album.thumbnailUrl || album.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={album.thumbnailUrl || album.coverImage} alt={album.name} className="object-cover h-full w-full group-hover:scale-102 transition-transform duration-500" />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-850 to-zinc-950 flex flex-col items-center justify-center text-zinc-650 gap-1.5">
-            <Folder size={32} className="text-zinc-700 group-hover:text-purple-500/30 transition-colors" />
-            <span className="text-[9px] uppercase tracking-wider font-extrabold text-zinc-555">Studio Album</span>
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-zinc-850 dark:to-zinc-950 flex flex-col items-center justify-center text-slate-400 dark:text-zinc-650 gap-1.5">
+            <Folder size={32} className="text-slate-400 dark:text-zinc-700 group-hover:text-purple-600 dark:group-hover:text-purple-500/30 transition-colors" />
+            <span className="text-[9px] uppercase tracking-wider font-extrabold text-slate-500 dark:text-zinc-555">Studio Album</span>
           </div>
         )}
 
@@ -778,12 +778,12 @@ function AlbumCard({
           </span>
         )}
 
-        <span className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md border border-zinc-850/80 px-2 py-0.5 rounded-md text-[9px] font-mono text-zinc-300 font-bold flex items-center gap-1">
-          <Layers size={9} className="text-purple-400" /> {album.itemCount} items ({storageSize} MB)
+        <span className="absolute bottom-3 right-3 bg-white/80 dark:bg-black/60 backdrop-blur-md border border-slate-200 dark:border-zinc-850/80 px-2 py-0.5 rounded-md text-[9px] font-mono text-slate-800 dark:text-zinc-300 font-bold flex items-center gap-1 shadow-sm">
+          <Layers size={9} className="text-purple-600 dark:text-purple-400" /> {album.itemCount} items ({storageSize} MB)
         </span>
 
-        <span className="absolute top-3 left-3 bg-black/50 backdrop-blur px-2 py-0.5 rounded-md text-[9px] font-bold text-zinc-400 flex items-center gap-1 border border-zinc-850/60">
-          {album.visibility === "PUBLIC" ? <Eye size={10} className="text-emerald-400" /> : <EyeOff size={10} className="text-zinc-550" />}
+        <span className="absolute top-3 left-3 bg-white/80 dark:bg-black/50 backdrop-blur px-2 py-0.5 rounded-md text-[9px] font-bold text-slate-700 dark:text-zinc-400 flex items-center gap-1 border border-slate-200 dark:border-zinc-850/60 shadow-sm">
+          {album.visibility === "PUBLIC" ? <Eye size={10} className="text-emerald-600 dark:text-emerald-400" /> : <EyeOff size={10} className="text-slate-400 dark:text-zinc-550" />}
           {album.visibility}
         </span>
       </div>
@@ -792,7 +792,7 @@ function AlbumCard({
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div className="space-y-1">
           <div className="flex justify-between items-start gap-2 relative">
-            <h3 className="font-bold text-xs text-zinc-200 group-hover:text-purple-400 transition-colors leading-snug line-clamp-1">
+            <h3 className="font-bold text-xs text-slate-900 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-snug line-clamp-1">
               {album.name}
             </h3>
             

@@ -54,14 +54,14 @@ interface KanbanBoardProps {
 }
 
 const COLUMNS = [
-  { id: "NEW", label: "New Lead", color: "border-purple-500/20 text-purple-400 bg-purple-500/5" },
-  { id: "CONTACTED", label: "Contacted", color: "border-cyan-500/20 text-cyan-400 bg-cyan-500/5" },
-  { id: "QUALIFIED", label: "Qualified", color: "border-blue-500/20 text-blue-400 bg-blue-500/5" },
-  { id: "PROPOSAL_SENT", label: "Proposal", color: "border-pink-500/20 text-pink-400 bg-pink-500/5" },
-  { id: "NEGOTIATION", label: "Negotiating", color: "border-amber-500/20 text-amber-400 bg-amber-500/5" },
-  { id: "WON", label: "Won / Booked", color: "border-emerald-500/20 text-emerald-450 bg-emerald-500/5" },
-  { id: "LOST", label: "Lost", color: "border-red-500/20 text-red-400 bg-red-500/5" },
-  { id: "ARCHIVED", label: "Archived", color: "border-zinc-500/20 text-zinc-400 bg-zinc-500/5" },
+  { id: "NEW", label: "New Lead", color: "border-purple-500/30 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/10" },
+  { id: "CONTACTED", label: "Contacted", color: "border-cyan-500/30 text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-500/10" },
+  { id: "QUALIFIED", label: "Qualified", color: "border-blue-500/30 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10" },
+  { id: "PROPOSAL_SENT", label: "Proposal", color: "border-pink-500/30 text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-500/10" },
+  { id: "NEGOTIATION", label: "Negotiating", color: "border-amber-500/30 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10" },
+  { id: "WON", label: "Won / Booked", color: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10" },
+  { id: "LOST", label: "Lost", color: "border-red-500/30 text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-500/10" },
+  { id: "ARCHIVED", label: "Archived", color: "border-slate-300 dark:border-zinc-700 text-slate-700 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800/40" },
 ];
 
 interface LeadMetadata {

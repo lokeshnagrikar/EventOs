@@ -137,7 +137,7 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Storage growth forecast */}
-        <div className="lg:col-span-2 p-5 border border-zinc-850 bg-[#121214]/30 backdrop-blur rounded-2xl space-y-4">
+        <div className="lg:col-span-2 p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/30 backdrop-blur rounded-2xl space-y-4 shadow-sm">
           <div className="flex justify-between items-center select-none">
             <div className="flex gap-2">
               <button
@@ -145,8 +145,8 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
                 className={cn(
                   "px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer",
                   activeSubTab === "storage"
-                    ? "bg-purple-650/10 text-purple-400 border border-purple-500/20"
-                    : "text-zinc-500 hover:text-zinc-300"
+                    ? "bg-purple-50 dark:bg-purple-650/10 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20 shadow-sm"
+                    : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                 )}
               >
                 Storage Analytics
@@ -156,14 +156,14 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
                 className={cn(
                   "px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer",
                   activeSubTab === "activity"
-                    ? "bg-purple-650/10 text-purple-400 border border-purple-500/20"
-                    : "text-zinc-500 hover:text-zinc-300"
+                    ? "bg-purple-50 dark:bg-purple-650/10 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20 shadow-sm"
+                    : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                 )}
               >
                 Recent Activity
               </button>
             </div>
-            <span className="text-[9.5px] text-zinc-550 font-bold uppercase tracking-wider">Cloud CDN Connected</span>
+            <span className="text-[9.5px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">Cloud CDN Connected</span>
           </div>
           
           {activeSubTab === "storage" ? (
@@ -172,42 +172,42 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
                 <AreaChart data={growthData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <defs>
                     <linearGradient id="growthGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.15}/>
+                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.2}/>
                       <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis dataKey="name" stroke="#71717a" tick={{ fontSize: 9 }} />
-                  <YAxis stroke="#71717a" tick={{ fontSize: 9 }} unit="MB" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-zinc-800" vertical={false} />
+                  <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 9 }} />
+                  <YAxis stroke="#94a3b8" tick={{ fontSize: 9 }} unit="MB" />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", fontSize: 10, borderRadius: "8px" }}
+                    contentStyle={{ backgroundColor: "#1e1b4b", borderColor: "#4338ca", fontSize: 10, borderRadius: "10px", color: "#fff" }}
                     formatter={(val: any) => [`${val} MB`, "Storage Used"]}
                   />
-                  <Area type="monotone" dataKey="UsageMB" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#growthGrad)" />
+                  <Area type="monotone" dataKey="UsageMB" stroke="#9333ea" strokeWidth={2} fillOpacity={1} fill="url(#growthGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           ) : (
             <div className="space-y-3.5 py-2">
               {recentActivities.length === 0 ? (
-                <div className="py-8 text-center text-zinc-500 text-xs">
+                <div className="py-8 text-center text-slate-400 dark:text-zinc-500 text-xs">
                   No media activities logged yet. Upload photos or videos to start tracking.
                 </div>
               ) : (
                 recentActivities.map((act) => {
                   const Icon = act.icon;
                   return (
-                    <div key={act.id} className="flex items-center justify-between p-3 bg-zinc-900/35 border border-zinc-850 rounded-xl hover:bg-zinc-900/50 transition">
+                    <div key={act.id} className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-zinc-900/35 border border-slate-200/90 dark:border-zinc-850 rounded-xl hover:bg-slate-100/80 dark:hover:bg-zinc-900/50 transition">
                       <div className="flex items-center gap-3">
                         <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", act.color)}>
                           <Icon size={14} />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-200">{act.action}</p>
-                          <p className="text-[10px] text-zinc-450 mt-0.5">{act.desc}</p>
+                          <p className="text-xs font-bold text-slate-900 dark:text-zinc-200">{act.action}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-zinc-450 mt-0.5">{act.desc}</p>
                         </div>
                       </div>
-                      <span className="text-[9px] text-zinc-550 font-mono shrink-0">{act.time}</span>
+                      <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-mono shrink-0">{act.time}</span>
                     </div>
                   );
                 })
@@ -217,11 +217,11 @@ export default function MediaDashboard({ albums, totalPhotos, totalVideos }: Med
         </div>
 
         {/* CDN Optimization & suggestions */}
-        <div className="lg:col-span-1 p-5 border border-zinc-850 bg-[#121214]/30 rounded-2xl flex flex-col justify-between">
+        <div className="lg:col-span-1 p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/30 rounded-2xl flex flex-col justify-between shadow-sm">
           <div className="space-y-4">
             <div className="flex items-center justify-between select-none">
-              <span className="text-[10px] text-zinc-550 uppercase font-black tracking-widest">Cloud Optimization</span>
-              <span className="text-[8px] text-emerald-450 font-bold flex items-center gap-0.5 uppercase tracking-wide">
+              <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-widest">Cloud Optimization</span>
+              <span className="text-[8px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 uppercase tracking-wide">
                 <ShieldCheck size={11} /> Active
               </span>
             </div>
@@ -322,36 +322,36 @@ function KpiDashboardCard({ title, value, subtitle, icon: Icon, trend, accent, s
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className="relative rounded-2xl border border-zinc-800 bg-[#141416]/40 p-5 flex flex-col justify-between min-h-[140px] hover:shadow-[0_0_30px_rgba(168,85,247,0.02)] group overflow-hidden transition-colors"
+      className="relative rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#141416]/40 p-5 flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-xl hover:shadow-purple-500/5 group overflow-hidden transition-all backdrop-blur-md"
     >
-      <div className={cn("absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br opacity-5 blur-[40px] rounded-full group-hover:opacity-10 transition-opacity", accent)} />
+      <div className={cn("absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br opacity-10 dark:opacity-5 blur-[40px] rounded-full group-hover:opacity-20 transition-opacity pointer-events-none", accent)} />
       
       <div className="flex justify-between items-start gap-4">
         <div className="space-y-1">
-          <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block">{title}</span>
-          <p className="text-xl font-extrabold tracking-tight text-zinc-200">
+          <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest block">{title}</span>
+          <p className="text-xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
             {typeof displayVal === "number" ? displayVal.toLocaleString() : displayVal}
           </p>
         </div>
-        <div className={cn("h-8 w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40", accent)}>
-          <Icon size={14} className="text-zinc-100" />
+        <div className={cn("h-8 w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-purple-600/10", accent)}>
+          <Icon size={14} className="text-white" />
         </div>
       </div>
 
-      <div className="flex justify-between items-end pt-4 border-t border-zinc-900/60 mt-2">
+      <div className="flex justify-between items-end pt-4 border-t border-slate-100 dark:border-zinc-900/60 mt-2">
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-[10px] font-black text-emerald-500 uppercase tracking-wider">
+          <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
             {trend}
           </div>
-          <span className="text-[9px] text-zinc-500 font-semibold block leading-none">{subtitle}</span>
+          <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-semibold block leading-none">{subtitle}</span>
         </div>
 
-        <div className="h-8 w-20 opacity-60 group-hover:opacity-100 transition-opacity">
+        <div className="h-8 w-20 opacity-70 group-hover:opacity-100 transition-opacity">
           <svg viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
             <polyline
-              fill="none; /* fallback */"
+              fill="none"
               stroke="#a855f7"
-              strokeWidth="1.8"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
               points={points}

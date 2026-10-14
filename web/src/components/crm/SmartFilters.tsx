@@ -111,17 +111,17 @@ export default function SmartFilters({
   };
 
   return (
-    <div className="bg-[#111113]/60 border-b border-zinc-800 p-6 space-y-5 animate-in fade-in duration-200 select-none">
+    <div className="bg-slate-50/80 dark:bg-[#111113]/60 border-b border-slate-200/90 dark:border-white/[0.08] p-6 space-y-5 animate-in fade-in duration-200 select-none backdrop-blur-md">
       
       {/* Search Filter Fields */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-5">
         {/* Lead Source */}
         <div className="space-y-1.5">
-          <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest block">Lead Source</label>
+          <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-bold tracking-widest block">Lead Source</label>
           <select
             value={sourceFilter}
             onChange={(e) => setSourceFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-zinc-900/80 border border-zinc-800 text-zinc-300 rounded-xl text-xs focus:outline-none focus:border-purple-650 transition-all font-semibold"
+            className="w-full px-3 py-2 bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 rounded-xl text-xs focus:outline-none focus:border-purple-600 transition-all font-semibold shadow-sm"
           >
             <option value="ALL">All Sources</option>
             <option value="Website">Website</option>
@@ -135,11 +135,11 @@ export default function SmartFilters({
 
         {/* Assigned Planner */}
         <div className="space-y-1.5">
-          <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest block">Assigned Planner</label>
+          <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-bold tracking-widest block">Assigned Planner</label>
           <select
             value={assigneeFilter}
             onChange={(e) => setAssigneeFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-zinc-900/80 border border-zinc-800 text-zinc-300 rounded-xl text-xs focus:outline-none focus:border-purple-650 transition-all font-semibold"
+            className="w-full px-3 py-2 bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 rounded-xl text-xs focus:outline-none focus:border-purple-600 transition-all font-semibold shadow-sm"
           >
             <option value="ALL">All Planners</option>
             <option value="UNASSIGNED">Unassigned</option>
@@ -153,11 +153,11 @@ export default function SmartFilters({
 
         {/* Priority Filter */}
         <div className="space-y-1.5">
-          <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest block">Priority</label>
+          <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-bold tracking-widest block">Priority</label>
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-zinc-900/80 border border-zinc-800 text-zinc-300 rounded-xl text-xs focus:outline-none focus:border-purple-650 transition-all font-semibold"
+            className="w-full px-3 py-2 bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 rounded-xl text-xs focus:outline-none focus:border-purple-600 transition-all font-semibold shadow-sm"
           >
             <option value="ALL">All Priorities</option>
             <option value="HIGH">High Priority</option>
@@ -168,11 +168,11 @@ export default function SmartFilters({
 
         {/* Event Type Filter */}
         <div className="space-y-1.5">
-          <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest block">Event Category</label>
+          <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-bold tracking-widest block">Event Category</label>
           <select
             value={eventTypeFilter}
             onChange={(e) => setEventTypeFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-zinc-900/80 border border-zinc-800 text-zinc-300 rounded-xl text-xs focus:outline-none focus:border-purple-650 transition-all font-semibold"
+            className="w-full px-3 py-2 bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 rounded-xl text-xs focus:outline-none focus:border-purple-600 transition-all font-semibold shadow-sm"
           >
             <option value="ALL">All Categories</option>
             <option value="WEDDING">Wedding</option>
@@ -184,45 +184,45 @@ export default function SmartFilters({
 
         {/* Budget range */}
         <div className="space-y-1.5 col-span-1 sm:col-span-2">
-          <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest block">Budget (Min / Max INR)</label>
+          <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-bold tracking-widest block">Budget (Min / Max INR)</label>
           <div className="flex gap-2 items-center">
             <input
               type="number"
               value={minBudget}
               onChange={(e) => setMinBudget(e.target.value)}
               placeholder="Min"
-              className="w-full px-3 py-1.5 bg-zinc-900/80 border border-zinc-800 rounded-xl text-xs placeholder-zinc-650 text-zinc-200 focus:outline-none focus:border-purple-650 transition-all font-semibold"
+              className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs placeholder-slate-400 dark:placeholder-zinc-600 text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-purple-600 transition-all font-semibold shadow-sm"
             />
-            <span className="text-zinc-600 text-xs">to</span>
+            <span className="text-slate-400 dark:text-zinc-600 text-xs font-bold">to</span>
             <input
               type="number"
               value={maxBudget}
               onChange={(e) => setMaxBudget(e.target.value)}
               placeholder="Max"
-              className="w-full px-3 py-1.5 bg-zinc-900/80 border border-zinc-800 rounded-xl text-xs placeholder-zinc-650 text-zinc-200 focus:outline-none focus:border-purple-650 transition-all font-semibold"
+              className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs placeholder-slate-400 dark:placeholder-zinc-600 text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-purple-600 transition-all font-semibold shadow-sm"
             />
           </div>
         </div>
       </div>
 
       {/* Preset management and Actions */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-t border-zinc-850/60 pt-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-t border-slate-200/90 dark:border-white/[0.08] pt-4">
         {/* Saved Presets */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-bold uppercase text-zinc-500 tracking-wider mr-2 flex items-center gap-1.5">
-            <Bookmark size={11} className="text-purple-400" />
+          <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-zinc-400 tracking-wider mr-2 flex items-center gap-1.5">
+            <Bookmark size={11} className="text-purple-600 dark:text-purple-400" />
             Presets:
           </span>
           {savedFilters.map((preset) => (
             <div
               key={preset.name}
               onClick={() => applyPreset(preset)}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900 border border-zinc-800 hover:border-purple-500/30 text-[10px] font-bold text-zinc-400 hover:text-purple-400 rounded-full transition-all cursor-pointer group"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-purple-500/40 text-[10px] font-bold text-slate-700 dark:text-zinc-300 hover:text-purple-700 dark:hover:text-purple-400 rounded-full transition-all cursor-pointer group shadow-sm"
             >
               <span>{preset.name}</span>
               <button
                 onClick={(e) => deletePreset(preset.name, e)}
-                className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-400 transition"
+                className="opacity-0 group-hover:opacity-100 text-slate-400 dark:text-zinc-500 hover:text-red-500 transition"
               >
                 <X size={10} />
               </button>
@@ -232,17 +232,17 @@ export default function SmartFilters({
 
         {/* Save Current Preset & Actions */}
         <div className="flex items-center gap-2 w-full md:w-auto self-end">
-          <div className="flex bg-zinc-900/80 border border-zinc-800 rounded-xl p-0.5 w-full max-w-[200px]">
+          <div className="flex bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 rounded-xl p-0.5 w-full max-w-[200px] shadow-sm">
             <input
               type="text"
               value={newPresetName}
               onChange={(e) => setNewPresetName(e.target.value)}
               placeholder="New Preset Name"
-              className="w-full pl-2.5 bg-transparent text-xs text-white placeholder-zinc-600 focus:outline-none"
+              className="w-full pl-2.5 bg-transparent text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none"
             />
             <button
               onClick={saveCurrentAsPreset}
-              className="h-6 w-6 rounded-lg bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center cursor-pointer transition"
+              className="h-6 w-6 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex items-center justify-center cursor-pointer transition shadow-sm active:scale-95"
               title="Save current filters"
             >
               <Plus size={12} />
@@ -251,7 +251,7 @@ export default function SmartFilters({
 
           <button
             onClick={onClear}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-zinc-850 hover:border-zinc-700 bg-zinc-950/40 hover:bg-zinc-900 rounded-xl text-[10px] font-bold text-zinc-400 hover:text-zinc-200 cursor-pointer transition-all shrink-0"
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-zinc-850 hover:border-slate-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-950/40 hover:bg-slate-50 dark:hover:bg-zinc-900 rounded-xl text-[10px] font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 cursor-pointer transition-all shrink-0 shadow-sm"
           >
             <Trash2 size={12} />
             Reset

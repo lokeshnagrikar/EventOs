@@ -2437,7 +2437,9 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
-                    {/* 9. BILLING & SUBSCRIPTIONS */}
+              )}
+
+              {/* 9. BILLING & SUBSCRIPTIONS */}
               {activeTab === "billing" && (
                 <div className="space-y-6">
                   {/* Title Bar */}

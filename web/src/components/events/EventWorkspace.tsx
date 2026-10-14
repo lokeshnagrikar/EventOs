@@ -55,7 +55,10 @@ import {
   Receipt,
   CheckCircle,
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  ArrowUpDown,
+  SlidersHorizontal,
+  Copy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/lib/toastStore";
@@ -387,6 +390,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
   const [newCueTitle, setNewCueTitle] = useState("");
   const [newCueDept, setNewCueDept] = useState("Hospitality & Hostess");
   const [newCueNotes, setNewCueNotes] = useState("");
+  const [timelineSearch, setTimelineSearch] = useState("");
+  const [timelineDeptFilter, setTimelineDeptFilter] = useState("ALL");
+  const [timelineSortMode, setTimelineSortMode] = useState<"CHRONO" | "ORDER">("CHRONO");
+
+  // Operational Filter States (Option B)
+  const [guestRsvpFilter, setGuestRsvpFilter] = useState<"ALL" | "CONFIRMED" | "PENDING" | "DECLINED">("ALL");
+  const [taskStatusFilter, setTaskStatusFilter] = useState<"ALL" | "PENDING" | "COMPLETED">("ALL");
+  const [vendorPaymentFilter, setVendorPaymentFilter] = useState<"ALL" | "UNPAID" | "PARTIAL" | "PAID">("ALL");
 
   // Fetch Event details
   const { data: eventResponse, isLoading: eventLoading } = useQuery<{ data: Event }>({
@@ -510,12 +521,45 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         parsedNotesText = event.notes || "";
       }
 
-      // Check localStorage for any cached cues if DB list is currently empty
+      // Option C: Dedicated guestList column fallback & LocalStorage Cache recovery
+      if (parsedGuests.length === 0 && event.guestList) {
+        try {
+          if (event.guestList.startsWith("[")) {
+            parsedGuests = JSON.parse(event.guestList);
+          } else {
+            parsedGuests = event.guestList
+              .split(/[\n,]+/)
+              .map(n => n.trim())
+              .filter(Boolean)
+              .map((name, idx) => ({
+                id: `gst-migrated-${idx}`,
+                name,
+                phone: "",
+                rsvp: "CONFIRMED" as const,
+                tableNo: "General Seating",
+                dietary: "STANDARD" as const
+              }));
+          }
+        } catch { }
+      }
+
+      // Check localStorage for any cached cues or metadata if DB list is currently empty
       if (typeof window !== "undefined") {
         if (parsedCues.length === 0) {
           try {
             const cached = localStorage.getItem(`eventos_cues_${eventId}`);
             if (cached) parsedCues = JSON.parse(cached);
+          } catch { }
+        }
+        if (parsedGuests.length === 0) {
+          try {
+            const cachedMeta = localStorage.getItem(`eventos_meta_${eventId}`);
+            if (cachedMeta) {
+              const pMeta = JSON.parse(cachedMeta);
+              if (Array.isArray(pMeta.guests) && pMeta.guests.length > 0) {
+                parsedGuests = pMeta.guests;
+              }
+            }
           } catch { }
         }
       }
@@ -644,8 +688,8 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         endDate: current.endDate ? new Date(current.endDate).toISOString() : new Date().toISOString(),
         location: current.location,
         venueName: current.venueName,
-        venueAddress: current.venueAddress,
-        guestCount: Number(current.guestCount) || 0,
+        guestCount: Number(current.guestCount) || current.guests.length || 0,
+        guestList: JSON.stringify(current.guests),
         budget: Number(current.budget) || 0,
         notes: JSON.stringify(metaPayload)
       };
@@ -1152,6 +1196,112 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
     addToast("Note removed", "info");
   };
 
+  // ── OPTION B: CHRONOLOGICAL TIME PARSER & OPERATIONAL COMPUTATIONS ──
+  const parseTimeToMinutes = (timeStr: string): number => {
+    if (!timeStr) return 9999;
+    const clean = timeStr.trim();
+    const match = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (!match) {
+      const generic = clean.match(/(\d{1,2})[:.](\d{2})/);
+      if (generic) {
+        return parseInt(generic[1], 10) * 60 + parseInt(generic[2], 10);
+      }
+      return 9999;
+    }
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const ampm = match[3] ? match[3].toUpperCase() : null;
+    if (ampm === "PM" && hours < 12) hours += 12;
+    if (ampm === "AM" && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  };
+
+  const filteredTimelineCues = useMemo(() => {
+    let list = [...timelineCues];
+    if (timelineDeptFilter !== "ALL") {
+      list = list.filter(c => c.department?.toLowerCase() === timelineDeptFilter.toLowerCase());
+    }
+    if (timelineSearch.trim()) {
+      const query = timelineSearch.toLowerCase();
+      list = list.filter(c =>
+        c.title?.toLowerCase().includes(query) ||
+        (c.notes && c.notes.toLowerCase().includes(query)) ||
+        c.time?.toLowerCase().includes(query) ||
+        c.department?.toLowerCase().includes(query)
+      );
+    }
+    if (timelineSortMode === "CHRONO") {
+      list.sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
+    }
+    return list;
+  }, [timelineCues, timelineDeptFilter, timelineSearch, timelineSortMode]);
+
+  const filteredGuests = useMemo(() => {
+    let list = [...guests];
+    if (guestRsvpFilter !== "ALL") {
+      list = list.filter(g => g.rsvp === guestRsvpFilter);
+    }
+    if (guestSearch.trim()) {
+      const query = guestSearch.toLowerCase();
+      list = list.filter(g =>
+        g.name.toLowerCase().includes(query) ||
+        (g.phone && g.phone.toLowerCase().includes(query)) ||
+        (g.tableNo && g.tableNo.toLowerCase().includes(query)) ||
+        (g.dietary && g.dietary.toLowerCase().includes(query))
+      );
+    }
+    return list;
+  }, [guests, guestRsvpFilter, guestSearch]);
+
+  const exportGuestListCSV = () => {
+    if (guests.length === 0) {
+      addToast("No guests to export", "info");
+      return;
+    }
+    const headers = ["Name", "Phone", "RSVP Status", "Table / Seating", "Dietary Preference"];
+    const rows = guests.map(g => [
+      `"${(g.name || "").replace(/"/g, '""')}"`,
+      `"${(g.phone || "").replace(/"/g, '""')}"`,
+      `"${g.rsvp || "PENDING"}"`,
+      `"${(g.tableNo || "").replace(/"/g, '""')}"`,
+      `"${g.dietary || "STANDARD"}"`
+    ]);
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${(editName || "event").replace(/[^a-zA-Z0-9_-]/g, "_")}_guests.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    addToast("Guest registry exported to CSV", "success");
+  };
+
+  const copyAllGuestPhones = () => {
+    const phones = guests.map(g => g.phone).filter(Boolean);
+    if (phones.length === 0) {
+      addToast("No guest phone numbers found to copy", "info");
+      return;
+    }
+    navigator.clipboard.writeText(phones.join(", "));
+    addToast(`Copied ${phones.length} phone numbers to clipboard`, "success");
+  };
+
+  const filteredChecklist = useMemo(() => {
+    if (taskStatusFilter === "PENDING") return checklist.filter(t => !t.completed);
+    if (taskStatusFilter === "COMPLETED") return checklist.filter(t => t.completed);
+    return checklist;
+  }, [checklist, taskStatusFilter]);
+
+  const filteredVendors = useMemo(() => {
+    if (vendorPaymentFilter !== "ALL") {
+      return vendors.filter(v => v.paymentStatus === vendorPaymentFilter);
+    }
+    return vendors;
+  }, [vendors, vendorPaymentFilter]);
+
   if (eventLoading || !event) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-[#0c0c0e] text-slate-600 dark:text-zinc-400">
@@ -1485,6 +1635,65 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                 </div>
               )}
 
+              {/* Timeline Search, Department Filter & Chrono Sort Controls (Option B) */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 bg-slate-50/80 dark:bg-zinc-950/40 border border-slate-200 dark:border-zinc-800 rounded-xl">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="relative flex-1 max-w-sm">
+                    <Search size={13} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
+                    <input
+                      type="text"
+                      placeholder="Search cue, department, or notes..."
+                      value={timelineSearch}
+                      onChange={(e) => setTimelineSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  {timelineSearch && (
+                    <button
+                      onClick={() => setTimelineSearch("")}
+                      className="text-[10px] text-slate-500 hover:text-slate-700 dark:hover:text-zinc-300 font-bold px-1.5 py-1"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Chronological Sort Toggle */}
+                  <button
+                    onClick={() => setTimelineSortMode(prev => prev === "CHRONO" ? "ORDER" : "CHRONO")}
+                    className={cn(
+                      "px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer select-none",
+                      timelineSortMode === "CHRONO"
+                        ? "bg-purple-600/10 border-purple-500/30 text-purple-700 dark:text-purple-300"
+                        : "bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                    )}
+                    title={timelineSortMode === "CHRONO" ? "Sorting automatically by time of day (Chronological)" : "Showing in raw entry order"}
+                  >
+                    <ArrowUpDown size={12} className={timelineSortMode === "CHRONO" ? "text-purple-600 dark:text-purple-400" : ""} />
+                    {timelineSortMode === "CHRONO" ? "Auto-Sorted: Chronological" : "Sort: Entry Order"}
+                  </button>
+
+                  {/* Department Filter Select */}
+                  <div className="flex items-center gap-1">
+                    <SlidersHorizontal size={12} className="text-slate-400 dark:text-zinc-500" />
+                    <select
+                      value={timelineDeptFilter}
+                      onChange={(e) => setTimelineDeptFilter(e.target.value)}
+                      className="px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-800 dark:text-zinc-200 text-xs font-bold focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Departments ({timelineCues.length})</option>
+                      <option value="Hospitality & Hostess">Hospitality & Hostess</option>
+                      <option value="Stage & Production">Stage & Production</option>
+                      <option value="Entertainment & AV">Entertainment & AV</option>
+                      <option value="Catering & Bar">Catering & Bar</option>
+                      <option value="Photography & Drone">Photography & Drone</option>
+                      <option value="Security & Valet">Security & Valet</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               {/* Cue Items List */}
               <div className="space-y-3">
                 {timelineCues.length === 0 ? (
@@ -1495,8 +1704,19 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                       Click "+ Add Timeline Cue" to build your live minute-by-minute execution cue sheet.
                     </p>
                   </div>
+                ) : filteredTimelineCues.length === 0 ? (
+                  <div className="text-center py-8 px-4 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-950/20 space-y-2">
+                    <Clock size={20} className="mx-auto text-slate-400 dark:text-zinc-500" />
+                    <p className="text-xs font-bold text-slate-700 dark:text-zinc-300">No cues match the selected filter or search query</p>
+                    <button
+                      onClick={() => { setTimelineSearch(""); setTimelineDeptFilter("ALL"); }}
+                      className="px-3 py-1 bg-purple-600/10 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold hover:underline cursor-pointer"
+                    >
+                      Reset Filter
+                    </button>
+                  </div>
                 ) : (
-                  timelineCues.map((cue) => (
+                  filteredTimelineCues.map((cue) => (
                     <div
                       key={cue.id}
                       className={cn(
@@ -1630,24 +1850,65 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                 </div>
               </div>
 
-              {/* Guest Search & Bulk Import Accordion */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="relative w-full sm:w-64">
-                  <Search size={13} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
-                  <input
-                    type="text"
-                    placeholder="Search guest by name..."
-                    value={guestSearch}
-                    onChange={(e) => setGuestSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
-                  />
+              {/* Guest Filter Toolbar & Export Actions (Option B) */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 bg-slate-50/80 dark:bg-zinc-950/40 border border-slate-200 dark:border-zinc-800 rounded-xl">
+                <div className="flex items-center gap-2 flex-1 flex-wrap">
+                  <div className="relative w-full sm:w-60">
+                    <Search size={13} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
+                    <input
+                      type="text"
+                      placeholder="Search name, phone, table..."
+                      value={guestSearch}
+                      onChange={(e) => setGuestSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+
+                  {/* RSVP Filter Pills */}
+                  <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 p-1 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs font-bold">
+                    {(["ALL", "CONFIRMED", "PENDING", "DECLINED"] as const).map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setGuestRsvpFilter(f)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-[10px] font-bold transition select-none cursor-pointer",
+                          guestRsvpFilter === f
+                            ? "bg-purple-600 text-white shadow-sm"
+                            : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                        )}
+                      >
+                        {f === "ALL" ? `All (${guests.length})` : f.charAt(0) + f.slice(1).toLowerCase()}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <button
-                  onClick={() => setShowBulkPaste(!showBulkPaste)}
-                  className="text-xs text-purple-600 dark:text-purple-400 hover:underline font-bold cursor-pointer"
-                >
-                  {showBulkPaste ? "Hide Bulk Import" : "+ Bulk Paste Guest Registry"}
-                </button>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={copyAllGuestPhones}
+                    className="px-2.5 py-1.5 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5 transition cursor-pointer"
+                    title="Copy all guest phone numbers for WhatsApp broadcast"
+                  >
+                    <Copy size={12} />
+                    Copy Phones
+                  </button>
+
+                  <button
+                    onClick={exportGuestListCSV}
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                    title="Download complete guest registry as CSV"
+                  >
+                    <Download size={13} className="text-purple-600 dark:text-purple-400" />
+                    Export CSV
+                  </button>
+
+                  <button
+                    onClick={() => setShowBulkPaste(!showBulkPaste)}
+                    className="text-xs text-purple-600 dark:text-purple-400 hover:underline font-bold cursor-pointer ml-1"
+                  >
+                    {showBulkPaste ? "Hide Import" : "+ Bulk Paste"}
+                  </button>
+                </div>
               </div>
 
               {showBulkPaste && (
@@ -1679,10 +1940,19 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     <span className="text-xs text-slate-700 dark:text-zinc-400 font-bold block">No guests registered yet</span>
                     <span className="text-[11px] text-slate-500 dark:text-zinc-500">Add guests individually or bulk-paste names above.</span>
                   </div>
+                ) : filteredGuests.length === 0 ? (
+                  <div className="text-center py-8 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-950/20 space-y-2">
+                    <Users size={20} className="mx-auto text-slate-400 dark:text-zinc-500" />
+                    <span className="text-xs text-slate-700 dark:text-zinc-300 font-bold block">No guests match the selected filter</span>
+                    <button
+                      onClick={() => { setGuestSearch(""); setGuestRsvpFilter("ALL"); }}
+                      className="px-3 py-1 bg-purple-600/10 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold hover:underline cursor-pointer"
+                    >
+                      Reset Filter
+                    </button>
+                  </div>
                 ) : (
-                  guests
-                    .filter(g => g.name.toLowerCase().includes(guestSearch.toLowerCase()))
-                    .map((g) => (
+                  filteredGuests.map((g) => (
                       <div
                         key={g.id}
                         className="p-3 border border-slate-200 dark:border-zinc-850 bg-slate-50/50 dark:bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4 text-xs"
@@ -1738,7 +2008,25 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                   <CheckSquare size={16} className="text-purple-600 dark:text-purple-400" />
                   <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest">Operational Checklist Tasks</h3>
                 </div>
-                <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{checklistProgress}% Completed</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900 p-1 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs font-bold">
+                    {(["ALL", "PENDING", "COMPLETED"] as const).map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setTaskStatusFilter(f)}
+                        className={cn(
+                          "px-2.5 py-0.5 rounded text-[10px] font-bold transition select-none cursor-pointer",
+                          taskStatusFilter === f
+                            ? "bg-purple-600 text-white shadow-sm"
+                            : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                        )}
+                      >
+                        {f === "ALL" ? `All (${checklist.length})` : f.charAt(0) + f.slice(1).toLowerCase()}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{checklistProgress}% Completed</span>
+                </div>
               </div>
 
               {/* Progress bar */}
@@ -1754,8 +2042,18 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     <span className="text-xs text-slate-700 dark:text-zinc-400 font-bold block">No operational tasks added yet</span>
                     <span className="text-[11px] text-slate-500 dark:text-zinc-500">Log tasks below to organize event deliverables.</span>
                   </div>
+                ) : filteredChecklist.length === 0 ? (
+                  <div className="text-center py-6 border border-slate-200 dark:border-zinc-850 rounded-xl bg-slate-50/50 dark:bg-zinc-950/20 space-y-2">
+                    <span className="text-xs text-slate-600 dark:text-zinc-400 font-bold block">No tasks match the filter</span>
+                    <button
+                      onClick={() => setTaskStatusFilter("ALL")}
+                      className="px-2.5 py-1 bg-purple-600/10 text-purple-600 dark:text-purple-400 rounded text-xs font-bold hover:underline cursor-pointer"
+                    >
+                      Show All Tasks
+                    </button>
+                  </div>
                 ) : (
-                  checklist.map((t) => (
+                  filteredChecklist.map((t) => (
                     <div key={t.id} className="flex items-center justify-between p-3 border border-slate-200 dark:border-zinc-850 rounded-xl bg-slate-50/60 dark:bg-zinc-950/30 text-xs">
                       <div className="flex items-center gap-3">
                         <button
@@ -1830,12 +2128,27 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                   <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">Assign vendors, track contractual commitments, costs, and payment status.</p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Payment Status Filter */}
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900 p-1 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs font-bold">
+                    {(["ALL", "UNPAID", "PARTIAL", "PAID"] as const).map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setVendorPaymentFilter(f)}
+                        className={cn(
+                          "px-2.5 py-0.5 rounded text-[10px] font-bold transition select-none cursor-pointer",
+                          vendorPaymentFilter === f
+                            ? "bg-purple-600 text-white shadow-sm"
+                            : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                        )}
+                      >
+                        {f === "ALL" ? `All (${vendors.length})` : f.charAt(0) + f.slice(1).toLowerCase()}
+                      </button>
+                    ))}
+                  </div>
+
                   <span className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300 font-mono font-bold text-xs">
-                    Total Quoted: ₹{totalVendorCost.toLocaleString()}
-                  </span>
-                  <span className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 text-xs font-bold">
-                    {vendors.length} Vendors
+                    Total: ₹{totalVendorCost.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -1850,8 +2163,19 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                       Use the "Log Vendor Assignment" form below to assign your caterers, decorators, sound engineers, and photographers.
                     </p>
                   </div>
+                ) : filteredVendors.length === 0 ? (
+                  <div className="col-span-3 text-center py-8 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-950/20 space-y-2">
+                    <Car size={20} className="mx-auto text-slate-400 dark:text-zinc-500" />
+                    <span className="text-xs text-slate-700 dark:text-zinc-300 font-bold block">No vendors match the selected payment status</span>
+                    <button
+                      onClick={() => setVendorPaymentFilter("ALL")}
+                      className="px-3 py-1 bg-purple-600/10 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold hover:underline cursor-pointer"
+                    >
+                      Show All Vendors
+                    </button>
+                  </div>
                 ) : (
-                  vendors.map((v) => (
+                  filteredVendors.map((v) => (
                     <div key={v.id} className="p-4 border border-slate-200 dark:border-zinc-850 bg-slate-50/60 dark:bg-[#161618]/50 hover:border-purple-300 dark:hover:border-zinc-700/80 transition rounded-xl space-y-3 relative group">
                       <div className="flex justify-between items-start">
                         <div>

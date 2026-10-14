@@ -393,17 +393,17 @@ export default function LeadDrawer({
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 26, stiffness: 210 }}
-      className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-border bg-background/98 backdrop-blur-md shadow-2xl flex flex-col justify-between select-none"
+      className="fixed inset-y-0 right-0 z-50 w-full max-w-xl border-l border-slate-200/90 dark:border-zinc-800 bg-white/98 dark:bg-[#111218]/98 backdrop-blur-xl shadow-2xl flex flex-col justify-between select-none"
 
     >
       {/* Drawer Header */}
-      <div className="h-16 border-b border-zinc-850 px-6 flex items-center justify-between shrink-0">
+      <div className="h-16 border-b border-slate-200/90 dark:border-zinc-850 px-6 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-transparent">
         <div className="flex items-center gap-3">
-          <span className="font-extrabold text-sm text-zinc-150 truncate max-w-[200px]">{lead.name}</span>
+          <span className="font-extrabold text-sm text-slate-900 dark:text-zinc-150 truncate max-w-[200px]">{lead.name}</span>
           <span className={cn(
             "text-[9px] font-bold px-2 py-0.5 rounded-full border tracking-wide uppercase",
-            lead.status === "WON" || lead.status === "BOOKED" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" :
-            lead.status === "LOST" ? "border-red-500/20 bg-red-500/5 text-red-400" : "border-purple-500/20 bg-purple-500/5 text-purple-400"
+            lead.status === "WON" || lead.status === "BOOKED" ? "border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" :
+            lead.status === "LOST" ? "border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400" : "border-purple-500/30 bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400"
           )}>
             {lead.status}
           </span>
@@ -411,12 +411,12 @@ export default function LeadDrawer({
           {/* Autosave Status */}
           <div className="flex items-center gap-1.5 pl-2">
             {saveStatus === "saving" && (
-              <span className="flex items-center gap-1 text-[9px] text-zinc-500 font-bold uppercase">
-                <Loader2 size={10} className="animate-spin text-purple-400" /> Saving...
+              <span className="flex items-center gap-1 text-[9px] text-slate-500 dark:text-zinc-400 font-bold uppercase">
+                <Loader2 size={10} className="animate-spin text-purple-600 dark:text-purple-400" /> Saving...
               </span>
             )}
             {saveStatus === "saved" && (
-              <span className="flex items-center gap-1 text-[9px] text-emerald-450 font-bold uppercase">
+              <span className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">
                 <Check size={10} /> Saved
               </span>
             )}
@@ -428,14 +428,14 @@ export default function LeadDrawer({
             onClick={() => {
               if (confirm("Delete this lead permanently?")) onDeleteLead();
             }}
-            className="h-8 w-8 rounded-lg bg-zinc-900/60 hover:bg-red-500/10 hover:text-red-500 border border-zinc-850 flex items-center justify-center transition-all cursor-pointer"
+            className="h-8 w-8 rounded-lg bg-slate-100 hover:bg-red-50 hover:text-red-600 dark:bg-zinc-900/60 dark:hover:bg-red-500/10 dark:hover:text-red-500 border border-slate-200 dark:border-zinc-850 flex items-center justify-center transition-all cursor-pointer text-slate-500"
             title="Delete Lead"
           >
             <Trash2 size={13} />
           </button>
           <button
             onClick={onClose}
-            className="h-8 w-8 rounded-lg bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-850 text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+            className="h-8 w-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900/60 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-850 text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer"
             aria-label="Close details"
           >
             <X size={14} />
@@ -444,7 +444,7 @@ export default function LeadDrawer({
       </div>
 
       {/* Tabs list */}
-      <div className="border-b border-zinc-850 px-6 bg-zinc-950/20 flex gap-4 shrink-0 overflow-x-auto scrollbar-none">
+      <div className="border-b border-slate-200/90 dark:border-zinc-850 px-6 bg-slate-50/70 dark:bg-zinc-950/20 flex gap-4 shrink-0 overflow-x-auto scrollbar-none">
         {[
           { id: "overview", label: "Overview", icon: User },
           { id: "contact", label: "Contact Profile", icon: Globe },
@@ -461,7 +461,7 @@ export default function LeadDrawer({
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
                 "py-3 text-[10px] font-bold border-b-2 tracking-wide uppercase transition-all cursor-pointer shrink-0 flex items-center gap-1.5",
-                activeTab === tab.id ? "border-purple-500 text-purple-400" : "border-transparent text-zinc-500 hover:text-zinc-350"
+                activeTab === tab.id ? "border-purple-600 text-purple-700 dark:border-purple-500 dark:text-purple-400" : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
               )}
             >
               <Icon size={11} />
@@ -478,10 +478,10 @@ export default function LeadDrawer({
         {activeTab === "overview" && (
           <div className="space-y-4 font-semibold text-xs">
             {/* Core details */}
-            <div className="p-4 rounded-xl border border-zinc-850 bg-zinc-900/10 space-y-3.5">
-              <h4 className="text-[10px] font-extrabold uppercase text-zinc-450 tracking-wider">Leads Specs</h4>
+            <div className="p-4 rounded-xl border border-slate-200/90 dark:border-zinc-850 bg-slate-50/50 dark:bg-zinc-900/10 space-y-3.5 shadow-sm">
+              <h4 className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-zinc-400 tracking-wider">Leads Specs</h4>
               <div className="space-y-1.5">
-                <label className="text-zinc-500 font-bold block">Lead Name</label>
+                <label className="text-slate-600 dark:text-zinc-400 font-bold block">Lead Name</label>
                 <input
                   type="text"
                   value={editName}
@@ -489,21 +489,21 @@ export default function LeadDrawer({
                     setEditName(e.target.value);
                     triggerAutoSave({ name: e.target.value });
                   }}
-                  className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none focus:border-purple-500"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-lg text-slate-900 dark:text-zinc-200 focus:outline-none focus:border-purple-600 shadow-sm"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-zinc-500 font-bold block">Category</label>
+                  <label className="text-slate-600 dark:text-zinc-400 font-bold block">Category</label>
                   <select
                     value={editEventType}
                     onChange={(e) => {
                       setEditEventType(e.target.value);
                       triggerAutoSave({ eventType: e.target.value });
                     }}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-lg text-slate-800 dark:text-zinc-300 focus:outline-none focus:border-purple-600 shadow-sm"
                   >
                     <option value="WEDDING">Wedding</option>
                     <option value="BIRTHDAY">Birthday</option>
@@ -512,7 +512,7 @@ export default function LeadDrawer({
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-zinc-500 font-bold block">Event Date</label>
+                  <label className="text-slate-600 dark:text-zinc-400 font-bold block">Event Date</label>
                   <input
                     type="date"
                     value={editEventDate}
@@ -520,14 +520,14 @@ export default function LeadDrawer({
                       setEditEventDate(e.target.value);
                       triggerAutoSave({ eventDate: e.target.value });
                     }}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-lg text-slate-800 dark:text-zinc-300 focus:outline-none focus:border-purple-600 shadow-sm"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-zinc-500 font-bold block">Budget (INR)</label>
+                  <label className="text-slate-600 dark:text-zinc-400 font-bold block">Budget (INR)</label>
                   <input
                     type="number"
                     value={editBudget}
@@ -535,18 +535,18 @@ export default function LeadDrawer({
                       setEditBudget(Number(e.target.value));
                       triggerAutoSave({ budget: Number(e.target.value) });
                     }}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-200 focus:outline-none focus:border-purple-500"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-lg text-slate-900 dark:text-zinc-200 focus:outline-none focus:border-purple-600 shadow-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-zinc-500 font-bold block">Source</label>
+                  <label className="text-slate-600 dark:text-zinc-400 font-bold block">Source</label>
                   <select
                     value={editSource}
                     onChange={(e) => {
                       setEditSource(e.target.value);
                       triggerAutoSave({ leadSource: e.target.value });
                     }}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-zinc-300 focus:outline-none focus:border-purple-500"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-lg text-slate-800 dark:text-zinc-300 focus:outline-none focus:border-purple-600 shadow-sm"
                   >
                     <option value="Website">Website</option>
                     <option value="WhatsApp">WhatsApp</option>
