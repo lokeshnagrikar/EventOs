@@ -9,6 +9,7 @@ export interface UserProfile {
   role: string;
   permissions: string[];
   profileImage?: string;
+  tenantId?: string;
 }
 
 export interface WorkspaceMembership {

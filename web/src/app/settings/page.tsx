@@ -161,7 +161,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
-  const { clearAuth, user, updateUserProfile } = useAuthStore();
+  const { clearAuth, user, updateUserProfile, activeTenantId } = useAuthStore();
   const { completeStep } = useOnboardingStore();
   const [mounted, setMounted] = useState(false);
 
@@ -1558,7 +1558,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-mono px-2.5 py-1 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-100/80 dark:bg-white/[0.04] text-slate-600 dark:text-zinc-300">
-                        {user?.tenantId || "Production Tenant"}
+                        {activeTenantId || user?.tenantId || "Production Tenant"}
                       </span>
                     </div>
                   </div>
