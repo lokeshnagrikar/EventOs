@@ -74,12 +74,12 @@ interface Lead {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  DRAFT: "border-zinc-800 bg-zinc-800/20 text-zinc-400",
-  SENT: "border-blue-500/20 bg-blue-500/5 text-blue-450",
-  VIEWED: "border-indigo-500/20 bg-indigo-500/5 text-indigo-400",
-  ACCEPTED: "border-emerald-500/20 bg-emerald-500/5 text-emerald-450",
-  REJECTED: "border-red-500/20 bg-red-500/5 text-red-450",
-  EXPIRED: "border-amber-500/20 bg-amber-500/5 text-amber-450"
+  DRAFT: "border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-800/40 text-slate-600 dark:text-zinc-400",
+  SENT: "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  VIEWED: "border-indigo-500/20 bg-indigo-500/10 text-indigo-700 dark:text-indigo-400",
+  ACCEPTED: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  REJECTED: "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400",
+  EXPIRED: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400"
 };
 
 export default function QuoteDetailPage() {
@@ -369,57 +369,57 @@ export default function QuoteDetailPage() {
   const auditLogs = typeof window !== "undefined" ? JSON.parse(localStorage.getItem(`quote_audit_${quoteId}`) || "[]") : [];
 
   // Template styling variables
-  let tplBg = "bg-[#161618]/30 border-zinc-850 text-zinc-200";
-  let tplHeader = "border-zinc-800";
+  let tplBg = "bg-white dark:bg-[#12131a] border-slate-200/90 dark:border-white/[0.08] text-slate-900 dark:text-zinc-200 shadow-sm";
+  let tplHeader = "border-slate-200/90 dark:border-white/[0.08]";
   let tplFont = "font-sans";
-  let tplAccentText = "text-purple-450";
-  let tplTableHead = "bg-zinc-900/40 text-zinc-400 border-zinc-800";
+  let tplAccentText = "text-purple-600 dark:text-purple-400";
+  let tplTableHead = "bg-slate-50 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 border-slate-200/90 dark:border-white/[0.08]";
   let tplTitle = "EventOS Proposals";
 
   if (quote.templateName === "ELEGANT") {
-    tplBg = "bg-[#0F0D0E]/80 border-pink-900/30 text-rose-100 font-serif";
-    tplHeader = "border-pink-900/25";
+    tplBg = "bg-rose-50/40 dark:bg-[#0F0D0E]/80 border-rose-200 dark:border-pink-900/30 text-rose-950 dark:text-rose-100 font-serif shadow-sm";
+    tplHeader = "border-rose-200 dark:border-pink-900/25";
     tplFont = "font-serif";
-    tplAccentText = "text-pink-400";
-    tplTableHead = "bg-pink-950/10 text-pink-300 border-pink-900/20";
+    tplAccentText = "text-pink-600 dark:text-pink-400";
+    tplTableHead = "bg-rose-100/50 dark:bg-pink-950/20 text-rose-800 dark:text-pink-300 border-rose-200 dark:border-pink-900/20";
     tplTitle = "Wedding Celebration Proposal";
   } else if (quote.templateName === "PLAYFUL") {
-    tplBg = "bg-[#090D0A]/80 border-emerald-900/30 text-emerald-100";
-    tplHeader = "border-emerald-900/25";
+    tplBg = "bg-emerald-50/40 dark:bg-[#090D0A]/80 border-emerald-200 dark:border-emerald-900/30 text-emerald-950 dark:text-emerald-100 shadow-sm";
+    tplHeader = "border-emerald-200 dark:border-emerald-900/25";
     tplFont = "font-sans";
-    tplAccentText = "text-emerald-400";
-    tplTableHead = "bg-emerald-950/10 text-emerald-300 border-emerald-900/20";
+    tplAccentText = "text-emerald-600 dark:text-emerald-400";
+    tplTableHead = "bg-emerald-100/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/20";
     tplTitle = "Birthday Gala Pricing Proposal";
   } else {
-    tplBg = "bg-[#111113] border-zinc-800 text-zinc-200";
-    tplHeader = "border-zinc-800";
+    tplBg = "bg-white dark:bg-[#111113] border-slate-200/90 dark:border-zinc-800 text-slate-900 dark:text-zinc-200 shadow-sm";
+    tplHeader = "border-slate-200/90 dark:border-zinc-800";
     tplFont = "font-sans";
-    tplAccentText = "text-blue-400";
-    tplTableHead = "bg-zinc-900 text-zinc-450 border-zinc-800";
+    tplAccentText = "text-blue-600 dark:text-blue-400";
+    tplTableHead = "bg-slate-50 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border-slate-200/90 dark:border-zinc-800";
     tplTitle = "Corporate Events Agreement";
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden transition-all duration-200 select-none">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0f] text-slate-900 dark:text-foreground flex flex-col relative overflow-hidden transition-all duration-200 select-none">
       
       {/* Background glow effects to match landing page theme */}
       <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
 
       {/* Top Navbar Header */}
-      <nav className="h-16 border-b border-border bg-card/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0 print:hidden">
+      <nav className="h-16 border-b border-slate-200/90 dark:border-white/[0.08] bg-white/80 dark:bg-card/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0 print:hidden">
 
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/quotes")}
-            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50 cursor-pointer"
+            className="h-8 w-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 flex items-center justify-center text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all border border-slate-200 dark:border-zinc-700/50 cursor-pointer"
             aria-label="Back to quotes"
           >
             <ArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-base">Quotation Sheet</span>
-            <span className="text-xs px-2 py-0.5 bg-zinc-800 rounded text-zinc-400">{quote.quoteNumber}</span>
+            <span className="font-bold text-base text-slate-900 dark:text-white">Quotation Sheet</span>
+            <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-zinc-800 rounded-lg text-slate-600 dark:text-zinc-400 font-semibold">{quote.quoteNumber}</span>
           </div>
         </div>
 
@@ -435,7 +435,7 @@ export default function QuoteDetailPage() {
 
           <button
             onClick={copyShareableLink}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 rounded-xl text-xs font-bold text-zinc-300 transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl text-xs font-bold text-slate-700 dark:text-zinc-300 transition cursor-pointer shadow-sm"
           >
             {copiedLink ? <CheckCircle size={13} className="text-emerald-500" /> : <Share2 size={13} />}
             <span>{copiedLink ? "Link Copied" : "Share link"}</span>
@@ -444,7 +444,7 @@ export default function QuoteDetailPage() {
           <button
             onClick={handleDownloadPdf}
             disabled={downloadingPdf}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/20 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-50 hover:bg-purple-100 dark:bg-purple-600/10 dark:hover:bg-purple-600/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
           >
             {downloadingPdf ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
             <span>{downloadingPdf ? "Generating PDF..." : "Download PDF"}</span>
@@ -452,7 +452,7 @@ export default function QuoteDetailPage() {
 
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/60 hover:bg-zinc-800 rounded-xl text-xs font-bold text-zinc-300 transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900/60 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl text-xs font-bold text-slate-700 dark:text-zinc-300 transition cursor-pointer shadow-sm"
           >
             <Printer size={13} />
             Print Quote
@@ -463,7 +463,7 @@ export default function QuoteDetailPage() {
             <>
               <button
                 onClick={() => setShowFeedbackModal(true)}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-red-650/10 hover:bg-red-650/20 text-red-500 border border-red-500/20 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-650/10 dark:hover:bg-red-650/20 text-red-600 dark:text-red-500 border border-red-200 dark:border-red-500/20 rounded-xl text-xs font-bold transition cursor-pointer"
               >
                 <XIcon size={14} />
                 Reject
@@ -484,10 +484,10 @@ export default function QuoteDetailPage() {
               setSelectedLeadId(quote.leadId || "");
               setShowReassignModal(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/80 hover:bg-zinc-850 rounded-xl text-xs font-bold text-zinc-300 transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900/80 hover:bg-slate-50 dark:hover:bg-zinc-850 rounded-xl text-xs font-bold text-slate-700 dark:text-zinc-300 transition cursor-pointer shadow-sm"
             title="Link this quote to an active CRM lead"
           >
-            <UserCheck size={13} className="text-purple-400" />
+            <UserCheck size={13} className="text-purple-600 dark:text-purple-400" />
             <span>Link Lead</span>
           </button>
 
@@ -495,7 +495,7 @@ export default function QuoteDetailPage() {
           {quote.status === "DRAFT" && (
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-xs font-bold transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 rounded-xl text-xs font-bold transition cursor-pointer"
               title="Delete this draft quote"
             >
               <Trash2 size={13} />
@@ -506,7 +506,7 @@ export default function QuoteDetailPage() {
           {quote.status === "ACCEPTED" && booking && (
             <button
               onClick={() => router.push(`/bookings/${booking.id}`)}
-              className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-650/10 hover:bg-emerald-650/20 text-emerald-450 border border-emerald-500/20 rounded-xl text-xs font-bold transition shadow-md cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-650/10 dark:hover:bg-emerald-650/20 text-emerald-700 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-xs font-bold transition shadow-md cursor-pointer"
             >
               <Award size={14} />
               Open Booking ({booking.bookingNumber})
@@ -692,50 +692,50 @@ export default function QuoteDetailPage() {
         {/* Right Sidebar (Version History & Client Digital approvals logs) */}
         <div className="space-y-6 print:hidden font-semibold text-xs select-none">
           {/* Quote metadata details panel */}
-          <div className="p-4 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-4">
-            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
-              <Lock size={13} className="text-purple-400" />
+          <div className="p-4 sm:p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md rounded-2xl space-y-4">
+            <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-widest flex items-center gap-1.5">
+              <Lock size={13} className="text-purple-600 dark:text-purple-400" />
               Digital Sign-off Vault
             </h3>
             {quote.status === "ACCEPTED" ? (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 flex items-center gap-2">
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
                 <UserCheck size={14} className="shrink-0" />
                 <div>
-                  <span className="font-bold block">Digitally Sign-off Completed</span>
+                  <span className="font-bold block">Digital Sign-off Completed</span>
                   <span className="text-[10px] opacity-80 block">Signee: {signerName || "Client Sponsor"}</span>
                 </div>
               </div>
             ) : (
-              <p className="text-zinc-500 leading-normal">
+              <p className="text-slate-500 dark:text-zinc-400 leading-normal font-medium">
                 Waiting for client approval. Secure sharing link active for client review.
               </p>
             )}
           </div>
 
           {/* Audit version timeline */}
-          <div className="p-4 border border-zinc-850 bg-zinc-950/20 rounded-xl space-y-4">
-            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
-              <History size={13} className="text-purple-400" />
+          <div className="p-4 sm:p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md rounded-2xl space-y-4">
+            <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-widest flex items-center gap-1.5">
+              <History size={13} className="text-purple-600 dark:text-purple-400" />
               Quote Version Logs
             </h3>
-            <div className="space-y-4 border-l border-zinc-850 pl-3 ml-1.5">
+            <div className="space-y-4 border-l border-slate-200 dark:border-zinc-800 pl-3 ml-1.5">
               {auditLogs.map((log: any, idx: number) => (
                 <div key={idx} className="relative">
-                  <span className="absolute -left-[18px] mt-1.5 h-2 w-2 rounded-full bg-purple-500 ring-4 ring-[#09090b]" />
+                  <span className="absolute -left-[18px] mt-1.5 h-2 w-2 rounded-full bg-purple-500 ring-4 ring-white dark:ring-[#09090b]" />
                   <div>
-                    <span className="font-bold text-zinc-200 block">v1.{idx} - Status: {log.status}</span>
-                    {log.signer && <p className="text-[10px] text-zinc-500 font-medium">Signed by: {log.signer}</p>}
-                    {log.feedback && <p className="text-[10px] text-zinc-500 font-medium">Feedback: {log.feedback}</p>}
-                    <span className="text-[9px] text-zinc-600 block">{new Date(log.timestamp).toLocaleString()}</span>
+                    <span className="font-bold text-slate-800 dark:text-zinc-200 block">v1.{idx} - Status: {log.status}</span>
+                    {log.signer && <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">Signed by: {log.signer}</p>}
+                    {log.feedback && <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">Feedback: {log.feedback}</p>}
+                    <span className="text-[9px] text-slate-400 dark:text-zinc-500 block">{new Date(log.timestamp).toLocaleString()}</span>
                   </div>
                 </div>
               ))}
               <div className="relative">
-                <span className="absolute -left-[18px] mt-1.5 h-2 w-2 rounded-full bg-purple-500 ring-4 ring-[#09090b]" />
+                <span className="absolute -left-[18px] mt-1.5 h-2 w-2 rounded-full bg-purple-500 ring-4 ring-white dark:ring-[#09090b]" />
                 <div>
-                  <span className="font-bold text-zinc-200 block">v1.0 - Original Proposal Draft</span>
-                  <p className="text-[10px] text-zinc-550">Created by CRM system broker</p>
-                  <span className="text-[9px] text-zinc-650">{new Date(quote.createdAt).toLocaleString()}</span>
+                  <span className="font-bold text-slate-800 dark:text-zinc-200 block">v1.0 - Original Proposal Draft</span>
+                  <p className="text-[10px] text-slate-500 dark:text-zinc-400">Created by CRM system broker</p>
+                  <span className="text-[9px] text-slate-400 dark:text-zinc-500">{new Date(quote.createdAt).toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -746,16 +746,16 @@ export default function QuoteDetailPage() {
 
       {/* Digital Sign-off Modal overlay */}
       {showSignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-md p-6 bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl text-white space-y-4 relative">
-            <button onClick={() => setShowSignModal(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-md p-6 bg-white dark:bg-[#0e0f15] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl text-slate-900 dark:text-white space-y-4 relative">
+            <button onClick={() => setShowSignModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
               <XIcon size={16} />
             </button>
             <h3 className="text-base font-bold flex items-center gap-2">
-              <UserCheck size={16} className="text-purple-400" />
+              <UserCheck size={16} className="text-purple-600 dark:text-purple-400" />
               Digital Approval Sign-off
             </h3>
-            <p className="text-xs text-zinc-450 font-medium leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed">
               By typing your name, you acknowledge this is a binding contract sign-off for Quote number {quote.quoteNumber}.
             </p>
             <form
@@ -766,29 +766,29 @@ export default function QuoteDetailPage() {
               className="space-y-4 text-xs font-semibold"
             >
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-zinc-555 uppercase">Full Signee Name</label>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider">Full Signee Name</label>
                 <input
                   type="text"
                   value={signerName}
                   onChange={(e) => setSignerName(e.target.value)}
                   placeholder="E.g., Shreya Sen"
                   required
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-600"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-zinc-555 uppercase">Job Title / Role</label>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider">Job Title / Role</label>
                 <input
                   type="text"
                   value={signerTitle}
                   onChange={(e) => setSignerTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-600"
                 />
               </div>
               <button
                 type="submit"
                 disabled={approveQuoteMutation.isPending}
-                className="w-full py-2.5 bg-purple-650 hover:bg-purple-650 text-white rounded-lg font-bold transition active:scale-95"
+                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold transition active:scale-95 cursor-pointer shadow-md shadow-purple-600/10"
               >
                 {approveQuoteMutation.isPending ? "Signing..." : "Electronically Sign & Accept"}
               </button>
@@ -799,16 +799,16 @@ export default function QuoteDetailPage() {
 
       {/* Reject/Request Changes feedback overlay */}
       {showFeedbackModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-md p-6 bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl text-white space-y-4 relative">
-            <button onClick={() => setShowFeedbackModal(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-md p-6 bg-white dark:bg-[#0e0f15] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl text-slate-900 dark:text-white space-y-4 relative">
+            <button onClick={() => setShowFeedbackModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
               <XIcon size={16} />
             </button>
             <h3 className="text-base font-bold flex items-center gap-2">
-              <MessageSquare size={16} className="text-red-400" />
+              <MessageSquare size={16} className="text-red-500" />
               Request Changes / Decline Proposal
             </h3>
-            <p className="text-xs text-zinc-450 font-medium">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
               Provide specific feedback or changes needed. This will be logged on the Lead timeline.
             </p>
             <form
@@ -819,20 +819,20 @@ export default function QuoteDetailPage() {
               className="space-y-4 text-xs font-semibold"
             >
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-zinc-555 uppercase">Feedback / Remarks</label>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider">Feedback / Remarks</label>
                 <textarea
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
                   placeholder="Specify budget changes or line items corrections needed..."
                   required
                   rows={4}
-                  className="w-full p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none"
+                  className="w-full p-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
                 />
               </div>
               <button
                 type="submit"
                 disabled={rejectQuoteMutation.isPending}
-                className="w-full py-2.5 bg-red-650 hover:bg-red-700 text-white rounded-lg font-bold transition"
+                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition cursor-pointer shadow-md shadow-red-600/10"
               >
                 {rejectQuoteMutation.isPending ? "Submitting..." : "Submit Decline & Feedback"}
               </button>
@@ -843,44 +843,44 @@ export default function QuoteDetailPage() {
 
       {/* Send Proposal to Client Modal */}
       {showSendModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="w-full max-w-md p-6 bg-[#09090B] border border-white/10 rounded-2xl shadow-2xl text-white space-y-5 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-md">
+          <div className="w-full max-w-md p-6 bg-white dark:bg-[#0e0f15] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl text-slate-900 dark:text-white space-y-5 relative">
             <button 
               onClick={() => setShowSendModal(false)} 
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
             >
               <XIcon size={16} />
             </button>
 
             <div className="space-y-1.5">
-              <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest block">
+              <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase tracking-widest block">
                 Proposal Delivery Hub
               </span>
               <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
-                <Send size={18} className="text-emerald-400" />
+                <Send size={18} className="text-emerald-600 dark:text-emerald-400" />
                 Send Web Proposal to Client
               </h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Dispatch the interactive Web Proposal link to <strong className="text-zinc-200">{lead?.name || "Client"}</strong>. Status will automatically update from <span className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-300 font-mono text-[10px]">DRAFT</span> ➔ <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-mono text-[10px]">SENT</span>.
+              <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-medium">
+                Dispatch the interactive Web Proposal link to <strong className="text-slate-900 dark:text-zinc-200">{lead?.name || "Client"}</strong>. Status will automatically update from <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-zinc-800 rounded text-slate-700 dark:text-zinc-300 font-mono text-[10px]">DRAFT</span> ➔ <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded font-mono text-[10px]">SENT</span>.
               </p>
             </div>
 
-            <div className="p-3 bg-white/[0.02] border border-white/[0.06] rounded-xl space-y-2 text-xs">
-              <div className="flex justify-between items-center text-zinc-400">
+            <div className="p-3 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-xl space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-500 dark:text-zinc-400">
                 <span>Quote Number:</span>
-                <span className="font-mono text-zinc-200 font-bold">{quote?.quoteNumber}</span>
+                <span className="font-mono text-slate-900 dark:text-zinc-200 font-bold">{quote?.quoteNumber}</span>
               </div>
-              <div className="flex justify-between items-center text-zinc-400">
+              <div className="flex justify-between items-center text-slate-500 dark:text-zinc-400">
                 <span>Client Name:</span>
-                <span className="text-zinc-200 font-bold">{lead?.name || "Unassigned"}</span>
+                <span className="text-slate-900 dark:text-zinc-200 font-bold">{lead?.name || "Unassigned"}</span>
               </div>
-              <div className="flex justify-between items-center text-zinc-400">
+              <div className="flex justify-between items-center text-slate-500 dark:text-zinc-400">
                 <span>Client Phone:</span>
-                <span className="font-mono text-emerald-400 font-bold">{lead?.phone || lead?.contact?.phone || "Not Specified"}</span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{lead?.phone || lead?.contact?.phone || "Not Specified"}</span>
               </div>
-              <div className="flex justify-between items-center text-zinc-400 border-t border-white/[0.06] pt-2">
+              <div className="flex justify-between items-center text-slate-500 dark:text-zinc-400 border-t border-slate-200 dark:border-white/[0.06] pt-2">
                 <span>Contract Total:</span>
-                <span className="font-extrabold text-white text-sm">₹{quote?.total?.toLocaleString("en-IN")}</span>
+                <span className="font-extrabold text-slate-900 dark:text-white text-sm">₹{quote?.total?.toLocaleString("en-IN")}</span>
               </div>
             </div>
 
@@ -888,7 +888,7 @@ export default function QuoteDetailPage() {
               {/* Option 1: WhatsApp Direct Dispatch */}
               <button
                 onClick={sendViaWhatsApp}
-                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2.5 transition shadow-lg shadow-emerald-600/25 cursor-pointer active:scale-[0.98]"
+                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2.5 transition shadow-lg shadow-emerald-600/20 cursor-pointer active:scale-[0.98]"
               >
                 <Share2 size={16} />
                 <span>Send via WhatsApp Web/App</span>
@@ -900,9 +900,9 @@ export default function QuoteDetailPage() {
                   copyShareableLink();
                   setShowSendModal(false);
                 }}
-                className="w-full py-2.5 px-4 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
               >
-                {copiedLink ? <CheckCircle size={15} className="text-emerald-400" /> : <Copy size={15} />}
+                {copiedLink ? <CheckCircle size={15} className="text-emerald-600 dark:text-emerald-400" /> : <Copy size={15} />}
                 <span>{copiedLink ? "Web Link Copied to Clipboard!" : "Copy Web Proposal Link"}</span>
               </button>
             </div>
@@ -912,42 +912,42 @@ export default function QuoteDetailPage() {
 
       {/* ── Reassign to Active Lead Modal ── */}
       {showReassignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="w-full max-w-md p-6 bg-[#0E0E11] border border-zinc-800 rounded-2xl shadow-2xl text-white space-y-5 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-md">
+          <div className="w-full max-w-md p-6 bg-white dark:bg-[#0E0E11] border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl text-slate-900 dark:text-white space-y-5 relative">
             <button
               onClick={() => setShowReassignModal(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
             >
               <XIcon size={16} />
             </button>
 
             <div className="space-y-1.5">
-              <span className="text-[9px] text-purple-400 font-extrabold uppercase tracking-widest block font-mono">
+              <span className="text-[9px] text-purple-600 dark:text-purple-400 font-extrabold uppercase tracking-widest block font-mono">
                 CRM Relationship Linker
               </span>
               <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
-                <UserCheck size={18} className="text-purple-400" />
+                <UserCheck size={18} className="text-purple-600 dark:text-purple-400" />
                 Link Quotation to Active Lead
               </h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Connect quotation <strong className="text-zinc-200 font-mono">#{quote?.quoteNumber}</strong> to an active client inquiry. All line items, grand totals (₹{quote?.total?.toLocaleString("en-IN")}), and PDF terms will be instantly synced.
+              <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-medium">
+                Connect quotation <strong className="text-slate-900 dark:text-zinc-200 font-mono">#{quote?.quoteNumber}</strong> to an active client inquiry. All line items, grand totals (₹{quote?.total?.toLocaleString("en-IN")}), and PDF terms will be instantly synced.
               </p>
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider block">
+              <label className="text-[10px] text-slate-600 dark:text-zinc-400 uppercase font-bold tracking-wider block">
                 Select Active CRM Lead:
               </label>
 
               {activeLeads.length === 0 ? (
-                <div className="p-4 rounded-xl border border-zinc-850 bg-zinc-900/50 text-center text-xs text-zinc-500">
+                <div className="p-4 rounded-xl border border-slate-200 dark:border-zinc-850 bg-slate-50 dark:bg-zinc-900/50 text-center text-xs text-slate-500 dark:text-zinc-500 font-medium">
                   No active CRM leads found in this workspace. Please create or restore a lead in the CRM pipeline first.
                 </div>
               ) : (
                 <select
                   value={selectedLeadId}
                   onChange={(e) => setSelectedLeadId(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white font-medium text-xs focus:outline-none focus:border-purple-500 transition cursor-pointer"
+                  className="w-full p-3 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white font-medium text-xs focus:outline-none focus:border-purple-500 transition cursor-pointer"
                 >
                   <option value="">-- Choose Lead from CRM --</option>
                   {activeLeads.map((l) => (
@@ -963,7 +963,7 @@ export default function QuoteDetailPage() {
               <button
                 type="button"
                 onClick={() => setShowReassignModal(false)}
-                className="px-4 py-2 border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-4 py-2 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -982,26 +982,26 @@ export default function QuoteDetailPage() {
 
       {/* ── Delete Draft Quote Confirmation Modal ── */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="w-full max-w-sm p-6 bg-[#0E0E11] border border-red-500/20 rounded-2xl shadow-2xl text-white space-y-5 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-md">
+          <div className="w-full max-w-sm p-6 bg-white dark:bg-[#0E0E11] border border-red-500/20 rounded-2xl shadow-2xl text-slate-900 dark:text-white space-y-5 relative">
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
             >
               <XIcon size={16} />
             </button>
 
             <div className="space-y-2 text-center pt-2">
-              <div className="h-12 w-12 mx-auto rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shadow-inner">
+              <div className="h-12 w-12 mx-auto rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shadow-inner">
                 <Trash2 size={22} />
               </div>
-              <h3 className="text-base font-black tracking-tight text-white">
+              <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
                 Delete Draft Quotation?
               </h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Are you sure you want to permanently delete quotation <strong className="text-zinc-200 font-mono">#{quote?.quoteNumber}</strong>?
+              <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-medium">
+                Are you sure you want to permanently delete quotation <strong className="text-slate-900 dark:text-zinc-200 font-mono">#{quote?.quoteNumber}</strong>?
               </p>
-              <div className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 text-[11px] text-zinc-500 font-medium">
+              <div className="p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/60 text-[11px] text-slate-500 dark:text-zinc-500 font-medium">
                 Note: Only unsent DRAFT proposals can be deleted. Sent or accepted proposals are permanently preserved for legal tax & audit integrity.
               </div>
             </div>
@@ -1010,7 +1010,7 @@ export default function QuoteDetailPage() {
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-2.5 border border-zinc-800 hover:bg-zinc-900 text-zinc-300 font-bold rounded-xl text-xs transition cursor-pointer"
+                className="flex-1 py-2.5 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-900 text-slate-700 dark:text-zinc-300 font-bold rounded-xl text-xs transition cursor-pointer"
               >
                 Cancel
               </button>

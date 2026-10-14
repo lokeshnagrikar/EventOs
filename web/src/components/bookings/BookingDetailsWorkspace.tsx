@@ -93,11 +93,11 @@ const TAB_OPTIONS = [
 
 const STATUSES = ["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"];
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: "border-zinc-800 bg-zinc-800/20 text-zinc-400",
-  CONFIRMED: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400",
-  IN_PROGRESS: "border-amber-500/20 bg-amber-500/5 text-amber-400",
-  COMPLETED: "border-blue-500/20 bg-blue-500/5 text-blue-400",
-  CANCELLED: "border-red-500/20 bg-red-500/5 text-red-400"
+  PENDING: "border-slate-300 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-800/20 text-slate-700 dark:text-zinc-400",
+  CONFIRMED: "border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  IN_PROGRESS: "border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  COMPLETED: "border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  CANCELLED: "border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400"
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -354,10 +354,10 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
   if (isPageLoading) {
     return (
       <div className="p-8 space-y-6 max-w-7xl mx-auto w-full animate-pulse">
-        <div className="h-10 bg-zinc-900 border border-zinc-850 rounded-xl w-1/3" />
+        <div className="h-10 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl w-1/3" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="h-[300px] bg-zinc-900/10 border border-zinc-850 rounded-xl lg:col-span-1" />
-          <div className="h-[300px] bg-zinc-900/10 border border-zinc-850 rounded-xl lg:col-span-2" />
+          <div className="h-[300px] bg-slate-100/60 dark:bg-zinc-900/10 border border-slate-200 dark:border-zinc-800 rounded-xl lg:col-span-1" />
+          <div className="h-[300px] bg-slate-100/60 dark:bg-zinc-900/10 border border-slate-200 dark:border-zinc-800 rounded-xl lg:col-span-2" />
         </div>
       </div>
     );
@@ -367,8 +367,8 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center space-y-4">
         <AlertCircle className="text-red-500 h-10 w-10 animate-bounce" />
-        <h3 className="font-extrabold text-sm text-zinc-200">Booking File Load Error</h3>
-        <button onClick={() => router.push("/bookings")} className="px-3 py-1.5 bg-zinc-850 rounded-xl text-xs text-zinc-300">
+        <h3 className="font-extrabold text-sm text-slate-900 dark:text-zinc-200">Booking File Load Error</h3>
+        <button onClick={() => router.push("/bookings")} className="px-3.5 py-1.5 bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-700 dark:text-zinc-300 font-bold hover:bg-slate-200 dark:hover:bg-zinc-700 cursor-pointer">
           Back to Bookings
         </button>
       </div>
@@ -382,16 +382,16 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
     <div className="space-y-6">
       
       {/* ─── HEADER BAR ─── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-850 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/90 dark:border-zinc-800 pb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-purple-550/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-extrabold shadow-inner text-lg">
+          <div className="h-10 w-10 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 font-extrabold shadow-inner text-lg">
             B
           </div>
           <div>
-            <h1 className="text-base font-extrabold tracking-tight text-zinc-200">
+            <h1 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-zinc-100">
               {event?.name || "Contract Workspace"}
             </h1>
-            <p className="text-[10px] text-zinc-550 font-bold mt-0.5">Booking Record: {booking.bookingNumber}</p>
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold mt-0.5">Booking Record: {booking.bookingNumber}</p>
           </div>
         </div>
 
@@ -401,18 +401,18 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
               href={booking.contractUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-[10px] font-extrabold shadow-md shadow-purple-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-[10px] font-extrabold shadow-md shadow-purple-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <FileText size={12} />
               View Contract PDF
               <ExternalLink size={10} />
             </a>
           )}
-          <span className="text-zinc-500 font-bold uppercase tracking-wider">Status:</span>
+          <span className="text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">Status:</span>
           <select
             value={booking.status}
             onChange={(e) => updateStatusMutation.mutate(e.target.value)}
-            className="bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-[10px] font-bold px-3 py-1.5 focus:outline-none focus:border-purple-650"
+            className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-300 rounded-xl text-[10px] font-bold px-3 py-1.5 focus:outline-none focus:border-purple-600"
           >
             {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
           </select>
@@ -420,14 +420,14 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
       </div>
 
       {/* ─── TABS HEADER ─── */}
-      <div className="flex bg-[#121214]/60 border border-zinc-850 p-1 rounded-2xl overflow-x-auto gap-1">
+      <div className="flex bg-slate-100/90 dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-800 p-1 rounded-2xl overflow-x-auto gap-1 shadow-sm">
         {TAB_OPTIONS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shrink-0",
-              activeTab === tab.id ? "bg-zinc-800 text-purple-400 shadow-md" : "text-zinc-500 hover:text-zinc-300"
+              "flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shrink-0 cursor-pointer",
+              activeTab === tab.id ? "bg-white dark:bg-zinc-800 text-purple-700 dark:text-purple-300 shadow-sm border border-slate-200/80 dark:border-transparent" : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
             )}
           >
             <tab.icon size={13} />
@@ -440,54 +440,54 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
         {/* Left Info Column */}
-        <div className="lg:col-span-1 p-5 border border-zinc-800 bg-[#141416]/40 rounded-2xl space-y-5 text-xs text-zinc-350">
-          <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-400 border-b border-zinc-850 pb-2">
+        <div className="lg:col-span-1 p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl space-y-5 text-xs text-slate-600 dark:text-zinc-300">
+          <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300 border-b border-slate-200 dark:border-zinc-800 pb-2">
             Financial Ledger Summary
           </h3>
 
           <div className="space-y-4">
             <div className="space-y-0.5">
-              <span className="text-[9px] text-zinc-500 uppercase font-black block">Total Contract Value</span>
-              <span className="text-base font-black text-zinc-200 font-mono">₹{booking.totalAmount.toLocaleString()}</span>
+              <span className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black block">Total Contract Value</span>
+              <span className="text-base font-black text-slate-900 dark:text-zinc-100 font-mono">₹{booking.totalAmount.toLocaleString()}</span>
             </div>
 
             <div className="space-y-0.5">
-              <span className="text-[9px] text-zinc-500 uppercase font-black block">Paid Balance</span>
-              <span className="text-base font-black text-emerald-450 font-mono">₹{booking.paidAmount.toLocaleString()}</span>
+              <span className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black block">Paid Balance</span>
+              <span className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">₹{booking.paidAmount.toLocaleString()}</span>
             </div>
 
             <div className="space-y-0.5">
-              <span className="text-[9px] text-zinc-500 uppercase font-black block">Outstanding Cost</span>
-              <span className="text-base font-black text-rose-400 font-mono">₹{outstanding.toLocaleString()}</span>
+              <span className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black block">Outstanding Cost</span>
+              <span className="text-base font-black text-rose-600 dark:text-rose-400 font-mono">₹{outstanding.toLocaleString()}</span>
             </div>
 
             {/* Payment Progress Ring simulation */}
-            <div className="flex items-center gap-3 border-t border-zinc-850/60 pt-4">
+            <div className="flex items-center gap-3 border-t border-slate-100 dark:border-zinc-850/60 pt-4">
               <div className="relative h-10 w-10 shrink-0">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                  <path className="text-zinc-800" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <path className="text-slate-200 dark:text-zinc-800" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                   <path className="text-emerald-500" strokeWidth="4" strokeDasharray={`${percentPaid}, 100`} strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[8.5px] font-black text-zinc-300">
+                <span className="absolute inset-0 flex items-center justify-center text-[8.5px] font-black text-slate-800 dark:text-zinc-300">
                   {percentPaid}%
                 </span>
               </div>
               <div>
-                <span className="text-[9px] text-zinc-550 uppercase font-bold">Installment Progress</span>
-                <p className="text-[10px] text-zinc-400 mt-0.5">Cleared contract ratios</p>
+                <span className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-bold">Installment Progress</span>
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5">Cleared contract ratios</p>
               </div>
             </div>
 
             {/* Contract Document Card */}
-            <div className="border-t border-zinc-850/60 pt-4 space-y-2">
+            <div className="border-t border-slate-100 dark:border-zinc-850/60 pt-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] text-zinc-500 uppercase font-black block">Contract Agreement</span>
+                <span className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black block">Contract Agreement</span>
                 {booking.contractUrl ? (
-                  <span className="text-[8px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                  <span className="text-[8px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/20 px-1.5 py-0.5 rounded">
                     ATTACHED
                   </span>
                 ) : (
-                  <span className="text-[8px] font-extrabold text-zinc-500 bg-zinc-800/40 border border-zinc-800 px-1.5 py-0.5 rounded">
+                  <span className="text-[8px] font-extrabold text-slate-500 dark:text-zinc-500 bg-slate-100 dark:bg-zinc-800/40 border border-slate-200 dark:border-zinc-800 px-1.5 py-0.5 rounded">
                     NOT ATTACHED
                   </span>
                 )}
@@ -497,25 +497,25 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                   href={booking.contractUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-2.5 bg-zinc-900/80 hover:bg-zinc-850 border border-zinc-800 hover:border-purple-500/40 rounded-xl transition-all group"
+                  className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-zinc-900/80 hover:bg-slate-100 dark:hover:bg-zinc-850 border border-slate-200 dark:border-zinc-800 hover:border-purple-500/40 rounded-xl transition-all group"
                 >
                   <div className="flex items-center gap-2 overflow-hidden">
-                    <FileText size={14} className="text-purple-400 shrink-0" />
-                    <span className="text-[10px] font-bold text-zinc-200 truncate group-hover:text-purple-300">
+                    <FileText size={14} className="text-purple-600 dark:text-purple-400 shrink-0" />
+                    <span className="text-[10px] font-bold text-slate-900 dark:text-zinc-200 truncate group-hover:text-purple-600 dark:group-hover:text-purple-300">
                       View Contract PDF
                     </span>
                   </div>
-                  <ExternalLink size={11} className="text-zinc-500 group-hover:text-purple-400 shrink-0" />
+                  <ExternalLink size={11} className="text-slate-400 dark:text-zinc-500 group-hover:text-purple-600 dark:group-hover:text-purple-400 shrink-0" />
                 </a>
               ) : (
-                <p className="text-[10px] text-zinc-500 italic">No contract PDF linked to this booking.</p>
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 italic">No contract PDF linked to this booking.</p>
               )}
             </div>
 
             {/* Collect Payment form */}
             {outstanding > 0 && (
-              <form onSubmit={handlePaymentSubmit} className="border-t border-zinc-850/60 pt-4 space-y-2">
-                <span className="text-[9px] text-zinc-500 uppercase font-black block">Collect Installment Payment</span>
+              <form onSubmit={handlePaymentSubmit} className="border-t border-slate-100 dark:border-zinc-850/60 pt-4 space-y-2">
+                <span className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black block">Collect Installment Payment</span>
                 <div className="flex gap-2">
                   <input
                     type="number"
@@ -523,13 +523,13 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                     placeholder="Enter amount..."
                     value={newPaymentAmount}
                     onChange={(e) => setNewPaymentAmount(e.target.value)}
-                    className="flex-1 px-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white font-mono"
+                    className="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
-                  <button type="submit" disabled={collectPaymentMutation.isPending} className="px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold">
+                  <button type="submit" disabled={collectPaymentMutation.isPending} className="px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold cursor-pointer">
                     Log
                   </button>
                 </div>
-                {formError && <p className="text-[9px] text-red-400 mt-1">{formError}</p>}
+                {formError && <p className="text-[9px] text-red-600 dark:text-red-400 mt-1">{formError}</p>}
               </form>
             )}
           </div>
@@ -547,27 +547,27 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.18 }}
-                className="space-y-6 text-xs text-zinc-300"
+                className="space-y-6 text-xs text-slate-600 dark:text-zinc-300"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 border border-zinc-800 bg-[#141416]/20 rounded-2xl">
-                    <span className="text-[9px] text-zinc-550 font-black uppercase">Timeline Actions</span>
-                    <p className="text-base font-black text-zinc-200 mt-1">
+                  <div className="p-4 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl">
+                    <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-black uppercase">Timeline Actions</span>
+                    <p className="text-base font-black text-slate-900 dark:text-zinc-100 mt-1">
                       {booking.timelineEvents?.filter((e) => e.status === "COMPLETED").length || 0} / {booking.timelineEvents?.length || 0}
                     </p>
                   </div>
-                  <div className="p-4 border border-zinc-800 bg-[#141416]/20 rounded-2xl">
-                    <span className="text-[9px] text-zinc-550 font-black uppercase">Staff Allocated</span>
-                    <p className="text-base font-black text-zinc-200 mt-1">{resources.length} resources</p>
+                  <div className="p-4 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl">
+                    <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-black uppercase">Staff Allocated</span>
+                    <p className="text-base font-black text-slate-900 dark:text-zinc-100 mt-1">{resources.length} resources</p>
                   </div>
-                  <div className="p-4 border border-zinc-800 bg-[#141416]/20 rounded-2xl">
-                    <span className="text-[9px] text-zinc-550 font-black uppercase">Outstanding Invoices</span>
-                    <p className="text-base font-black text-zinc-200 mt-1">{invoices.filter((i) => i.status !== "PAID").length} pending</p>
+                  <div className="p-4 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl">
+                    <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-black uppercase">Outstanding Invoices</span>
+                    <p className="text-base font-black text-slate-900 dark:text-zinc-100 mt-1">{invoices.filter((i) => i.status !== "PAID").length} pending</p>
                   </div>
                 </div>
 
-                <div className="p-5 border border-zinc-800 bg-[#141416]/40 rounded-2xl space-y-3.5">
-                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-400">Contracts Workspace Logs</h3>
+                <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl space-y-3.5">
+                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300">Contracts Workspace Logs</h3>
                   <p className="leading-relaxed">This workspace coordinates the specific financial contracts, invoices, and installment ledgers associated with this booking. Use the tabs above to track the timeline, log payment receipts, and assign personnel resources.</p>
                 </div>
               </motion.div>
@@ -581,62 +581,62 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.18 }}
-                className="p-5 border border-zinc-800 bg-[#141416]/40 rounded-2xl space-y-6"
+                className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl space-y-6"
               >
-                <div className="flex justify-between items-center border-b border-zinc-850 pb-3">
+                <div className="flex justify-between items-center border-b border-slate-200 dark:border-zinc-800 pb-3">
                   <div>
-                    <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-200">Event Operations & Lifecycle Milestones</h3>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">Click any milestone to toggle between Pending and Completed.</p>
+                    <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-zinc-200">Event Operations & Lifecycle Milestones</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">Click any milestone to toggle between Pending and Completed.</p>
                   </div>
-                  <span className="text-[9px] font-mono font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[9px] font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 px-2.5 py-0.5 rounded-full">
                     {booking.timelineEvents?.filter((e) => e.status === "COMPLETED").length || 0} / {booking.timelineEvents?.length || 0} Done
                   </span>
                 </div>
 
-                <div className="relative border-l border-zinc-800 pl-6 ml-2 space-y-4 py-1">
+                <div className="relative border-l border-slate-200 dark:border-zinc-800 pl-6 ml-2 space-y-4 py-1">
                   {booking.timelineEvents?.map((m) => (
                     <div
                       key={m.id}
                       onClick={() => toggleMilestoneMutation.mutate(m.id)}
                       className={cn(
-                        "relative p-3.5 border rounded-xl bg-zinc-950/20 cursor-pointer flex justify-between items-center transition-all hover:bg-zinc-950/40",
-                        m.status === "COMPLETED" ? "border-zinc-850 text-zinc-550 opacity-80" : "border-zinc-800 text-zinc-200 hover:border-zinc-700"
+                        "relative p-3.5 border rounded-xl bg-slate-50/70 dark:bg-zinc-950/20 cursor-pointer flex justify-between items-center transition-all hover:bg-purple-500/[0.03] dark:hover:bg-zinc-950/40",
+                        m.status === "COMPLETED" ? "border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-500 opacity-80" : "border-slate-200/90 dark:border-zinc-800 text-slate-900 dark:text-zinc-200 hover:border-purple-300 dark:hover:border-zinc-700"
                       )}
                     >
-                      <div className="absolute -left-[32px] top-4 h-3 w-3 rounded-full border-2 bg-[#09090b]"
-                        style={{ borderColor: m.status === "COMPLETED" ? "#a855f7" : "#3f3f46" }}
+                      <div className="absolute -left-[32px] top-4 h-3 w-3 rounded-full border-2 bg-white dark:bg-[#09090b]"
+                        style={{ borderColor: m.status === "COMPLETED" ? "#a855f7" : "#94a3b8" }}
                       />
                       <div className="flex items-center gap-2.5 min-w-0 pr-3">
-                        {m.status === "COMPLETED" ? <CheckCircle2 size={15} className="text-emerald-400 shrink-0" /> : <div className="h-4 w-4 rounded-full border border-zinc-700 shrink-0" />}
+                        {m.status === "COMPLETED" ? <CheckCircle2 size={15} className="text-emerald-500 shrink-0" /> : <div className="h-4 w-4 rounded-full border border-slate-400 dark:border-zinc-700 shrink-0" />}
                         <div className="truncate">
-                          <span className={cn("font-bold text-xs block truncate", m.status === "COMPLETED" && "line-through text-zinc-500")}>{m.title}</span>
-                          {m.description && <span className="text-[10px] text-zinc-500 block truncate">{m.description}</span>}
+                          <span className={cn("font-bold text-xs block truncate text-slate-900 dark:text-zinc-200", m.status === "COMPLETED" && "line-through text-slate-400 dark:text-zinc-500")}>{m.title}</span>
+                          {m.description && <span className="text-[10px] text-slate-500 dark:text-zinc-400 block truncate">{m.description}</span>}
                           {booking.contractUrl && m.title.toLowerCase().includes("contract") && (
                             <a
                               href={booking.contractUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-purple-400 hover:text-purple-300 underline"
+                              className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 underline"
                             >
                               <FileText size={10} /> View Signed Contract <ExternalLink size={9} />
                             </a>
                           )}
                         </div>
                       </div>
-                      <span className="text-[10px] text-zinc-400 font-mono font-bold shrink-0">
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono font-bold shrink-0">
                         {new Date(m.eventDate).toLocaleDateString()} {new Date(m.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   ))}
                   {(!booking.timelineEvents || booking.timelineEvents.length === 0) && (
-                    <p className="text-xs text-zinc-550 italic py-3 text-center">No timeline milestones defined yet. Log your first event milestone below.</p>
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 italic py-3 text-center">No timeline milestones defined yet. Log your first event milestone below.</p>
                   )}
                 </div>
 
                 {/* Add Milestone Form */}
-                <form onSubmit={handleMilestoneSubmit} className="border-t border-zinc-850 pt-5 space-y-3">
-                  <h4 className="text-[10px] uppercase font-black text-zinc-400">Add Timeline Milestone</h4>
+                <form onSubmit={handleMilestoneSubmit} className="border-t border-slate-200 dark:border-zinc-800 pt-5 space-y-3">
+                  <h4 className="text-[10px] uppercase font-black text-slate-700 dark:text-zinc-300">Add Timeline Milestone</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input 
                       type="text" 
@@ -644,24 +644,24 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                       placeholder="Milestone Title (e.g. Sound & Acoustic Ingress)" 
                       value={newMilestoneTitle} 
                       onChange={(e) => { setNewMilestoneTitle(e.target.value); setMilestoneError(""); }}
-                      className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500" 
+                      className="px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500" 
                     />
                     <input 
                       type="datetime-local" 
                       required 
                       value={newMilestoneDate} 
                       onChange={(e) => { setNewMilestoneDate(e.target.value); setMilestoneError(""); }}
-                      className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500" 
+                      className="px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500" 
                     />
                   </div>
                   {milestoneError && (
-                    <p className="text-[10px] text-red-400 font-bold bg-red-500/10 border border-red-500/20 p-2 rounded-lg">{milestoneError}</p>
+                    <p className="text-[10px] text-red-600 dark:text-red-400 font-bold bg-red-500/10 border border-red-500/20 p-2 rounded-lg">{milestoneError}</p>
                   )}
                   <div className="flex justify-end">
                     <button 
                       type="submit" 
                       disabled={addMilestoneMutation.isPending} 
-                      className="px-4 py-2 bg-purple-650 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
                     >
                       {addMilestoneMutation.isPending && <Loader2 size={12} className="animate-spin" />}
                       <span>{addMilestoneMutation.isPending ? "Saving..." : "Log Milestone"}</span>
@@ -679,35 +679,37 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.18 }}
-                className="p-5 border border-zinc-800 bg-[#141416]/40 rounded-2xl space-y-4"
+                className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl space-y-4"
               >
-                <div className="flex justify-between items-center border-b border-zinc-850 pb-3">
-                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-300">Generated Invoices</h3>
-                  <button onClick={() => router.push("/invoices")} className="text-purple-400 hover:text-purple-300 font-bold text-[10px] uppercase tracking-wider">
+                <div className="flex justify-between items-center border-b border-slate-200 dark:border-zinc-800 pb-3">
+                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-zinc-200">Generated Invoices</h3>
+                  <button onClick={() => router.push("/invoices")} className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold text-[10px] uppercase tracking-wider">
                     Invoice Center &rarr;
                   </button>
                 </div>
 
                 <div className="space-y-2.5">
                   {invoices.map((inv) => (
-                    <div key={inv.id} className="p-3.5 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between">
+                    <div key={inv.id} className="p-3.5 border border-slate-200/80 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/20 rounded-xl flex items-center justify-between">
                       <div>
-                        <h4 className="font-extrabold text-xs text-zinc-200">{inv.invoiceNumber}</h4>
-                        <span className="text-[9.5px] text-zinc-550 font-bold">Due Date: {new Date(inv.dueDate).toLocaleDateString()}</span>
+                        <h4 className="font-extrabold text-xs text-slate-900 dark:text-zinc-100">{inv.invoiceNumber}</h4>
+                        <span className="text-[9.5px] text-slate-500 dark:text-zinc-400 font-bold">Due Date: {new Date(inv.dueDate).toLocaleDateString()}</span>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="font-mono font-bold text-zinc-300 text-xs">₹{inv.totalAmount.toLocaleString()}</span>
-                        <span className={cn("px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase")}>
+                        <span className="font-mono font-bold text-slate-900 dark:text-zinc-200 text-xs">₹{inv.totalAmount.toLocaleString()}</span>
+                        <span className={cn("px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase",
+                          inv.status === "PAID" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-slate-300 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                        )}>
                           {inv.status}
                         </span>
-                        <button onClick={() => router.push(`/invoices/${inv.id}`)} className="text-purple-400 font-bold text-[9px] uppercase hover:underline">
+                        <button onClick={() => router.push(`/invoices/${inv.id}`)} className="text-purple-600 dark:text-purple-400 font-bold text-[9px] uppercase hover:underline">
                           View
                         </button>
                       </div>
                     </div>
                   ))}
                   {invoices.length === 0 && (
-                    <p className="text-xs text-zinc-550 italic py-4 text-center">No invoices generated for this contract ledger yet.</p>
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 italic py-4 text-center">No invoices generated for this contract ledger yet.</p>
                   )}
                 </div>
               </motion.div>
@@ -721,33 +723,33 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.18 }}
-                className="p-5 border border-zinc-800 bg-[#141416]/40 rounded-2xl space-y-4"
+                className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl space-y-4"
               >
-                <div className="flex justify-between items-center border-b border-zinc-850 pb-3">
-                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-300">Transaction Ledgers</h3>
-                  <button onClick={() => router.push("/payments")} className="text-purple-400 hover:text-purple-300 font-bold text-[10px] uppercase tracking-wider">
+                <div className="flex justify-between items-center border-b border-slate-200 dark:border-zinc-800 pb-3">
+                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-zinc-200">Transaction Ledgers</h3>
+                  <button onClick={() => router.push("/payments")} className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold text-[10px] uppercase tracking-wider">
                     Payment Ledgers &rarr;
                   </button>
                 </div>
 
                 <div className="space-y-2.5">
                   {paymentTransactions.map((txn) => (
-                    <div key={txn.id} className="p-3.5 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between">
+                    <div key={txn.id} className="p-3.5 border border-slate-200/80 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/20 rounded-xl flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-extrabold text-xs text-zinc-200">{txn.code}</h4>
-                          <span className="text-[10px] text-zinc-400 font-medium">{txn.title}</span>
+                          <h4 className="font-extrabold text-xs text-slate-900 dark:text-zinc-200">{txn.code}</h4>
+                          <span className="text-[10px] text-slate-600 dark:text-zinc-400 font-medium">{txn.title}</span>
                         </div>
-                        <span className="text-[9px] text-zinc-550 font-bold flex items-center gap-1 mt-0.5">
+                        <span className="text-[9px] text-slate-500 dark:text-zinc-500 font-bold flex items-center gap-1 mt-0.5">
                           <Clock size={9} /> {txn.date}
                         </span>
                       </div>
-                      <span className="font-mono font-black text-emerald-450 text-xs">{txn.amount}</span>
+                      <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">{txn.amount}</span>
                     </div>
                   ))}
 
                   {paymentTransactions.length === 0 && (
-                    <p className="text-xs text-zinc-550 italic py-6 text-center">
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 italic py-6 text-center">
                       No payment transactions recorded yet. Use the "Collect Installment Payment" form to log receipts.
                     </p>
                   )}
@@ -763,44 +765,44 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.18 }}
-                className="p-5 border border-zinc-800 bg-[#141416]/40 rounded-2xl space-y-6"
+                className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl space-y-6"
               >
-                <div className="flex justify-between items-center border-b border-zinc-850 pb-3">
-                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-300">Resource Allocations</h3>
-                  <span className="text-[10px] text-zinc-500 font-bold">{resources.length} active assignments</span>
+                <div className="flex justify-between items-center border-b border-slate-200 dark:border-zinc-800 pb-3">
+                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-zinc-200">Resource Allocations</h3>
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold">{resources.length} active assignments</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {resources.map((res) => (
-                    <div key={res.id} className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl flex items-center justify-between group">
+                    <div key={res.id} className="p-3 border border-slate-200/80 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/20 rounded-xl flex items-center justify-between group">
                       <div>
-                        <h4 className="text-xs font-bold text-zinc-250">{res.resourceName}</h4>
-                        <span className="text-[9px] text-zinc-500 uppercase font-black mt-0.5 block">{res.resourceType}</span>
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100">{res.resourceName}</h4>
+                        <span className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black mt-0.5 block">{res.resourceType}</span>
                       </div>
-                      <button onClick={() => removeResourceMutation.mutate(res.id)} className="h-7 w-7 bg-zinc-900 border border-zinc-800 flex items-center justify-center rounded-lg hover:bg-red-500/10 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => removeResourceMutation.mutate(res.id)} className="h-7 w-7 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 flex items-center justify-center rounded-lg hover:bg-red-500/10 hover:text-red-500 text-slate-500 dark:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                         &times;
                       </button>
                     </div>
                   ))}
                   {resources.length === 0 && (
-                    <p className="text-xs text-zinc-550 italic col-span-2">No assigned resources.</p>
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 italic col-span-2">No assigned resources.</p>
                   )}
                 </div>
 
                 {/* Assignment form */}
-                <form onSubmit={handleResourceSubmit} className="border-t border-zinc-850 pt-5 space-y-3">
-                  <h4 className="text-[9px] uppercase font-black text-zinc-400">Allocate Resource</h4>
+                <form onSubmit={handleResourceSubmit} className="border-t border-slate-200 dark:border-zinc-800 pt-5 space-y-3">
+                  <h4 className="text-[9px] uppercase font-black text-slate-700 dark:text-zinc-300">Allocate Resource</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input type="text" required placeholder="Resource/Staff Name (e.g. Sound Engineer)" value={newResourceName} onChange={(e) => setNewResourceName(e.target.value)}
-                      className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-xs" />
-                    <select value={newResourceType} onChange={(e) => setNewResourceType(e.target.value)} className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-bold">
+                      className="px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500" />
+                    <select value={newResourceType} onChange={(e) => setNewResourceType(e.target.value)} className="px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs text-slate-800 dark:text-zinc-200 font-bold focus:outline-none">
                       <option value="STAFF">Staff Personnel</option>
                       <option value="EQUIPMENT">System Equipment</option>
                       <option value="VEHICLE">Logistics Vehicle</option>
                     </select>
                   </div>
                   <div className="flex justify-end">
-                    <button type="submit" disabled={assignResourceMutation.isPending} className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-all shadow-md">
+                    <button type="submit" disabled={assignResourceMutation.isPending} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-md cursor-pointer">
                       Assign Resource
                     </button>
                   </div>
@@ -816,25 +818,25 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.18 }}
-                className="p-5 border border-zinc-800 bg-[#141416]/40 rounded-2xl space-y-4"
+                className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl space-y-4"
               >
-                <div className="border-b border-zinc-850 pb-3">
-                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-300">Operations Audit Trail</h3>
+                <div className="border-b border-slate-200 dark:border-zinc-800 pb-3">
+                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-zinc-200">Operations Audit Trail</h3>
                 </div>
 
                 <div className="space-y-3 text-xs leading-normal">
                   {auditLogs.map((log) => (
-                    <div key={log.id} className="p-3 border border-zinc-850/60 bg-zinc-950/20 rounded-xl space-y-1">
-                      <div className="flex justify-between items-center text-[10px] text-zinc-550 font-bold">
+                    <div key={log.id} className="p-3 border border-slate-200/80 dark:border-zinc-850/60 bg-slate-50/70 dark:bg-zinc-950/20 rounded-xl space-y-1">
+                      <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-zinc-400 font-bold">
                         <span>{log.changedBy}</span>
                         <span>{new Date(log.createdAt).toLocaleString()}</span>
                       </div>
-                      <p className="font-bold text-zinc-250">{log.action}</p>
-                      {log.details && <p className="text-[10px] text-zinc-500">{log.details}</p>}
+                      <p className="font-bold text-slate-900 dark:text-zinc-100">{log.action}</p>
+                      {log.details && <p className="text-[10px] text-slate-500 dark:text-zinc-400">{log.details}</p>}
                     </div>
                   ))}
                   {auditLogs.length === 0 && (
-                    <p className="text-xs text-zinc-550 italic py-2">No logs audited for this ledger.</p>
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 italic py-2">No logs audited for this ledger.</p>
                   )}
                 </div>
               </motion.div>

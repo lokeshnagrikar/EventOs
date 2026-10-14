@@ -53,12 +53,12 @@ interface Lead {
 
 
 const STATUS_COLORS: Record<string, string> = {
-  DRAFT: "border-zinc-800 bg-zinc-800/20 text-zinc-400",
-  SENT: "border-blue-500/20 bg-blue-500/5 text-blue-450",
-  VIEWED: "border-indigo-500/20 bg-indigo-500/5 text-indigo-400",
-  ACCEPTED: "border-emerald-500/20 bg-emerald-500/5 text-emerald-450",
-  REJECTED: "border-red-500/20 bg-red-500/5 text-red-450",
-  EXPIRED: "border-amber-500/20 bg-amber-500/5 text-amber-450"
+  DRAFT: "border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-800/40 text-slate-600 dark:text-zinc-400",
+  SENT: "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  VIEWED: "border-indigo-500/20 bg-indigo-500/10 text-indigo-700 dark:text-indigo-400",
+  ACCEPTED: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  REJECTED: "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400",
+  EXPIRED: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400"
 };
 
 const TEMPLATE_LABELS: Record<string, string> = {
@@ -172,25 +172,25 @@ export default function QuotesPage() {
         <div className="space-y-6">
           {/* Summary KPI Strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
-            <div className="p-3 sm:p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block truncate">Total Proposals</span>
-              <p className="text-lg sm:text-xl font-black text-white font-mono tabular-nums truncate">{quotes.length}</p>
+            <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md space-y-1">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest block truncate">Total Proposals</span>
+              <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono tabular-nums truncate">{quotes.length}</p>
             </div>
-            <div className="p-3 sm:p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block truncate">Pipeline Value</span>
-              <p className="text-lg sm:text-xl font-black text-emerald-400 font-mono tabular-nums truncate">
+            <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md space-y-1">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest block truncate">Pipeline Value</span>
+              <p className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums truncate">
                 ₹{quotes.reduce((acc, q) => acc + (q.total || 0), 0).toLocaleString("en-IN")}
               </p>
             </div>
-            <div className="p-3 sm:p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block truncate">Accepted Deals</span>
-              <p className="text-lg sm:text-xl font-black text-purple-400 font-mono tabular-nums truncate">
+            <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md space-y-1">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest block truncate">Accepted Deals</span>
+              <p className="text-lg sm:text-xl font-black text-purple-600 dark:text-purple-400 font-mono tabular-nums truncate">
                 {quotes.filter((q) => ["ACCEPTED", "APPROVED", "PAID", "E_SIGNED"].includes(q.status)).length}
               </p>
             </div>
-            <div className="p-3 sm:p-4 rounded-xl border border-zinc-800 bg-[#121214]/60 backdrop-blur-sm space-y-1">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block truncate">Awaiting Sign-Off</span>
-              <p className="text-lg sm:text-xl font-black text-amber-400 font-mono tabular-nums truncate">
+            <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md space-y-1">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest block truncate">Awaiting Sign-Off</span>
+              <p className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400 font-mono tabular-nums truncate">
                 {quotes.filter((q) => ["SENT", "VIEWED", "PENDING", "DRAFT"].includes(q.status)).length}
               </p>
             </div>
@@ -199,26 +199,26 @@ export default function QuotesPage() {
           {/* Grid Layout of Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {quotes.map((q) => {
-              const statusStyle = STATUS_COLORS[q.status] || "border-zinc-800 text-zinc-400";
+              const statusStyle = STATUS_COLORS[q.status] || "border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400";
               const templateLabel = TEMPLATE_LABELS[q.templateName] || q.templateName;
 
               return (
                 <div
                   key={q.id}
                   onClick={() => router.push(`/quotes/${q.id}`)}
-                  className="p-4 sm:p-5 rounded-2xl border border-zinc-800/80 bg-[#121214]/50 hover:border-purple-500/30 hover:bg-[#121214]/80 transition-all cursor-pointer flex flex-col justify-between h-[215px] hover:shadow-xl hover:shadow-purple-500/5 group"
+                  className="p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 hover:border-purple-500/40 hover:bg-slate-50/50 dark:hover:bg-[#151722]/80 transition-all cursor-pointer flex flex-col justify-between h-[215px] shadow-sm hover:shadow-xl hover:shadow-purple-500/5 group"
                 >
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300 px-2 py-0.5 rounded font-bold">
+                        <span className="text-[10px] font-mono bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 text-slate-700 dark:text-zinc-300 px-2 py-0.5 rounded-lg font-bold">
                           {q.quoteNumber}
                         </span>
                         <button
                           type="button"
                           onClick={(e) => handleDownloadPdf(e, q)}
                           disabled={downloadingId === q.id}
-                          className="px-2 py-0.5 rounded bg-zinc-900 hover:bg-purple-600/20 text-zinc-400 hover:text-purple-300 transition-all flex items-center gap-1 text-[9px] font-bold border border-zinc-800 cursor-pointer disabled:opacity-50"
+                          className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-purple-100 dark:bg-zinc-900 dark:hover:bg-purple-600/20 text-slate-600 hover:text-purple-700 dark:text-zinc-400 dark:hover:text-purple-300 transition-all flex items-center gap-1 text-[9px] font-bold border border-slate-200 dark:border-zinc-800 cursor-pointer disabled:opacity-50"
                           title="Download PDF Proposal"
                         >
                           {downloadingId === q.id ? (
@@ -237,28 +237,28 @@ export default function QuotesPage() {
                       const leadInfo = getLeadInfo(q.leadId);
                       return (
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-base text-zinc-100 group-hover:text-purple-400 transition-colors leading-tight line-clamp-1">
+                          <h3 className="font-bold text-base text-slate-900 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-tight line-clamp-1">
                             {leadInfo.name}
                           </h3>
                           {leadInfo.isArchived && (
-                            <span className="shrink-0 text-[8.5px] font-bold font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/25" title="Associated CRM lead was archived or detached">
+                            <span className="shrink-0 text-[8.5px] font-bold font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25" title="Associated CRM lead was archived or detached">
                               Archived Lead
                             </span>
                           )}
                         </div>
                       );
                     })()}
-                    <p className="text-[10px] text-zinc-500 font-semibold">{templateLabel}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">{templateLabel}</p>
                   </div>
 
-                  <div className="border-t border-zinc-850 pt-3 mt-4 flex items-center justify-between text-xs">
-                    <div className="text-zinc-500 flex items-center gap-1 font-mono text-[11px]">
+                  <div className="border-t border-slate-100 dark:border-white/[0.08] pt-3 mt-4 flex items-center justify-between text-xs">
+                    <div className="text-slate-500 dark:text-zinc-400 flex items-center gap-1 font-mono text-[11px]">
                       <Calendar size={12} />
                       <span>{new Date(q.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[9px] text-zinc-500 block uppercase font-semibold">Grand Total</span>
-                      <span className="font-extrabold text-emerald-400 text-sm font-mono tabular-nums">
+                      <span className="text-[9px] text-slate-400 dark:text-zinc-500 block uppercase font-bold tracking-wider">Grand Total</span>
+                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm font-mono tabular-nums">
                         ₹{(q.total || 0).toLocaleString("en-IN")}
                       </span>
                     </div>

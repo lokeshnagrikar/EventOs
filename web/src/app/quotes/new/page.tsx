@@ -226,32 +226,32 @@ export default function QuoteBuilderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0f] text-slate-900 dark:text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
       
       {/* Background glow effects to match landing page theme */}
       <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-br from-purple-500/5 to-pink-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
 
       {/* Top Navbar */}
-      <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
+      <nav className="h-16 border-b border-slate-200/90 dark:border-white/[0.08] bg-white/80 dark:bg-[#111113]/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/quotes")}
-            className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
+            className="h-8 w-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 flex items-center justify-center text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all border border-slate-200 dark:border-zinc-700/50 cursor-pointer"
             aria-label="Back to quotes"
           >
             <ArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-base">Quote Builder</span>
-            <span className="text-xs px-2 py-0.5 bg-zinc-800 rounded text-zinc-400">Proposal Scaffolder</span>
+            <span className="font-bold text-base text-slate-900 dark:text-white">Quote Builder</span>
+            <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-zinc-800 rounded-lg text-slate-600 dark:text-zinc-400 font-semibold">Proposal Scaffolder</span>
           </div>
         </div>
 
         <button
           onClick={handleSaveQuote}
           disabled={createQuoteMutation.isPending}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98]"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/10 active:scale-[0.98] cursor-pointer"
         >
           <Save size={16} />
           Save & Send Quote
@@ -266,29 +266,29 @@ export default function QuoteBuilderPage() {
           <form onSubmit={handleSaveQuote} className="space-y-6 text-xs">
             {/* Error Banner */}
             {errorText && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg flex items-center gap-2">
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 rounded-xl flex items-center gap-2">
                 <AlertCircle size={14} className="shrink-0" />
                 <span>{errorText}</span>
               </div>
             )}
 
             {/* Client Context Details */}
-            <div className="p-5 border border-zinc-800 bg-[#161618]/30 rounded-xl space-y-4">
-              <h3 className="font-bold text-sm uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-800">
+            <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md rounded-2xl space-y-4">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-zinc-400 pb-2 border-b border-slate-200/90 dark:border-white/[0.08]">
                 1. Select Client Lead
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-zinc-400 uppercase font-semibold">CRM Lead Profile</label>
+                  <label className="text-slate-700 dark:text-zinc-400 uppercase font-bold text-[10px] tracking-wider">CRM Lead Profile</label>
                   {leadsLoading ? (
-                    <div className="h-10 bg-zinc-900 border border-zinc-800 rounded animate-pulse w-full" />
+                    <div className="h-10 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl animate-pulse w-full" />
                   ) : (
                     <select
                       value={selectedLeadId}
                       required
                       onChange={(e) => setSelectedLeadId(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-[#18181B] border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-purple-600 font-medium"
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 font-medium"
                     >
                       <option value="">-- Choose active lead --</option>
                       {leads.map((l) => (
@@ -301,15 +301,15 @@ export default function QuoteBuilderPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-zinc-400 uppercase font-semibold">Select Design Preset Template</label>
+                  <label className="text-slate-700 dark:text-zinc-400 uppercase font-bold text-[10px] tracking-wider">Select Design Preset Template</label>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => handleTemplateApply("ELEGANT")}
-                      className={`flex-1 py-2 px-3 border rounded-lg font-bold transition-all text-[11px] md:text-xs ${
+                      className={`flex-1 py-2 px-3 border rounded-xl font-bold transition-all text-[11px] md:text-xs cursor-pointer ${
                         templateName === "ELEGANT"
-                          ? "border-pink-500 bg-pink-500/5 text-pink-400"
-                          : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200"
+                          ? "border-pink-500 bg-pink-500/10 text-pink-700 dark:text-pink-400"
+                          : "border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                       }`}
                     >
                       Elegant Wedding
@@ -317,10 +317,10 @@ export default function QuoteBuilderPage() {
                     <button
                       type="button"
                       onClick={() => handleTemplateApply("MINIMALIST")}
-                      className={`flex-1 py-2 px-3 border rounded-lg font-bold transition-all text-[11px] md:text-xs ${
+                      className={`flex-1 py-2 px-3 border rounded-xl font-bold transition-all text-[11px] md:text-xs cursor-pointer ${
                         templateName === "MINIMALIST"
-                          ? "border-blue-500 bg-blue-500/5 text-blue-400"
-                          : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200"
+                          ? "border-blue-500 bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                          : "border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                       }`}
                     >
                       Minimalist Corp
@@ -328,10 +328,10 @@ export default function QuoteBuilderPage() {
                     <button
                       type="button"
                       onClick={() => handleTemplateApply("PLAYFUL")}
-                      className={`flex-1 py-2 px-3 border rounded-lg font-bold transition-all text-[11px] md:text-xs ${
+                      className={`flex-1 py-2 px-3 border rounded-xl font-bold transition-all text-[11px] md:text-xs cursor-pointer ${
                         templateName === "PLAYFUL"
-                          ? "border-emerald-500 bg-emerald-500/5 text-emerald-400"
-                          : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200"
+                          ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                          : "border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/40 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
                       }`}
                     >
                       Standard Birthday
@@ -342,15 +342,15 @@ export default function QuoteBuilderPage() {
             </div>
 
             {/* Line Items Editor */}
-            <div className="p-5 border border-zinc-800 bg-[#161618]/30 rounded-xl space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-zinc-400">
+            <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md rounded-2xl space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200/90 dark:border-white/[0.08]">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-zinc-400">
                   2. Price Quotation Line Items
                 </h3>
                 <button
                   type="button"
                   onClick={handleAddItemRow}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-purple-650/10 hover:bg-purple-650/20 text-purple-400 border border-purple-500/20 rounded font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-650/10 dark:hover:bg-purple-650/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20 rounded-lg font-semibold transition-all cursor-pointer"
                 >
                   <Plus size={12} />
                   Add Row
@@ -373,25 +373,25 @@ export default function QuoteBuilderPage() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               style={provided.draggableProps.style as React.CSSProperties}
-                              className={`flex flex-col p-4 bg-[#141416] border rounded-xl relative transition-all duration-200 ${
+                              className={`flex flex-col p-4 bg-slate-50/70 dark:bg-[#141416] border rounded-xl relative transition-all duration-200 ${
                                 snapshot.isDragging
-                                  ? "border-purple-500 bg-purple-950/20 scale-[1.01] shadow-2xl z-50"
-                                  : "border-zinc-850 hover:border-zinc-700/60"
+                                  ? "border-purple-500 bg-purple-50 dark:bg-purple-950/20 scale-[1.01] shadow-2xl z-50"
+                                  : "border-slate-200 dark:border-zinc-850 hover:border-slate-300 dark:hover:border-zinc-700/60"
                               }`}
                             >
                               {/* Mobile Header Accordion (Only visible below md) */}
-                              <div className="flex md:hidden items-center justify-between w-full border-b border-zinc-800/80 pb-2 mb-2">
+                              <div className="flex md:hidden items-center justify-between w-full border-b border-slate-200 dark:border-zinc-800/80 pb-2 mb-2">
                                 <div className="flex items-center gap-2">
                                   <div
                                     {...provided.dragHandleProps}
                                     tabIndex={0}
                                     role="button"
                                     aria-label={`Drag to reorder item ${idx + 1}`}
-                                    className="text-zinc-500 hover:text-purple-400 p-1.5 rounded hover:bg-zinc-800/50 transition-colors"
+                                    className="text-slate-400 dark:text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400 p-1.5 rounded hover:bg-slate-100 dark:hover:bg-zinc-800/50 transition-colors"
                                   >
                                     <GripVertical size={14} />
                                   </div>
-                                  <span className="font-bold text-xs text-zinc-300">
+                                  <span className="font-bold text-xs text-slate-800 dark:text-zinc-300">
                                     {item.itemName.trim() ? item.itemName : `Item #${idx + 1}`}
                                   </span>
                                 </div>
@@ -399,7 +399,7 @@ export default function QuoteBuilderPage() {
                                   <button
                                     type="button"
                                     onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
-                                    className="px-2.5 py-1 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-350 hover:text-white rounded text-[10px] font-bold border border-zinc-700/50"
+                                    className="px-2.5 py-1 bg-white dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-350 hover:text-slate-900 dark:hover:text-white rounded-lg text-[10px] font-bold border border-slate-200 dark:border-zinc-700/50"
                                   >
                                     {expandedIndex === idx ? "Collapse" : "Edit Details"}
                                   </button>
@@ -407,7 +407,7 @@ export default function QuoteBuilderPage() {
                                     type="button"
                                     onClick={() => handleRemoveItemRow(idx)}
                                     disabled={items.length === 1}
-                                    className="h-7 w-7 rounded bg-zinc-800/40 hover:bg-red-500/10 hover:text-red-500 flex items-center justify-center text-zinc-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                    className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-zinc-800/40 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-500 flex items-center justify-center text-slate-400 dark:text-zinc-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                   >
                                     <Trash2 size={13} />
                                   </button>
@@ -423,53 +423,53 @@ export default function QuoteBuilderPage() {
                                       tabIndex={0}
                                       role="button"
                                       aria-label={`Drag to reorder item ${idx + 1}`}
-                                      className="hidden md:block text-zinc-500 hover:text-purple-400 p-1 rounded hover:bg-zinc-800/50 shrink-0 transition-colors"
+                                      className="hidden md:block text-slate-400 dark:text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-zinc-800/50 shrink-0 transition-colors cursor-grab"
                                     >
                                       <GripVertical size={14} />
                                     </div>
                                     <div className="w-full">
-                                      <label className="block md:hidden text-[9px] uppercase tracking-wider text-zinc-500 mb-1 font-bold">Item Name</label>
+                                      <label className="block md:hidden text-[9px] uppercase tracking-wider text-slate-500 dark:text-zinc-500 mb-1 font-bold">Item Name</label>
                                       <input
                                         type="text"
                                         required
                                         value={item.itemName}
                                         onChange={(e) => handleItemFieldChange(idx, "itemName", e.target.value)}
                                         placeholder="Item name (e.g. Venue Catering)..."
-                                        className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-600 font-medium"
+                                        className="w-full px-3 py-2 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-purple-600 font-medium"
                                       />
                                     </div>
                                   </div>
                                 </div>
                                 <div className="md:col-span-4 space-y-1 mt-2.5 md:mt-0">
-                                  <label className="block md:hidden text-[9px] uppercase tracking-wider text-zinc-500 mb-1 font-bold">Description</label>
+                                  <label className="block md:hidden text-[9px] uppercase tracking-wider text-slate-500 dark:text-zinc-500 mb-1 font-bold">Description</label>
                                   <input
                                     type="text"
                                     value={item.description}
                                     onChange={(e) => handleItemFieldChange(idx, "description", e.target.value)}
                                     placeholder="Detail descriptions (optional)..."
-                                    className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-600"
+                                    className="w-full px-3 py-2 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-purple-600"
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1 mt-2.5 md:mt-0">
-                                  <label className="block md:hidden text-[9px] uppercase tracking-wider text-zinc-500 mb-1 font-bold">Unit Price</label>
+                                  <label className="block md:hidden text-[9px] uppercase tracking-wider text-slate-500 dark:text-zinc-500 mb-1 font-bold">Unit Price</label>
                                   <input
                                     type="number"
                                     required
                                     value={item.unitPrice || ""}
                                     onChange={(e) => handleItemFieldChange(idx, "unitPrice", e.target.value)}
                                     placeholder="Unit price..."
-                                    className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-600 font-mono"
+                                    className="w-full px-3 py-2 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-purple-600 font-mono"
                                   />
                                 </div>
                                 <div className="md:col-span-1 space-y-1 mt-2.5 md:mt-0">
-                                  <label className="block md:hidden text-[9px] uppercase tracking-wider text-zinc-500 mb-1 font-bold">Qty</label>
+                                  <label className="block md:hidden text-[9px] uppercase tracking-wider text-slate-500 dark:text-zinc-500 mb-1 font-bold">Qty</label>
                                   <input
                                     type="number"
                                     required
                                     value={item.quantity || ""}
                                     onChange={(e) => handleItemFieldChange(idx, "quantity", e.target.value)}
                                     placeholder="Qty..."
-                                    className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-600 font-mono"
+                                    className="w-full px-3 py-2 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-purple-600 font-mono"
                                   />
                                 </div>
                                 <div className="hidden md:flex md:col-span-1 justify-end mt-1.5">
@@ -477,9 +477,9 @@ export default function QuoteBuilderPage() {
                                     type="button"
                                     onClick={() => handleRemoveItemRow(idx)}
                                     disabled={items.length === 1}
-                                    className="h-7 w-7 rounded bg-zinc-800/40 hover:bg-red-500/10 hover:text-red-500 flex items-center justify-center text-zinc-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                    className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-zinc-800/40 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-500 flex items-center justify-center text-slate-400 dark:text-zinc-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                   >
-                                    <Trash2 size={13} />
+                                    <Trash2 size={14} />
                                   </button>
                                 </div>
                               </div>
@@ -497,25 +497,25 @@ export default function QuoteBuilderPage() {
 
             {/* T&C + Notes */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-5 border border-zinc-800 bg-[#161618]/30 rounded-xl space-y-4">
-                <label className="text-zinc-400 uppercase font-semibold">Client Notes</label>
+              <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md rounded-2xl space-y-3">
+                <label className="text-slate-700 dark:text-zinc-400 uppercase font-bold text-[10px] tracking-wider">Client Notes</label>
                 <textarea
                   rows={4}
                   value={clientNotes}
                   onChange={(e) => setClientNotes(e.target.value)}
                   placeholder="E.g., Pricing includes transportation charges to Delhi venue..."
-                  className="w-full px-3 py-2.5 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-600 leading-normal"
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-purple-600 leading-normal"
                 />
               </div>
 
-              <div className="p-5 border border-zinc-800 bg-[#161618]/30 rounded-xl space-y-4">
-                <label className="text-zinc-400 uppercase font-semibold">Terms & Conditions</label>
+              <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur-md rounded-2xl space-y-3">
+                <label className="text-slate-700 dark:text-zinc-400 uppercase font-bold text-[10px] tracking-wider">Terms & Conditions</label>
                 <textarea
                   rows={4}
                   value={termsConditions}
                   onChange={(e) => setTermsConditions(e.target.value)}
                   placeholder="Terms and contract parameters..."
-                  className="w-full px-3 py-2.5 bg-[#18181B] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-600 leading-normal"
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-purple-600 leading-normal"
                 />
               </div>
             </div>
@@ -525,16 +525,16 @@ export default function QuoteBuilderPage() {
         {/* Right Column (Live Calculations Summary) */}
         <div className="space-y-6">
           {/* Sticky Bottom Summary on mobile, Sticky Top on desktop */}
-          <div className="p-4 md:p-6 border border-zinc-850 bg-[#161618]/95 backdrop-blur-md rounded-xl space-y-4 sticky bottom-0 lg:bottom-auto lg:top-6 shadow-2xl lg:shadow-none z-30">
-            <div className="flex items-center justify-between lg:border-b lg:border-zinc-800 lg:pb-2">
-              <h3 className="font-bold text-xs md:text-sm uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                <Sparkles size={14} className="text-purple-400" />
+          <div className="p-4 md:p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/95 backdrop-blur-md rounded-2xl space-y-4 sticky bottom-0 lg:bottom-auto lg:top-6 shadow-xl lg:shadow-sm z-30">
+            <div className="flex items-center justify-between lg:border-b lg:border-slate-200/90 dark:lg:border-white/[0.08] lg:pb-3">
+              <h3 className="font-bold text-xs md:text-sm uppercase tracking-wider text-slate-700 dark:text-zinc-300 flex items-center gap-2">
+                <Sparkles size={14} className="text-purple-600 dark:text-purple-400" />
                 Live Summary
               </h3>
               <button
                 type="button"
                 onClick={() => setShowSummaryDetails(!showSummaryDetails)}
-                className="block lg:hidden text-zinc-400 hover:text-white text-[10px] font-bold px-2 py-0.5 bg-zinc-800 rounded border border-zinc-700"
+                className="block lg:hidden text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white text-[10px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-zinc-800 rounded-lg border border-slate-200 dark:border-zinc-700"
               >
                 {showSummaryDetails ? "Hide Breakdowns" : "Show Breakdowns"}
               </button>
@@ -542,57 +542,57 @@ export default function QuoteBuilderPage() {
 
             {/* Always visible grand total on mobile summary bar */}
             <div className="flex lg:hidden justify-between items-center text-xs">
-              <span className="text-zinc-400 font-semibold">Grand Total</span>
-              <span className="font-mono font-extrabold text-emerald-400 text-sm">
+              <span className="text-slate-600 dark:text-zinc-400 font-semibold">Grand Total</span>
+              <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">
                 INR {grandTotal.toLocaleString()}
               </span>
             </div>
 
             {/* Collapsible pricing summary details */}
-            <div className={`${showSummaryDetails ? "block" : "hidden lg:block"} space-y-4 text-xs pt-2 lg:pt-0 border-t border-zinc-800/50 lg:border-t-0`}>
-              <div className="flex justify-between items-center text-zinc-400">
+            <div className={`${showSummaryDetails ? "block" : "hidden lg:block"} space-y-4 text-xs pt-2 lg:pt-0 border-t border-slate-100 dark:border-zinc-800/50 lg:border-t-0`}>
+              <div className="flex justify-between items-center text-slate-600 dark:text-zinc-400 font-medium">
                 <span>Subtotal Items</span>
-                <span className="font-mono font-bold text-zinc-200">
+                <span className="font-mono font-bold text-slate-900 dark:text-zinc-200">
                   INR {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
 
               {/* Adjusters */}
-              <div className="space-y-2 border-t border-b border-zinc-800/60 py-3">
+              <div className="space-y-3 border-t border-b border-slate-100 dark:border-white/[0.08] py-3.5">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-zinc-450">Apply Discount (INR)</span>
+                  <span className="text-slate-600 dark:text-zinc-400 font-medium">Apply Discount (INR)</span>
                   <input
                     type="number"
                     value={discount}
                     onChange={(e) => setDiscount(e.target.value)}
                     placeholder="0.00"
-                    className="w-32 px-2 py-1 bg-[#18181B] border border-zinc-800 rounded text-right text-white focus:outline-none focus:border-purple-600 font-mono font-bold"
+                    className="w-32 px-2.5 py-1.5 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-right text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 font-mono font-bold"
                   />
                 </div>
 
-                <div className="flex items-center justify-between gap-4 pt-2">
-                  <span className="text-zinc-450">Tax Rate Percentage (%)</span>
+                <div className="flex items-center justify-between gap-4 pt-1">
+                  <span className="text-slate-600 dark:text-zinc-400 font-medium">Tax Rate (%)</span>
                   <input
                     type="number"
                     value={taxRate}
                     onChange={(e) => setTaxRate(e.target.value)}
                     placeholder="18"
-                    className="w-32 px-2 py-1 bg-[#18181B] border border-zinc-800 rounded text-right text-white focus:outline-none focus:border-purple-600 font-mono font-bold"
+                    className="w-32 px-2.5 py-1.5 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-right text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 font-mono font-bold"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-between items-center text-zinc-450 pt-1">
+              <div className="flex justify-between items-center text-slate-600 dark:text-zinc-400 font-medium pt-1">
                 <span>Calculated Tax</span>
-                <span className="font-mono font-bold text-zinc-200">
+                <span className="font-mono font-bold text-slate-900 dark:text-zinc-200">
                   INR {taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
 
               {/* Grand Total (Desktop Layout) */}
-              <div className="hidden lg:flex justify-between items-center border-t border-zinc-800/60 pt-4 text-sm font-bold">
-                <span className="text-zinc-200">Grand Total</span>
-                <span className="font-mono font-extrabold text-emerald-400 text-base">
+              <div className="hidden lg:flex justify-between items-center border-t border-slate-100 dark:border-white/[0.08] pt-4 text-sm font-bold">
+                <span className="text-slate-900 dark:text-zinc-200">Grand Total</span>
+                <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-base">
                   INR {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>

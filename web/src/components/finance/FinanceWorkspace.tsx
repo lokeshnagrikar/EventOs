@@ -62,7 +62,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import {
   ResponsiveContainer,
   AreaChart,
-  
+
   Area,
   XAxis,
   YAxis,
@@ -137,24 +137,24 @@ interface Expense {
 
 const INVOICE_STATUSES = ["ALL", "DRAFT", "SENT", "ISSUED", "VIEWED", "PARTIAL", "PARTIALLY_PAID", "PAID", "OVERDUE", "CANCELLED"];
 const STATUS_PILLS: Record<string, string> = {
-  DRAFT: "border-zinc-800 bg-zinc-800/20 text-zinc-400",
-  SENT: "border-blue-500/20 bg-blue-500/5 text-blue-400",
-  ISSUED: "border-blue-500/20 bg-blue-500/5 text-blue-400",
-  VIEWED: "border-cyan-500/20 bg-cyan-500/5 text-cyan-400",
-  PARTIAL: "border-indigo-500/20 bg-indigo-500/5 text-indigo-400",
-  PARTIALLY_PAID: "border-indigo-500/20 bg-indigo-500/5 text-indigo-400",
-  PAID: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400",
-  OVERDUE: "border-rose-500/20 bg-rose-500/5 text-rose-400",
-  CANCELLED: "border-zinc-800 bg-zinc-900/10 text-zinc-600"
+  DRAFT: "border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-800/40 text-slate-600 dark:text-zinc-400",
+  SENT: "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  ISSUED: "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  VIEWED: "border-cyan-500/20 bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
+  PARTIAL: "border-indigo-500/20 bg-indigo-500/10 text-indigo-700 dark:text-indigo-400",
+  PARTIALLY_PAID: "border-indigo-500/20 bg-indigo-500/10 text-indigo-700 dark:text-indigo-400",
+  PAID: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  OVERDUE: "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-400",
+  CANCELLED: "border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900/10 text-slate-500 dark:text-zinc-500"
 };
 
 const PAYMENT_STATUS_PILLS: Record<string, string> = {
-  PENDING: "border-amber-500/20 bg-amber-500/5 text-amber-400",
-  PENDING_VERIFICATION: "border-yellow-500/20 bg-yellow-500/5 text-yellow-400",
-  COMPLETED: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400",
-  SUCCESSFUL: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400",
-  REFUNDED: "border-purple-500/20 bg-purple-500/5 text-purple-400",
-  FAILED: "border-red-500/20 bg-red-500/5 text-red-400"
+  PENDING: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  PENDING_VERIFICATION: "border-yellow-500/20 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
+  COMPLETED: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  SUCCESSFUL: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  REFUNDED: "border-purple-500/20 bg-purple-500/10 text-purple-700 dark:text-purple-400",
+  FAILED: "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400"
 };
 
 export default function FinanceWorkspace({ defaultTab = "dashboard" }: { defaultTab?: string }) {
@@ -399,7 +399,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
   const kpis = useMemo(() => {
     const activeInvoices = invoices.filter((i) => i.status !== "CANCELLED");
     const totalInvoiced = activeInvoices.reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
-    
+
     // Dynamically calculate collections from invoices (including partial payments) and direct completed payments
     const paidFromInvoices = activeInvoices.reduce((sum, i) => {
       const paid = Number(i.paidAmount) || 0;
@@ -590,7 +590,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       subtitle="Monitor event reservation ledgers, payment progress, and contract milestones."
     >
       {/* Global Finance Tab Selection */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-850 pb-4 select-none">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/90 dark:border-white/[0.08] pb-4 select-none">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar touch-pan-x max-w-full pb-1 md:pb-0">
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -600,13 +600,13 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 key={tab.key}
                 onClick={() => { setActiveTab(tab.key); setSearchQuery(""); }}
                 className={cn(
-                  "px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0",
+                  "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0",
                   isActive
-                    ? "bg-purple-600/10 text-purple-400 border border-purple-550/20"
-                    : "text-zinc-500 hover:text-zinc-350 border border-transparent hover:bg-zinc-900/40"
+                    ? "bg-purple-50 dark:bg-purple-600/10 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-550/20 shadow-sm"
+                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-transparent hover:bg-slate-100 dark:hover:bg-zinc-900/40"
                 )}
               >
-                <Icon size={12} />
+                <Icon size={13} />
                 {tab.label}
               </button>
             );
@@ -614,13 +614,13 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
         </div>
 
         <div className="relative w-full md:max-w-xs shrink-0">
-          <Search size={13} className="absolute left-3 top-2.5 text-zinc-550" />
+          <Search size={14} className="absolute left-3.5 top-2.5 text-slate-400 dark:text-zinc-500" />
           <input
             type="text"
             placeholder="Search invoice, client, reference..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-zinc-950/40 border border-zinc-850 rounded-xl text-xs text-white focus:outline-none focus:border-purple-650 transition-all font-semibold"
+            className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-zinc-950/40 border border-slate-200 dark:border-zinc-850 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-purple-600 transition-all font-semibold shadow-sm"
           />
         </div>
       </div>
@@ -647,19 +647,19 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           {/* Secondary KPI strip */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: "Revenue Today", value: `₹${(Number(kpis.revenueToday) || 0).toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
-              { label: "Revenue This Week", value: `₹${(Number(kpis.revenueWeek) || 0).toLocaleString()}`, icon: Coins, color: "text-purple-400" },
-              { label: "Annual Revenue", value: `₹${(Number(kpis.revenueYear) || 0).toLocaleString()}`, icon: BarChart3, color: "text-blue-400" },
-              { label: "Collection Rate", value: `${kpis.collectionRate || 0}%`, icon: CheckCircle2, color: "text-cyan-400" },
-              { label: "Refunds Issued", value: `₹${(Number(kpis.refundedAmount) || 0).toLocaleString()}`, icon: RefreshCw, color: "text-rose-400" },
-              { label: "Avg Payment Time", value: "4.8 Days", icon: Clock, color: "text-zinc-400" }
+              { label: "Revenue Today", value: `₹${(Number(kpis.revenueToday) || 0).toLocaleString()}`, icon: TrendingUp, color: "text-emerald-600 dark:text-emerald-400" },
+              { label: "Revenue This Week", value: `₹${(Number(kpis.revenueWeek) || 0).toLocaleString()}`, icon: Coins, color: "text-purple-600 dark:text-purple-400" },
+              { label: "Annual Revenue", value: `₹${(Number(kpis.revenueYear) || 0).toLocaleString()}`, icon: BarChart3, color: "text-blue-600 dark:text-blue-400" },
+              { label: "Collection Rate", value: `${kpis.collectionRate || 0}%`, icon: CheckCircle2, color: "text-cyan-600 dark:text-cyan-400" },
+              { label: "Refunds Issued", value: `₹${(Number(kpis.refundedAmount) || 0).toLocaleString()}`, icon: RefreshCw, color: "text-rose-600 dark:text-rose-400" },
+              { label: "Avg Payment Time", value: "4.8 Days", icon: Clock, color: "text-slate-500 dark:text-zinc-400" }
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.label} className="p-3.5 border border-zinc-850 bg-[#121214]/40 rounded-2xl flex items-center justify-between hover:border-zinc-700 transition">
+                <div key={item.label} className="p-3.5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/40 rounded-2xl flex items-center justify-between hover:border-purple-500/30 transition shadow-sm">
                   <div>
-                    <span className="text-[9px] text-zinc-550 uppercase font-black tracking-wider block">{item.label}</span>
-                    <span className="text-sm font-black text-zinc-200 mt-0.5 block">{item.value}</span>
+                    <span className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">{item.label}</span>
+                    <span className="text-sm font-black text-slate-900 dark:text-zinc-200 mt-0.5 block">{item.value}</span>
                   </div>
                   <Icon size={14} className={item.color} />
                 </div>
@@ -669,60 +669,60 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
           {/* Recent Payments + Outstanding Invoices */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="p-5 border border-zinc-850 bg-[#121214]/20 rounded-2xl space-y-4">
+            <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/20 rounded-2xl shadow-sm space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">Recent Transactions</h3>
-                <button onClick={() => setActiveTab("payments")} className="text-[10px] text-purple-400 hover:underline cursor-pointer">View All</button>
+                <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300">Recent Transactions</h3>
+                <button onClick={() => setActiveTab("payments")} className="text-[10px] text-purple-600 dark:text-purple-400 font-bold hover:underline cursor-pointer">View All</button>
               </div>
               <div className="space-y-3">
                 {payments.slice(0, 5).map((p) => (
-                  <div key={p.id} className="flex justify-between items-center p-3 bg-zinc-900/30 border border-zinc-850 rounded-xl hover:bg-zinc-900/50 transition-colors">
+                  <div key={p.id} className="flex justify-between items-center p-3 bg-slate-50/70 dark:bg-zinc-900/30 border border-slate-200/90 dark:border-zinc-850 rounded-xl hover:bg-slate-100/70 dark:hover:bg-zinc-900/50 transition-colors">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                      <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                         <Coins size={14} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-zinc-200">Ref: {p.transactionReference || "N/A"}</p>
-                        <p className="text-[10px] text-zinc-500">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "-"} • {(p.paymentMethod || "OTHER").replace("_", " ")}</p>
+                        <p className="text-xs font-bold text-slate-900 dark:text-zinc-200">Ref: {p.transactionReference || "N/A"}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-zinc-400">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "-"} • {(p.paymentMethod || "OTHER").replace("_", " ")}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="font-mono text-xs font-black text-emerald-400 block">₹{(Number(p.amount) || 0).toLocaleString()}</span>
-                      <span className={cn("text-[8px] font-bold px-1.5 py-0.5 rounded border inline-block mt-0.5", PAYMENT_STATUS_PILLS[p.status] || "border-zinc-800 text-zinc-500")}>{p.status}</span>
+                      <span className="font-mono text-xs font-black text-emerald-600 dark:text-emerald-400 block">₹{(Number(p.amount) || 0).toLocaleString()}</span>
+                      <span className={cn("text-[8px] font-bold px-1.5 py-0.5 rounded border inline-block mt-0.5", PAYMENT_STATUS_PILLS[p.status] || "border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-500")}>{p.status}</span>
                     </div>
                   </div>
                 ))}
-                {payments.length === 0 && <p className="text-xs text-zinc-550 text-center py-6">No transactions recorded.</p>}
+                {payments.length === 0 && <p className="text-xs text-slate-400 dark:text-zinc-500 text-center py-6">No transactions recorded.</p>}
               </div>
             </div>
 
-            <div className="p-5 border border-zinc-850 bg-[#121214]/20 rounded-2xl space-y-4">
+            <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/20 rounded-2xl shadow-sm space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">Outstanding Invoices</h3>
-                <button onClick={() => setActiveTab("invoices")} className="text-[10px] text-purple-400 hover:underline cursor-pointer">View All</button>
+                <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300">Outstanding Invoices</h3>
+                <button onClick={() => setActiveTab("invoices")} className="text-[10px] text-purple-600 dark:text-purple-400 font-bold hover:underline cursor-pointer">View All</button>
               </div>
               <div className="space-y-3">
                 {invoices.filter((i) => i.status !== "PAID" && i.status !== "CANCELLED").slice(0, 5).map((inv) => {
-                  const pillClass = STATUS_PILLS[inv.status] || "border-zinc-800 text-zinc-400";
+                  const pillClass = STATUS_PILLS[inv.status] || "border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400";
                   return (
-                    <div key={inv.id} className="flex justify-between items-center p-3 bg-zinc-900/30 border border-zinc-850 rounded-xl hover:bg-zinc-900/50 transition-colors">
+                    <div key={inv.id} className="flex justify-between items-center p-3 bg-slate-50/70 dark:bg-zinc-900/30 border border-slate-200/90 dark:border-zinc-850 rounded-xl hover:bg-slate-100/70 dark:hover:bg-zinc-900/50 transition-colors">
                       <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-lg bg-zinc-950 flex items-center justify-center text-zinc-450 border border-zinc-850">
+                        <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-zinc-950 flex items-center justify-center text-slate-600 dark:text-zinc-450 border border-slate-200 dark:border-zinc-850">
                           <FileText size={14} />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-200">{inv.clientName || "Client"}</p>
-                          <p className="text-[10px] text-zinc-550">Due: {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "-"} • {inv.invoiceNumber || "DRAFT"}</p>
+                          <p className="text-xs font-bold text-slate-900 dark:text-zinc-200">{inv.clientName || "Client"}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-zinc-400">Due: {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "-"} • {inv.invoiceNumber || "DRAFT"}</p>
                         </div>
                       </div>
                       <div className="text-right space-y-1">
-                        <p className="font-mono text-xs font-black text-zinc-250">₹{(Number(inv.totalAmount) || 0).toLocaleString()}</p>
+                        <p className="font-mono text-xs font-black text-slate-900 dark:text-zinc-200">₹{(Number(inv.totalAmount) || 0).toLocaleString()}</p>
                         <span className={cn("px-2 py-0.5 border rounded-full text-[8px] font-black uppercase inline-block", pillClass)}>{inv.status}</span>
                       </div>
                     </div>
                   );
                 })}
-                {invoices.length === 0 && <p className="text-xs text-zinc-550 text-center py-6">No outstanding invoices.</p>}
+                {invoices.length === 0 && <p className="text-xs text-slate-400 dark:text-zinc-500 text-center py-6">No outstanding invoices.</p>}
               </div>
             </div>
           </div>
@@ -735,13 +735,13 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {activeTab === "cashflow" && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">Cash Flow Analysis</h3>
-            <div className="flex bg-zinc-900 border border-zinc-800 p-0.5 rounded-lg">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300">Cash Flow Analysis</h3>
+            <div className="flex bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] p-0.5 rounded-lg">
               {(["week", "month", "quarter", "year"] as const).map((p) => (
                 <button
                   key={p}
                   onClick={() => setCashFlowPeriod(p)}
-                  className={cn("px-2.5 py-1 text-[9px] font-black rounded-md uppercase tracking-wider transition-all cursor-pointer", cashFlowPeriod === p ? "bg-zinc-800 text-purple-400" : "text-zinc-500 hover:text-zinc-300")}
+                  className={cn("px-2.5 py-1 text-[9px] font-black rounded-md uppercase tracking-wider transition-all cursor-pointer", cashFlowPeriod === p ? "bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-sm" : "text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200")}
                 >
                   {p}
                 </button>
@@ -750,18 +750,18 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           </div>
 
           {/* Income vs Expense bar chart */}
-          <div className="p-5 border border-zinc-850 bg-[#121214]/30 backdrop-blur rounded-2xl space-y-4">
-            <h4 className="font-bold text-xs text-zinc-400 uppercase tracking-wider">Revenue vs Expenses</h4>
+          <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur rounded-2xl space-y-4">
+            <h4 className="font-bold text-xs text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Revenue vs Expenses</h4>
             <div className="h-64 w-full text-xs">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={revenueTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis dataKey="month" stroke="#71717a" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="#71717a" tick={{ fontSize: 10 }} />
-                  <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", color: "#f4f4f5", fontSize: 11 }} />
-                  <Legend wrapperStyle={{ fontSize: 10, color: "#71717a" }} />
-                  <Bar dataKey="Revenue" fill="#a855f7" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-slate-200 dark:text-white/[0.06]" vertical={false} />
+                  <XAxis dataKey="month" stroke="#888888" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="#888888" tick={{ fontSize: 10 }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#1e1b4b", borderColor: "#6366f1", borderRadius: "12px", color: "#f4f4f5", fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                  <Bar dataKey="Revenue" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -769,23 +769,23 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
           {/* Profit Trend + Payment Methods */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="p-5 border border-zinc-850 bg-[#121214]/30 backdrop-blur rounded-2xl space-y-4">
-              <h4 className="font-bold text-xs text-zinc-400 uppercase tracking-wider">Profit Trend</h4>
+            <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur rounded-2xl space-y-4">
+              <h4 className="font-bold text-xs text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Profit Trend</h4>
               <div className="h-48 w-full text-xs">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={revenueTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                    <XAxis dataKey="month" stroke="#71717a" tick={{ fontSize: 10 }} />
-                    <YAxis stroke="#71717a" tick={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", fontSize: 11 }} />
-                    <Line type="monotone" dataKey="Profit" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: "#10b981" }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-slate-200 dark:text-white/[0.06]" vertical={false} />
+                    <XAxis dataKey="month" stroke="#888888" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#888888" tick={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ backgroundColor: "#1e1b4b", borderColor: "#6366f1", borderRadius: "12px", color: "#f4f4f5", fontSize: 11 }} />
+                    <Line type="monotone" dataKey="Profit" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3, fill: "#10b981" }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="p-5 border border-zinc-850 bg-[#121214]/30 backdrop-blur rounded-2xl space-y-4 flex flex-col justify-between">
-              <h4 className="font-bold text-xs text-zinc-400 uppercase tracking-wider">Payment Methods Distribution</h4>
+            <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm backdrop-blur rounded-2xl space-y-4 flex flex-col justify-between">
+              <h4 className="font-bold text-xs text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Payment Methods Distribution</h4>
               <div className="h-44 w-full text-xs">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -794,7 +794,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                         <Cell key={`method-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", fontSize: 11 }} />
+                    <Tooltip contentStyle={{ backgroundColor: "#1e1b4b", borderColor: "#6366f1", borderRadius: "12px", color: "#f4f4f5", fontSize: 11 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -802,7 +802,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 {paymentMethodData.map((entry) => (
                   <div key={entry.name} className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-                    <span className="text-zinc-400 truncate">{entry.name} (₹{Math.round(entry.value/1000)}k)</span>
+                    <span className="text-slate-600 dark:text-zinc-400 truncate">{entry.name} (₹{Math.round(entry.value / 1000)}k)</span>
                   </div>
                 ))}
               </div>
@@ -816,29 +816,29 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {/* ═══════════════════════════════════════════════ */}
       {activeTab === "invoices" && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/[0.08] pb-4">
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative max-w-xs flex-1">
-                <Search size={13} className="absolute left-3 top-2.5 text-zinc-550" />
+                <Search size={13} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
                 <input type="text" placeholder="Search invoices..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-3 py-1.5 bg-[#121214]/60 border border-zinc-800 focus:border-purple-650 rounded-lg text-xs text-white focus:outline-none transition-colors w-64" />
+                  className="pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 focus:border-purple-500 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none transition-colors w-64" />
               </div>
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg text-xs focus:outline-none font-bold">
+                className="px-3 py-1.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 rounded-lg text-xs focus:outline-none font-bold">
                 <option value="ALL">All Statuses</option>
                 {INVOICE_STATUSES.filter(s => s !== "ALL").map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <button onClick={() => { resetInvoiceForm(); setIsInvoiceModalOpen(true); }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
               <Plus size={13} /> Generate Invoice
             </button>
           </div>
 
-          <div className="overflow-x-auto border border-zinc-850 bg-[#121214]/20 rounded-2xl">
+          <div className="overflow-x-auto border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-zinc-850 bg-zinc-950/20 text-zinc-550 font-black uppercase text-[8.5px] tracking-wider select-none">
+                <tr className="border-b border-slate-200 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-zinc-400 font-black uppercase text-[8.5px] tracking-wider select-none">
                   <th className="p-4">Invoice No</th>
                   <th className="p-4">Customer</th>
                   <th className="p-4">Linked Booking</th>
@@ -848,30 +848,30 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-850/40 text-zinc-350">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04] text-slate-600 dark:text-zinc-300">
                 {filteredInvoices.map((inv) => {
-                  const statusClass = STATUS_PILLS[inv.status] || "border-zinc-800 text-zinc-400";
+                  const statusClass = STATUS_PILLS[inv.status] || "border-slate-300 dark:border-zinc-800 text-slate-600 dark:text-zinc-400";
                   const bookingNum = bookings.find((b) => b.id === inv.bookingId)?.bookingNumber ||
-                                     eventsList.find((e) => e.id === inv.bookingId || e.bookingId === inv.bookingId)?.name ||
-                                     "Direct Client";
+                    eventsList.find((e) => e.id === inv.bookingId || e.bookingId === inv.bookingId)?.name ||
+                    "Direct Client";
                   return (
-                    <tr key={inv.id} className="hover:bg-zinc-900/10 transition-colors">
-                      <td className="p-4 font-mono font-bold text-zinc-400">{inv.invoiceNumber || "DRAFT"}</td>
-                      <td className="p-4 font-extrabold text-zinc-200">{inv.clientName || "Client"}</td>
+                    <tr key={inv.id} className="hover:bg-purple-500/[0.03] dark:hover:bg-white/[0.02] transition-colors">
+                      <td className="p-4 font-mono font-bold text-slate-900 dark:text-zinc-300">{inv.invoiceNumber || "DRAFT"}</td>
+                      <td className="p-4 font-extrabold text-slate-900 dark:text-zinc-100">{inv.clientName || "Client"}</td>
                       <td className="p-4 font-mono">{bookingNum}</td>
                       <td className="p-4">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "-"}</td>
                       <td className="p-4"><span className={cn("px-2.5 py-0.5 border rounded-full text-[8.5px] font-black uppercase", statusClass)}>{inv.status.replace("_", " ")}</span></td>
                       <td className="p-4 font-mono">
-                        <div className="font-black text-zinc-100">₹{(Number(inv.totalAmount) || 0).toLocaleString()}</div>
+                        <div className="font-black text-slate-900 dark:text-zinc-100">₹{(Number(inv.totalAmount) || 0).toLocaleString()}</div>
                         {(Number(inv.paidAmount) || 0) > 0 && inv.status !== "PAID" && (
-                          <div className="text-[10px] text-zinc-400 mt-0.5">
-                            Paid: <span className="text-emerald-450 font-bold">₹{(Number(inv.paidAmount) || 0).toLocaleString()}</span>
-                            <span className="text-zinc-600 mx-1">&bull;</span>
-                            Due: <span className="text-amber-400 font-bold">₹{Math.max(0, (Number(inv.totalAmount) || 0) - (Number(inv.paidAmount) || 0)).toLocaleString()}</span>
+                          <div className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                            Paid: <span className="text-emerald-600 dark:text-emerald-400 font-bold">₹{(Number(inv.paidAmount) || 0).toLocaleString()}</span>
+                            <span className="text-slate-300 dark:text-zinc-600 mx-1">&bull;</span>
+                            Due: <span className="text-amber-600 dark:text-amber-400 font-bold">₹{Math.max(0, (Number(inv.totalAmount) || 0) - (Number(inv.paidAmount) || 0)).toLocaleString()}</span>
                           </div>
                         )}
                         {inv.status === "PAID" && (
-                          <div className="text-[10px] text-emerald-450 font-bold mt-0.5">Fully Settled</div>
+                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">Fully Settled</div>
                         )}
                       </td>
                       <td className="p-4 text-right space-x-2">
@@ -893,12 +893,12 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                               addToast("Invoice PDF download failed.", "error");
                             }
                           }}
-                          className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors inline-flex items-center gap-1 cursor-pointer text-[11px]"
+                          className="text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors inline-flex items-center gap-1 cursor-pointer text-[11px]"
                           title="Download PDF"
                         >
                           <Download size={13} />
                         </button>
-                        <button onClick={() => router.push(`/invoices/${inv.id}`)} className="text-purple-400 hover:text-purple-300 font-bold inline-flex items-center gap-0.5 hover:underline cursor-pointer">
+                        <button onClick={() => router.push(`/invoices/${inv.id}`)} className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold inline-flex items-center gap-0.5 hover:underline cursor-pointer">
                           View <ArrowUpRight size={12} />
                         </button>
                       </td>
@@ -908,9 +908,9 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               </tbody>
             </table>
             {filteredInvoices.length === 0 && (
-              <div className="p-16 text-center space-y-2 border-t border-zinc-850">
-                <Inbox className="h-8 w-8 mx-auto text-zinc-650" />
-                <p className="text-xs text-zinc-450 font-bold">No invoices found matching current filters.</p>
+              <div className="p-16 text-center space-y-2 border-t border-slate-200 dark:border-white/[0.08]">
+                <Inbox className="h-8 w-8 mx-auto text-slate-400 dark:text-zinc-600" />
+                <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold">No invoices found matching current filters.</p>
               </div>
             )}
           </div>
@@ -922,40 +922,40 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {/* ═══════════════════════════════════════════════ */}
       {activeTab === "payments" && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/[0.08] pb-4">
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative max-w-xs flex-1">
-                <Search size={13} className="absolute left-3 top-2.5 text-zinc-550" />
+                <Search size={13} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
                 <input type="text" placeholder="Search transaction reference..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-3 py-1.5 bg-[#121214]/60 border border-zinc-800 focus:border-purple-650 rounded-lg text-xs text-white focus:outline-none transition-colors w-64" />
+                  className="pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 focus:border-purple-500 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none transition-colors w-64" />
               </div>
               <select value={methodFilter} onChange={(e) => setMethodFilter(e.target.value)}
-                className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg text-xs focus:outline-none font-bold">
+                className="px-3 py-1.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 rounded-lg text-xs focus:outline-none font-bold">
                 <option value="ALL">All Payment Methods</option>
                 {["UPI", "CASH", "CARD", "BANK_TRANSFER", "CHEQUE"].map((m) => <option key={m} value={m}>{m.replace("_", " ")}</option>)}
               </select>
             </div>
             <button onClick={() => { resetPaymentForm(); setIsPaymentModalOpen(true); }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
               <Plus size={13} /> Record Payment
             </button>
           </div>
 
           {/* Payment Timeline Visualizer */}
-          <div className="p-5 border border-zinc-850 bg-[#121214]/20 rounded-2xl space-y-4">
-            <h4 className="font-bold text-xs text-zinc-400 uppercase tracking-wider">Payment Timeline</h4>
-            <div className="relative pl-5 border-l border-zinc-800 space-y-4">
+          <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl space-y-4">
+            <h4 className="font-bold text-xs text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Payment Timeline</h4>
+            <div className="relative pl-5 border-l border-slate-200 dark:border-zinc-800 space-y-4">
               {filteredPayments.slice(0, 8).map((p) => (
                 <div key={p.id} className="relative">
-                  <div className={cn("absolute -left-[23px] top-1 h-2.5 w-2.5 rounded-full ring-4 ring-[#0c0c0e]",
+                  <div className={cn("absolute -left-[23px] top-1 h-2.5 w-2.5 rounded-full ring-4 ring-white dark:ring-[#0c0c0e]",
                     p.status === "COMPLETED" ? "bg-emerald-500" : p.status === "REFUNDED" ? "bg-purple-500" : p.status === "FAILED" ? "bg-red-500" : "bg-amber-500"
                   )} />
                   <div className="flex justify-between items-center">
                     <div>
-                      <span className="text-xs font-bold text-zinc-200">₹{(Number(p.amount) || 0).toLocaleString()} via {(p.paymentMethod || "MANUAL").replace("_", " ")}</span>
-                      <span className="text-[10px] text-zinc-500 block">Ref: {p.transactionReference || "N/A"} • {p.paymentDate ? new Date(p.paymentDate).toLocaleString() : "Date N/A"}</span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-zinc-200">₹{(Number(p.amount) || 0).toLocaleString()} via {(p.paymentMethod || "MANUAL").replace("_", " ")}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 block">Ref: {p.transactionReference || "N/A"} • {p.paymentDate ? new Date(p.paymentDate).toLocaleString() : "Date N/A"}</span>
                     </div>
-                    <span className={cn("text-[8px] font-bold px-2 py-0.5 rounded border", PAYMENT_STATUS_PILLS[p.status] || "border-zinc-800 text-zinc-500")}>{p.status}</span>
+                    <span className={cn("text-[8px] font-bold px-2 py-0.5 rounded border", PAYMENT_STATUS_PILLS[p.status] || "border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400")}>{p.status}</span>
                   </div>
                 </div>
               ))}
@@ -963,10 +963,10 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
           </div>
 
           {/* Payments table */}
-          <div className="overflow-x-auto border border-zinc-850 bg-[#121214]/20 rounded-2xl">
+          <div className="overflow-x-auto border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-zinc-850 bg-zinc-950/20 text-zinc-550 font-black uppercase text-[8.5px] tracking-wider">
+                <tr className="border-b border-slate-200 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-zinc-400 font-black uppercase text-[8.5px] tracking-wider">
                   <th className="p-4">Transaction ID</th>
                   <th className="p-4">Linked Booking</th>
                   <th className="p-4">Method</th>
@@ -976,29 +976,29 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                   <th className="p-4 text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-850/40 text-zinc-350">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04] text-slate-600 dark:text-zinc-300">
                 {filteredPayments.map((p) => {
                   const bookingNum = bookings.find((b) => b.id === p.bookingId)?.bookingNumber || "Unassigned";
                   return (
-                    <tr key={p.id} className="hover:bg-zinc-900/10 transition-colors">
-                      <td className="p-4 font-mono text-zinc-400">{(p.id || "").substring(0, 13)}</td>
-                      <td className="p-4 font-bold text-zinc-200">Booking {bookingNum}</td>
-                      <td className="p-4 font-bold text-zinc-400">{(p.paymentMethod || "UPI").replace("_", " ")}</td>
-                      <td className="p-4 font-mono text-zinc-300">{p.transactionReference || "N/A"}</td>
+                    <tr key={p.id} className="hover:bg-purple-500/[0.03] dark:hover:bg-white/[0.02] transition-colors">
+                      <td className="p-4 font-mono text-slate-500 dark:text-zinc-400">{(p.id || "").substring(0, 13)}</td>
+                      <td className="p-4 font-bold text-slate-900 dark:text-zinc-200">Booking {bookingNum}</td>
+                      <td className="p-4 font-bold text-slate-700 dark:text-zinc-400">{(p.paymentMethod || "UPI").replace("_", " ")}</td>
+                      <td className="p-4 font-mono text-slate-600 dark:text-zinc-300">{p.transactionReference || "N/A"}</td>
                       <td className="p-4">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "-"}</td>
                       <td className="p-4">
-                        <span className={cn("px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase", PAYMENT_STATUS_PILLS[p.status] || "border-zinc-800 text-zinc-400")}>{p.status}</span>
+                        <span className={cn("px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase", PAYMENT_STATUS_PILLS[p.status] || "border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400")}>{p.status}</span>
                       </td>
-                      <td className="p-4 text-right font-mono font-black text-emerald-450">₹{(Number(p.amount) || 0).toLocaleString()}</td>
+                      <td className="p-4 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">₹{(Number(p.amount) || 0).toLocaleString()}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
             {filteredPayments.length === 0 && (
-              <div className="p-16 text-center space-y-2 border-t border-zinc-850">
-                <Inbox className="h-8 w-8 mx-auto text-zinc-650" />
-                <p className="text-xs text-zinc-450 font-bold">No payments transaction logged.</p>
+              <div className="p-16 text-center space-y-2 border-t border-slate-200 dark:border-white/[0.08]">
+                <Inbox className="h-8 w-8 mx-auto text-slate-400 dark:text-zinc-600" />
+                <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold">No payments transaction logged.</p>
               </div>
             )}
           </div>
@@ -1010,24 +1010,24 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {/* ═══════════════════════════════════════════════ */}
       {activeTab === "expenses" && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-zinc-400">Budget Context:</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">Budget Context:</span>
               <select value={selectedBookingId} onChange={(e) => setSelectedBookingId(e.target.value)}
-                className="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg text-xs focus:outline-none font-bold">
+                className="px-3.5 py-1.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-300 rounded-lg text-xs focus:outline-none font-bold">
                 {bookings.map((b) => <option key={b.id} value={b.id}>{b.bookingNumber} (₹{(Number(b.totalAmount) || 0).toLocaleString()})</option>)}
               </select>
             </div>
             <button onClick={() => { resetExpenseForm(); setIsExpenseModalOpen(true); }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
               <Plus size={13} /> Log Expense
             </button>
           </div>
 
-          <div className="overflow-x-auto border border-zinc-850 bg-[#121214]/20 rounded-2xl">
+          <div className="overflow-x-auto border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-zinc-850 bg-zinc-950/20 text-zinc-550 font-black uppercase text-[8.5px] tracking-wider">
+                <tr className="border-b border-slate-200 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-zinc-400 font-black uppercase text-[8.5px] tracking-wider">
                   <th className="p-4">Category</th>
                   <th className="p-4">Description</th>
                   <th className="p-4">Payment Method</th>
@@ -1037,22 +1037,22 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-850/40 text-zinc-350">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04] text-slate-600 dark:text-zinc-300">
                 {expenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-zinc-900/10 transition-colors">
-                    <td className="p-4 font-bold text-zinc-200">{e.category}</td>
-                    <td className="p-4 text-zinc-300">{e.description}</td>
-                    <td className="p-4 font-medium text-zinc-400">{e.paymentMethod || "N/A"}</td>
+                  <tr key={e.id} className="hover:bg-purple-500/[0.03] dark:hover:bg-white/[0.02] transition-colors">
+                    <td className="p-4 font-bold text-slate-900 dark:text-zinc-200">{e.category}</td>
+                    <td className="p-4 text-slate-700 dark:text-zinc-300">{e.description}</td>
+                    <td className="p-4 font-medium text-slate-500 dark:text-zinc-400">{e.paymentMethod || "N/A"}</td>
                     <td className="p-4">{new Date(e.expenseDate).toLocaleDateString()}</td>
                     <td className="p-4">
                       <span className={cn("px-2 py-0.5 border rounded-full text-[8.5px] font-black uppercase",
-                        e.status === "PAID" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" : "border-amber-500/20 bg-amber-500/5 text-amber-500"
+                        e.status === "PAID" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
                       )}>{e.status}</span>
                     </td>
-                    <td className="p-4 font-mono font-black text-rose-400">₹{(Number(e.amount) || 0).toLocaleString()}</td>
+                    <td className="p-4 font-mono font-black text-rose-600 dark:text-rose-400">₹{(Number(e.amount) || 0).toLocaleString()}</td>
                     <td className="p-4 text-right">
                       <button onClick={() => deleteExpenseMutation.mutate(e.id)}
-                        className="p-1 text-zinc-550 hover:text-red-500 rounded bg-zinc-950/20 hover:bg-red-500/10 transition-colors cursor-pointer">
+                        className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded bg-slate-100 dark:bg-zinc-800/60 hover:bg-red-500/10 transition-colors cursor-pointer">
                         <Trash2 size={12} />
                       </button>
                     </td>
@@ -1061,9 +1061,9 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               </tbody>
             </table>
             {expenses.length === 0 && (
-              <div className="p-16 text-center space-y-2 border-t border-zinc-850">
-                <Inbox className="h-8 w-8 mx-auto text-zinc-650" />
-                <p className="text-xs text-zinc-450 font-bold">No expenses logged for this booking budget.</p>
+              <div className="p-16 text-center space-y-2 border-t border-slate-200 dark:border-white/[0.08]">
+                <Inbox className="h-8 w-8 mx-auto text-slate-400 dark:text-zinc-600" />
+                <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold">No expenses logged for this booking budget.</p>
               </div>
             )}
           </div>
@@ -1075,19 +1075,19 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {/* ═══════════════════════════════════════════════ */}
       {activeTab === "ledger" && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center border-b border-zinc-850 pb-4">
-            <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">General Accounting Ledger</h3>
+          <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/[0.08] pb-4">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300">General Accounting Ledger</h3>
             <div className="flex gap-2">
-              <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 rounded-xl text-[10px] font-bold cursor-pointer">
+              <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl text-[10px] font-bold cursor-pointer">
                 <Download size={12} /> Export CSV
               </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-zinc-850 bg-[#121214]/20 rounded-2xl">
+          <div className="overflow-x-auto border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-zinc-850 bg-zinc-950/20 text-zinc-550 font-black uppercase text-[8.5px] tracking-wider">
+                <tr className="border-b border-slate-200 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-zinc-400 font-black uppercase text-[8.5px] tracking-wider">
                   <th className="p-4">Date</th>
                   <th className="p-4">Description</th>
                   <th className="p-4">Type</th>
@@ -1097,16 +1097,16 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                   <th className="p-4 text-right">Balance</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-850/40 text-zinc-350">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04] text-slate-600 dark:text-zinc-300">
                 {/* Opening Balance */}
-                <tr className="bg-zinc-950/30">
-                  <td className="p-4 font-mono text-zinc-500">01 Jan 2026</td>
-                  <td className="p-4 font-bold text-zinc-200">Opening Balance — FY 2026-27</td>
-                  <td className="p-4"><span className="px-2 py-0.5 border border-blue-500/20 bg-blue-500/5 text-blue-400 rounded text-[8px] font-bold">OPENING</span></td>
-                  <td className="p-4 font-mono text-zinc-500">SYS-INIT</td>
+                <tr className="bg-slate-50/60 dark:bg-zinc-900/40">
+                  <td className="p-4 font-mono text-slate-500 dark:text-zinc-500">01 Jan 2026</td>
+                  <td className="p-4 font-bold text-slate-900 dark:text-zinc-200">Opening Balance — FY 2026-27</td>
+                  <td className="p-4"><span className="px-2 py-0.5 border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-[8px] font-bold">OPENING</span></td>
+                  <td className="p-4 font-mono text-slate-500 dark:text-zinc-500">SYS-INIT</td>
                   <td className="p-4 text-right font-mono">—</td>
                   <td className="p-4 text-right font-mono">—</td>
-                  <td className="p-4 text-right font-mono font-black text-zinc-200">₹0</td>
+                  <td className="p-4 text-right font-mono font-black text-slate-900 dark:text-zinc-200">₹0</td>
                 </tr>
                 {/* Generate from payments */}
                 {payments.filter(p => p.status === "COMPLETED" || p.status === "SUCCESSFUL").slice(0, 10).map((p, idx) => {
@@ -1115,26 +1115,26 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                     .slice(0, idx + 1)
                     .reduce((sum, pp) => sum + (Number(pp.amount) || 0), 0);
                   return (
-                    <tr key={p.id} className="hover:bg-zinc-900/10 transition-colors">
-                      <td className="p-4 font-mono text-zinc-500">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "-"}</td>
-                      <td className="p-4 font-semibold text-zinc-300">Payment via {(p.paymentMethod || "MANUAL").replace("_", " ")}</td>
-                      <td className="p-4"><span className="px-2 py-0.5 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 rounded text-[8px] font-bold">INCOME</span></td>
-                      <td className="p-4 font-mono text-zinc-500">{p.transactionReference || p.id.substring(0, 8)}</td>
+                    <tr key={p.id} className="hover:bg-purple-500/[0.03] dark:hover:bg-white/[0.02] transition-colors">
+                      <td className="p-4 font-mono text-slate-500 dark:text-zinc-400">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "-"}</td>
+                      <td className="p-4 font-semibold text-slate-900 dark:text-zinc-300">Payment via {(p.paymentMethod || "MANUAL").replace("_", " ")}</td>
+                      <td className="p-4"><span className="px-2 py-0.5 border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded text-[8px] font-bold">INCOME</span></td>
+                      <td className="p-4 font-mono text-slate-500 dark:text-zinc-400">{p.transactionReference || p.id.substring(0, 8)}</td>
                       <td className="p-4 text-right font-mono">—</td>
-                      <td className="p-4 text-right font-mono text-emerald-400">₹{(Number(p.amount) || 0).toLocaleString()}</td>
-                      <td className="p-4 text-right font-mono font-black text-zinc-200">₹{(Number(runningBalance) || 0).toLocaleString()}</td>
+                      <td className="p-4 text-right font-mono text-emerald-600 dark:text-emerald-400 font-bold">₹{(Number(p.amount) || 0).toLocaleString()}</td>
+                      <td className="p-4 text-right font-mono font-black text-slate-900 dark:text-zinc-200">₹{(Number(runningBalance) || 0).toLocaleString()}</td>
                     </tr>
                   );
                 })}
                 {/* Closing Balance */}
-                <tr className="bg-zinc-950/30">
-                  <td className="p-4 font-mono text-zinc-500">Today</td>
-                  <td className="p-4 font-bold text-zinc-200">Closing Balance</td>
-                  <td className="p-4"><span className="px-2 py-0.5 border border-purple-500/20 bg-purple-500/5 text-purple-400 rounded text-[8px] font-bold">CLOSING</span></td>
-                  <td className="p-4 font-mono text-zinc-500">—</td>
+                <tr className="bg-slate-50/60 dark:bg-zinc-900/40">
+                  <td className="p-4 font-mono text-slate-500 dark:text-zinc-500">Today</td>
+                  <td className="p-4 font-bold text-slate-900 dark:text-zinc-200">Closing Balance</td>
+                  <td className="p-4"><span className="px-2 py-0.5 border border-purple-500/20 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded text-[8px] font-bold">CLOSING</span></td>
+                  <td className="p-4 font-mono text-slate-500 dark:text-zinc-500">—</td>
                   <td className="p-4 text-right font-mono">—</td>
                   <td className="p-4 text-right font-mono">—</td>
-                  <td className="p-4 text-right font-mono font-black text-emerald-400">₹{kpis.paidInvoicesVolume.toLocaleString()}</td>
+                  <td className="p-4 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">₹{kpis.paidInvoicesVolume.toLocaleString()}</td>
                 </tr>
               </tbody>
             </table>
@@ -1147,31 +1147,31 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {/* ═══════════════════════════════════════════════ */}
       {activeTab === "vendorpay" && (
         <div className="space-y-6">
-          <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350 border-b border-zinc-850 pb-4">Vendor Payout Management</h3>
-          
+          <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300 border-b border-slate-200 dark:border-white/[0.08] pb-4">Vendor Payout Management</h3>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {expenses.map((vp) => (
-              <div key={vp.id} className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-3 hover:border-zinc-700 transition">
+              <div key={vp.id} className="p-4 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm rounded-2xl space-y-3 hover:border-purple-300 dark:hover:border-purple-500/40 transition">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-extrabold text-zinc-200 text-xs block">{vp.description || "Vendor Payout"}</span>
-                    <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider block mt-0.5">{vp.category || "Vendor"}</span>
+                    <span className="font-extrabold text-slate-900 dark:text-zinc-200 text-xs block">{vp.description || "Vendor Payout"}</span>
+                    <span className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-bold tracking-wider block mt-0.5">{vp.category || "Vendor"}</span>
                   </div>
                   <span className={cn("text-[8px] font-bold px-2 py-0.5 rounded-full border uppercase",
-                    vp.status === "PAID" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" :
-                    vp.status === "SCHEDULED" ? "border-blue-500/20 bg-blue-500/5 text-blue-400" :
-                    "border-amber-500/20 bg-amber-500/5 text-amber-400"
+                    vp.status === "PAID" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                      vp.status === "SCHEDULED" ? "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400" :
+                        "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
                   )}>{vp.status}</span>
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t border-zinc-900/60">
-                  <span className="font-mono text-sm font-black text-zinc-200">₹{(Number(vp.amount) || 0).toLocaleString()}</span>
-                  <span className="text-[9px] text-zinc-500 font-bold">{(vp.paymentMethod || "MANUAL").replace("_", " ")}</span>
+                <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-white/[0.06]">
+                  <span className="font-mono text-sm font-black text-slate-900 dark:text-zinc-200">₹{(Number(vp.amount) || 0).toLocaleString()}</span>
+                  <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-bold">{(vp.paymentMethod || "MANUAL").replace("_", " ")}</span>
                 </div>
               </div>
             ))}
           </div>
           {expenses.length === 0 && (
-            <div className="text-center py-12 border border-dashed border-zinc-850 rounded-2xl text-zinc-500 text-xs">
+            <div className="text-center py-12 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl text-slate-500 dark:text-zinc-400 text-xs">
               No vendor payouts or disbursements logged yet. Add expenses in the Expenses tab to track vendor transactions dynamically.
             </div>
           )}
@@ -1184,39 +1184,39 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {activeTab === "tax" && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-5 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-1">
-              <span className="text-[10px] text-zinc-550 font-black uppercase">CGST (9%)</span>
-              <p className="text-xl font-mono font-black text-zinc-200">₹{(Number(taxSummary.cgst) || 0).toLocaleString()}</p>
-              <p className="text-[9px] text-zinc-500">Central Goods & Services</p>
+            <div className="p-5 bg-white dark:bg-[#111218]/60 border border-slate-200/90 dark:border-white/[0.08] shadow-sm rounded-2xl space-y-1">
+              <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-black uppercase">CGST (9%)</span>
+              <p className="text-xl font-mono font-black text-slate-900 dark:text-zinc-100">₹{(Number(taxSummary.cgst) || 0).toLocaleString()}</p>
+              <p className="text-[9px] text-slate-400 dark:text-zinc-500">Central Goods & Services</p>
             </div>
-            <div className="p-5 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-1">
-              <span className="text-[10px] text-zinc-550 font-black uppercase">SGST (9%)</span>
-              <p className="text-xl font-mono font-black text-zinc-200">₹{(Number(taxSummary.sgst) || 0).toLocaleString()}</p>
-              <p className="text-[9px] text-zinc-500">State Goods & Services</p>
+            <div className="p-5 bg-white dark:bg-[#111218]/60 border border-slate-200/90 dark:border-white/[0.08] shadow-sm rounded-2xl space-y-1">
+              <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-black uppercase">SGST (9%)</span>
+              <p className="text-xl font-mono font-black text-slate-900 dark:text-zinc-100">₹{(Number(taxSummary.sgst) || 0).toLocaleString()}</p>
+              <p className="text-[9px] text-slate-400 dark:text-zinc-500">State Goods & Services</p>
             </div>
-            <div className="p-5 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-1">
-              <span className="text-[10px] text-zinc-550 font-black uppercase">IGST</span>
-              <p className="text-xl font-mono font-black text-zinc-200">₹{(Number(taxSummary.igst) || 0).toLocaleString()}</p>
-              <p className="text-[9px] text-zinc-500">Inter-State (Not Applicable)</p>
+            <div className="p-5 bg-white dark:bg-[#111218]/60 border border-slate-200/90 dark:border-white/[0.08] shadow-sm rounded-2xl space-y-1">
+              <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-black uppercase">IGST</span>
+              <p className="text-xl font-mono font-black text-slate-900 dark:text-zinc-100">₹{(Number(taxSummary.igst) || 0).toLocaleString()}</p>
+              <p className="text-[9px] text-slate-400 dark:text-zinc-500">Inter-State (Not Applicable)</p>
             </div>
-            <div className="p-5 bg-zinc-900/30 border border-zinc-850 rounded-2xl space-y-1">
-              <span className="text-[10px] text-zinc-550 font-black uppercase">Total GST Liability</span>
-              <p className="text-xl font-mono font-black text-purple-400">₹{(Number(taxSummary.totalTax) || 0).toLocaleString()}</p>
-              <p className="text-[9px] text-zinc-500">Accumulated tax from settled invoices</p>
+            <div className="p-5 bg-white dark:bg-[#111218]/60 border border-slate-200/90 dark:border-white/[0.08] shadow-sm rounded-2xl space-y-1">
+              <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-black uppercase">Total GST Liability</span>
+              <p className="text-xl font-mono font-black text-purple-600 dark:text-purple-400">₹{(Number(taxSummary.totalTax) || 0).toLocaleString()}</p>
+              <p className="text-[9px] text-slate-400 dark:text-zinc-500">Accumulated tax from settled invoices</p>
             </div>
           </div>
 
-          <div className="p-6 bg-[#121214]/20 border border-zinc-850 rounded-2xl space-y-4">
+          <div className="p-6 bg-white dark:bg-[#111218]/60 border border-slate-200/90 dark:border-white/[0.08] shadow-sm rounded-2xl space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">GST Compliance Audit Table</h3>
-              <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 rounded-xl text-[10px] font-bold cursor-pointer">
+              <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300">GST Compliance Audit Table</h3>
+              <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl text-[10px] font-bold cursor-pointer">
                 <Download size={12} /> Export Tax Report
               </button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-zinc-850 text-zinc-550 font-black uppercase text-[8.5px] tracking-wider">
+                  <tr className="border-b border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-zinc-400 font-black uppercase text-[8.5px] tracking-wider">
                     <th className="pb-3">Transaction</th>
                     <th className="pb-3">Type</th>
                     <th className="pb-3">Billed State</th>
@@ -1226,26 +1226,26 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                     <th className="pb-3 text-right">Total GST</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-850/40 text-zinc-350">
+                <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04] text-slate-600 dark:text-zinc-300">
                   {invoices.filter((i) => i.status === "PAID").slice(0, 8).map((inv) => {
                     const taxable = Number(inv.subtotal || inv.totalAmount || 0);
                     const cgstAmt = Math.round(taxable * 0.09);
                     const sgstAmt = Math.round(taxable * 0.09);
                     return (
                       <tr key={inv.id}>
-                        <td className="py-3 font-mono font-bold text-zinc-400">{inv.invoiceNumber || "DRAFT"}</td>
-                        <td className="py-3 font-semibold text-zinc-300">Intra-State GST</td>
+                        <td className="py-3 font-mono font-bold text-slate-900 dark:text-zinc-300">{inv.invoiceNumber || "DRAFT"}</td>
+                        <td className="py-3 font-semibold text-slate-800 dark:text-zinc-200">Intra-State GST</td>
                         <td className="py-3">Domestic</td>
-                        <td className="py-3 text-right font-mono">₹{taxable.toLocaleString()}</td>
-                        <td className="py-3 text-right font-mono text-zinc-400">₹{cgstAmt.toLocaleString()}</td>
-                        <td className="py-3 text-right font-mono text-zinc-400">₹{sgstAmt.toLocaleString()}</td>
-                        <td className="py-3 text-right font-mono font-black text-emerald-450">₹{(cgstAmt + sgstAmt).toLocaleString()}</td>
+                        <td className="py-3 text-right font-mono text-slate-900 dark:text-zinc-100">₹{taxable.toLocaleString()}</td>
+                        <td className="py-3 text-right font-mono text-slate-600 dark:text-zinc-400">₹{cgstAmt.toLocaleString()}</td>
+                        <td className="py-3 text-right font-mono text-slate-600 dark:text-zinc-400">₹{sgstAmt.toLocaleString()}</td>
+                        <td className="py-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">₹{(cgstAmt + sgstAmt).toLocaleString()}</td>
                       </tr>
                     );
                   })}
                   {invoices.filter((i) => i.status === "PAID").length === 0 && (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-zinc-500 text-xs">
+                      <td colSpan={7} className="py-8 text-center text-slate-400 dark:text-zinc-500 text-xs">
                         No settled paid invoices found for GST liability calculation yet.
                       </td>
                     </tr>
@@ -1262,39 +1262,39 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {/* ═══════════════════════════════════════════════ */}
       {activeTab === "reports" && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center border-b border-zinc-850 pb-4">
-            <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">Company Ledger Balance Sheet</h3>
+          <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/[0.08] pb-4">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300">Company Ledger Balance Sheet</h3>
             <div className="flex gap-2 text-xs">
-              <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 rounded-xl text-[10px] font-bold cursor-pointer">
+              <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl text-[10px] font-bold cursor-pointer">
                 <Download size={12} /> Export Excel
               </button>
-              <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 rounded-xl text-[10px] font-bold cursor-pointer">
+              <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl text-[10px] font-bold cursor-pointer">
                 <Printer size={12} /> Print PDF
               </button>
             </div>
           </div>
 
-          <div className="p-6 bg-[#121214]/20 border border-zinc-850 rounded-3xl space-y-6">
-            <div className="border-b border-zinc-850 pb-4 text-center">
-              <h2 className="text-sm font-black text-zinc-250">Profit & Loss Statement</h2>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase mt-1">FY 2026-2027 &bull; Realtime Accounting Ledger</p>
+          <div className="p-6 bg-white dark:bg-[#111218]/60 border border-slate-200/90 dark:border-white/[0.08] shadow-sm rounded-3xl space-y-6">
+            <div className="border-b border-slate-200 dark:border-white/[0.08] pb-4 text-center">
+              <h2 className="text-sm font-black text-slate-900 dark:text-zinc-100">Profit & Loss Statement</h2>
+              <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold uppercase mt-1">FY 2026-2027 &bull; Realtime Accounting Ledger</p>
             </div>
 
             <div className="space-y-4 text-xs">
               {/* Income */}
               <div className="space-y-2">
-                <div className="flex justify-between font-black uppercase text-[10px] text-purple-400">
+                <div className="flex justify-between font-black uppercase text-[10px] text-purple-600 dark:text-purple-400">
                   <span>Operating Revenue</span><span>INR</span>
                 </div>
-                <div className="flex justify-between text-zinc-300 pl-4 border-l border-zinc-800">
+                <div className="flex justify-between text-slate-700 dark:text-zinc-300 pl-4 border-l border-purple-200 dark:border-purple-900/40">
                   <span>Event Contract Collections</span>
-                  <span className="font-mono">₹{(Number(kpis.paidInvoicesVolume) || 0).toLocaleString()}</span>
+                  <span className="font-mono font-bold">₹{(Number(kpis.paidInvoicesVolume) || 0).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-zinc-300 pl-4 border-l border-zinc-800">
+                <div className="flex justify-between text-slate-700 dark:text-zinc-300 pl-4 border-l border-purple-200 dark:border-purple-900/40">
                   <span>Tax Claims & Retainers</span>
-                  <span className="font-mono">₹0</span>
+                  <span className="font-mono font-bold">₹0</span>
                 </div>
-                <div className="flex justify-between font-bold border-t border-zinc-850/60 pt-2 text-zinc-200">
+                <div className="flex justify-between font-bold border-t border-slate-200 dark:border-white/[0.06] pt-2 text-slate-900 dark:text-zinc-100">
                   <span>Gross Operating Income</span>
                   <span className="font-mono">₹{(Number(kpis.paidInvoicesVolume) || 0).toLocaleString()}</span>
                 </div>
@@ -1302,30 +1302,30 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
               {/* Expenses */}
               <div className="space-y-2 pt-4">
-                <div className="flex justify-between font-black uppercase text-[10px] text-rose-400">
+                <div className="flex justify-between font-black uppercase text-[10px] text-rose-600 dark:text-rose-400">
                   <span>Operating Expenses</span><span>INR</span>
                 </div>
                 {expenseCategoryData.length > 0 ? (
                   expenseCategoryData.slice(0, 4).map((cat) => (
-                    <div key={cat.name} className="flex justify-between text-zinc-300 pl-4 border-l border-zinc-850">
+                    <div key={cat.name} className="flex justify-between text-slate-700 dark:text-zinc-300 pl-4 border-l border-rose-200 dark:border-rose-900/40">
                       <span>{cat.name}</span>
-                      <span className="font-mono">₹{(Number(cat.value) || 0).toLocaleString()}</span>
+                      <span className="font-mono font-bold">₹{(Number(cat.value) || 0).toLocaleString()}</span>
                     </div>
                   ))
                 ) : (
-                  <div className="flex justify-between text-zinc-400 pl-4 border-l border-zinc-850">
+                  <div className="flex justify-between text-slate-500 dark:text-zinc-400 pl-4 border-l border-rose-200 dark:border-rose-900/40">
                     <span>Recorded Operating Disbursements</span>
-                    <span className="font-mono">₹{(Number(kpis.estimatedExpenses) || 0).toLocaleString()}</span>
+                    <span className="font-mono font-bold">₹{(Number(kpis.estimatedExpenses) || 0).toLocaleString()}</span>
                   </div>
                 )}
-                <div className="flex justify-between font-bold border-t border-zinc-850/60 pt-2 text-zinc-200">
+                <div className="flex justify-between font-bold border-t border-slate-200 dark:border-white/[0.06] pt-2 text-slate-900 dark:text-zinc-100">
                   <span>Total Operating Expenses</span>
                   <span className="font-mono">₹{(Number(kpis.estimatedExpenses) || 0).toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Net Summary */}
-              <div className="border-t border-zinc-800 pt-4 flex justify-between font-black text-sm text-emerald-450 bg-emerald-950/5 p-4 rounded-xl border border-emerald-900/10">
+              <div className="border-t border-slate-200 dark:border-white/[0.08] pt-4 flex justify-between font-black text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/30">
                 <span>Net Operating Profit</span>
                 <span className="font-mono">₹{(Math.max(0, Number(kpis.netProfit) || 0)).toLocaleString()}</span>
               </div>
@@ -1339,9 +1339,9 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       {/* ═══════════════════════════════════════════════ */}
       {activeTab === "automation" && (
         <div className="space-y-6 select-none">
-          <div className="p-6 bg-[#121214]/20 border border-zinc-850 rounded-2xl space-y-4">
-            <h3 className="font-extrabold text-xs uppercase tracking-wider text-zinc-350">Accounting Automation Rules</h3>
-            <p className="text-[10px] text-zinc-550 leading-relaxed">Define system triggers to draft invoices, dispatch email reminders, and log transaction receipts without manual overhead.</p>
+          <div className="p-6 bg-white dark:bg-[#111218]/60 border border-slate-200/90 dark:border-white/[0.08] shadow-sm rounded-2xl space-y-4">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-zinc-300">Accounting Automation Rules</h3>
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-relaxed">Define system triggers to draft invoices, dispatch email reminders, and log transaction receipts without manual overhead.</p>
 
             <div className="space-y-4 pt-2">
               {[
@@ -1352,14 +1352,14 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                 { title: "Tax Auto-Calculation", desc: "Automatically calculate and apply GST (CGST + SGST) at 18% on all new invoices.", active: true },
                 { title: "Recurring Reminder Schedule", desc: "Send follow-up reminders every 7 days for unpaid invoices exceeding ₹50,000.", active: false }
               ].map((rule, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-zinc-900/30 border border-zinc-850 rounded-2xl hover:bg-zinc-900/50 transition-colors">
+                <div key={idx} className="flex items-center justify-between p-4 bg-slate-50/80 dark:bg-zinc-900/30 border border-slate-200/90 dark:border-zinc-850 rounded-2xl hover:border-purple-300 dark:hover:border-zinc-700 transition-colors">
                   <div>
-                    <h4 className="text-xs font-bold text-zinc-200">{rule.title}</h4>
-                    <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed max-w-[480px]">{rule.desc}</p>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-200">{rule.title}</h4>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5 leading-relaxed max-w-[480px]">{rule.desc}</p>
                   </div>
                   <div className={cn(
                     "px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border cursor-pointer",
-                    rule.active ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-zinc-800 bg-zinc-900 text-zinc-550"
+                    rule.active ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold" : "border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900 text-slate-400 dark:text-zinc-500"
                   )}>
                     {rule.active ? "ENABLED" : "DISABLED"}
                   </div>
@@ -1376,20 +1376,20 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
       {/* MODAL: GENERATE INVOICE */}
       {isInvoiceModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4">
           <div className="absolute inset-0" onClick={() => setIsInvoiceModalOpen(false)} />
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-lg bg-[#111113] border border-zinc-850 rounded-2xl shadow-2xl p-6 overflow-hidden relative z-10">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
-            <div className="flex justify-between items-center pb-4 border-b border-zinc-850 mb-4 z-10 relative">
+            className="w-full max-w-lg bg-white dark:bg-[#111113] border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 overflow-hidden relative z-10">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-500/10 dark:from-purple-950/20 via-transparent to-transparent pointer-events-none" />
+            <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-zinc-800 mb-4 z-10 relative">
               <div>
-                <h2 className="text-sm font-extrabold text-white">Generate Client Invoice</h2>
-                <p className="text-[10px] text-zinc-550 mt-0.5">Provision line items, billing details, and outstanding balances.</p>
+                <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">Generate Client Invoice</h2>
+                <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">Provision line items, billing details, and outstanding balances.</p>
               </div>
-              <button onClick={() => setIsInvoiceModalOpen(false)} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer"><X size={14} /></button>
+              <button onClick={() => setIsInvoiceModalOpen(false)} className="h-8 w-8 rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={14} /></button>
             </div>
 
-            {errorText && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-xs text-red-400 rounded-lg">{errorText}</div>}
+            {errorText && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 rounded-lg">{errorText}</div>}
 
             <form onSubmit={(e) => {
               e.preventDefault(); setErrorText("");
@@ -1406,10 +1406,10 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               {/* Template Selector Grid */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-[9px] text-zinc-400 uppercase font-black tracking-wider font-mono">
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black tracking-wider font-mono">
                     Select Invoice Presentation Template
                   </label>
-                  <span className="text-[9px] text-purple-400 font-mono font-bold">
+                  <span className="text-[9px] text-purple-600 dark:text-purple-400 font-mono font-bold">
                     {invTemplate === "ROYAL_WEDDING" && "💍 Royal Wedding Luxe"}
                     {invTemplate === "GST_CORPORATE" && "🏢 Classic GST Tax"}
                     {invTemplate === "MINIMAL_STUDIO" && "⚡ Modern Studio"}
@@ -1423,14 +1423,14 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                     className={cn(
                       "p-2.5 rounded-xl border text-left transition flex items-center gap-2 cursor-pointer",
                       invTemplate === "ROYAL_WEDDING"
-                        ? "bg-amber-950/20 border-amber-500/50 text-amber-200 ring-1 ring-amber-500/30"
-                        : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                        ? "bg-amber-500/10 dark:bg-amber-950/20 border-amber-500/50 text-amber-700 dark:text-amber-200 ring-1 ring-amber-500/30"
+                        : "bg-slate-50 dark:bg-zinc-900/60 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
                     )}
                   >
                     <span className="text-base">💍</span>
                     <div>
-                      <p className="font-bold text-[11px] leading-tight text-white">Royal Wedding</p>
-                      <p className="text-[9px] text-zinc-400">Gold crest, serif elegance</p>
+                      <p className="font-bold text-[11px] leading-tight text-slate-900 dark:text-white">Royal Wedding</p>
+                      <p className="text-[9px] text-slate-500 dark:text-zinc-400">Gold crest, serif elegance</p>
                     </div>
                   </button>
 
@@ -1440,14 +1440,14 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                     className={cn(
                       "p-2.5 rounded-xl border text-left transition flex items-center gap-2 cursor-pointer",
                       invTemplate === "GST_CORPORATE"
-                        ? "bg-blue-950/20 border-blue-500/50 text-blue-200 ring-1 ring-blue-500/30"
-                        : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                        ? "bg-blue-500/10 dark:bg-blue-950/20 border-blue-500/50 text-blue-700 dark:text-blue-200 ring-1 ring-blue-500/30"
+                        : "bg-slate-50 dark:bg-zinc-900/60 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
                     )}
                   >
                     <span className="text-base">🏢</span>
                     <div>
-                      <p className="font-bold text-[11px] leading-tight text-white">Classic GST Tax</p>
-                      <p className="text-[9px] text-zinc-400">Rule 46 CGST, HSN table</p>
+                      <p className="font-bold text-[11px] leading-tight text-slate-900 dark:text-white">Classic GST Tax</p>
+                      <p className="text-[9px] text-slate-500 dark:text-zinc-400">Rule 46 CGST, HSN table</p>
                     </div>
                   </button>
 
@@ -1457,14 +1457,14 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                     className={cn(
                       "p-2.5 rounded-xl border text-left transition flex items-center gap-2 cursor-pointer",
                       invTemplate === "MINIMAL_STUDIO"
-                        ? "bg-zinc-800 border-zinc-600 text-white ring-1 ring-zinc-500"
-                        : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                        ? "bg-slate-100 dark:bg-zinc-800 border-slate-300 dark:border-zinc-600 text-slate-900 dark:text-white ring-1 ring-slate-400 dark:ring-zinc-500"
+                        : "bg-slate-50 dark:bg-zinc-900/60 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
                     )}
                   >
                     <span className="text-base">⚡</span>
                     <div>
-                      <p className="font-bold text-[11px] leading-tight text-white">Minimal Studio</p>
-                      <p className="text-[9px] text-zinc-400">Monochrome, photo-ready</p>
+                      <p className="font-bold text-[11px] leading-tight text-slate-900 dark:text-white">Minimal Studio</p>
+                      <p className="text-[9px] text-slate-500 dark:text-zinc-400">Monochrome, photo-ready</p>
                     </div>
                   </button>
 
@@ -1474,23 +1474,23 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                     className={cn(
                       "p-2.5 rounded-xl border text-left transition flex items-center gap-2 cursor-pointer",
                       invTemplate === "MILESTONE_SPLIT"
-                        ? "bg-emerald-950/20 border-emerald-500/50 text-emerald-200 ring-1 ring-emerald-500/30"
-                        : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                        ? "bg-emerald-500/10 dark:bg-emerald-950/20 border-emerald-500/50 text-emerald-700 dark:text-emerald-200 ring-1 ring-emerald-500/30"
+                        : "bg-slate-50 dark:bg-zinc-900/60 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
                     )}
                   >
                     <span className="text-base">📊</span>
                     <div>
-                      <p className="font-bold text-[11px] leading-tight text-white">Milestone Split</p>
-                      <p className="text-[9px] text-zinc-400">50-25-25 + UPI QR Code</p>
+                      <p className="font-bold text-[11px] leading-tight text-slate-900 dark:text-white">Milestone Split</p>
+                      <p className="text-[9px] text-slate-500 dark:text-zinc-400">50-25-25 + UPI QR Code</p>
                     </div>
                   </button>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-550 uppercase font-black">Associated Event or Booking</label>
+                <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Associated Event or Booking</label>
                 <select value={invBookingId} onChange={(e) => handleInvoiceBookingChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white">
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white">
                   <option value="">-- Choose Event or Booking --</option>
                   {eventsList.length > 0 && (
                     <optgroup label="Active Events">
@@ -1517,35 +1517,35 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Client Name</label>
-                  <input type="text" required value={invClientName} onChange={(e) => setInvClientName(e.target.value)} className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Client Name</label>
+                  <input type="text" required value={invClientName} onChange={(e) => setInvClientName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Client Email</label>
-                  <input type="email" value={invClientEmail} onChange={(e) => setInvClientEmail(e.target.value)} placeholder="name@domain.com" className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Client Email</label>
+                  <input type="email" value={invClientEmail} onChange={(e) => setInvClientEmail(e.target.value)} placeholder="name@domain.com" className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Subtotal (INR)</label>
-                  <input type="number" required value={invSubtotal} onChange={(e) => setInvSubtotal(e.target.value)} className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Subtotal (INR)</label>
+                  <input type="number" required value={invSubtotal} onChange={(e) => setInvSubtotal(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Tax Rate (%)</label>
-                  <input type="number" value={invTax} onChange={(e) => setInvTax(e.target.value)} className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Tax Rate (%)</label>
+                  <input type="number" value={invTax} onChange={(e) => setInvTax(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Discount (INR)</label>
-                  <input type="number" value={invDiscount} onChange={(e) => setInvDiscount(e.target.value)} className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Discount (INR)</label>
+                  <input type="number" value={invDiscount} onChange={(e) => setInvDiscount(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-550 uppercase font-black">Due Date</label>
-                <input type="datetime-local" required value={invDueDate} onChange={(e) => setInvDueDate(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white" />
+                <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Due Date</label>
+                <input type="datetime-local" required value={invDueDate} onChange={(e) => setInvDueDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-850">
-                <button type="button" onClick={() => setIsInvoiceModalOpen(false)} className="px-4 py-2 border border-zinc-850 bg-zinc-900 rounded-lg text-zinc-300 cursor-pointer">Cancel</button>
-                <button type="submit" disabled={createInvoiceMutation.isPending} className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-lg font-bold cursor-pointer">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-zinc-800">
+                <button type="button" onClick={() => setIsInvoiceModalOpen(false)} className="px-4 py-2 border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900 rounded-lg text-slate-700 dark:text-zinc-300 cursor-pointer">Cancel</button>
+                <button type="submit" disabled={createInvoiceMutation.isPending} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold cursor-pointer">
                   {createInvoiceMutation.isPending ? "Generating..." : "Generate Invoice"}
                 </button>
               </div>
@@ -1556,20 +1556,20 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
       {/* MODAL: RECORD PAYMENT */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4">
           <div className="absolute inset-0" onClick={() => setIsPaymentModalOpen(false)} />
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-lg bg-[#111113] border border-zinc-850 rounded-2xl shadow-2xl p-6 overflow-hidden relative z-10">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
-            <div className="flex justify-between items-center pb-4 border-b border-zinc-850 mb-4 z-10 relative">
+            className="w-full max-w-lg bg-white dark:bg-[#111113] border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 overflow-hidden relative z-10">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-500/10 dark:from-purple-950/20 via-transparent to-transparent pointer-events-none" />
+            <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-zinc-800 mb-4 z-10 relative">
               <div>
-                <h2 className="text-sm font-extrabold text-white">Record Transaction</h2>
-                <p className="text-[10px] text-zinc-550 mt-0.5">Register customer balance collections directly onto system books.</p>
+                <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">Record Transaction</h2>
+                <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">Register customer balance collections directly onto system books.</p>
               </div>
-              <button onClick={() => setIsPaymentModalOpen(false)} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer"><X size={14} /></button>
+              <button onClick={() => setIsPaymentModalOpen(false)} className="h-8 w-8 rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={14} /></button>
             </div>
 
-            {errorText && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-xs text-red-400 rounded-lg">{errorText}</div>}
+            {errorText && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 rounded-lg">{errorText}</div>}
 
             <form onSubmit={(e) => {
               e.preventDefault(); setErrorText("");
@@ -1595,7 +1595,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               });
             }} className="space-y-4 text-xs z-10 relative">
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-550 uppercase font-black">Associated Event, Booking, or Invoice</label>
+                <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Associated Event, Booking, or Invoice</label>
                 <select required value={payBookingId} onChange={(e) => {
                   const val = e.target.value;
                   setPayBookingId(val);
@@ -1619,7 +1619,7 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                     setPayAmount(rem > 0 ? rem.toString() : "50000");
                   }
                 }}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white">
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white">
                   <option value="">-- Choose Event, Booking or Invoice --</option>
                   {invoices.filter(i => i.status !== "CANCELLED" && i.status !== "PAID").length > 0 && (
                     <optgroup label="Pending / Unpaid Invoices">
@@ -1656,12 +1656,12 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Payment Amount (INR)</label>
-                  <input type="number" required value={payAmount} onChange={(e) => setPayAmount(e.target.value)} placeholder="50000" className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Payment Amount (INR)</label>
+                  <input type="number" required value={payAmount} onChange={(e) => setPayAmount(e.target.value)} placeholder="50000" className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Payment Method</label>
-                  <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white font-bold">
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Payment Method</label>
+                  <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white font-bold">
                     <option value="UPI">UPI / NetBanking</option>
                     <option value="CASH">Cash Delivery</option>
                     <option value="CARD">Credit/Debit Card</option>
@@ -1672,17 +1672,17 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Reference Number</label>
-                  <input type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} placeholder="TXN789012" className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Reference Number</label>
+                  <input type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} placeholder="TXN789012" className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Paid Date</label>
-                  <input type="datetime-local" required value={payDate} onChange={(e) => setPayDate(e.target.value)} className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Paid Date</label>
+                  <input type="datetime-local" required value={payDate} onChange={(e) => setPayDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-850">
-                <button type="button" onClick={() => setIsPaymentModalOpen(false)} className="px-4 py-2 border border-zinc-800 bg-zinc-900 rounded-lg text-zinc-300 cursor-pointer">Cancel</button>
-                <button type="submit" disabled={recordPaymentMutation.isPending} className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-lg font-bold cursor-pointer">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-zinc-800">
+                <button type="button" onClick={() => setIsPaymentModalOpen(false)} className="px-4 py-2 border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900 rounded-lg text-slate-700 dark:text-zinc-300 cursor-pointer">Cancel</button>
+                <button type="submit" disabled={recordPaymentMutation.isPending} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold cursor-pointer">
                   {recordPaymentMutation.isPending ? "Logging..." : "Log Transaction"}
                 </button>
               </div>
@@ -1693,20 +1693,20 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
 
       {/* MODAL: LOG EXPENSE */}
       {isExpenseModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4">
           <div className="absolute inset-0" onClick={() => setIsExpenseModalOpen(false)} />
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-lg bg-[#111113] border border-zinc-850 rounded-2xl shadow-2xl p-6 overflow-hidden relative z-10">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-950/15 via-transparent to-transparent pointer-events-none" />
-            <div className="flex justify-between items-center pb-4 border-b border-zinc-850 mb-4 z-10 relative">
+            className="w-full max-w-lg bg-white dark:bg-[#111113] border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 overflow-hidden relative z-10">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_var(--tw-gradient-stops))] from-purple-500/10 dark:from-purple-950/20 via-transparent to-transparent pointer-events-none" />
+            <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-zinc-800 mb-4 z-10 relative">
               <div>
-                <h2 className="text-sm font-extrabold text-white">Log Direct Expense</h2>
-                <p className="text-[10px] text-zinc-550 mt-0.5">Deduct vendor costs and equipment rentals against the selected event budget.</p>
+                <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">Log Direct Expense</h2>
+                <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">Deduct vendor costs and equipment rentals against the selected event budget.</p>
               </div>
-              <button onClick={() => setIsExpenseModalOpen(false)} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer"><X size={14} /></button>
+              <button onClick={() => setIsExpenseModalOpen(false)} className="h-8 w-8 rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X size={14} /></button>
             </div>
 
-            {errorText && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-xs text-red-400 rounded-lg">{errorText}</div>}
+            {errorText && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 rounded-lg">{errorText}</div>}
 
             <form onSubmit={(e) => {
               e.preventDefault(); setErrorText("");
@@ -1718,8 +1718,8 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
             }} className="space-y-4 text-xs z-10 relative">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Budget Category</label>
-                  <select value={expCategory} onChange={(e) => setExpCategory(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white">
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Budget Category</label>
+                  <select value={expCategory} onChange={(e) => setExpCategory(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white">
                     <option value="VENUE">Venue Rentals</option>
                     <option value="CATERING">Catering & Food</option>
                     <option value="PHOTOGRAPHY">Photography & Video</option>
@@ -1732,8 +1732,8 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Payment Method</label>
-                  <select value={expMethod} onChange={(e) => setExpMethod(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white">
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Payment Method</label>
+                  <select value={expMethod} onChange={(e) => setExpMethod(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white">
                     <option value="UPI">UPI Transfer</option>
                     <option value="CASH">Cash Settlement</option>
                     <option value="CARD">Company Card</option>
@@ -1743,32 +1743,32 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Expense Cost (INR)</label>
-                  <input type="number" required value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="15000" className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Expense Cost (INR)</label>
+                  <input type="number" required value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="15000" className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-550 uppercase font-black">Approval Status</label>
-                  <select value={expStatus} onChange={(e) => setExpStatus(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white font-bold">
+                  <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Approval Status</label>
+                  <select value={expStatus} onChange={(e) => setExpStatus(e.target.value)} className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white font-bold">
                     <option value="PAID">PAID</option>
                     <option value="PENDING">PENDING APPROVAL</option>
                   </select>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-550 uppercase font-black">Item Description</label>
+                <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Item Description</label>
                 <input type="text" required value={expDesc} onChange={(e) => setExpDesc(e.target.value)} placeholder="Premium lighting rigs, stage floral items..."
-                  className="w-full px-3 py-2 bg-[#18181B] border border-zinc-800 rounded-lg text-white" />
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-550 uppercase font-black">Receipt Upload (JPG / PDF)</label>
-                <div className="border border-dashed border-zinc-800 rounded-xl p-6 text-center text-zinc-550 hover:border-purple-900 hover:text-zinc-400 transition-all cursor-pointer">
+                <label className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-black">Receipt Upload (JPG / PDF)</label>
+                <div className="border border-dashed border-slate-300 dark:border-zinc-800 rounded-xl p-6 text-center text-slate-500 dark:text-zinc-400 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 transition-all cursor-pointer">
                   <Download size={16} className="mx-auto mb-1" />
                   <span className="text-[10px]">Drag receipt file here or click to choose file</span>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-850">
-                <button type="button" onClick={() => setIsExpenseModalOpen(false)} className="px-4 py-2 border border-zinc-800 bg-zinc-900 rounded-lg text-zinc-300 cursor-pointer">Cancel</button>
-                <button type="submit" disabled={createExpenseMutation.isPending} className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-lg font-bold cursor-pointer">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-zinc-800">
+                <button type="button" onClick={() => setIsExpenseModalOpen(false)} className="px-4 py-2 border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900 rounded-lg text-slate-700 dark:text-zinc-300 cursor-pointer">Cancel</button>
+                <button type="submit" disabled={createExpenseMutation.isPending} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold cursor-pointer">
                   {createExpenseMutation.isPending ? "Adding..." : "Log Expense"}
                 </button>
               </div>
@@ -1781,18 +1781,18 @@ export default function FinanceWorkspace({ defaultTab = "dashboard" }: { default
       <AnimatePresence>
         {isSuccessOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4">
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-              className="w-full max-w-sm bg-[#121214] border border-zinc-850 rounded-2xl shadow-2xl p-6 text-center space-y-4">
-              <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 mx-auto animate-bounce">
+              className="w-full max-w-sm bg-white dark:bg-[#121214] border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 text-center space-y-4">
+              <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto animate-bounce">
                 <CheckCircle2 size={24} />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-extrabold text-white">Payment Receipt Settled</h3>
-                <p className="text-[10px] text-zinc-500">Transaction logged and verified on local ledger books.</p>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Payment Receipt Settled</h3>
+                <p className="text-[10px] text-slate-500 dark:text-zinc-400">Transaction logged and verified on local ledger books.</p>
               </div>
               <button onClick={() => setIsSuccessOpen(false)}
-                className="w-full py-2 bg-purple-650 hover:bg-purple-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer">
+                className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer">
                 Done
               </button>
             </motion.div>
@@ -1851,28 +1851,28 @@ function FinanceKpiCard({ title, value, icon: Icon, trend, accent, sparkData, is
   return (
     <motion.div
       whileHover={{ y: -3 }}
-      className="relative rounded-2xl border border-zinc-800 bg-[#141416]/40 p-3.5 sm:p-5 flex flex-col justify-between min-h-[125px] sm:min-h-[140px] hover:shadow-[0_0_30px_rgba(168,85,247,0.02)] group overflow-hidden select-none transition-colors"
+      className="relative rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 shadow-sm p-3.5 sm:p-5 flex flex-col justify-between min-h-[125px] sm:min-h-[140px] hover:shadow-[0_0_30px_rgba(168,85,247,0.06)] group overflow-hidden select-none transition-colors"
     >
       <div className={cn("absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br opacity-5 blur-[40px] rounded-full group-hover:opacity-10 transition-opacity", accent)} />
-      
+
       <div className="flex justify-between items-start gap-3 sm:gap-4">
         <div className="space-y-1 min-w-0">
-          <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block truncate">{title}</span>
-          <p className="text-lg sm:text-xl font-extrabold tracking-tight text-zinc-200 truncate">
+          <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest block truncate">{title}</span>
+          <p className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-zinc-100 truncate">
             {isCount ? (displayValue ?? 0) : `₹${(Number(displayValue) || 0).toLocaleString()}`}
           </p>
         </div>
-        <div className={cn("h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40 shrink-0", accent)}>
-          <Icon size={14} className="text-zinc-100" />
+        <div className={cn("h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-purple-500/20 shrink-0", accent)}>
+          <Icon size={14} className="text-white" />
         </div>
       </div>
 
-      <div className="flex justify-between items-end pt-4 border-t border-zinc-900/60 mt-2">
+      <div className="flex justify-between items-end pt-4 border-t border-slate-100 dark:border-white/[0.06] mt-2">
         <div className="space-y-1">
-          <div className={cn("flex items-center gap-1 text-[11px] font-bold", trend.isPositive ? "text-emerald-500" : "text-red-500")}>
+          <div className={cn("flex items-center gap-1 text-[11px] font-bold", trend.isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
             {trend.isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
             <span>{trend.value}%</span>
-            <span className="text-zinc-650 font-normal text-[9px] lowercase">vs past month</span>
+            <span className="text-slate-400 dark:text-zinc-500 font-normal text-[9px] lowercase">vs past month</span>
           </div>
         </div>
 

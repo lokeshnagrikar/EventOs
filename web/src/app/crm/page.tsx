@@ -636,24 +636,12 @@ export default function CrmPage() {
     const followups = filteredLeads.filter(l => {
       if (l.notes && l.notes.startsWith("{")) {
         try {
-          const parsed = JSON.parse(l.notes);
-          return parsed.priority === "HIGH";
-        } catch (e) {}
-      }
-      return false;
-    }).length;
-
-    return { total, active, pipelineVal, convRate, avgDeal, wonCount, lostCount, followups };
-  }, [filteredLeads]);
-
-  if (!mounted) return null;
-
-  const headerActions = (
+          const parsed = JSON.parse(  const headerActions = (
     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
       {duplicateGroups.length > 0 && (
         <button
           onClick={() => setShowDuplicateModal(true)}
-          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-450 text-xs font-bold rounded-xl transition shrink-0"
+          className="flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-xl transition shrink-0"
         >
           <AlertTriangle size={13} className="animate-pulse" />
           <span>{duplicateGroups.length} Duplicates</span>
@@ -661,14 +649,16 @@ export default function CrmPage() {
       )}
 
       {/* Smart Saved Views bar */}
-      <div className="hidden sm:flex bg-zinc-950/60 border border-zinc-850 p-0.5 rounded-xl text-[10px] font-bold shrink-0">
+      <div className="hidden sm:flex bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] p-1 rounded-xl text-[10px] font-bold shrink-0">
         {savedViews.slice(0, 4).map(v => (
           <button
             key={v.id}
             onClick={() => handleApplySavedView(v.id)}
             className={cn(
-              "px-2.5 py-1 rounded-lg transition-all cursor-pointer",
-              activeSavedView === v.id ? "bg-zinc-800 text-purple-400" : "text-zinc-500 hover:text-zinc-350"
+              "px-3 py-1 rounded-lg transition-all cursor-pointer font-bold",
+              activeSavedView === v.id
+                ? "bg-white dark:bg-white/[0.1] text-purple-600 dark:text-purple-300 shadow-sm"
+                : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
             )}
           >
             {v.label}
@@ -679,10 +669,10 @@ export default function CrmPage() {
       <button
         onClick={() => setShowFiltersPanel(!showFiltersPanel)}
         className={cn(
-          "px-2.5 sm:px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer shrink-0",
+          "px-3 py-2 border rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer shrink-0",
           showFiltersPanel 
-            ? "bg-purple-950/20 border-purple-500/40 text-purple-400" 
-            : "bg-zinc-900 border-zinc-850 hover:bg-zinc-800 text-zinc-350"
+            ? "bg-purple-500/15 border-purple-500/40 text-purple-700 dark:text-purple-300 shadow-sm" 
+            : "bg-slate-100 dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-700 dark:text-zinc-300"
         )}
       >
         <Filter size={13} />
@@ -691,10 +681,10 @@ export default function CrmPage() {
       
       <button
         onClick={() => setShowImportModal(true)}
-        className="px-2.5 sm:px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-300 transition cursor-pointer shrink-0 hidden sm:flex items-center"
+        className="px-3 py-2 bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] rounded-xl text-xs font-bold text-slate-700 dark:text-zinc-300 transition cursor-pointer shrink-0 hidden sm:flex items-center gap-1.5"
       >
-        <Upload size={13} className="inline mr-1" />
-        Import CSV
+        <Upload size={13} />
+        <span>Import CSV</span>
       </button>
 
       <button 
@@ -702,10 +692,10 @@ export default function CrmPage() {
           if (!useBillingStore.getState().checkLimit("leads")) return;
           setShowQuickAddModal(true);
         }}
-        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-[0.98] cursor-pointer shrink-0"
+        className="flex items-center gap-1.5 sm:gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/20 active:scale-[0.98] cursor-pointer shrink-0"
       >
         <Plus size={14} />
-        Log Lead
+        <span>Log Lead</span>
       </button>
     </div>
   );
@@ -723,7 +713,7 @@ export default function CrmPage() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden bg-[#111113]/40 border-b border-zinc-900 shrink-0"
+            className="overflow-hidden bg-slate-50/50 dark:bg-[#111218]/40 border-b border-slate-200/90 dark:border-white/[0.08] shrink-0"
           >
             <SmartFilters
               sourceFilter={sourceFilter}
@@ -748,10 +738,10 @@ export default function CrmPage() {
       </AnimatePresence>
 
       {/* View Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-4 shrink-0 select-none">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/90 dark:border-white/[0.08] pb-4 shrink-0 select-none">
         <div className="relative w-full max-w-xs">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-555">
-            <Search size={13} />
+          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-zinc-500">
+            <Search size={14} />
           </span>
           <input
             type="text"
@@ -761,28 +751,30 @@ export default function CrmPage() {
               setCurrentPage(0);
             }}
             placeholder="Search name, phone, email, venue, quote..."
-            className="w-full pl-9 pr-4 py-1.5 bg-zinc-950/40 border border-zinc-850 rounded-xl text-xs placeholder-zinc-555 text-zinc-200 focus:outline-none focus:border-purple-650 transition-all font-semibold"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-xl text-xs placeholder-slate-400 dark:placeholder-zinc-500 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all font-semibold"
           />
         </div>
 
         {/* View Mode Switcher */}
-        <div className="flex items-center bg-zinc-950/60 border border-zinc-850 p-0.5 rounded-xl self-start font-semibold overflow-x-auto no-scrollbar max-w-full touch-pan-x">
+        <div className="flex items-center bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] p-1 rounded-xl self-start font-semibold overflow-x-auto no-scrollbar max-w-full touch-pan-x">
           {(["dashboard", "board", "table", "list", "compact", "timeline", "recycle"] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => handleSetViewMode(mode)}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold rounded-lg transition-all cursor-pointer shrink-0 whitespace-nowrap",
-                viewMode === mode ? "bg-zinc-800 text-purple-400" : "text-zinc-500 hover:text-zinc-300"
+                viewMode === mode
+                  ? "bg-white dark:bg-white/[0.1] text-purple-600 dark:text-purple-300 shadow-sm"
+                  : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               )}
             >
-              {mode === "dashboard" && <LineChart size={11} />}
-              {mode === "board" && <Grid size={11} />}
-              {mode === "table" && <SlidersHorizontal size={11} />}
-              {mode === "list" && <List size={11} />}
-              {mode === "compact" && <Layers size={11} />}
-              {mode === "timeline" && <Calendar size={11} />}
-              {mode === "recycle" && <Trash2 size={11} />}
+              {mode === "dashboard" && <LineChart size={12} />}
+              {mode === "board" && <Grid size={12} />}
+              {mode === "table" && <SlidersHorizontal size={12} />}
+              {mode === "list" && <List size={12} />}
+              {mode === "compact" && <Layers size={12} />}
+              {mode === "timeline" && <Calendar size={12} />}
+              {mode === "recycle" && <Trash2 size={12} />}
               <span>{mode} {mode === "recycle" ? "Bin" : ""}</span>
             </button>
           ))}
@@ -836,23 +828,28 @@ export default function CrmPage() {
                   {/* Top Stats Summary */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                      { label: "Total Leads", val: crmHomepageStats.total, suffix: "", icon: Users, color: "text-purple-400" },
-                      { label: "Active Clients", val: crmHomepageStats.active, suffix: "", icon: CheckCircle2, color: "text-blue-400" },
-                      { label: "Pipeline Value", val: `₹${(crmHomepageStats.pipelineVal / 100000).toFixed(1)}L`, suffix: "", icon: TrendingUp, color: "text-emerald-450" },
-                      { label: "Conversion Rate", val: `${crmHomepageStats.convRate.toFixed(1)}%`, suffix: "", icon: Award, color: "text-pink-400" },
-                      { label: "Average Deal Size", val: `₹${(crmHomepageStats.avgDeal / 100000).toFixed(1)}L`, suffix: "", icon: Building, color: "text-cyan-400" },
-                      { label: "Won This Month", val: crmHomepageStats.wonCount, suffix: "", icon: Check, color: "text-emerald-450" },
-                      { label: "Lost This Month", val: crmHomepageStats.lostCount, suffix: "", icon: Trash2, color: "text-red-400" },
-                      { label: "Follow-ups Today", val: crmHomepageStats.followups, suffix: "", icon: Clock, color: "text-amber-500" }
+                      { label: "Total Leads", val: crmHomepageStats.total, suffix: "", icon: Users, color: "text-purple-600 dark:text-purple-400" },
+                      { label: "Active Clients", val: crmHomepageStats.active, suffix: "", icon: CheckCircle2, color: "text-blue-600 dark:text-blue-400" },
+                      { label: "Pipeline Value", val: `₹${(crmHomepageStats.pipelineVal / 100000).toFixed(1)}L`, suffix: "", icon: TrendingUp, color: "text-emerald-600 dark:text-emerald-400" },
+                      { label: "Conversion Rate", val: `${crmHomepageStats.convRate.toFixed(1)}%`, suffix: "", icon: Award, color: "text-pink-600 dark:text-pink-400" },
+                      { label: "Average Deal Size", val: `₹${(crmHomepageStats.avgDeal / 100000).toFixed(1)}L`, suffix: "", icon: Building, color: "text-cyan-600 dark:text-cyan-400" },
+                      { label: "Won This Month", val: crmHomepageStats.wonCount, suffix: "", icon: Check, color: "text-emerald-600 dark:text-emerald-400" },
+                      { label: "Lost This Month", val: crmHomepageStats.lostCount, suffix: "", icon: Trash2, color: "text-red-600 dark:text-red-400" },
+                      { label: "Follow-ups Today", val: crmHomepageStats.followups, suffix: "", icon: Clock, color: "text-amber-600 dark:text-amber-500" }
                     ].map((st) => {
                       const Icon = st.icon;
                       return (
-                        <div key={st.label} className="p-4 border border-zinc-850 bg-[#161618]/30 rounded-2xl flex items-center justify-between hover:border-zinc-700 transition">
+                        <div
+                          key={st.label}
+                          className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 backdrop-blur-xl rounded-2xl flex items-center justify-between hover:border-purple-500/30 transition shadow-sm"
+                        >
                           <div>
-                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider block">{st.label}</span>
-                            <span className="text-lg font-black text-zinc-200 mt-1 block">{st.val}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">{st.label}</span>
+                            <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block tracking-tight">{st.val}</span>
                           </div>
-                          <Icon size={16} className={st.color} />
+                          <div className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-center shrink-0">
+                            <Icon size={18} className={st.color} />
+                          </div>
                         </div>
                       );
                     })}
@@ -863,19 +860,19 @@ export default function CrmPage() {
                     {/* Pipeline & Recent activity */}
                     <div className="lg:col-span-2 space-y-6">
                       {/* Pipeline summary */}
-                      <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
-                        <h3 className="text-xs font-black uppercase text-zinc-400 tracking-wider">Leads Pipeline Distribution</h3>
-                        <div className="space-y-3.5">
+                      <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 backdrop-blur-xl rounded-2xl space-y-4 shadow-sm">
+                        <h3 className="text-xs font-black uppercase text-slate-900 dark:text-zinc-300 tracking-wider">Leads Pipeline Distribution</h3>
+                        <div className="space-y-4">
                           {["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "WON"].map((stage) => {
                             const count = filteredLeads.filter(l => l.status === stage).length;
                             return (
                               <div key={stage} className="space-y-1.5 text-xs font-bold">
-                                <div className="flex justify-between items-center text-zinc-400">
+                                <div className="flex justify-between items-center text-slate-600 dark:text-zinc-400">
                                   <span>{stage}</span>
-                                  <span className="text-zinc-200">{count} Leads</span>
+                                  <span className="text-slate-900 dark:text-white font-mono">{count} Leads</span>
                                 </div>
-                                <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden">
-                                  <div className="h-full bg-purple-600 rounded-full" style={{ width: `${(count / (filteredLeads.length || 1)) * 100}%` }} />
+                                <div className="h-2 w-full bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
+                                  <div className="h-full bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full" style={{ width: `${(count / (filteredLeads.length || 1)) * 100}%` }} />
                                 </div>
                               </div>
                             );
@@ -884,16 +881,16 @@ export default function CrmPage() {
                       </div>
 
                       {/* Recently Added Leads */}
-                      <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
-                        <h3 className="text-xs font-black uppercase text-zinc-400 tracking-wider">Recently Added Leads</h3>
-                        <div className="divide-y divide-zinc-900/60">
+                      <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 backdrop-blur-xl rounded-2xl space-y-4 shadow-sm">
+                        <h3 className="text-xs font-black uppercase text-slate-900 dark:text-zinc-300 tracking-wider">Recently Added Leads</h3>
+                        <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
                           {filteredLeads.slice(0, 3).map((l) => (
-                            <div key={l.id} onClick={() => setSelectedLeadId(l.id)} className="py-3 flex justify-between items-center hover:bg-zinc-900/10 px-2 rounded-lg cursor-pointer transition">
+                            <div key={l.id} onClick={() => setSelectedLeadId(l.id)} className="py-3.5 flex justify-between items-center hover:bg-slate-50/70 dark:hover:bg-white/[0.02] px-2.5 rounded-xl cursor-pointer transition">
                               <div>
-                                <span className="font-extrabold text-zinc-200 block">{l.name}</span>
-                                <span className="text-[10px] text-zinc-550">{l.eventType} • {l.contact?.phone || l.phone || "No phone"}</span>
+                                <span className="font-extrabold text-slate-900 dark:text-white block text-sm">{l.name}</span>
+                                <span className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">{l.eventType} • {l.contact?.phone || l.phone || "No phone"}</span>
                               </div>
-                              <span className="font-mono text-emerald-450 text-xs font-bold">₹{l.budget?.toLocaleString()}</span>
+                              <span className="font-mono text-emerald-600 dark:text-emerald-400 text-xs font-bold">₹{l.budget?.toLocaleString()}</span>
                             </div>
                           ))}
                         </div>
@@ -903,45 +900,43 @@ export default function CrmPage() {
                     {/* Tasks, Activity & Upcoming Meetings */}
                     <div className="lg:col-span-1 space-y-6">
                       {/* Recent Activities list */}
-                      <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
-                        <h3 className="text-xs font-black uppercase text-zinc-400 tracking-wider flex items-center gap-1.5">
-                          <ActivityIcon size={13} className="text-purple-400" />
+                      <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 backdrop-blur-xl rounded-2xl space-y-4 shadow-sm">
+                        <h3 className="text-xs font-black uppercase text-slate-900 dark:text-zinc-300 tracking-wider flex items-center gap-1.5">
+                          <ActivityIcon size={14} className="text-purple-600 dark:text-purple-400" />
                           Recent Activity Feed
                         </h3>
-                        <div className="relative pl-3.5 border-l border-zinc-850 space-y-3.5 text-[11px] font-bold">
+                        <div className="relative pl-3.5 border-l-2 border-purple-200 dark:border-purple-500/30 space-y-3.5 text-xs font-semibold">
                           <div className="relative">
-                            <div className="absolute -left-[18px] top-1 h-1.5 w-1.5 rounded-full bg-purple-500" />
-                            <span className="text-zinc-200 block">Lead updated: Rohan & Meera</span>
-                            <span className="text-[9px] text-zinc-550 block">10 mins ago</span>
+                            <div className="absolute -left-[18px] top-1 h-2 w-2 rounded-full bg-purple-600" />
+                            <span className="text-slate-900 dark:text-zinc-200 block">Lead updated: Rohan & Meera</span>
+                            <span className="text-[10px] text-slate-400 dark:text-zinc-500 block">10 mins ago</span>
                           </div>
                           <div className="relative">
-                            <div className="absolute -left-[18px] top-1 h-1.5 w-1.5 rounded-full bg-purple-500" />
-                            <span className="text-zinc-200 block">New proposal estimates logged</span>
-                            <span className="text-[9px] text-zinc-550 block">1 hour ago</span>
+                            <div className="absolute -left-[18px] top-1 h-2 w-2 rounded-full bg-purple-600" />
+                            <span className="text-slate-900 dark:text-zinc-200 block">New proposal estimates logged</span>
+                            <span className="text-[10px] text-slate-400 dark:text-zinc-500 block">1 hour ago</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Meetings list */}
-                      <div className="p-6 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
-                        <h3 className="text-xs font-black uppercase text-zinc-400 tracking-wider flex items-center gap-1.5">
-                          <Calendar size={13} className="text-purple-400" />
+                      <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 backdrop-blur-xl rounded-2xl space-y-4 shadow-sm">
+                        <h3 className="text-xs font-black uppercase text-slate-900 dark:text-zinc-300 tracking-wider flex items-center gap-1.5">
+                          <Calendar size={14} className="text-purple-600 dark:text-purple-400" />
                           Upcoming CRM Meetings
                         </h3>
                         <div className="space-y-3">
-                          <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl text-xs">
-                            <span className="text-[9px] text-purple-400 font-extrabold uppercase tracking-wider block">Today, 04:30 PM</span>
-                            <span className="font-bold text-zinc-200 block pt-0.5">Budget Negotiation - Rohan G.</span>
+                          <div className="p-3.5 border border-slate-200/80 dark:border-white/[0.06] bg-slate-50/80 dark:bg-white/[0.02] rounded-xl text-xs">
+                            <span className="text-[10px] text-purple-600 dark:text-purple-400 font-extrabold uppercase tracking-wider block">Today, 04:30 PM</span>
+                            <span className="font-bold text-slate-900 dark:text-zinc-200 block pt-0.5">Budget Negotiation - Rohan G.</span>
                           </div>
-                          <div className="p-3 border border-zinc-850 bg-zinc-950/20 rounded-xl text-xs">
-                            <span className="text-[9px] text-zinc-500 font-extrabold block uppercase tracking-wider">Tomorrow, 11:00 AM</span>
-                            <span className="font-bold text-zinc-200 block pt-0.5">Initial onboarding - TechCorp</span>
+                          <div className="p-3.5 border border-slate-200/80 dark:border-white/[0.06] bg-slate-50/80 dark:bg-white/[0.02] rounded-xl text-xs">
+                            <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-extrabold block uppercase tracking-wider">Tomorrow, 11:00 AM</span>
+                            <span className="font-bold text-slate-900 dark:text-zinc-200 block pt-0.5">Initial onboarding - TechCorp</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
               )}
 
               {/* KANBAN VIEW */}
@@ -1004,28 +999,28 @@ export default function CrmPage() {
               {/* RECYCLE BIN */}
               {viewMode === "recycle" && (
                 <div className="space-y-4 font-semibold text-xs select-none">
-                  <div className="border border-zinc-900 bg-zinc-950/20 rounded-2xl overflow-hidden">
-                    <div className="p-4 border-b border-zinc-900 bg-zinc-950/40 text-[10px] uppercase font-bold tracking-widest text-zinc-450">
+                  <div className="border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#111218]/60 backdrop-blur-xl rounded-2xl overflow-hidden shadow-sm">
+                    <div className="p-4 border-b border-slate-200/90 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.02] text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-zinc-400">
                       Soft-Deleted Leads Recycle Bin
                     </div>
-                    <div className="divide-y divide-zinc-900/60">
+                    <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
                       {recycleBin.map((lead) => (
-                        <div key={lead.id} className="p-4 flex items-center justify-between hover:bg-[#161618]/20 transition">
+                        <div key={lead.id} className="p-4 flex items-center justify-between hover:bg-slate-50/60 dark:hover:bg-white/[0.02] transition">
                           <div>
-                            <span className="font-bold text-zinc-200 block">{lead.name}</span>
-                            <span className="text-[10px] text-zinc-500 font-medium">{lead.eventType} • ₹{lead.budget?.toLocaleString()}</span>
+                            <span className="font-bold text-slate-900 dark:text-zinc-200 block text-sm">{lead.name}</span>
+                            <span className="text-xs text-slate-500 dark:text-zinc-400 font-medium">{lead.eventType} • ₹{lead.budget?.toLocaleString()}</span>
                           </div>
                           <button
                             onClick={() => handleRestoreLead(lead)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/10 border border-purple-500/20 hover:bg-purple-600/20 text-purple-400 rounded-xl transition cursor-pointer"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold rounded-xl transition cursor-pointer text-xs"
                           >
-                            <RefreshCw size={12} />
-                            Restore Lead
+                            <RefreshCw size={13} />
+                            <span>Restore Lead</span>
                           </button>
                         </div>
                       ))}
                       {recycleBin.length === 0 && (
-                        <div className="p-12 text-center text-zinc-650 italic">
+                        <div className="p-12 text-center text-slate-400 dark:text-zinc-500 italic">
                           No soft-deleted leads inside the Recycle Bin.
                         </div>
                       )}
@@ -1045,41 +1040,41 @@ export default function CrmPage() {
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#0c0c0e]/95 border border-purple-550/30 shadow-2xl rounded-2xl px-6 py-3 flex items-center gap-6 text-xs text-zinc-350 select-none"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 dark:bg-[#0c0c0e]/95 border border-purple-500/30 shadow-2xl rounded-2xl px-6 py-3 flex items-center gap-6 text-xs text-slate-200 select-none backdrop-blur-xl"
           >
             <span className="font-extrabold text-white text-[11px] uppercase tracking-wider font-mono">
               {selectedLeadIds.length} Selected
             </span>
-            <div className="h-4 w-px bg-zinc-800" />
-            <div className="flex items-center gap-3">
+            <div className="h-4 w-px bg-slate-700 dark:bg-zinc-800" />
+            <div className="flex items-center gap-2.5">
               <button 
                 onClick={handleBulkAssign}
-                className="hover:text-purple-400 font-bold flex items-center gap-1 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-xl cursor-pointer"
+                className="hover:text-purple-400 font-bold flex items-center gap-1 bg-slate-800 dark:bg-zinc-900 border border-slate-700 dark:border-zinc-800 px-3 py-1.5 rounded-xl cursor-pointer transition"
               >
                 Assign
               </button>
               <button 
                 onClick={handleBulkMove}
-                className="hover:text-purple-400 font-bold flex items-center gap-1 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-xl cursor-pointer"
+                className="hover:text-purple-400 font-bold flex items-center gap-1 bg-slate-800 dark:bg-zinc-900 border border-slate-700 dark:border-zinc-800 px-3 py-1.5 rounded-xl cursor-pointer transition"
               >
                 Move Stage
               </button>
               <button 
                 onClick={handleBulkDelete}
-                className="hover:text-red-400 font-bold flex items-center gap-1 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-xl cursor-pointer"
+                className="hover:text-red-400 font-bold flex items-center gap-1 bg-slate-800 dark:bg-zinc-900 border border-slate-700 dark:border-zinc-800 px-3 py-1.5 rounded-xl cursor-pointer transition"
               >
                 Delete
               </button>
               <button 
                 onClick={handleBulkExport}
-                className="hover:text-zinc-200 font-bold flex items-center gap-1 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-xl cursor-pointer"
+                className="hover:text-white font-bold flex items-center gap-1 bg-slate-800 dark:bg-zinc-900 border border-slate-700 dark:border-zinc-800 px-3 py-1.5 rounded-xl cursor-pointer transition"
               >
                 Export CSV
               </button>
             </div>
             <button 
               onClick={() => setSelectedLeadIds([])}
-              className="text-[10px] text-zinc-500 hover:text-white uppercase font-bold cursor-pointer"
+              className="text-[10px] text-slate-400 hover:text-white uppercase font-bold cursor-pointer"
             >
               Cancel
             </button>
@@ -1115,9 +1110,9 @@ export default function CrmPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-[#0c0c0e] border border-zinc-800 rounded-2xl shadow-2xl p-6 z-50 text-xs text-zinc-300 font-semibold"
+              className="relative w-full max-w-md bg-white dark:bg-[#111218] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-6 z-50 text-xs text-slate-700 dark:text-zinc-300 font-semibold"
             >
-              <h3 className="font-extrabold text-sm text-zinc-100 mb-4">Log New Lead Proposal</h3>
+              <h3 className="font-extrabold text-base text-slate-900 dark:text-white mb-4">Log New Lead Proposal</h3>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -1148,7 +1143,7 @@ export default function CrmPage() {
                 className="space-y-4"
               >
                 <div className="space-y-1.5">
-                  <label className="text-zinc-500">Client Name *</label>
+                  <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Client Name *</label>
                   <input
                     type="text"
                     required
@@ -1156,12 +1151,12 @@ export default function CrmPage() {
                     value={quickAddName}
                     onChange={(e) => setQuickAddName(e.target.value)}
                     placeholder="e.g. Rahul Sharma"
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50 transition"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500">Phone Coordinates *</label>
+                    <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Phone Number *</label>
                     <input
                       type="text"
                       required
@@ -1169,29 +1164,29 @@ export default function CrmPage() {
                       value={quickAddPhone}
                       onChange={(e) => setQuickAddPhone(e.target.value)}
                       placeholder="e.g. 9876543210"
-                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50 transition"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500">Email Address</label>
+                    <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Email Address</label>
                     <input
                       type="email"
                       disabled={quickAddLeadMutation.isPending}
                       value={quickAddEmail}
                       onChange={(e) => setQuickAddEmail(e.target.value)}
                       placeholder="e.g. rahul@example.com"
-                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50 transition"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500">Event Class</label>
+                    <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Event Class</label>
                     <select
                       disabled={quickAddLeadMutation.isPending}
                       value={quickAddType}
                       onChange={(e) => setQuickAddType(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white font-bold focus:outline-none focus:border-purple-500 disabled:opacity-50 transition"
                     >
                       <option value="WEDDING">Wedding</option>
                       <option value="BIRTHDAY">Birthday</option>
@@ -1200,7 +1195,7 @@ export default function CrmPage() {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500">Estimated Budget (INR)</label>
+                    <label className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider block">Estimated Budget (INR)</label>
                     <input
                       type="number"
                       required
@@ -1209,24 +1204,33 @@ export default function CrmPage() {
                       value={quickAddBudget}
                       onChange={(e) => setQuickAddBudget(e.target.value)}
                       placeholder="e.g. 250000"
-                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white disabled:opacity-50"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50 transition"
                     />
                   </div>
                 </div>
-                <button
-                  type="submit"
-                  disabled={quickAddLeadMutation.isPending}
-                  className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-650 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {quickAddLeadMutation.isPending ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Saving Lead Proposal...</span>
-                    </>
-                  ) : (
-                    "Log Proposal"
-                  )}
-                </button>
+                <div className="flex gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickAddModal(false)}
+                    className="flex-1 py-2.5 border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.03] text-slate-700 dark:text-zinc-300 font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={quickAddLeadMutation.isPending}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 shadow-md shadow-purple-600/20"
+                  >
+                    {quickAddLeadMutation.isPending ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      "Log Proposal"
+                    )}
+                  </button>
+                </div>
               </form>
             </motion.div>
           </div>
@@ -1242,10 +1246,10 @@ export default function CrmPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-[#0c0c0e] border border-zinc-800 rounded-2xl shadow-2xl p-6 z-50 text-xs text-zinc-300 font-semibold"
+              className="relative w-full max-w-md bg-white dark:bg-[#111218] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-6 z-50 text-xs text-slate-700 dark:text-zinc-300 font-semibold"
             >
-              <h3 className="font-extrabold text-sm text-zinc-100 mb-2">Import CRM Leads via CSV</h3>
-              <p className="text-[10px] text-zinc-550 mb-4">Paste CSV text below. Format: Name, Phone, Email, EventType, EventDate, Budget, Source, Notes</p>
+              <h3 className="font-extrabold text-base text-slate-900 dark:text-white mb-1">Import CRM Leads via CSV</h3>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 mb-4">Paste CSV rows below. Format: Name, Phone, Email, EventType, EventDate, Budget, Source, Notes</p>
               <form onSubmit={handleCsvImport} className="space-y-4">
                 <textarea
                   required
@@ -1253,14 +1257,23 @@ export default function CrmPage() {
                   value={csvRawText}
                   onChange={(e) => setCsvRawText(e.target.value)}
                   placeholder={`"Amit Sharma","9876543210","amit@gmail.com","WEDDING","2026-10-12",250000,"Instagram","Needs pastel theme floral"`}
-                  className="w-full p-3 bg-zinc-900 border border-zinc-850 rounded-lg text-white font-mono text-[10px] focus:outline-none focus:border-purple-500"
+                  className="w-full p-3.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white font-mono text-[11px] focus:outline-none focus:border-purple-500 transition resize-none"
                 />
-                <button
-                  type="submit"
-                  className="w-full py-2 bg-purple-650 hover:bg-purple-600 text-white rounded-lg font-bold cursor-pointer"
-                >
-                  Import Pasted Records
-                </button>
+                <div className="flex gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowImportModal(false)}
+                    className="flex-1 py-2.5 border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.03] text-slate-700 dark:text-zinc-300 font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold cursor-pointer transition shadow-md shadow-purple-600/20"
+                  >
+                    Import Pasted Records
+                  </button>
+                </div>
               </form>
             </motion.div>
           </div>
@@ -1276,13 +1289,13 @@ export default function CrmPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-lg bg-[#0c0c0e] border border-zinc-800 rounded-2xl shadow-2xl p-6 z-50 text-xs text-zinc-300 font-semibold max-h-[80vh] overflow-y-auto"
+              className="relative w-full max-w-lg bg-white dark:bg-[#111218] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-6 z-50 text-xs text-slate-700 dark:text-zinc-300 font-semibold max-h-[80vh] overflow-y-auto"
             >
-              <h3 className="font-extrabold text-sm text-zinc-100 mb-2 flex items-center gap-1.5 text-amber-400">
-                <AlertTriangle size={15} />
+              <h3 className="font-extrabold text-base text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-2">
+                <AlertTriangle size={18} />
                 CRM De-duplication Roster
               </h3>
-              <p className="text-[10px] text-zinc-500 mb-4">We detected client profiles with matching email coordinates or phone contact lines. Choose which record to maintain.</p>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 mb-4">We detected client profiles with matching email coordinates or phone lines. Choose which record to maintain.</p>
               
               <div className="space-y-4">
                 {duplicateGroups.map((group, idx) => {
@@ -1290,27 +1303,27 @@ export default function CrmPage() {
                   const leadB = group[1];
                   if (!leadA || !leadB) return null;
                   return (
-                    <div key={idx} className="p-3 border border-zinc-850 bg-zinc-950/40 rounded-xl space-y-3">
-                      <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-                        <span className="text-zinc-200">Matching coordinates: <strong>{leadA.email || leadA.phone}</strong></span>
+                    <div key={idx} className="p-4 border border-slate-200 dark:border-white/[0.08] bg-slate-50/70 dark:bg-white/[0.02] rounded-xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/[0.06] pb-2 text-xs">
+                        <span className="text-slate-600 dark:text-zinc-300">Matching coordinates: <strong className="text-slate-900 dark:text-white">{leadA.email || leadA.phone}</strong></span>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="p-2 border border-zinc-850 rounded-lg space-y-1">
-                          <span className="text-zinc-150 block font-bold">{leadA.name}</span>
-                          <span className="text-[9px] text-zinc-500 block">{leadA.eventType} • Budget: ₹{leadA.budget?.toLocaleString()}</span>
+                        <div className="p-3 border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#161618]/50 rounded-xl space-y-1">
+                          <span className="text-slate-900 dark:text-white block font-bold text-xs">{leadA.name}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 block">{leadA.eventType} • Budget: ₹{leadA.budget?.toLocaleString()}</span>
                           <button
                             onClick={() => handleMergeLeads(leadA, leadB)}
-                            className="mt-2 w-full py-1 bg-purple-650 hover:bg-purple-600 text-white rounded text-[9px] cursor-pointer"
+                            className="mt-2 w-full py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg text-xs font-bold cursor-pointer transition shadow-sm"
                           >
                             Keep {leadA.name.split(" ")[0]}
                           </button>
                         </div>
-                        <div className="p-2 border border-zinc-850 rounded-lg space-y-1">
-                          <span className="text-zinc-150 block font-bold">{leadB.name}</span>
-                          <span className="text-[9px] text-zinc-500 block">{leadB.eventType} • Budget: ₹{leadB.budget?.toLocaleString()}</span>
+                        <div className="p-3 border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#161618]/50 rounded-xl space-y-1">
+                          <span className="text-slate-900 dark:text-white block font-bold text-xs">{leadB.name}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 block">{leadB.eventType} • Budget: ₹{leadB.budget?.toLocaleString()}</span>
                           <button
                             onClick={() => handleMergeLeads(leadB, leadA)}
-                            className="mt-2 w-full py-1 bg-purple-650 hover:bg-purple-600 text-white rounded text-[9px] cursor-pointer"
+                            className="mt-2 w-full py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg text-xs font-bold cursor-pointer transition shadow-sm"
                           >
                             Keep {leadB.name.split(" ")[0]}
                           </button>

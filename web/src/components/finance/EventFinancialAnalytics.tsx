@@ -208,35 +208,35 @@ export function EventFinancialAnalytics({
   const hasFinancialActivity = grossRevenue > 0 || vendorPayouts > 0 || unpaidInvoicesList.length > 0 || eventProfitData.length > 0;
 
   return (
-    <div className="w-full space-y-6 text-white">
+    <div className="w-full space-y-6 text-slate-900 dark:text-white">
       {/* Top Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-zinc-950/80 border border-purple-500/20 rounded-2xl backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 bg-white dark:bg-zinc-950/80 border border-slate-200/90 dark:border-purple-500/20 rounded-2xl shadow-sm backdrop-blur-xl">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
               Live Event Financial Analytics & Margins
             </h2>
-            <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-[10px] rounded-full uppercase">
+            <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-[10px] rounded-full uppercase">
               Real-Time Sync
             </span>
           </div>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Monitor real revenue, vendor payouts, margin health, and per-event net profitability.
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           {/* Currency Switcher */}
-          <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl p-0.5 text-xs font-mono">
+          <div className="flex bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl p-0.5 text-xs font-mono">
             {(["INR", "USD", "EUR"] as const).map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setCurrency(c)}
-                className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
                   currency === c
                     ? "bg-purple-600 text-white shadow-sm"
-                    : "text-zinc-400 hover:text-white"
+                    : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
                 {c === "INR" ? "₹ INR" : c === "USD" ? "$ USD" : "€ EUR"}
@@ -247,7 +247,7 @@ export function EventFinancialAnalytics({
           <Button
             type="button"
             onClick={handleExportReport}
-            className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-lg shadow-purple-950/40 cursor-pointer"
+            className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md shadow-purple-600/20 cursor-pointer active:scale-95"
           >
             <Download size={14} />
             <span>Export Analytics</span>
@@ -258,29 +258,29 @@ export function EventFinancialAnalytics({
       {/* KPI Cards Grid (100% Real Live Metrics) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Revenue */}
-        <div className="p-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl space-y-2 relative overflow-hidden">
-          <div className="flex justify-between items-center text-xs text-zinc-400 font-bold uppercase tracking-wider">
+        <div className="p-4 sm:p-5 bg-white dark:bg-zinc-900/80 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-sm space-y-2 relative overflow-hidden">
+          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
             <span>Total Gross Revenue</span>
-            <DollarSign size={16} className="text-purple-400" />
+            <DollarSign size={16} className="text-purple-600 dark:text-purple-400" />
           </div>
-          <div className="text-2xl font-black font-mono text-white">
+          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
             {formatAmount(grossRevenue)}
           </div>
-          <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-400">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-zinc-400">
             <span>{kpis?.collectionRate ?? 0}% collection rate</span>
           </div>
         </div>
 
         {/* Vendor Expenses */}
-        <div className="p-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl space-y-2">
-          <div className="flex justify-between items-center text-xs text-zinc-400 font-bold uppercase tracking-wider">
+        <div className="p-4 sm:p-5 bg-white dark:bg-zinc-900/80 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-sm space-y-2">
+          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
             <span>Production & Vendor Payouts</span>
-            <Layers size={16} className="text-pink-400" />
+            <Layers size={16} className="text-pink-600 dark:text-pink-400" />
           </div>
-          <div className="text-2xl font-black font-mono text-white">
+          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
             {formatAmount(vendorPayouts)}
           </div>
-          <div className="text-[11px] text-zinc-400 font-mono">
+          <div className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
             {grossRevenue > 0
               ? `${((vendorPayouts / grossRevenue) * 100).toFixed(1)}% of Gross Revenue`
               : `${expenses.length} logged expense entries`}
@@ -288,16 +288,16 @@ export function EventFinancialAnalytics({
         </div>
 
         {/* Net Profit Margin */}
-        <div className="p-4 bg-purple-950/20 border border-purple-500/30 rounded-2xl space-y-2 relative overflow-hidden">
-          <div className="flex justify-between items-center text-xs text-purple-300 font-bold uppercase tracking-wider">
+        <div className="p-4 sm:p-5 bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-500/30 rounded-2xl shadow-sm space-y-2 relative overflow-hidden">
+          <div className="flex justify-between items-center text-xs text-purple-700 dark:text-purple-300 font-bold uppercase tracking-wider">
             <span>Net Profit Margin</span>
-            <TrendingUp size={16} className="text-purple-400" />
+            <TrendingUp size={16} className="text-purple-600 dark:text-purple-400" />
           </div>
-          <div className="text-2xl font-black font-mono text-purple-300">
+          <div className="text-2xl font-black font-mono text-purple-700 dark:text-purple-300">
             {formatAmount(netProfit)}
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-purple-400">
-            <span className="px-2 py-0.5 bg-purple-500/20 border border-purple-500/40 rounded-md font-mono">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-purple-700 dark:text-purple-400">
+            <span className="px-2 py-0.5 bg-purple-500/10 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/40 rounded-md font-mono">
               {profitMarginPercent}% Margin
             </span>
             <span>{profitMarginPercent >= 0 ? "Healthy Ratio" : "Deficit"}</span>
@@ -305,15 +305,15 @@ export function EventFinancialAnalytics({
         </div>
 
         {/* Pending Receivables */}
-        <div className="p-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl space-y-2">
-          <div className="flex justify-between items-center text-xs text-zinc-400 font-bold uppercase tracking-wider">
+        <div className="p-4 sm:p-5 bg-white dark:bg-zinc-900/80 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-sm space-y-2">
+          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
             <span>Unpaid Invoices</span>
-            <AlertCircle size={16} className="text-amber-400" />
+            <AlertCircle size={16} className="text-amber-500 dark:text-amber-400" />
           </div>
-          <div className="text-2xl font-black font-mono text-white">
+          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
             {formatAmount(outstandingInvoices)}
           </div>
-          <div className="text-[11px] text-amber-400 font-bold">
+          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">
             {unpaidInvoicesList.length === 0
               ? "All invoices fully settled"
               : `${unpaidInvoicesList.length} outstanding invoice${unpaidInvoicesList.length === 1 ? "" : "s"}`}
@@ -324,16 +324,16 @@ export function EventFinancialAnalytics({
       {/* Visual Analytics Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Chart: Monthly Revenue vs Expense Trend (8 Cols) */}
-        <div className="lg:col-span-8 p-5 bg-zinc-900/80 border border-zinc-800 rounded-2xl space-y-4">
+        <div className="lg:col-span-8 p-5 sm:p-6 bg-white dark:bg-zinc-900/80 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-sm space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
                 <BarChart3 size={14} />
                 <span>Monthly Revenue vs. Production Expense</span>
               </h3>
-              <p className="text-[10px] text-zinc-400 mt-0.5">Rolling 6-month historical cash flow</p>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Rolling 6-month historical cash flow</p>
             </div>
-            <span className="text-xs font-mono text-zinc-400">Live Ledger</span>
+            <span className="text-xs font-mono text-slate-500 dark:text-zinc-400 font-bold">Live Ledger</span>
           </div>
 
           <div className="h-64 w-full">
@@ -350,10 +350,11 @@ export function EventFinancialAnalytics({
                       <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="month" stroke="#71717a" fontSize={11} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-zinc-800" />
+                  <XAxis dataKey="month" stroke="#94a3b8" className="dark:stroke-zinc-500" fontSize={11} />
                   <YAxis
-                    stroke="#71717a"
+                    stroke="#94a3b8"
+                    className="dark:stroke-zinc-500"
                     fontSize={11}
                     tickFormatter={(val) => {
                       if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`;
@@ -362,7 +363,7 @@ export function EventFinancialAnalytics({
                     }}
                   />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "#09090b", borderColor: "#3f3f46", borderRadius: "12px", fontSize: "11px" }}
+                    contentStyle={{ backgroundColor: "#1e1b4b", borderColor: "#6366f1", borderRadius: "12px", fontSize: "11px", color: "#fff" }}
                     formatter={(value: any) => [formatAmount(Number(value)), ""]}
                   />
                   <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }} />
@@ -371,8 +372,8 @@ export function EventFinancialAnalytics({
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full w-full flex flex-col items-center justify-center border border-dashed border-zinc-850 rounded-xl text-zinc-500 text-xs gap-2">
-                <BarChart3 size={24} className="opacity-40 text-purple-400" />
+              <div className="h-full w-full flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl text-slate-400 dark:text-zinc-500 text-xs gap-2">
+                <BarChart3 size={24} className="opacity-40 text-purple-500" />
                 <span>No revenue or expense trend recorded yet.</span>
               </div>
             )}
@@ -380,19 +381,19 @@ export function EventFinancialAnalytics({
         </div>
 
         {/* Right Chart: Production Expense Allocation Donut (4 Cols) */}
-        <div className="lg:col-span-4 p-5 bg-zinc-900/80 border border-zinc-800 rounded-2xl space-y-4 flex flex-col justify-between">
+        <div className="lg:col-span-4 p-5 sm:p-6 bg-white dark:bg-zinc-900/80 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-sm space-y-4 flex flex-col justify-between">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+            <h3 className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
               <PieChartIcon size={14} />
               <span>Cost Allocation Breakdown</span>
             </h3>
-            <p className="text-[10px] text-zinc-400 mt-0.5">Distribution across expense categories</p>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Distribution across expense categories</p>
           </div>
 
           <div className="h-44 w-full relative flex items-center justify-center">
             {expenseCategoryData.length === 0 ? (
-              <div className="h-full w-full flex flex-col items-center justify-center border border-dashed border-zinc-850 rounded-xl text-zinc-500 text-xs gap-2">
-                <PieChartIcon size={24} className="opacity-40 text-purple-400" />
+              <div className="h-full w-full flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl text-slate-400 dark:text-zinc-500 text-xs gap-2">
+                <PieChartIcon size={24} className="opacity-40 text-purple-500" />
                 <span>No expenses recorded yet.</span>
               </div>
             ) : (
@@ -412,7 +413,7 @@ export function EventFinancialAnalytics({
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ backgroundColor: "#09090b", borderColor: "#3f3f46", borderRadius: "12px", fontSize: "11px" }}
+                    contentStyle={{ backgroundColor: "#1e1b4b", borderColor: "#6366f1", borderRadius: "12px", fontSize: "11px", color: "#fff" }}
                     formatter={(val: any) => [formatAmount(Number(val)), "Amount"]}
                   />
                 </PieChart>
@@ -423,15 +424,15 @@ export function EventFinancialAnalytics({
           <div className="space-y-1.5 text-xs">
             {expenseCategoryData.slice(0, 5).map((cat) => (
               <div key={cat.name} className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-zinc-300">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-zinc-300">
                   <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                  <span className="truncate max-w-[130px]">{cat.name}</span>
+                  <span className="truncate max-w-[130px] font-semibold">{cat.name}</span>
                 </div>
-                <span className="font-mono font-bold text-white">{formatAmount(cat.value)}</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">{formatAmount(cat.value)}</span>
               </div>
             ))}
             {expenseCategoryData.length === 0 && (
-              <div className="text-[10px] text-zinc-500 text-center italic py-2">
+              <div className="text-[10px] text-slate-400 dark:text-zinc-500 text-center italic py-2">
                 Categories appear dynamically when expenses are logged.
               </div>
             )}
@@ -440,14 +441,14 @@ export function EventFinancialAnalytics({
       </div>
 
       {/* Per-Event Net Profitability Table */}
-      <div className="p-5 bg-zinc-900/80 border border-zinc-800 rounded-2xl space-y-4">
+      <div className="p-5 sm:p-6 bg-white dark:bg-zinc-900/80 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-sm space-y-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <h3 className="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+            <h3 className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
               <ShieldCheck size={14} />
               <span>Per-Event Profitability Audit</span>
             </h3>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-slate-500 dark:text-zinc-400 font-semibold">
               ({eventProfitData.length} Event{eventProfitData.length === 1 ? "" : "s"} Audited)
             </span>
           </div>
@@ -455,7 +456,7 @@ export function EventFinancialAnalytics({
           {onCreateInvoice && (
             <button
               onClick={onCreateInvoice}
-              className="text-xs text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 cursor-pointer transition"
+              className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold flex items-center gap-1 cursor-pointer transition"
             >
               <Plus size={13} />
               <span>New Invoice</span>
@@ -481,7 +482,7 @@ export function EventFinancialAnalytics({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-zinc-850 text-zinc-500 uppercase text-[9px] font-bold">
+                <tr className="border-b border-slate-200/90 dark:border-zinc-850 text-slate-500 dark:text-zinc-400 uppercase text-[9px] font-bold">
                   <th className="py-2.5 px-3">Event & Client</th>
                   <th className="py-2.5 px-3">Date</th>
                   <th className="py-2.5 px-3 text-right">Revenue</th>
@@ -491,30 +492,30 @@ export function EventFinancialAnalytics({
                   <th className="py-2.5 px-3 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-850/80">
+              <tbody className="divide-y divide-slate-100 dark:divide-zinc-850/80">
                 {eventProfitData.map((evt) => {
                   return (
-                    <tr key={evt.id} className="hover:bg-zinc-800/40 transition">
+                    <tr key={evt.id} className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/40 transition">
                       <td className="py-3 px-3">
-                        <div className="font-bold text-white">{evt.name}</div>
-                        <div className="text-[10px] text-zinc-400">{evt.client} • {evt.id}</div>
+                        <div className="font-bold text-slate-900 dark:text-white">{evt.name}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-zinc-400">{evt.client} • {evt.id}</div>
                       </td>
-                      <td className="py-3 px-3 text-zinc-400 font-mono text-[11px]">{evt.date}</td>
-                      <td className="py-3 px-3 text-right font-mono font-bold text-white">{formatAmount(evt.revenue)}</td>
-                      <td className="py-3 px-3 text-right font-mono text-pink-400">{formatAmount(evt.expenses)}</td>
-                      <td className="py-3 px-3 text-right font-mono font-bold text-emerald-400">{formatAmount(evt.netProfit)}</td>
+                      <td className="py-3 px-3 text-slate-600 dark:text-zinc-400 font-mono text-[11px]">{evt.date}</td>
+                      <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">{formatAmount(evt.revenue)}</td>
+                      <td className="py-3 px-3 text-right font-mono text-pink-600 dark:text-pink-400 font-bold">{formatAmount(evt.expenses)}</td>
+                      <td className="py-3 px-3 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{formatAmount(evt.netProfit)}</td>
                       <td className="py-3 px-3 text-right">
-                        <span className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 text-purple-300 font-mono font-bold rounded-lg text-[10px]">
+                        <span className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-mono font-bold rounded-lg text-[10px]">
                           {evt.marginPercent}%
                         </span>
                       </td>
                       <td className="py-3 px-3 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
                           evt.status === "Paid"
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30"
                             : evt.status === "Partial"
-                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                            : "bg-rose-500/10 text-rose-400 border border-rose-500/30"
+                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30"
+                            : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30"
                         }`}>
                           {evt.status}
                         </span>

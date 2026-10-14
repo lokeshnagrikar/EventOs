@@ -1154,60 +1154,60 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
   if (eventLoading || !event) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0c0c0e] text-zinc-400">
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-[#0c0c0e] text-slate-600 dark:text-zinc-400">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
-          <span className="text-xs font-semibold tracking-wider uppercase text-zinc-500">Loading Event Workspace...</span>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-600 dark:border-purple-500 border-t-transparent" />
+          <span className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-zinc-500">Loading Event Workspace...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0a0a0c] text-zinc-100 font-sans relative overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-slate-50/70 dark:bg-[#0a0a0c] text-slate-900 dark:text-zinc-100 font-sans relative overflow-x-hidden">
       {/* Background Ambience */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/5 blur-[100px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-500/5 blur-[90px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/10 dark:bg-purple-500/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/10 dark:bg-cyan-500/5 blur-[90px] rounded-full pointer-events-none" />
 
       {/* Workspace Header */}
-      <div className="border-b border-zinc-800 bg-[#111113]/90 backdrop-blur-md p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none shrink-0 relative z-10">
+      <div className="border-b border-slate-200/90 dark:border-zinc-800 bg-white/90 dark:bg-[#111113]/90 backdrop-blur-md p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none shrink-0 relative z-10 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/events")}
-            className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-white transition text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-1.5 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl text-slate-700 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition text-xs font-bold flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowRight size={13} className="rotate-180" />
             Back
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-extrabold text-sm sm:text-base text-zinc-100">{event.name}</h1>
-              {saveStatus === "saving" && <span className="text-[9px] text-zinc-500 animate-pulse uppercase font-bold">Saving...</span>}
-              {saveStatus === "saved" && <span className="text-[9px] text-emerald-400 uppercase font-bold">Saved ✓</span>}
+              <h1 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-zinc-100">{event.name}</h1>
+              {saveStatus === "saving" && <span className="text-[9px] text-slate-500 dark:text-zinc-500 animate-pulse uppercase font-bold">Saving...</span>}
+              {saveStatus === "saved" && <span className="text-[9px] text-emerald-600 dark:text-emerald-400 uppercase font-bold">Saved ✓</span>}
             </div>
-            <p className="text-[10px] text-zinc-400 mt-1 flex items-center gap-1">
-              <Calendar size={11} className="text-purple-400" />
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1 flex items-center gap-1">
+              <Calendar size={11} className="text-purple-600 dark:text-purple-400" />
               {event.startDate ? new Date(event.startDate).toLocaleDateString() : "TBD"} &mdash; {event.endDate ? new Date(event.endDate).toLocaleDateString() : "TBD"}
-              {event.venueName && <span className="text-zinc-500 ml-1">· {event.venueName}</span>}
+              {event.venueName && <span className="text-slate-400 dark:text-zinc-500 ml-1">· {event.venueName}</span>}
             </p>
           </div>
         </div>
 
         {/* Right Header: Live Sync Indicator & Status Select */}
         <div className="flex items-center gap-3">
-          <div className="group relative flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold select-none cursor-pointer transition hover:bg-emerald-500/20">
+          <div className="group relative flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold select-none cursor-pointer transition hover:bg-emerald-500/20">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <span className="text-[11px] font-bold tracking-wide">Live Mesh Sync</span>
-            <span className="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300 font-mono">Offline Ready</span>
+            <span className="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-700 dark:text-emerald-300 font-mono">Offline Ready</span>
           </div>
 
           <select
             value={event.status}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className={cn("px-3 py-1.5 rounded-xl text-xs font-bold border focus:outline-none cursor-pointer", STATUS_COLORS[event.status] || "border-zinc-800 bg-zinc-900 text-zinc-300")}
+            className={cn("px-3 py-1.5 rounded-xl text-xs font-bold border focus:outline-none cursor-pointer", STATUS_COLORS[event.status] || "border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-300")}
           >
             {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}
           </select>
@@ -1215,14 +1215,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       </div>
 
       {/* Tab Switchers */}
-      <div className="border-b border-zinc-850 px-4 sm:px-6 bg-zinc-950/40 flex gap-4 shrink-0 overflow-x-auto no-scrollbar select-none relative z-10">
+      <div className="border-b border-slate-200/90 dark:border-zinc-850 px-4 sm:px-6 bg-white/80 dark:bg-zinc-950/40 flex gap-4 shrink-0 overflow-x-auto no-scrollbar select-none relative z-10 shadow-sm">
         {TAB_OPTIONS.map(opt => (
           <button
             key={opt.id}
             onClick={() => setActiveTab(opt.id)}
             className={cn(
               "py-3.5 text-[10px] font-bold border-b-2 tracking-wide uppercase transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
-              activeTab === opt.id ? "border-purple-500 text-purple-400" : "border-transparent text-zinc-500 hover:text-zinc-300"
+              activeTab === opt.id ? "border-purple-600 dark:border-purple-500 text-purple-700 dark:text-purple-400" : "border-transparent text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-zinc-300"
             )}
           >
             <opt.icon size={12} />
@@ -1236,28 +1236,28 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
         {/* 1. OVERVIEW TAB */}
         {activeTab === "overview" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-semibold text-xs text-zinc-300">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-semibold text-xs text-slate-700 dark:text-zinc-300">
             <div className="md:col-span-2 space-y-6">
-              <div className="p-5 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
-                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pb-2 border-b border-zinc-900">Basic Information</h3>
+              <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#161618]/30 shadow-sm rounded-2xl space-y-4">
+                <h3 className="text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-zinc-900">Basic Information</h3>
 
                 <div className="space-y-1.5">
-                  <label className="text-zinc-500 font-bold block">Event Title</label>
+                  <label className="text-slate-600 dark:text-zinc-500 font-bold block">Event Title</label>
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => { setEditName(e.target.value); triggerAutoSave({ name: e.target.value }); }}
-                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-white focus:outline-none focus:border-purple-500 text-xs"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 text-xs"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 font-bold block">Category</label>
+                    <label className="text-slate-600 dark:text-zinc-500 font-bold block">Category</label>
                     <select
                       value={editType}
                       onChange={(e) => { setEditType(e.target.value); triggerAutoSave({ type: e.target.value }); }}
-                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-white focus:outline-none text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs"
                     >
                       <option value="WEDDING">Wedding</option>
                       <option value="BIRTHDAY">Birthday</option>
@@ -1268,56 +1268,56 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 font-bold block">Total Budget (INR)</label>
+                    <label className="text-slate-600 dark:text-zinc-500 font-bold block">Total Budget (INR)</label>
                     <input
                       type="number"
                       value={editBudget}
                       onChange={(e) => { setEditBudget(Number(e.target.value)); triggerAutoSave({ budget: Number(e.target.value) }); }}
-                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-white focus:outline-none focus:border-purple-500 text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 text-xs"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 font-bold block">Start Time</label>
+                    <label className="text-slate-600 dark:text-zinc-500 font-bold block">Start Time</label>
                     <input
                       type="datetime-local"
                       value={editStartDate}
                       onChange={(e) => { setEditStartDate(e.target.value); triggerAutoSave({ startDate: e.target.value }); }}
-                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-white focus:outline-none focus:border-purple-500 text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 text-xs"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 font-bold block">End Time</label>
+                    <label className="text-slate-600 dark:text-zinc-500 font-bold block">End Time</label>
                     <input
                       type="datetime-local"
                       value={editEndDate}
                       onChange={(e) => { setEditEndDate(e.target.value); triggerAutoSave({ endDate: e.target.value }); }}
-                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-white focus:outline-none focus:border-purple-500 text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 text-xs"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 font-bold block">Venue Name</label>
+                    <label className="text-slate-600 dark:text-zinc-500 font-bold block">Venue Name</label>
                     <input
                       type="text"
                       placeholder="e.g. Taj West End, Bangalore"
                       value={editVenueName}
                       onChange={(e) => { setEditVenueName(e.target.value); triggerAutoSave({ venueName: e.target.value }); }}
-                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-white focus:outline-none text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-zinc-500 font-bold block">City / Location</label>
+                    <label className="text-slate-600 dark:text-zinc-500 font-bold block">City / Location</label>
                     <input
                       type="text"
                       placeholder="e.g. Bangalore, Karnataka"
                       value={editLocation}
                       onChange={(e) => { setEditLocation(e.target.value); triggerAutoSave({ location: e.target.value }); }}
-                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-850 rounded-xl text-white focus:outline-none text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs"
                     />
                   </div>
                 </div>
@@ -1325,33 +1325,33 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
             </div>
 
             <div className="space-y-6">
-              <div className="p-5 border border-zinc-850 bg-[#161618]/30 rounded-2xl space-y-4">
-                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pb-2 border-b border-zinc-900">Event Specs</h3>
+              <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#161618]/30 shadow-sm rounded-2xl space-y-4">
+                <h3 className="text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-zinc-900">Event Specs</h3>
 
                 <div className="space-y-1">
-                  <span className="text-zinc-500 font-bold block text-[10px]">Dress Code</span>
+                  <span className="text-slate-600 dark:text-zinc-500 font-bold block text-[10px]">Dress Code</span>
                   <input
                     type="text"
                     value={dressCode}
                     onChange={(e) => { setDressCode(e.target.value); triggerAutoSave({ dressCode: e.target.value }); }}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none text-xs"
+                    className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-zinc-200 focus:outline-none text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-zinc-500 font-bold block text-[10px]">Theme / Styling</span>
+                  <span className="text-slate-600 dark:text-zinc-500 font-bold block text-[10px]">Theme / Styling</span>
                   <input
                     type="text"
                     value={themeName}
                     onChange={(e) => { setThemeName(e.target.value); triggerAutoSave({ theme: e.target.value }); }}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none text-xs"
+                    className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-zinc-200 focus:outline-none text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-zinc-500 font-bold block text-[10px]">Priority Tier</span>
+                  <span className="text-slate-600 dark:text-zinc-500 font-bold block text-[10px]">Priority Tier</span>
                   <select
                     value={priorityTier}
                     onChange={(e) => { setPriorityTier(e.target.value as any); triggerAutoSave({ priority: e.target.value as any }); }}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none text-xs"
+                    className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-zinc-200 focus:outline-none text-xs font-bold"
                   >
                     <option value="HIGH">High Priority (VIP)</option>
                     <option value="MEDIUM">Standard Execution</option>
@@ -1366,36 +1366,36 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         {/* 2. RUN OF SHOW / TIMELINE TAB */}
         {activeTab === "timeline" && (
           <div className="space-y-6">
-            <div className="p-6 border border-zinc-850 bg-[#121214]/60 rounded-2xl space-y-6 backdrop-blur-sm">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+            <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-6 shadow-sm backdrop-blur-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-900">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Clock size={16} className="text-purple-400" />
-                    <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest">
+                    <Clock size={16} className="text-purple-600 dark:text-purple-400" />
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest">
                       Run-of-Show &amp; Minute-by-Minute Cue Sheet
                     </h3>
                   </div>
-                  <p className="text-[11px] text-zinc-400 mt-1">
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">
                     Live coordination execution timeline for stage, sound &amp; light, hospitality, and banquet staff.
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-bold">
-                    <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400">
                       {timelineCues.length} Cues
                     </span>
-                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
                       {timelineCues.filter(c => c.status === "COMPLETED").length} Done
                     </span>
-                    <span className="px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                    <span className="px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400">
                       {timelineCues.filter(c => c.status === "IN_PROGRESS").length} Active
                     </span>
                   </div>
 
                   <button
                     onClick={() => setShowAddCue(!showAddCue)}
-                    className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-lg shadow-purple-900/30 cursor-pointer"
+                    className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-lg shadow-purple-900/20 dark:shadow-purple-900/30 cursor-pointer"
                   >
                     <Plus size={13} strokeWidth={3} />
                     {showAddCue ? "Close Form" : "Add Timeline Cue"}
@@ -1405,23 +1405,23 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
               {/* Add Cue Drawer */}
               {showAddCue && (
-                <div className="p-4 border border-purple-500/30 bg-purple-950/10 rounded-xl space-y-3">
-                  <div className="text-xs font-bold text-purple-300 flex items-center gap-1.5">
+                <div className="p-4 border border-purple-500/20 dark:border-purple-500/30 bg-purple-50/60 dark:bg-purple-950/10 rounded-xl space-y-3">
+                  <div className="text-xs font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
                     <Sparkles size={13} /> Log New Live Cue to Schedule
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-[10px] text-zinc-400 font-bold block mb-1">Cue Time</label>
+                      <label className="text-[10px] text-slate-600 dark:text-zinc-400 font-bold block mb-1">Cue Time</label>
                       <input
                         type="text"
                         placeholder="e.g. 06:00 PM"
                         value={newCueTime}
                         onChange={(e) => setNewCueTime(e.target.value)}
-                        className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                        className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-zinc-400 font-bold block mb-1">Activity / Title</label>
+                      <label className="text-[10px] text-slate-600 dark:text-zinc-400 font-bold block mb-1">Activity / Title</label>
                       <input
                         type="text"
                         placeholder="e.g. Guest Arrival & Welcome Cocktails"
@@ -1433,15 +1433,15 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                             handleAddCue();
                           }
                         }}
-                        className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                        className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-zinc-400 font-bold block mb-1">Department</label>
+                      <label className="text-[10px] text-slate-600 dark:text-zinc-400 font-bold block mb-1">Department</label>
                       <select
                         value={newCueDept}
                         onChange={(e) => setNewCueDept(e.target.value)}
-                        className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                        className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                       >
                         <option value="Hospitality & Hostess">Hospitality & Hostess</option>
                         <option value="Stage & Production">Stage & Production</option>
@@ -1453,7 +1453,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-zinc-400 font-bold block mb-1">Operational Notes (Optional)</label>
+                    <label className="text-[10px] text-slate-600 dark:text-zinc-400 font-bold block mb-1">Operational Notes (Optional)</label>
                     <input
                       type="text"
                       placeholder="e.g. Wireless mics check, dim ambient lighting..."
@@ -1465,13 +1465,13 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                           handleAddCue();
                         }
                       }}
-                      className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                     />
                   </div>
                   <div className="flex justify-end gap-2 pt-1">
                     <button
                       onClick={() => setShowAddCue(false)}
-                      className="px-3 py-1 bg-zinc-900 text-zinc-400 hover:text-white rounded-lg text-xs"
+                      className="px-3 py-1 bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-800 rounded-lg text-xs"
                     >
                       Cancel
                     </button>
@@ -1488,10 +1488,10 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               {/* Cue Items List */}
               <div className="space-y-3">
                 {timelineCues.length === 0 ? (
-                  <div className="text-center py-10 px-4 border border-dashed border-zinc-800 rounded-2xl bg-zinc-950/30 space-y-2">
-                    <Clock size={24} className="mx-auto text-zinc-600" />
-                    <h4 className="font-bold text-xs text-zinc-300">No Timeline Cues Added Yet</h4>
-                    <p className="text-[11px] text-zinc-500 max-w-sm mx-auto">
+                  <div className="text-center py-10 px-4 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50/50 dark:bg-zinc-950/30 space-y-2">
+                    <Clock size={24} className="mx-auto text-slate-400 dark:text-zinc-600" />
+                    <h4 className="font-bold text-xs text-slate-700 dark:text-zinc-300">No Timeline Cues Added Yet</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-500 max-w-sm mx-auto">
                       Click "+ Add Timeline Cue" to build your live minute-by-minute execution cue sheet.
                     </p>
                   </div>
@@ -1502,27 +1502,27 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                       className={cn(
                         "p-4 border rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200",
                         cue.status === "COMPLETED"
-                          ? "bg-zinc-950/40 border-zinc-900 opacity-80"
+                          ? "bg-slate-50/70 dark:bg-zinc-950/40 border-slate-200 dark:border-zinc-900 opacity-80"
                           : cue.status === "IN_PROGRESS"
-                            ? "bg-purple-950/20 border-purple-500/40 shadow-lg shadow-purple-950/20"
-                            : "bg-[#141416]/70 border-zinc-850"
+                            ? "bg-purple-50/70 dark:bg-purple-950/20 border-purple-300 dark:border-purple-500/40 shadow-sm dark:shadow-lg dark:shadow-purple-950/20"
+                            : "bg-slate-50/40 dark:bg-[#141416]/70 border-slate-200/90 dark:border-zinc-850"
                       )}
                     >
                       <div className="flex items-start md:items-center gap-4">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900/90 border border-zinc-800 rounded-lg text-purple-300 font-mono font-extrabold text-xs shrink-0">
-                          <Clock size={12} className="text-purple-400" />
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-zinc-900/90 border border-purple-200/70 dark:border-zinc-800 rounded-lg text-purple-700 dark:text-purple-300 font-mono font-extrabold text-xs shrink-0">
+                          <Clock size={12} className="text-purple-600 dark:text-purple-400" />
                           {cue.time}
                         </div>
                         <div>
                           <div className="flex items-center gap-2.5 flex-wrap">
-                            <span className={cn("font-bold text-sm", cue.status === "COMPLETED" ? "line-through text-zinc-500" : "text-zinc-100")}>
+                            <span className={cn("font-bold text-sm", cue.status === "COMPLETED" ? "line-through text-slate-400 dark:text-zinc-500" : "text-slate-900 dark:text-zinc-100")}>
                               {cue.title}
                             </span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-zinc-800/60 text-zinc-300 border-zinc-700">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-100 dark:bg-zinc-800/60 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700">
                               {cue.department}
                             </span>
                           </div>
-                          {cue.notes && <p className="text-[11px] text-zinc-400 mt-1">{cue.notes}</p>}
+                          {cue.notes && <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">{cue.notes}</p>}
                         </div>
                       </div>
 
@@ -1531,9 +1531,9 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                           onClick={() => handleToggleCueStatus(cue.id)}
                           className={cn(
                             "px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border shadow-sm select-none",
-                            cue.status === "COMPLETED" && "bg-emerald-500/15 border-emerald-500/40 text-emerald-400",
-                            cue.status === "IN_PROGRESS" && "bg-cyan-500/15 border-cyan-500/40 text-cyan-300 animate-pulse",
-                            cue.status === "PENDING" && "bg-amber-500/15 border-amber-500/40 text-amber-400"
+                            cue.status === "COMPLETED" && "bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400",
+                            cue.status === "IN_PROGRESS" && "bg-cyan-500/15 border-cyan-500/40 text-cyan-600 dark:text-cyan-300 animate-pulse",
+                            cue.status === "PENDING" && "bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400"
                           )}
                         >
                           {cue.status === "COMPLETED" && <><CheckCircle2 size={13} /> Done</>}
@@ -1543,7 +1543,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                         </button>
                         <button
                           onClick={() => handleDeleteCue(cue.id)}
-                          className="p-1.5 text-zinc-500 hover:text-red-400 transition rounded-lg hover:bg-red-500/10 cursor-pointer"
+                          className="p-1.5 text-slate-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition rounded-lg hover:bg-red-500/10 cursor-pointer"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -1559,62 +1559,62 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         {/* 3. GUESTS TAB */}
         {activeTab === "guests" && (
           <div className="space-y-6">
-            <div className="p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+            <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-6 shadow-sm backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-900">
                 <div>
-                  <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest flex items-center gap-2">
-                    <Users size={15} className="text-purple-400" />
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest flex items-center gap-2">
+                    <Users size={15} className="text-purple-600 dark:text-purple-400" />
                     Interactive Guest &amp; RSVP Registry
                   </h3>
-                  <p className="text-[11px] text-zinc-400 mt-1">Manage guest list, track RSVPs, table seatings, and meal preferences.</p>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">Manage guest list, track RSVPs, table seatings, and meal preferences.</p>
                 </div>
 
                 {/* RSVP Stats */}
-                <div className="flex items-center gap-2 text-xs font-bold">
-                  <span className="px-2.5 py-1 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <div className="flex items-center gap-2 text-xs font-bold flex-wrap">
+                  <span className="px-2.5 py-1 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
                     Total: {guests.length}
                   </span>
-                  <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                     Confirmed: {guests.filter(g => g.rsvp === "CONFIRMED").length}
                   </span>
-                  <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                     Pending: {guests.filter(g => g.rsvp === "PENDING").length}
                   </span>
-                  <span className="px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                  <span className="px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                     Declined: {guests.filter(g => g.rsvp === "DECLINED").length}
                   </span>
                 </div>
               </div>
 
               {/* Add Single Guest Form */}
-              <div className="p-4 bg-zinc-950/40 border border-zinc-850 rounded-xl space-y-3">
-                <span className="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Add Individual Guest</span>
+              <div className="p-4 bg-slate-50/80 dark:bg-zinc-950/40 border border-slate-200 dark:border-zinc-850 rounded-xl space-y-3">
+                <span className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-zinc-400 tracking-wider block">Add Individual Guest</span>
                 <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
                   <input
                     type="text"
                     placeholder="Guest Full Name *"
                     value={newGuestName}
                     onChange={(e) => setNewGuestName(e.target.value)}
-                    className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                   />
                   <input
                     type="text"
                     placeholder="Phone / WhatsApp"
                     value={newGuestPhone}
                     onChange={(e) => setNewGuestPhone(e.target.value)}
-                    className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                   />
                   <input
                     type="text"
                     placeholder="Table / Seating (e.g. Table 4)"
                     value={newGuestTable}
                     onChange={(e) => setNewGuestTable(e.target.value)}
-                    className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                   />
                   <select
                     value={newGuestDietary}
                     onChange={(e) => setNewGuestDietary(e.target.value as any)}
-                    className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   >
                     <option value="VEG">Veg</option>
                     <option value="NON_VEG">Non-Veg</option>
@@ -1633,26 +1633,26 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               {/* Guest Search & Bulk Import Accordion */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="relative w-full sm:w-64">
-                  <Search size={13} className="absolute left-3 top-2.5 text-zinc-500" />
+                  <Search size={13} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
                   <input
                     type="text"
                     placeholder="Search guest by name..."
                     value={guestSearch}
                     onChange={(e) => setGuestSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none"
+                    className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
                   />
                 </div>
                 <button
                   onClick={() => setShowBulkPaste(!showBulkPaste)}
-                  className="text-xs text-purple-400 hover:text-purple-300 font-bold cursor-pointer"
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:underline font-bold cursor-pointer"
                 >
                   {showBulkPaste ? "Hide Bulk Import" : "+ Bulk Paste Guest Registry"}
                 </button>
               </div>
 
               {showBulkPaste && (
-                <div className="p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-3">
-                  <label className="text-[10px] text-zinc-400 font-bold block">
+                <div className="p-4 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 rounded-xl space-y-3">
+                  <label className="text-[10px] text-slate-600 dark:text-zinc-400 font-bold block">
                     Paste comma or newline-separated guest names:
                   </label>
                   <textarea
@@ -1660,7 +1660,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     placeholder="Rahul Sharma, Shreya Gupta, Priya Verma, Rohan Mehta..."
                     value={bulkGuestText}
                     onChange={(e) => setBulkGuestText(e.target.value)}
-                    className="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="w-full p-2.5 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   />
                   <button
                     onClick={handleApplyBulkGuests}
@@ -1674,10 +1674,10 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               {/* Guests List */}
               <div className="space-y-2">
                 {guests.length === 0 ? (
-                  <div className="text-center py-10 border border-dashed border-zinc-800 rounded-xl bg-zinc-950/20">
-                    <Users size={24} className="mx-auto text-zinc-600 mb-2" />
-                    <span className="text-xs text-zinc-400 font-bold block">No guests registered yet</span>
-                    <span className="text-[11px] text-zinc-500">Add guests individually or bulk-paste names above.</span>
+                  <div className="text-center py-10 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-950/20">
+                    <Users size={24} className="mx-auto text-slate-400 dark:text-zinc-600 mb-2" />
+                    <span className="text-xs text-slate-700 dark:text-zinc-400 font-bold block">No guests registered yet</span>
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-500">Add guests individually or bulk-paste names above.</span>
                   </div>
                 ) : (
                   guests
@@ -1685,15 +1685,15 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     .map((g) => (
                       <div
                         key={g.id}
-                        className="p-3 border border-zinc-850 bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4 text-xs"
+                        className="p-3 border border-slate-200 dark:border-zinc-850 bg-slate-50/50 dark:bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4 text-xs"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-[10px] text-purple-400">
+                          <div className="h-8 w-8 rounded-full bg-purple-50 dark:bg-zinc-900 border border-purple-200 dark:border-zinc-800 flex items-center justify-center font-bold text-[10px] text-purple-700 dark:text-purple-400">
                             {g.name.slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-bold text-zinc-100 block">{g.name}</span>
-                            <div className="flex items-center gap-2 text-[10px] text-zinc-500 mt-0.5">
+                            <span className="font-bold text-slate-900 dark:text-zinc-100 block">{g.name}</span>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-zinc-500 mt-0.5">
                               {g.phone && <span>{g.phone}</span>}
                               <span>• Table: {g.tableNo}</span>
                               <span>• Meal: {g.dietary}</span>
@@ -1706,9 +1706,9 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                             onClick={() => handleCycleRsvp(g.id)}
                             className={cn(
                               "px-2.5 py-1 rounded-lg text-[10px] font-bold border cursor-pointer transition select-none",
-                              g.rsvp === "CONFIRMED" && "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-                              g.rsvp === "PENDING" && "bg-amber-500/10 text-amber-400 border-amber-500/30",
-                              g.rsvp === "DECLINED" && "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                              g.rsvp === "CONFIRMED" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+                              g.rsvp === "PENDING" && "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
+                              g.rsvp === "DECLINED" && "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30"
                             )}
                             title="Click to cycle RSVP status"
                           >
@@ -1716,7 +1716,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                           </button>
                           <button
                             onClick={() => handleDeleteGuest(g.id, g.name)}
-                            className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition cursor-pointer"
+                            className="p-1.5 text-slate-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-500/10 transition cursor-pointer"
                           >
                             <Trash2 size={13} />
                           </button>
@@ -1732,31 +1732,31 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         {/* 4. TASKS TAB */}
         {activeTab === "tasks" && (
           <div className="space-y-6">
-            <div className="p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-4">
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
+            <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-4 shadow-sm backdrop-blur-sm">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-zinc-900">
                 <div className="flex items-center gap-2">
-                  <CheckSquare size={16} className="text-purple-400" />
-                  <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest">Operational Checklist Tasks</h3>
+                  <CheckSquare size={16} className="text-purple-600 dark:text-purple-400" />
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest">Operational Checklist Tasks</h3>
                 </div>
-                <span className="text-xs font-mono font-bold text-emerald-400">{checklistProgress}% Completed</span>
+                <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{checklistProgress}% Completed</span>
               </div>
 
               {/* Progress bar */}
-              <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-slate-100 dark:bg-zinc-950 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-purple-500 to-emerald-500 transition-all duration-300" style={{ width: `${checklistProgress}%` }} />
               </div>
 
               {/* Checklist items */}
               <div className="space-y-2.5">
                 {checklist.length === 0 ? (
-                  <div className="text-center py-8 border border-dashed border-zinc-800 rounded-xl bg-zinc-950/20">
-                    <CheckSquare size={20} className="mx-auto text-zinc-600 mb-1" />
-                    <span className="text-xs text-zinc-400 font-bold block">No operational tasks added yet</span>
-                    <span className="text-[11px] text-zinc-500">Log tasks below to organize event deliverables.</span>
+                  <div className="text-center py-8 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-950/20">
+                    <CheckSquare size={20} className="mx-auto text-slate-400 dark:text-zinc-600 mb-1" />
+                    <span className="text-xs text-slate-700 dark:text-zinc-400 font-bold block">No operational tasks added yet</span>
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-500">Log tasks below to organize event deliverables.</span>
                   </div>
                 ) : (
                   checklist.map((t) => (
-                    <div key={t.id} className="flex items-center justify-between p-3 border border-zinc-850 rounded-xl bg-zinc-950/30 text-xs">
+                    <div key={t.id} className="flex items-center justify-between p-3 border border-slate-200 dark:border-zinc-850 rounded-xl bg-slate-50/60 dark:bg-zinc-950/30 text-xs">
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => {
@@ -1767,19 +1767,19 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                           }}
                           className={cn(
                             "h-4 w-4 rounded border flex items-center justify-center transition-all cursor-pointer",
-                            t.completed ? "bg-purple-600 border-purple-500 text-white" : "border-zinc-700 hover:border-purple-500"
+                            t.completed ? "bg-purple-600 border-purple-500 text-white" : "border-slate-300 dark:border-zinc-700 hover:border-purple-500"
                           )}
                         >
                           {t.completed && <Check size={10} strokeWidth={3} />}
                         </button>
                         <div>
-                          <span className={cn("font-bold text-zinc-100 block", t.completed && "line-through text-zinc-500")}>{t.text}</span>
-                          <p className="text-[10px] text-zinc-500 font-medium">Due: {t.dueDate} • Assigned: {t.assignedStaff} • Priority: {t.priority}</p>
+                          <span className={cn("font-bold text-slate-900 dark:text-zinc-100 block", t.completed && "line-through text-slate-400 dark:text-zinc-500")}>{t.text}</span>
+                          <p className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium">Due: {t.dueDate} • Assigned: {t.assignedStaff} • Priority: {t.priority}</p>
                         </div>
                       </div>
                       <button
                         onClick={() => handleDeleteCheckItem(t.id)}
-                        className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 cursor-pointer"
+                        className="p-1.5 text-slate-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-500/10 cursor-pointer"
                       >
                         <Trash2 size={13} />
                       </button>
@@ -1789,21 +1789,21 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               </div>
 
               {/* Add checklist task input */}
-              <div className="p-3 bg-zinc-950/40 border border-zinc-850 rounded-xl space-y-3">
-                <span className="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Add operational task</span>
+              <div className="p-3 bg-slate-50/80 dark:bg-zinc-950/40 border border-slate-200 dark:border-zinc-850 rounded-xl space-y-3">
+                <span className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-zinc-400 tracking-wider block">Add operational task</span>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                   <input
                     type="text"
                     placeholder="Task description..."
                     value={newCheckText}
                     onChange={(e) => setNewCheckText(e.target.value)}
-                    className="sm:col-span-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="sm:col-span-2 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   />
                   <input
                     type="date"
                     value={newCheckDue}
                     onChange={(e) => setNewCheckDue(e.target.value)}
-                    className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   />
                   <button
                     onClick={handleAddCheckItem}
@@ -1817,24 +1817,24 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
           </div>
         )}
 
-        {/* 5. VENDORS TAB (Screenshot 1 Active) */}
+        {/* 5. VENDORS TAB */}
         {activeTab === "vendors" && (
           <div className="space-y-6">
-            <div className="p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+            <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-6 shadow-sm backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-900">
                 <div>
-                  <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest flex items-center gap-2">
-                    <Car size={15} className="text-purple-400" />
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest flex items-center gap-2">
+                    <Car size={15} className="text-purple-600 dark:text-purple-400" />
                     Vendor Management Roster
                   </h3>
-                  <p className="text-[11px] text-zinc-400 mt-1">Assign vendors, track contractual commitments, costs, and payment status.</p>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">Assign vendors, track contractual commitments, costs, and payment status.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300 font-mono font-bold text-xs">
+                  <span className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300 font-mono font-bold text-xs">
                     Total Quoted: ₹{totalVendorCost.toLocaleString()}
                   </span>
-                  <span className="px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-bold">
+                  <span className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 text-xs font-bold">
                     {vendors.length} Vendors
                   </span>
                 </div>
@@ -1843,28 +1843,28 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               {/* Vendor Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {vendors.length === 0 ? (
-                  <div className="col-span-3 text-center py-12 border border-dashed border-zinc-800 rounded-2xl bg-zinc-950/30 space-y-2">
-                    <Car size={26} className="mx-auto text-zinc-600" />
-                    <h4 className="font-bold text-xs text-zinc-300">No Vendors Mapped Yet</h4>
-                    <p className="text-[11px] text-zinc-500 max-w-sm mx-auto">
+                  <div className="col-span-3 text-center py-12 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50/50 dark:bg-zinc-950/30 space-y-2">
+                    <Car size={26} className="mx-auto text-slate-400 dark:text-zinc-600" />
+                    <h4 className="font-bold text-xs text-slate-700 dark:text-zinc-300">No Vendors Mapped Yet</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-500 max-w-sm mx-auto">
                       Use the "Log Vendor Assignment" form below to assign your caterers, decorators, sound engineers, and photographers.
                     </p>
                   </div>
                 ) : (
                   vendors.map((v) => (
-                    <div key={v.id} className="p-4 border border-zinc-850 bg-[#161618]/50 hover:border-zinc-700/80 transition rounded-xl space-y-3 relative group">
+                    <div key={v.id} className="p-4 border border-slate-200 dark:border-zinc-850 bg-slate-50/60 dark:bg-[#161618]/50 hover:border-purple-300 dark:hover:border-zinc-700/80 transition rounded-xl space-y-3 relative group">
                       <div className="flex justify-between items-start">
                         <div>
-                          <span className="font-extrabold text-zinc-100 block text-xs tracking-wide">{v.name}</span>
-                          <span className="text-[9px] text-zinc-400 block uppercase font-bold tracking-wider mt-0.5">{v.category}</span>
+                          <span className="font-extrabold text-slate-900 dark:text-zinc-100 block text-xs tracking-wide">{v.name}</span>
+                          <span className="text-[9px] text-slate-500 dark:text-zinc-400 block uppercase font-bold tracking-wider mt-0.5">{v.category}</span>
                         </div>
                         <button
                           onClick={() => handleCycleVendorPayment(v.id)}
                           className={cn(
                             "text-[8px] font-bold px-2 py-0.5 rounded-full border cursor-pointer transition select-none",
-                            v.paymentStatus === "PAID" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-                            v.paymentStatus === "PARTIAL" && "border-amber-500/30 bg-amber-500/10 text-amber-400",
-                            v.paymentStatus === "UNPAID" && "border-zinc-700 bg-zinc-800/40 text-zinc-400"
+                            v.paymentStatus === "PAID" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                            v.paymentStatus === "PARTIAL" && "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+                            v.paymentStatus === "UNPAID" && "border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800/40 text-slate-600 dark:text-zinc-400"
                           )}
                           title="Click to cycle payment status: Unpaid -> Partial -> Paid"
                         >
@@ -1872,13 +1872,13 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                         </button>
                       </div>
 
-                      <div className="flex justify-between items-center text-[10px] font-bold pt-2 border-t border-zinc-900/60 text-zinc-400">
-                        <span className="font-mono text-zinc-200">Rate: ₹{v.cost.toLocaleString()}</span>
+                      <div className="flex justify-between items-center text-[10px] font-bold pt-2 border-t border-slate-200 dark:border-zinc-900/60 text-slate-500 dark:text-zinc-400">
+                        <span className="font-mono text-slate-900 dark:text-zinc-200">Rate: ₹{v.cost.toLocaleString()}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-purple-400">★ {v.rating}</span>
+                          <span className="text-purple-600 dark:text-purple-400">★ {v.rating}</span>
                           <button
                             onClick={() => handleDeleteVendor(v.id, v.name)}
-                            className="p-1 text-zinc-600 hover:text-red-400 transition rounded"
+                            className="p-1 text-slate-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 transition rounded"
                             title="Remove Vendor"
                           >
                             <Trash2 size={12} />
@@ -1887,13 +1887,13 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                       </div>
 
                       {v.phone && (
-                        <div className="text-[10px] text-zinc-500 flex items-center justify-between pt-1">
+                        <div className="text-[10px] text-slate-500 dark:text-zinc-500 flex items-center justify-between pt-1">
                           <span className="flex items-center gap-1"><Phone size={10} /> {v.phone}</span>
                           <a
                             href={`https://wa.me/${v.phone.replace(/[^0-9]/g, "")}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-[9px] text-emerald-400 hover:underline font-bold"
+                            className="text-[9px] text-emerald-600 dark:text-emerald-400 hover:underline font-bold"
                           >
                             WhatsApp
                           </a>
@@ -1905,20 +1905,20 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               </div>
 
               {/* Log Vendor Assignment Form */}
-              <div className="p-4 bg-zinc-950/50 border border-zinc-850 rounded-xl space-y-3">
-                <span className="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Log Vendor Assignment</span>
+              <div className="p-4 bg-slate-50/80 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-850 rounded-xl space-y-3">
+                <span className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-zinc-400 tracking-wider block">Log Vendor Assignment</span>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <input
                     type="text"
                     placeholder="Vendor Name *"
                     value={newVendorName}
                     onChange={(e) => setNewVendorName(e.target.value)}
-                    className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                    className="px-3 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                   />
                   <select
                     value={newVendorCat}
                     onChange={(e) => setNewVendorCat(e.target.value)}
-                    className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="px-3 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   >
                     {VENDOR_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -1929,7 +1929,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     placeholder="Cost (INR) *"
                     value={newVendorCost}
                     onChange={(e) => setNewVendorCost(e.target.value)}
-                    className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                    className="px-3 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                   />
                   <div className="flex gap-2">
                     <input
@@ -1937,7 +1937,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                       placeholder="Phone / WhatsApp"
                       value={newVendorPhone}
                       onChange={(e) => setNewVendorPhone(e.target.value)}
-                      className="w-1/2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                      className="w-1/2 px-3 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                     />
                     <button
                       onClick={handleAddVendor}
@@ -1955,17 +1955,17 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         {/* 6. STAFF TAB */}
         {activeTab === "staff" && (
           <div className="space-y-6">
-            <div className="p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+            <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-6 shadow-sm backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-900">
                 <div>
-                  <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest flex items-center gap-2">
-                    <UserCheck size={15} className="text-purple-400" />
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest flex items-center gap-2">
+                    <UserCheck size={15} className="text-purple-600 dark:text-purple-400" />
                     Account Staff &amp; Crew Allocations
                   </h3>
-                  <p className="text-[11px] text-zinc-400 mt-1">Assign internal workspace team members and on-site event managers.</p>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">Assign internal workspace team members and on-site event managers.</p>
                 </div>
 
-                <span className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-300">
+                <span className="px-3 py-1 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-slate-700 dark:text-zinc-300">
                   {staffAllocations.length} Active Crew
                 </span>
               </div>
@@ -1973,10 +1973,10 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               {/* Staff Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-bold">
                 {staffAllocations.length === 0 ? (
-                  <div className="col-span-2 text-center py-10 border border-dashed border-zinc-800 rounded-xl bg-zinc-950/20">
-                    <UserCheck size={22} className="mx-auto text-zinc-600 mb-1" />
-                    <span className="text-xs text-zinc-400 font-bold block">No staff members allocated yet</span>
-                    <span className="text-[11px] text-zinc-500">Allocate workspace members or dedicated event runners below.</span>
+                  <div className="col-span-2 text-center py-10 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-950/20">
+                    <UserCheck size={22} className="mx-auto text-slate-400 dark:text-zinc-600 mb-1" />
+                    <span className="text-xs text-slate-700 dark:text-zinc-400 font-bold block">No staff members allocated yet</span>
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-500">Allocate workspace members or dedicated event runners below.</span>
                   </div>
                 ) : (
                   staffAllocations.map((member, idx) => {
@@ -1984,21 +1984,21 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     const memberRole = formatRoleName(member?.role);
                     const memberId = member?.id || `stf-${idx}`;
                     return (
-                      <div key={memberId} className="p-4 border border-zinc-850 bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4">
+                      <div key={memberId} className="p-4 border border-slate-200 dark:border-zinc-850 bg-slate-50/60 dark:bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="h-9 w-9 rounded-full bg-purple-950/40 border border-purple-800/40 flex items-center justify-center text-purple-300 font-black text-xs shrink-0">
+                          <div className="h-9 w-9 rounded-full bg-purple-100 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/40 flex items-center justify-center text-purple-700 dark:text-purple-300 font-black text-xs shrink-0">
                             {getStaffInitials(memberName)}
                           </div>
                           <div className="min-w-0">
-                            <span className="text-[9px] text-purple-400 block uppercase tracking-wider">{memberRole}</span>
-                            <span className="text-zinc-100 font-extrabold text-xs mt-0.5 block truncate">{memberName}</span>
-                            {member?.phone && <span className="text-[10px] text-zinc-500 font-normal">{member.phone}</span>}
+                            <span className="text-[9px] text-purple-600 dark:text-purple-400 block uppercase tracking-wider">{memberRole}</span>
+                            <span className="text-slate-900 dark:text-zinc-100 font-extrabold text-xs mt-0.5 block truncate">{memberName}</span>
+                            {member?.phone && <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-normal">{member.phone}</span>}
                           </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleDeleteStaff(memberId, memberName)}
-                          className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 cursor-pointer shrink-0"
+                          className="p-1.5 text-slate-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-500/10 cursor-pointer shrink-0"
                           title="Unassign"
                         >
                           <Trash2 size={13} />
@@ -2010,14 +2010,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               </div>
 
               {/* Add / Allocate Staff Form */}
-              <div className="p-4 bg-zinc-950/50 border border-zinc-850 rounded-xl space-y-3">
+              <div className="p-4 bg-slate-50/80 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-850 rounded-xl space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Allocate Crew Member</span>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-zinc-400 tracking-wider block">Allocate Crew Member</span>
                   {teamMembers.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setIsCustomStaffMode(!isCustomStaffMode)}
-                      className="text-[10px] text-purple-400 hover:text-purple-300 font-bold underline cursor-pointer"
+                      className="text-[10px] text-purple-600 dark:text-purple-400 hover:underline font-bold cursor-pointer"
                     >
                       {isCustomStaffMode ? "← Select from Team Directory" : "+ Enter Custom Name"}
                     </button>
@@ -2036,7 +2036,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                         });
                         if (member?.phone) setNewStaffPhone(member.phone);
                       }}
-                      className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                      className="px-3 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                     >
                       <option value="">-- Select Team Member --</option>
                       {teamMembers.map(m => {
@@ -2054,14 +2054,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                       placeholder="Staff Member Name *"
                       value={newStaffName}
                       onChange={(e) => setNewStaffName(e.target.value)}
-                      className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                      className="px-3 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                     />
                   )}
 
                   <select
                     value={newStaffRole}
                     onChange={(e) => setNewStaffRole(e.target.value)}
-                    className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="px-3 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   >
                     {STAFF_ROLES.map(role => (
                       <option key={role} value={role}>{role}</option>
@@ -2073,7 +2073,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     placeholder="Phone Number (Optional)"
                     value={newStaffPhone}
                     onChange={(e) => setNewStaffPhone(e.target.value)}
-                    className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="px-3 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   />
 
                   <button
@@ -2093,31 +2093,31 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         {activeTab === "budget" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-semibold">
-              <div className="lg:col-span-2 p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-4">
-                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pb-2 border-b border-zinc-900">
+              <div className="lg:col-span-2 p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-4 shadow-sm backdrop-blur-sm">
+                <h3 className="text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-widest pb-2 border-b border-slate-200 dark:border-zinc-900">
                   Operational Cost Ledger
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 bg-zinc-950/40 rounded-xl border border-zinc-850">
-                    <span className="text-[9px] text-zinc-500 block uppercase font-bold">Total Budget</span>
-                    <span className="text-lg font-mono font-black text-zinc-100 mt-1 block">
+                  <div className="p-4 bg-slate-50/70 dark:bg-zinc-950/40 rounded-xl border border-slate-200 dark:border-zinc-850">
+                    <span className="text-[9px] text-slate-500 dark:text-zinc-500 block uppercase font-bold">Total Budget</span>
+                    <span className="text-lg font-mono font-black text-slate-900 dark:text-zinc-100 mt-1 block">
                       ₹{editBudget.toLocaleString()}
                     </span>
                   </div>
-                  <div className="p-4 bg-zinc-950/40 rounded-xl border border-zinc-850">
-                    <span className="text-[9px] text-zinc-500 block uppercase font-bold">Committed Costs</span>
-                    <span className="text-lg font-mono font-black text-purple-400 mt-1 block">
+                  <div className="p-4 bg-slate-50/70 dark:bg-zinc-950/40 rounded-xl border border-slate-200 dark:border-zinc-850">
+                    <span className="text-[9px] text-slate-500 dark:text-zinc-500 block uppercase font-bold">Committed Costs</span>
+                    <span className="text-lg font-mono font-black text-purple-600 dark:text-purple-400 mt-1 block">
                       ₹{totalCommittedCosts.toLocaleString()}
                     </span>
-                    <span className="text-[9px] text-zinc-500 block mt-0.5">
+                    <span className="text-[9px] text-slate-500 dark:text-zinc-500 block mt-0.5">
                       Vendors: ₹{totalVendorCost.toLocaleString()}
                     </span>
                   </div>
-                  <div className="p-4 bg-zinc-950/40 rounded-xl border border-zinc-850">
-                    <span className="text-[9px] text-zinc-500 block uppercase font-bold">Net Profit Margin</span>
+                  <div className="p-4 bg-slate-50/70 dark:bg-zinc-950/40 rounded-xl border border-slate-200 dark:border-zinc-850">
+                    <span className="text-[9px] text-slate-500 dark:text-zinc-500 block uppercase font-bold">Net Profit Margin</span>
                     <span className={cn(
                       "text-lg font-mono font-black mt-1 block",
-                      budgetPerformance.remaining >= 0 ? "text-emerald-400" : "text-rose-400"
+                      budgetPerformance.remaining >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
                     )}>
                       ₹{budgetPerformance.remaining.toLocaleString()}
                     </span>
@@ -2126,11 +2126,11 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               </div>
 
               {/* Gauge */}
-              <div className="lg:col-span-1 p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl flex flex-col justify-between space-y-4">
-                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Budget Utilization</h3>
+              <div className="lg:col-span-1 p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl flex flex-col justify-between space-y-4 shadow-sm backdrop-blur-sm">
+                <h3 className="text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-widest">Budget Utilization</h3>
                 <div className="relative flex items-center justify-center py-4">
                   <svg className="w-24 h-24 transform -rotate-90">
-                    <circle cx="48" cy="48" r="40" stroke="#1c1c1f" strokeWidth="6" fill="transparent" />
+                    <circle cx="48" cy="48" r="40" className="stroke-slate-200 dark:stroke-[#1c1c1f]" strokeWidth="6" fill="transparent" />
                     <circle
                       cx="48"
                       cy="48"
@@ -2144,35 +2144,35 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     />
                   </svg>
                   <div className="absolute text-center">
-                    <span className="font-mono text-base font-black text-white">{Math.round(budgetPerformance.percentUsed)}%</span>
-                    <span className="text-[8px] text-zinc-500 block uppercase">Utilized</span>
+                    <span className="font-mono text-base font-black text-slate-900 dark:text-white">{Math.round(budgetPerformance.percentUsed)}%</span>
+                    <span className="text-[8px] text-slate-500 dark:text-zinc-500 block uppercase">Utilized</span>
                   </div>
                 </div>
-                <p className="text-[10px] text-zinc-500 text-center">
+                <p className="text-[10px] text-slate-500 dark:text-zinc-500 text-center">
                   {budgetPerformance.percentUsed > 100 ? "⚠️ Event is currently over allocated budget" : "Healthy profit margin maintained"}
                 </p>
               </div>
             </div>
 
             {/* Additional Operational Expenses Line Items */}
-            <div className="p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-4">
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pb-2 border-b border-zinc-900">
+            <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-4 shadow-sm backdrop-blur-sm">
+              <h3 className="text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-widest pb-2 border-b border-slate-200 dark:border-zinc-900">
                 Additional Operational Expenses (Non-Vendor)
               </h3>
 
               <div className="space-y-2">
                 {additionalExpenses.length === 0 ? (
-                  <p className="text-xs text-zinc-500 italic py-2">No additional operational expenses logged.</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-500 italic py-2">No additional operational expenses logged.</p>
                 ) : (
                   additionalExpenses.map(exp => (
-                    <div key={exp.id} className="p-3 bg-zinc-950/30 border border-zinc-850 rounded-xl flex items-center justify-between text-xs font-semibold">
+                    <div key={exp.id} className="p-3 bg-slate-50/60 dark:bg-zinc-950/30 border border-slate-200 dark:border-zinc-850 rounded-xl flex items-center justify-between text-xs font-semibold">
                       <div>
-                        <span className="text-zinc-200 font-bold block">{exp.title}</span>
-                        <span className="text-[10px] text-zinc-500">{exp.category} • {exp.date}</span>
+                        <span className="text-slate-900 dark:text-zinc-200 font-bold block">{exp.title}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-zinc-500">{exp.category} • {exp.date}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-mono font-bold text-zinc-200">₹{exp.amount.toLocaleString()}</span>
-                        <button onClick={() => handleDeleteExpense(exp.id)} className="text-zinc-500 hover:text-rose-400">
+                        <span className="font-mono font-bold text-slate-900 dark:text-zinc-200">₹{exp.amount.toLocaleString()}</span>
+                        <button onClick={() => handleDeleteExpense(exp.id)} className="text-slate-400 dark:text-zinc-500 hover:text-rose-500 dark:hover:text-rose-400">
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -2188,14 +2188,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                   placeholder="Expense Title (e.g. Police NOC, Generator Fuel)"
                   value={newExpTitle}
                   onChange={(e) => setNewExpTitle(e.target.value)}
-                  className="sm:col-span-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                  className="sm:col-span-2 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                 />
                 <input
                   type="number"
                   placeholder="Amount (INR)"
                   value={newExpAmount}
                   onChange={(e) => setNewExpAmount(e.target.value)}
-                  className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                  className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                 />
                 <button
                   onClick={handleAddExpense}
@@ -2211,14 +2211,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         {/* 8. INVOICES TAB */}
         {activeTab === "invoices" && (
           <div className="space-y-6">
-            <div className="p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+            <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-6 shadow-sm backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-900">
                 <div>
-                  <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest flex items-center gap-2">
-                    <FileText size={15} className="text-purple-400" />
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest flex items-center gap-2">
+                    <FileText size={15} className="text-purple-600 dark:text-purple-400" />
                     Event Invoices &amp; Tax Billing Records
                   </h3>
-                  <p className="text-[11px] text-zinc-400 mt-1">Generate GST invoices for client deposits and milestones.</p>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">Generate GST invoices for client deposits and milestones.</p>
                 </div>
 
                 <button
@@ -2232,32 +2232,32 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
               {/* Create Invoice Drawer */}
               {showInvoiceModal && (
-                <div className="p-4 bg-zinc-950/60 border border-purple-500/30 rounded-xl space-y-3">
-                  <span className="text-xs font-bold text-purple-300 block">Generate Event Invoice</span>
+                <div className="p-4 bg-purple-50/60 dark:bg-zinc-950/60 border border-purple-200 dark:border-purple-500/30 rounded-xl space-y-3">
+                  <span className="text-xs font-bold text-purple-700 dark:text-purple-300 block">Generate Event Invoice</span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <input
                       type="text"
                       placeholder="Invoice Title (e.g. Booking Advance 30%)"
                       value={newInvTitle}
                       onChange={(e) => setNewInvTitle(e.target.value)}
-                      className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                      className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                     />
                     <input
                       type="number"
                       placeholder="Subtotal Amount (INR)"
                       value={newInvAmount}
                       onChange={(e) => setNewInvAmount(e.target.value)}
-                      className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                      className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                     />
                     <input
                       type="date"
                       value={newInvDueDate}
                       onChange={(e) => setNewInvDueDate(e.target.value)}
-                      className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                      className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                     />
                   </div>
                   <div className="flex items-center justify-between pt-1">
-                    <label className="flex items-center gap-2 text-xs text-zinc-300 font-semibold cursor-pointer">
+                    <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-zinc-300 font-semibold cursor-pointer">
                       <input
                         type="checkbox"
                         checked={newInvIncludeGst}
@@ -2268,7 +2268,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     </label>
 
                     <div className="flex gap-2">
-                      <button onClick={() => setShowInvoiceModal(false)} className="px-3 py-1 bg-zinc-900 text-zinc-400 rounded-lg text-xs">
+                      <button onClick={() => setShowInvoiceModal(false)} className="px-3 py-1 bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 rounded-lg text-xs">
                         Cancel
                       </button>
                       <button
@@ -2285,33 +2285,33 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               {/* Invoices List */}
               <div className="space-y-3">
                 {invoices.length === 0 ? (
-                  <div className="text-center py-10 border border-dashed border-zinc-800 rounded-xl bg-zinc-950/20 space-y-2">
-                    <FileText size={22} className="mx-auto text-zinc-600" />
-                    <span className="text-xs text-zinc-300 font-bold block">No invoices generated for this event yet</span>
-                    <span className="text-[11px] text-zinc-500">Click "Create New Invoice" to generate an official GST billing record.</span>
+                  <div className="text-center py-10 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-950/20 space-y-2">
+                    <FileText size={22} className="mx-auto text-slate-400 dark:text-zinc-600" />
+                    <span className="text-xs text-slate-700 dark:text-zinc-300 font-bold block">No invoices generated for this event yet</span>
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-500">Click "Create New Invoice" to generate an official GST billing record.</span>
                   </div>
                 ) : (
                   invoices.map((inv) => (
-                    <div key={inv.id} className="p-4 border border-zinc-850 bg-zinc-950/30 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-semibold text-xs">
+                    <div key={inv.id} className="p-4 border border-slate-200 dark:border-zinc-850 bg-slate-50/60 dark:bg-zinc-950/30 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-semibold text-xs">
                       <div>
                         <div className="flex items-center gap-2.5">
-                          <span className="font-mono text-purple-400 font-black text-xs">{inv.invoiceNumber}</span>
-                          <span className="text-zinc-100 font-bold">{inv.title}</span>
+                          <span className="font-mono text-purple-600 dark:text-purple-400 font-black text-xs">{inv.invoiceNumber}</span>
+                          <span className="text-slate-900 dark:text-zinc-100 font-bold">{inv.title}</span>
                         </div>
-                        <p className="text-[10px] text-zinc-500 mt-1">
+                        <p className="text-[10px] text-slate-500 dark:text-zinc-500 mt-1">
                           Base: ₹{inv.subtotal.toLocaleString()} • GST ({inv.gstRate}%): ₹{inv.gstAmount.toLocaleString()} • Due: {inv.dueDate}
                         </p>
                       </div>
 
                       <div className="flex items-center gap-3 self-end sm:self-center">
-                        <span className="font-mono font-bold text-sm text-zinc-100">₹{inv.totalAmount.toLocaleString()}</span>
+                        <span className="font-mono font-bold text-sm text-slate-900 dark:text-zinc-100">₹{inv.totalAmount.toLocaleString()}</span>
                         <button
                           onClick={() => handleToggleInvoiceStatus(inv.id)}
                           className={cn(
                             "text-[9px] font-bold px-2.5 py-1 rounded-lg border cursor-pointer transition select-none",
-                            inv.status === "CLEARED" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-                            inv.status === "SENT" && "border-cyan-500/30 bg-cyan-500/10 text-cyan-400",
-                            inv.status === "DRAFT" && "border-zinc-700 bg-zinc-800/40 text-zinc-400"
+                            inv.status === "CLEARED" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                            inv.status === "SENT" && "border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
+                            inv.status === "DRAFT" && "border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800/40 text-slate-600 dark:text-zinc-400"
                           )}
                           title="Click to cycle status: Draft -> Sent -> Cleared"
                         >
@@ -2319,14 +2319,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                         </button>
                         <button
                           onClick={() => setViewInvoice(inv)}
-                          className="p-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 hover:text-white"
+                          className="p-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white"
                           title="Preview Invoice"
                         >
                           <Eye size={13} />
                         </button>
                         <button
                           onClick={() => handleDeleteInvoice(inv.id, inv.invoiceNumber)}
-                          className="p-1.5 text-zinc-500 hover:text-rose-400 rounded-lg"
+                          className="p-1.5 text-slate-400 dark:text-zinc-500 hover:text-rose-500 dark:hover:text-rose-400 rounded-lg"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -2342,21 +2342,21 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         {/* 9. PAYMENTS TAB */}
         {activeTab === "payments" && (
           <div className="space-y-6">
-            <div className="p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-6 font-semibold">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+            <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-6 font-semibold shadow-sm backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-900">
                 <div>
-                  <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest flex items-center gap-2">
-                    <CreditCard size={15} className="text-purple-400" />
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest flex items-center gap-2">
+                    <CreditCard size={15} className="text-purple-600 dark:text-purple-400" />
                     Payment Milestones Ledger
                   </h3>
-                  <p className="text-[11px] text-zinc-400 mt-1">Track advance booking, interim disbursements, and final settlements.</p>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">Track advance booking, interim disbursements, and final settlements.</p>
                 </div>
 
                 <div className="flex items-center gap-3 text-xs">
-                  <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl font-bold font-mono">
+                  <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-xl font-bold font-mono">
                     Received: ₹{paymentMilestones.filter(m => m.status === "RECEIVED").reduce((s, m) => s + m.amount, 0).toLocaleString()}
                   </span>
-                  <span className="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-xl font-bold font-mono">
+                  <span className="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-xl font-bold font-mono">
                     Pending: ₹{paymentMilestones.filter(m => m.status === "PENDING").reduce((s, m) => s + m.amount, 0).toLocaleString()}
                   </span>
                 </div>
@@ -2365,17 +2365,17 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               {/* Milestones list */}
               <div className="space-y-3">
                 {paymentMilestones.length === 0 ? (
-                  <div className="text-center py-10 border border-dashed border-zinc-800 rounded-xl bg-zinc-950/20">
-                    <CreditCard size={22} className="mx-auto text-zinc-600 mb-1" />
-                    <span className="text-xs text-zinc-400 font-bold block">No payment milestones added yet</span>
-                    <span className="text-[11px] text-zinc-500">Log client milestones below to track advance collections.</span>
+                  <div className="text-center py-10 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-zinc-950/20">
+                    <CreditCard size={22} className="mx-auto text-slate-400 dark:text-zinc-600 mb-1" />
+                    <span className="text-xs text-slate-700 dark:text-zinc-400 font-bold block">No payment milestones added yet</span>
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-500">Log client milestones below to track advance collections.</span>
                   </div>
                 ) : (
                   paymentMilestones.map((milestone) => (
-                    <div key={milestone.id} className="p-3.5 border border-zinc-850 bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4">
+                    <div key={milestone.id} className="p-3.5 border border-slate-200 dark:border-zinc-850 bg-slate-50/60 dark:bg-zinc-950/30 rounded-xl flex items-center justify-between gap-4">
                       <div>
-                        <span className="text-zinc-100 font-bold text-xs block">{milestone.title}</span>
-                        <div className="text-[10px] text-zinc-500 mt-0.5 flex items-center gap-2">
+                        <span className="text-slate-900 dark:text-zinc-100 font-bold text-xs block">{milestone.title}</span>
+                        <div className="text-[10px] text-slate-500 dark:text-zinc-500 mt-0.5 flex items-center gap-2">
                           <span>Amount: ₹{milestone.amount.toLocaleString()}</span>
                           <span>• Due: {milestone.dueDate}</span>
                           <span>• Mode: {milestone.method}</span>
@@ -2388,14 +2388,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                           onClick={() => handleToggleMilestone(milestone.id)}
                           className={cn(
                             "px-3 py-1 text-[9px] uppercase tracking-wider rounded-lg font-bold border transition cursor-pointer",
-                            milestone.status === "RECEIVED" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-zinc-800 text-zinc-400 hover:text-white"
+                            milestone.status === "RECEIVED" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
                           )}
                         >
                           {milestone.status === "RECEIVED" ? "Cleared ✓" : "Mark Cleared"}
                         </button>
                         <button
                           onClick={() => handleDeleteMilestone(milestone.id, milestone.title)}
-                          className="p-1 text-zinc-500 hover:text-rose-400"
+                          className="p-1 text-slate-400 dark:text-zinc-500 hover:text-rose-500 dark:hover:text-rose-400"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -2406,33 +2406,33 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               </div>
 
               {/* Add Milestone Form */}
-              <div className="p-4 bg-zinc-950/50 border border-zinc-850 rounded-xl space-y-3">
-                <span className="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Add Payment Milestone</span>
+              <div className="p-4 bg-slate-50/80 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-850 rounded-xl space-y-3">
+                <span className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-zinc-400 tracking-wider block">Add Payment Milestone</span>
                 <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
                   <input
                     type="text"
                     placeholder="Milestone (e.g. 30% Booking Advance)"
                     value={newMileTitle}
                     onChange={(e) => setNewMileTitle(e.target.value)}
-                    className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   />
                   <input
                     type="number"
                     placeholder="Amount (INR)"
                     value={newMileAmount}
                     onChange={(e) => setNewMileAmount(e.target.value)}
-                    className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   />
                   <input
                     type="date"
                     value={newMileDue}
                     onChange={(e) => setNewMileDue(e.target.value)}
-                    className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   />
                   <select
                     value={newMileMethod}
                     onChange={(e) => setNewMileMethod(e.target.value as any)}
-                    className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                   >
                     <option value="UPI">UPI</option>
                     <option value="BANK_TRANSFER">Bank Transfer (NEFT/RTGS)</option>
@@ -2455,14 +2455,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
         {/* 10. GALLERY TAB */}
         {activeTab === "gallery" && (
           <div className="space-y-6">
-            <div className="p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+            <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-6 shadow-sm backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-900">
                 <div>
-                  <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest flex items-center gap-2">
-                    <ImageIcon size={15} className="text-purple-400" />
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest flex items-center gap-2">
+                    <ImageIcon size={15} className="text-purple-600 dark:text-purple-400" />
                     Moodboard &amp; Photo Assets Masonry
                   </h3>
-                  <p className="text-[11px] text-zinc-400 mt-1">Upload 3D stage layouts, floral designs, venue photos, and moodboards.</p>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">Upload 3D stage layouts, floral designs, venue photos, and moodboards.</p>
                 </div>
 
                 <button
@@ -2476,20 +2476,20 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
               {/* Upload Asset Drawer */}
               {showAddAssetModal && (
-                <div className="p-4 bg-zinc-950/60 border border-purple-500/30 rounded-xl space-y-3">
-                  <span className="text-xs font-bold text-purple-300 block">Add Event Visual / Layout Asset</span>
+                <div className="p-4 bg-purple-50/60 dark:bg-zinc-950/60 border border-purple-200 dark:border-purple-500/30 rounded-xl space-y-3">
+                  <span className="text-xs font-bold text-purple-700 dark:text-purple-300 block">Add Event Visual / Layout Asset</span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <input
                       type="text"
                       placeholder="Asset Title (e.g. Mandap Floral Blueprint)"
                       value={newAssetTitle}
                       onChange={(e) => setNewAssetTitle(e.target.value)}
-                      className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                      className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                     />
                     <select
                       value={newAssetCategory}
                       onChange={(e) => setNewAssetCategory(e.target.value)}
-                      className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none"
+                      className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none"
                     >
                       <option value="Decor">Decor & Florals</option>
                       <option value="Stage">Stage & AV</option>
@@ -2498,12 +2498,12 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                       <option value="Moodboard">Color Moodboard</option>
                     </select>
                     <div className="flex items-center gap-2">
-                      <label className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                      <label className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer">
                         <Upload size={13} />
                         Choose File
                         <input type="file" accept="image/*" onChange={handleImageFileUpload} className="hidden" />
                       </label>
-                      <span className="text-[10px] text-zinc-500">or enter image URL below</span>
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-500">or enter image URL below</span>
                     </div>
                   </div>
                   <input
@@ -2511,10 +2511,10 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     placeholder="Image URL (https://... or choose a local file above)"
                     value={newAssetUrl}
                     onChange={(e) => setNewAssetUrl(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none font-mono"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none font-mono"
                   />
                   <div className="flex justify-end gap-2 pt-1">
-                    <button onClick={() => setShowAddAssetModal(false)} className="px-3 py-1 bg-zinc-900 text-zinc-400 rounded-lg text-xs">
+                    <button onClick={() => setShowAddAssetModal(false)} className="px-3 py-1 bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 rounded-lg text-xs">
                       Cancel
                     </button>
                     <button
@@ -2530,16 +2530,16 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
               {/* Gallery Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {galleryAssets.length === 0 ? (
-                  <div className="col-span-full text-center py-12 border border-dashed border-zinc-800 rounded-2xl bg-zinc-950/20 space-y-2">
-                    <ImageIcon size={26} className="mx-auto text-zinc-600" />
-                    <span className="text-xs text-zinc-300 font-bold block">No visual assets uploaded yet</span>
-                    <span className="text-[11px] text-zinc-500">Click "Upload Visual Asset" to upload design blueprints and inspiration photos.</span>
+                  <div className="col-span-full text-center py-12 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50/50 dark:bg-zinc-950/20 space-y-2">
+                    <ImageIcon size={26} className="mx-auto text-slate-400 dark:text-zinc-600" />
+                    <span className="text-xs text-slate-700 dark:text-zinc-300 font-bold block">No visual assets uploaded yet</span>
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-500">Click "Upload Visual Asset" to upload design blueprints and inspiration photos.</span>
                   </div>
                 ) : (
                   galleryAssets.map((asset) => (
                     <div
                       key={asset.id}
-                      className="group relative aspect-video bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm"
+                      className="group relative aspect-video bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm"
                     >
                       <img
                         src={asset.url}
@@ -2568,31 +2568,31 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
         {/* 11. NOTES TAB */}
         {activeTab === "notes" && (
-          <div className="p-6 border border-zinc-855 bg-[#121214]/40 rounded-2xl space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                <Pin size={14} className="text-purple-400" />
+          <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-4 shadow-sm backdrop-blur-sm">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-zinc-900">
+              <h3 className="text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                <Pin size={14} className="text-purple-600 dark:text-purple-400" />
                 Operational Scratchpad &amp; Handover Notes
               </h3>
               <div className="relative w-44">
-                <Search size={11} className="absolute left-2.5 top-2.5 text-zinc-500" />
+                <Search size={11} className="absolute left-2.5 top-2.5 text-slate-400 dark:text-zinc-500" />
                 <input
                   type="text"
                   placeholder="Search notes..."
                   value={noteSearch}
                   onChange={(e) => setNoteSearch(e.target.value)}
-                  className="w-full pl-7 pr-3 py-1 bg-zinc-950 border border-zinc-850 rounded-lg text-[10px] focus:outline-none"
+                  className="w-full pl-7 pr-3 py-1 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 rounded-lg text-slate-900 dark:text-white text-[10px] focus:outline-none"
                 />
               </div>
             </div>
 
-            <div className="p-3 bg-zinc-950/40 border border-zinc-850 rounded-xl space-y-2">
+            <div className="p-3 bg-slate-50/80 dark:bg-zinc-950/40 border border-slate-200 dark:border-zinc-850 rounded-xl space-y-2">
               <textarea
                 value={newNoteText}
                 onChange={(e) => setNewNoteText(e.target.value)}
                 placeholder="Type a new operational note or handover instruction..."
                 rows={3}
-                className="w-full p-2.5 bg-zinc-900 border border-zinc-850 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500 font-semibold"
+                className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500 font-semibold"
               />
               <button
                 onClick={handleAddNote}
@@ -2604,17 +2604,17 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
             <div className="space-y-3 pt-2">
               {richNotes.length === 0 ? (
-                <p className="text-xs text-zinc-500 text-center py-6">No operational notes yet.</p>
+                <p className="text-xs text-slate-500 dark:text-zinc-500 text-center py-6">No operational notes yet.</p>
               ) : (
                 richNotes
                   .filter(n => n.text.toLowerCase().includes(noteSearch.toLowerCase()))
                   .map((n) => (
-                    <div key={n.id} className="p-3.5 border border-zinc-850 rounded-xl bg-zinc-950/20 text-xs flex justify-between items-start gap-4">
+                    <div key={n.id} className="p-3.5 border border-slate-200 dark:border-zinc-850 rounded-xl bg-slate-50/60 dark:bg-zinc-950/20 text-xs flex justify-between items-start gap-4">
                       <div>
-                        <p className="text-zinc-200 font-semibold leading-relaxed whitespace-pre-wrap">{n.text}</p>
-                        <span className="text-[9px] text-zinc-500 font-mono block pt-2">{new Date(n.createdAt).toLocaleString()}</span>
+                        <p className="text-slate-800 dark:text-zinc-200 font-semibold leading-relaxed whitespace-pre-wrap">{n.text}</p>
+                        <span className="text-[9px] text-slate-500 dark:text-zinc-500 font-mono block pt-2">{new Date(n.createdAt).toLocaleString()}</span>
                       </div>
-                      <button onClick={() => handleDeleteNote(n.id)} className="text-zinc-500 hover:text-rose-400 p-1">
+                      <button onClick={() => handleDeleteNote(n.id)} className="text-slate-400 dark:text-zinc-500 hover:text-rose-500 dark:hover:text-rose-400 p-1">
                         <Trash2 size={12} />
                       </button>
                     </div>
@@ -2626,13 +2626,13 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
         {/* 12. ACTIVITY TAB */}
         {activeTab === "activity" && (
-          <div className="p-6 border border-zinc-850 bg-[#121214]/40 rounded-2xl space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-900">
-              <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-widest flex items-center gap-2">
-                <Activity size={15} className="text-purple-400" />
+          <div className="p-6 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 rounded-2xl space-y-6 shadow-sm backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-zinc-900">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-200 uppercase tracking-widest flex items-center gap-2">
+                <Activity size={15} className="text-purple-600 dark:text-purple-400" />
                 Live Event Audit Trail &amp; Execution Feed
               </h3>
-              <span className="text-xs font-mono text-zinc-400">{activityFeed.length} Action Logs</span>
+              <span className="text-xs font-mono text-slate-500 dark:text-zinc-400">{activityFeed.length} Action Logs</span>
             </div>
 
             {/* Manual Activity Log Input */}
@@ -2649,7 +2649,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                     addToast("Operational log recorded", "success");
                   }
                 }}
-                className="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-xs focus:outline-none focus:border-purple-500"
+                className="flex-1 px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
               />
               <button
                 onClick={() => {
@@ -2666,18 +2666,18 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
             </div>
 
             {/* Dynamic Activity List */}
-            <div className="relative pl-5 border-l border-zinc-800 space-y-5 py-2">
+            <div className="relative pl-5 border-l border-slate-200 dark:border-zinc-800 space-y-5 py-2">
               {activityFeed.length === 0 ? (
-                <div className="text-xs text-zinc-500">
+                <div className="text-xs text-slate-500 dark:text-zinc-500">
                   <span>Event workspace provisioned. Future activities (vendor mappings, status updates, invoice generation) will record here in realtime.</span>
                 </div>
               ) : (
                 activityFeed.map((act) => (
                   <div key={act.id} className="relative text-xs">
-                    <div className="absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full bg-purple-500 ring-4 ring-[#0c0c0e]" />
+                    <div className="absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full bg-purple-600 dark:bg-purple-500 ring-4 ring-white dark:ring-[#0c0c0e]" />
                     <div className="space-y-0.5">
-                      <span className="text-zinc-200 font-bold block">{act.text}</span>
-                      <span className="text-[10px] text-zinc-500 font-mono block">
+                      <span className="text-slate-800 dark:text-zinc-200 font-bold block">{act.text}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-mono block">
                         {new Date(act.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} • {new Date(act.timestamp).toLocaleDateString()}
                       </span>
                     </div>
@@ -2692,42 +2692,42 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
 
       {/* Invoice Viewer Modal */}
       {viewInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#121214] border border-zinc-800 rounded-2xl w-full max-w-lg p-6 space-y-5 text-zinc-200">
-            <div className="flex justify-between items-start border-b border-zinc-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#121214] border border-slate-200 dark:border-zinc-800 rounded-2xl w-full max-w-lg p-6 space-y-5 text-slate-800 dark:text-zinc-200 shadow-2xl">
+            <div className="flex justify-between items-start border-b border-slate-200 dark:border-zinc-800 pb-3">
               <div>
-                <span className="font-mono text-purple-400 font-bold text-sm">{viewInvoice.invoiceNumber}</span>
-                <h3 className="font-extrabold text-base text-white">{viewInvoice.title}</h3>
+                <span className="font-mono text-purple-600 dark:text-purple-400 font-bold text-sm">{viewInvoice.invoiceNumber}</span>
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white">{viewInvoice.title}</h3>
               </div>
-              <button onClick={() => setViewInvoice(null)} className="text-zinc-400 hover:text-white">
+              <button onClick={() => setViewInvoice(null)} className="text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-4 bg-zinc-950/50 rounded-xl space-y-2 text-xs font-semibold">
-              <div className="flex justify-between text-zinc-400">
+            <div className="p-4 bg-slate-50 dark:bg-zinc-950/50 border border-slate-200/60 dark:border-transparent rounded-xl space-y-2 text-xs font-semibold">
+              <div className="flex justify-between text-slate-500 dark:text-zinc-400">
                 <span>Event:</span>
-                <span className="text-white">{event.name}</span>
+                <span className="text-slate-900 dark:text-white">{event.name}</span>
               </div>
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between text-slate-500 dark:text-zinc-400">
                 <span>Due Date:</span>
-                <span className="text-white">{viewInvoice.dueDate}</span>
+                <span className="text-slate-900 dark:text-white">{viewInvoice.dueDate}</span>
               </div>
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between text-slate-500 dark:text-zinc-400">
                 <span>Payment Status:</span>
-                <span className="text-emerald-400 font-bold uppercase">{viewInvoice.status}</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold uppercase">{viewInvoice.status}</span>
               </div>
-              <div className="border-t border-zinc-800 pt-2 flex justify-between">
+              <div className="border-t border-slate-200 dark:border-zinc-800 pt-2 flex justify-between">
                 <span>Subtotal:</span>
                 <span>₹{viewInvoice.subtotal.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between text-slate-500 dark:text-zinc-400">
                 <span>GST ({viewInvoice.gstRate}%):</span>
                 <span>₹{viewInvoice.gstAmount.toLocaleString()}</span>
               </div>
-              <div className="border-t border-zinc-800 pt-2 flex justify-between text-sm font-bold text-white">
+              <div className="border-t border-slate-200 dark:border-zinc-800 pt-2 flex justify-between text-sm font-bold text-slate-900 dark:text-white">
                 <span>Total Amount:</span>
-                <span className="text-purple-400">₹{viewInvoice.totalAmount.toLocaleString()}</span>
+                <span className="text-purple-600 dark:text-purple-400">₹{viewInvoice.totalAmount.toLocaleString()}</span>
               </div>
             </div>
 
@@ -2736,7 +2736,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
                 onClick={() => {
                   window.print();
                 }}
-                className="px-4 py-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
               >
                 <Printer size={13} /> Print Invoice
               </button>

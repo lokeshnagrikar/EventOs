@@ -163,26 +163,26 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
   const selectedEvent = events.find((e) => e.id === selectedEventId);
 
   return (
-    <div className="p-5 border border-white/[0.08] bg-white/[0.02] backdrop-blur-2xl rounded-2xl space-y-5 shadow-2xl">
+    <div className="p-5 border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121214]/60 backdrop-blur-2xl rounded-2xl space-y-5 shadow-sm dark:shadow-2xl">
       {/* Widget Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/[0.06] pb-4">
         <div>
-          <span className="text-[9px] text-purple-400 font-mono font-extrabold uppercase tracking-widest block">
+          <span className="text-[9px] text-purple-600 dark:text-purple-400 font-mono font-extrabold uppercase tracking-widest block">
             Venue Operations Check-in Desk
           </span>
-          <h3 className="text-base font-extrabold text-white mt-0.5 flex items-center gap-2">
+          <h3 className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5 flex items-center gap-2">
             Day-of-Event Guest Roster
             {!isOnline ? (
-              <span className="text-[9px] bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+              <span className="text-[9px] bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
                 <WifiOff size={10} /> Offline Queue
               </span>
             ) : (
-              <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+              <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
                 <Zap size={10} /> Auto-Sync Active
               </span>
             )}
           </h3>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
+          <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
             Real-time gate check-in & barcode desk for attendees and VIPs with local offline storage support.
           </p>
         </div>
@@ -190,15 +190,15 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
         {/* Event Selector & Actions */}
         <div className="flex flex-wrap items-center gap-3">
           {events.length > 0 && (
-            <div className="flex items-center gap-2 bg-white/[0.03] border border-white/[0.08] px-3 py-1.5 rounded-xl">
-              <Calendar size={13} className="text-purple-400" />
+            <div className="flex items-center gap-2 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] px-3 py-1.5 rounded-xl">
+              <Calendar size={13} className="text-purple-600 dark:text-purple-400" />
               <select
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(e.target.value)}
-                className="bg-transparent text-xs font-bold text-white outline-none cursor-pointer pr-2"
+                className="bg-transparent text-xs font-bold text-slate-900 dark:text-white outline-none cursor-pointer pr-2"
               >
                 {events.map((e) => (
-                  <option key={e.id} value={e.id} className="bg-zinc-900 text-white">
+                  <option key={e.id} value={e.id} className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">
                     {e.name}
                   </option>
                 ))}
@@ -215,16 +215,16 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
           </button>
 
           {/* Live Check-in Progress Bar */}
-          <div className="flex items-center gap-3 bg-white/[0.02] border border-white/[0.06] px-3.5 py-1.5 rounded-xl">
+          <div className="flex items-center gap-3 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] px-3.5 py-1.5 rounded-xl">
             <div className="text-right">
-              <span className="text-xs font-black text-white block">
+              <span className="text-xs font-black text-slate-900 dark:text-white block">
                 {checkedInCount} / {totalCount} Checked In
               </span>
-              <span className="text-[9px] text-zinc-400 font-mono block">
+              <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-mono block">
                 {checkedInPercent}% Attendance
               </span>
             </div>
-            <div className="h-8 w-8 rounded-full border-2 border-purple-500/40 flex items-center justify-center text-[10px] font-black text-purple-400 font-mono bg-purple-500/10">
+            <div className="h-8 w-8 rounded-full border-2 border-purple-500/40 flex items-center justify-center text-[10px] font-black text-purple-600 dark:text-purple-400 font-mono bg-purple-500/10">
               {checkedInPercent}%
             </div>
           </div>
@@ -234,13 +234,13 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
       {/* Controls Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-2.5 text-zinc-500" />
+          <Search size={14} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
           <input
             type="text"
             placeholder="Search guest name, table, or ticket code..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white/[0.02] border border-white/[0.06] text-white rounded-xl text-xs outline-none focus:border-purple-500 font-medium"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] text-slate-900 dark:text-white rounded-xl text-xs outline-none focus:border-purple-500 font-medium"
           />
         </div>
 
@@ -249,25 +249,25 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
           className={cn(
             "px-3.5 py-2 border rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 justify-center",
             vipOnly
-              ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
-              : "bg-white/[0.02] border-white/[0.06] text-zinc-400 hover:text-white"
+              ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300"
+              : "bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
           )}
         >
-          <Star size={13} className={vipOnly ? "fill-amber-400 text-amber-400" : ""} />
+          <Star size={13} className={vipOnly ? "fill-amber-400 text-amber-500" : ""} />
           VIP Filter
         </button>
       </div>
 
       {/* Guest Roster Table */}
-      <div className="border border-white/[0.06] bg-white/[0.01] rounded-xl overflow-hidden">
+      <div className="border border-slate-200 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.01] rounded-xl overflow-hidden">
         {filteredGuests.length === 0 ? (
           <div className="py-14 px-4 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 mx-auto flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 mx-auto flex items-center justify-center">
               <Users size={22} />
             </div>
             <div className="space-y-1">
-              <h4 className="text-xs font-bold text-white">No guests on this roster</h4>
-              <p className="text-[11px] text-zinc-500 max-w-sm mx-auto">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">No guests on this roster</h4>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-500 max-w-sm mx-auto">
                 {search || vipOnly
                   ? "No guests match your active search filters."
                   : `Add attendees for ${selectedEvent?.name || "this event"} to enable barcode check-in at the venue desk.`}
@@ -281,9 +281,9 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
             </button>
           </div>
         ) : (
-          <table className="w-full text-xs font-medium text-zinc-300">
+          <table className="w-full text-xs font-medium text-slate-700 dark:text-zinc-300">
             <thead>
-              <tr className="text-left border-b border-white/[0.06] text-[9px] text-zinc-500 font-black uppercase tracking-wider bg-white/[0.02] font-mono">
+              <tr className="text-left border-b border-slate-200 dark:border-white/[0.06] text-[9px] text-slate-500 dark:text-zinc-500 font-black uppercase tracking-wider bg-slate-100/70 dark:bg-white/[0.02] font-mono">
                 <th className="p-3">Guest Name</th>
                 <th className="p-3">Table Seating</th>
                 <th className="p-3">Ticket ID</th>
@@ -293,26 +293,26 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
             </thead>
             <tbody>
               {filteredGuests.map((guest) => (
-                <tr key={guest.id} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02] transition">
+                <tr key={guest.id} className="border-b border-slate-200/70 dark:border-white/[0.04] last:border-0 hover:bg-slate-100/60 dark:hover:bg-white/[0.02] transition">
                   <td className="p-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-white text-xs">{guest.name}</span>
+                      <span className="font-extrabold text-slate-900 dark:text-white text-xs">{guest.name}</span>
                       {guest.isVip && (
-                        <span className="px-1.5 py-0.2 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[8px] font-black uppercase rounded font-mono">
+                        <span className="px-1.5 py-0.2 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[8px] font-black uppercase rounded font-mono">
                           VIP
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="p-3 text-zinc-400 text-[11px]">{guest.table}</td>
-                  <td className="p-3 font-mono text-[10px] text-zinc-500">{guest.ticketCode}</td>
+                  <td className="p-3 text-slate-500 dark:text-zinc-400 text-[11px]">{guest.table}</td>
+                  <td className="p-3 font-mono text-[10px] text-slate-400 dark:text-zinc-500">{guest.ticketCode}</td>
                   <td className="p-3">
                     {guest.status === "CHECKED_IN" ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
                         <CheckCircle2 size={10} /> Arrived ({guest.checkInTime || "Now"})
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-white/[0.04] text-zinc-500 border border-white/[0.06] font-mono">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-100 dark:bg-white/[0.04] text-slate-500 dark:text-zinc-500 border border-slate-200 dark:border-white/[0.06] font-mono">
                         Pending
                       </span>
                     )}
@@ -324,7 +324,7 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
                         className={cn(
                           "px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition cursor-pointer border flex items-center gap-1",
                           guest.status === "CHECKED_IN"
-                            ? "bg-white/[0.03] border-white/[0.06] text-zinc-400 hover:text-white"
+                            ? "bg-slate-100 dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
                             : "bg-purple-600 border-purple-500 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/20"
                         )}
                       >
@@ -341,7 +341,7 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
 
                       <button
                         onClick={() => handleDeleteGuest(guest.id, guest.name)}
-                        className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
+                        className="p-1.5 text-slate-400 dark:text-zinc-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
                         title="Remove guest"
                       >
                         <Trash2 size={12} />
@@ -358,18 +358,18 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
       {/* Add Guest Modal */}
       <AnimatePresence>
         {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 backdrop-blur-sm">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl"
+              className="w-full max-w-md bg-white dark:bg-zinc-950 border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl text-slate-800 dark:text-zinc-200"
             >
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <h4 className="text-sm font-black text-white">Add Attendee / Guest</h4>
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+                <h4 className="text-sm font-black text-slate-900 dark:text-white">Add Attendee / Guest</h4>
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="text-zinc-500 hover:text-white transition"
+                  className="text-slate-400 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-white transition"
                 >
                   <X size={16} />
                 </button>
@@ -377,7 +377,7 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
 
               <form onSubmit={handleAddGuest} className="space-y-4">
                 <div>
-                  <label className="text-[11px] font-bold text-zinc-400 block mb-1.5">
+                  <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 block mb-1.5">
                     Guest Full Name *
                   </label>
                   <input
@@ -386,13 +386,13 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
                     placeholder="e.g. Rahul Sharma"
                     value={newGuestName}
                     onChange={(e) => setNewGuestName(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/[0.04] border border-white/10 rounded-xl text-xs text-white outline-none focus:border-purple-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-400 block mb-1.5">
+                    <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 block mb-1.5">
                       Table / Seating
                     </label>
                     <input
@@ -400,11 +400,11 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
                       placeholder="e.g. Table 04 (Gold)"
                       value={newGuestTable}
                       onChange={(e) => setNewGuestTable(e.target.value)}
-                      className="w-full px-3 py-2 bg-white/[0.04] border border-white/10 rounded-xl text-xs text-white outline-none focus:border-purple-500"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-zinc-400 block mb-1.5">
+                    <label className="text-[11px] font-bold text-slate-600 dark:text-zinc-400 block mb-1.5">
                       Ticket ID (Optional)
                     </label>
                     <input
@@ -412,7 +412,7 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
                       placeholder="Auto-generated if empty"
                       value={newGuestTicket}
                       onChange={(e) => setNewGuestTicket(e.target.value)}
-                      className="w-full px-3 py-2 bg-white/[0.04] border border-white/10 rounded-xl text-xs text-white outline-none focus:border-purple-500 font-mono"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500 font-mono"
                     />
                   </div>
                 </div>
@@ -423,18 +423,18 @@ export default function OfflineCheckInWidget({ events = [] }: OfflineCheckInWidg
                     id="isVipCheck"
                     checked={newGuestIsVip}
                     onChange={(e) => setNewGuestIsVip(e.target.checked)}
-                    className="rounded border-zinc-700 text-purple-600 focus:ring-purple-500"
+                    className="rounded border-slate-300 dark:border-zinc-700 text-purple-600 focus:ring-purple-500"
                   />
-                  <label htmlFor="isVipCheck" className="text-xs text-zinc-300 font-medium cursor-pointer">
+                  <label htmlFor="isVipCheck" className="text-xs text-slate-700 dark:text-zinc-300 font-medium cursor-pointer">
                     Mark as VIP Attendee
                   </label>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-white/10">
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-white transition cursor-pointer"
+                    className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
                   >
                     Cancel
                   </button>
