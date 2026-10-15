@@ -103,3 +103,23 @@ STOMP live presence     PostgreSQL 17 alignment       100svh mobile drawer fix
 * Routed backend traffic `api.eventosapp.in` directly to VPS `200.234.47.154` with DNS-Only (Grey Cloud) configuration.
 * Configured Cloudflare Email Routing for inbound mailboxes (`admin@eventosapp.in`, `support@eventosapp.in`) forwarding directly into founder's personal Gmail inbox.
 * Preserved Resend SMTP outbound sending architecture (`send.eventosapp.in` MX/DKIM records) with zero conflict.
+
+### Phase 13: UI/UX Dark Mode & Typography Contrast Overhaul (October 2026)
+* Diagnosed dark mode illegibility where invalid Tailwind classes (e.g. `dark:text-zinc-150`) rendered client names and booking titles pitch black on dark slate cards in:
+  - [`web/src/components/crm/KanbanBoard.tsx`](file:///d:/EventOs/web/src/components/crm/KanbanBoard.tsx)
+  - [`web/src/components/bookings/BookingCard.tsx`](file:///d:/EventOs/web/src/components/bookings/BookingCard.tsx)
+  - [`web/src/components/crm/LeadDrawer.tsx`](file:///d:/EventOs/web/src/components/crm/LeadDrawer.tsx)
+  - [`web/src/components/dashboard/KpiCard.tsx`](file:///d:/EventOs/web/src/components/dashboard/KpiCard.tsx)
+* Standardized text hierarchy to high-contrast Tailwind tokens: `dark:text-zinc-100` (primary titles), `dark:text-zinc-300` (secondary copy), and `dark:text-zinc-400` (timestamps/metadata).
+* Refactored dark card backgrounds in [`web/src/app/dashboard/page.tsx`](file:///d:/EventOs/web/src/app/dashboard/page.tsx) (Event Operations Radar, AI Action Queue) to elevated dark surface `#13151f` with subtle specular borders `border-white/[0.08]`.
+* Upgraded [`AiAssistant.tsx`](file:///d:/EventOs/web/src/components/AiAssistant.tsx) with a custom markdown link parser that detects `@solo.founder.ai` and renders an interactive pink gradient badge pill with hover tooltips.
+* Cleaned all ESLint errors across the web client (including JSX tag mismatches in `BookingsDashboard.tsx`, unescaped brackets in `crm/page.tsx`, and syntax issues in `settings/page.tsx`), achieving a clean Next.js 15 production build.
+
+### Phase 14: Java Backend Lombok 1.18.36 & Eclipse JDT LS Alignment (October 2026)
+* Diagnosed Eclipse JDT Language Server (VS Code / Antigravity Java) false-positive compilation errors:
+  - Error: `"The Java feature 'Flexible Constructor Bodies' is only available with source level 25 and above"` across hundreds of Lombok-annotated DTOs and entities (`@Data`, `@AllArgsConstructor`, `@NoArgsConstructor`, `@Builder`).
+  - Root Cause: Eclipse JDT compiler prematurely flagged Lombok's generated constructor ASTs as JEP 447 (Flexible Constructor Bodies) statements before `super()`.
+* Upgraded Lombok from `1.18.32` to **`1.18.36`** in [`backend/pom.xml`](file:///d:/EventOs/backend/pom.xml) properties and parent `<dependencyManagement>` to enforce the bug fix across all microservices (`auth-service`, `crm-service`, `event-service`, `gallery-service`).
+* Cleaned redundant `maven-compiler-plugin` declarations in [`backend/auth-service/pom.xml`](file:///d:/EventOs/backend/auth-service/pom.xml) to inherit the complete MapStruct and Lombok processor chain from the parent POM.
+* Fixed null-safety lambda conversion warnings in [`CreateBudgetEstimateDto.java`](file:///d:/EventOs/backend/event-service/src/main/java/com/eventos/event/dto/CreateBudgetEstimateDto.java) for clean compilation.
+

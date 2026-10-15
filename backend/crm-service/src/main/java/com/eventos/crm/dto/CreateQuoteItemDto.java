@@ -1,5 +1,6 @@
 package com.eventos.crm.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -12,10 +13,19 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateQuoteItemDto {
+
+    public CreateQuoteItemDto() {
+    }
+
+    public CreateQuoteItemDto(String itemName, String description, BigDecimal unitPrice, Integer quantity) {
+        this.itemName = itemName;
+        this.description = description;
+        this.unitPrice = unitPrice;
+        this.quantity = quantity;
+    }
 
     @NotBlank(message = "Item name is required")
     private String itemName;

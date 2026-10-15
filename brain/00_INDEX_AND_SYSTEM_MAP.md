@@ -1,8 +1,8 @@
 # 🧠 EventOS Master Brain & Context Repository
 
 > **Single Source of Truth (SSOT)** for EventOS Architecture, Codebase, Microservices, Data Models, Third-Party Integrations, DevOps, and Development History.
-> **Last Updated**: September 2026
-> **Platform Version**: 2.2.0 (Production Hardened & Fully Containerized)
+> **Last Updated**: October 2026
+> **Platform Version**: 2.3.0 (Production Hardened, Dark Mode Polished & Fully Containerized)
 
 ---
 

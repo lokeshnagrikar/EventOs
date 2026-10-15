@@ -14,11 +14,15 @@
 **Risk:** Low (mock key), but bad pattern for future development.
 **RECOMMENDATION:** Default to empty string; require explicit configuration.
 
-### 3. No Database Migration System
-**Source:** All backend services use Hibernate auto-DDL
-**Issue:** No Flyway or Liquibase migrations. Schema changes are managed entirely by JPA entity definitions.
-**Risk:** Difficult to track schema evolution, no rollback capability, potential data loss on entity changes in production.
-**RECOMMENDATION:** Introduce Flyway or Liquibase before production data becomes critical.
+### 3. Database Migration System (Partially Resolved)
+**Status:** ✅ RESOLVED for `auth-service` (Flyway V1–V41) and `crm-service` (Flyway V1–V11).
+**Remaining:** `event-service` and `gallery-service` currently use Hibernate DDL.
+**Recommendation:** Migrate `event-service` and `gallery-service` to Flyway migrations as their data models stabilize.
+
+### 3.1 Eclipse JDT Language Server "Flexible Constructor Bodies" (Resolved)
+**Status:** ✅ RESOLVED via Lombok 1.18.36 upgrade in `backend/pom.xml`.
+**Issue:** Newer Eclipse JDT compiler versions in IDE extensions flag Lombok-generated constructors as Java 25 preview features (JEP 447).
+**Resolution:** Upgrading `<lombok.version>` to `1.18.36` in root POM and refreshing IDE workspace cache completely clears these false-positive markers.
 
 ---
 

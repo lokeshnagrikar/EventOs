@@ -92,3 +92,21 @@ On public marketing pages, **Lenis** provides momentum-based smooth scrolling:
   - Outer motion container is constrained using `max-h-[calc(100svh-5.5rem)]`.
   - Uses `100svh` (**Small Viewport Height**) to ensure the menu never gets cut off by mobile browser address bars or bottom navigation bars.
   - Inner content container features `data-lenis-prevent`, `overflow-y-auto`, `overscroll-contain`, and `scrollbar-thin` for smooth mobile scrolling when both **SOLUTIONS** and **RESOURCES** submenus are simultaneously expanded.
+
+---
+
+## 6. Dark Mode Typography, High-Contrast Standards & Text Legibility
+
+To prevent contrast degradation and unreadable pitch-black text on dark panels:
+1. **Forbidden Classes**:
+   - Never use non-existent Tailwind zinc shades like `dark:text-zinc-150`. They fail silently in CSS and cause the text color to fall back to dark/black on dark background cards.
+2. **Text Hierarchy Tokens**:
+   - **Primary Headings & Titles**: `text-zinc-900 dark:text-zinc-100` (or `dark:text-white font-semibold`).
+   - **Secondary Labels & Values**: `text-zinc-700 dark:text-zinc-300`.
+   - **Muted Subtitles & Dates**: `text-zinc-500 dark:text-zinc-400`.
+   - **Badges & Microcopy**: `text-xs font-medium dark:text-zinc-300`.
+3. **Elevated Card Surfaces**:
+   - Dashboard Radar & Action cards must use an elevated dark surface (`#13151f` or `bg-slate-900/90`) bordered by `dark:border-white/[0.08]` to establish clear visual depth over the `#090A16` canvas.
+4. **AI Assistant Interactive Badge Linking**:
+   - In [`AiAssistant.tsx`](file:///d:/EventOs/web/src/components/AiAssistant.tsx), markdown mentions like `@solo.founder.ai` or internal actions are automatically parsed into interactive gradient badge pills with custom tooltips.
+

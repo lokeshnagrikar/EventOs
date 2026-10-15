@@ -1,5 +1,6 @@
 package com.eventos.crm.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -14,10 +15,22 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateQuoteDto {
+
+    public CreateQuoteDto() {
+    }
+
+    public CreateQuoteDto(UUID leadId, String templateName, BigDecimal discount, BigDecimal taxRate, String clientNotes, String termsConditions, List<CreateQuoteItemDto> items) {
+        this.leadId = leadId;
+        this.templateName = templateName;
+        this.discount = discount;
+        this.taxRate = taxRate;
+        this.clientNotes = clientNotes;
+        this.termsConditions = termsConditions;
+        this.items = items;
+    }
 
     @NotNull(message = "Lead ID is required")
     private UUID leadId;
