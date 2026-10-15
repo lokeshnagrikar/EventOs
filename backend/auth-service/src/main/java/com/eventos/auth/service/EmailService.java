@@ -31,15 +31,15 @@ public class EmailService {
     @Value("${app.frontend-url:https://eventosapp.in}")
     private String frontendUrl;
 
-    // CDN 3D Emoji Assets (Microsoft Fluent 3D rendered, universally supported by Gmail & Apple Mail)
-    private static final String ICON_LOCK = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Locked.png";
-    private static final String ICON_HANDSHAKE = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Handshake.png";
-    private static final String ICON_SHIELD = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Shield.png";
-    private static final String ICON_PARTY = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Party%20Popper.png";
-    private static final String ICON_ROCKET = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png";
-    private static final String ICON_CROWN = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Crown.png";
-    private static final String ICON_CHECK = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Check%20Mark%20Button.png";
-    private static final String ICON_FIRE = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png";
+    // 3D Visual Assets (Hosted on EventOS CDN / Public Domain for 100% reliable inbox delivery)
+    private static final String ICON_LOCK = "https://www.eventosapp.in/emails/lock.png";
+    private static final String ICON_HANDSHAKE = "https://www.eventosapp.in/emails/handshake.png";
+    private static final String ICON_SHIELD = "https://www.eventosapp.in/emails/shield.png";
+    private static final String ICON_PARTY = "https://www.eventosapp.in/emails/party-popper.png";
+    private static final String ICON_ROCKET = "https://www.eventosapp.in/emails/rocket.png";
+    private static final String ICON_CROWN = "https://www.eventosapp.in/emails/crown.png";
+    private static final String ICON_CHECK = "https://www.eventosapp.in/emails/check.png";
+    private static final String ICON_FIRE = "https://www.eventosapp.in/emails/fire.png";
     private static final String LOGO_URL = "https://www.eventosapp.in/icon-192.png";
 
     public EmailService(JavaMailSender mailSender) {
