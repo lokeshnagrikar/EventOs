@@ -9,10 +9,29 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class EventDashboardMetricsDto {
+
+    public EventDashboardMetricsDto() {
+    }
+
+    public EventDashboardMetricsDto(long upcomingEventsCount, List<EventSummaryDto> upcomingEvents,
+                                    BigDecimal totalRevenue, BigDecimal pendingPayments,
+                                    List<TaskSummaryDto> teamTasks, long outstandingInvoicesCount,
+                                    BigDecimal outstandingInvoicesAmount, BigDecimal estimatedCosts,
+                                    BigDecimal actualCosts, BigDecimal profitMargin, BigDecimal profitMarginPercentage) {
+        this.upcomingEventsCount = upcomingEventsCount;
+        this.upcomingEvents = upcomingEvents;
+        this.totalRevenue = totalRevenue;
+        this.pendingPayments = pendingPayments;
+        this.teamTasks = teamTasks;
+        this.outstandingInvoicesCount = outstandingInvoicesCount;
+        this.outstandingInvoicesAmount = outstandingInvoicesAmount;
+        this.estimatedCosts = estimatedCosts;
+        this.actualCosts = actualCosts;
+        this.profitMargin = profitMargin;
+        this.profitMarginPercentage = profitMarginPercentage;
+    }
 
     private long upcomingEventsCount;
     private List<EventSummaryDto> upcomingEvents;
@@ -28,10 +47,21 @@ public class EventDashboardMetricsDto {
     private BigDecimal profitMarginPercentage;
 
     @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
     @Builder
     public static class EventSummaryDto {
+
+        public EventSummaryDto() {
+        }
+
+        public EventSummaryDto(String id, String name, String type, String status, String startDate, String location) {
+            this.id = id;
+            this.name = name;
+            this.type = type;
+            this.status = status;
+            this.startDate = startDate;
+            this.location = location;
+        }
+
         private String id;
         private String name;
         private String type;
@@ -41,10 +71,22 @@ public class EventDashboardMetricsDto {
     }
 
     @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
     @Builder
     public static class TaskSummaryDto {
+
+        public TaskSummaryDto() {
+        }
+
+        public TaskSummaryDto(String id, String eventId, String eventName, String title, String description, String scheduledTime, boolean completed) {
+            this.id = id;
+            this.eventId = eventId;
+            this.eventName = eventName;
+            this.title = title;
+            this.description = description;
+            this.scheduledTime = scheduledTime;
+            this.completed = completed;
+        }
+
         private String id;
         private String eventId;
         private String eventName;

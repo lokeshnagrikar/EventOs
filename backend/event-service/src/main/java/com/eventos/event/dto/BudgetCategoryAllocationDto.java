@@ -11,10 +11,16 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class BudgetCategoryAllocationDto {
+
+    public BudgetCategoryAllocationDto() {
+    }
+
+    public BudgetCategoryAllocationDto(BudgetCategory category, BigDecimal estimatedCost) {
+        this.category = category;
+        this.estimatedCost = estimatedCost;
+    }
 
     @NotNull(message = "Category is required")
     private BudgetCategory category;

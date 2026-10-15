@@ -7,10 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class UpdateInvoiceStatusDto {
+
+    public UpdateInvoiceStatusDto() {
+    }
+
+    public UpdateInvoiceStatusDto(String status) {
+        this.status = status;
+    }
 
     @NotBlank(message = "Status is required")
     private String status; // DRAFT, SENT, PAID, OVERDUE, CANCELLED

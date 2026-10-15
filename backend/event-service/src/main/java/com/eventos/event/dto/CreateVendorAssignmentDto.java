@@ -9,10 +9,18 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateVendorAssignmentDto {
+
+    public CreateVendorAssignmentDto() {
+    }
+
+    public CreateVendorAssignmentDto(UUID vendorId, UUID bookingId, UUID taskId, String roleDescription) {
+        this.vendorId = vendorId;
+        this.bookingId = bookingId;
+        this.taskId = taskId;
+        this.roleDescription = roleDescription;
+    }
 
     @NotNull(message = "Vendor ID is required")
     private UUID vendorId;

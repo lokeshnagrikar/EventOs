@@ -11,9 +11,34 @@ import java.util.UUID;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class GalleryItemResponseDto {
+
+    public GalleryItemResponseDto() {
+    }
+
+    public GalleryItemResponseDto(UUID id, UUID tenantId, UUID albumId, String name, GalleryItemType type,
+                                  String url, String publicId, Long size, String format, Double duration,
+                                  String category, boolean favorite, java.util.Set<String> tags,
+                                  LocalDateTime createdAt, LocalDateTime updatedAt, Integer width, Integer height, String resourceType) {
+        this.id = id;
+        this.tenantId = tenantId;
+        this.albumId = albumId;
+        this.name = name;
+        this.type = type;
+        this.url = url;
+        this.publicId = publicId;
+        this.size = size;
+        this.format = format;
+        this.duration = duration;
+        this.category = category;
+        this.favorite = favorite;
+        this.tags = tags;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.width = width;
+        this.height = height;
+        this.resourceType = resourceType;
+    }
     private UUID id;
     private UUID tenantId;
     private UUID albumId;

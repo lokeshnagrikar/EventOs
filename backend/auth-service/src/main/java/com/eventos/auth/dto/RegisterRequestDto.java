@@ -7,9 +7,19 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class RegisterRequestDto {
+
+    public RegisterRequestDto() {
+    }
+
+    public RegisterRequestDto(String firstName, String lastName, String email, String phone, String companyName, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
+        this.companyName = companyName;
+        this.password = password;
+    }
     private String firstName;
     private String lastName;
     private String email;

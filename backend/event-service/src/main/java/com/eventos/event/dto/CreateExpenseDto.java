@@ -14,10 +14,22 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateExpenseDto {
+
+    public CreateExpenseDto() {
+    }
+
+    public CreateExpenseDto(BudgetCategory category, String description, BigDecimal amount,
+                            LocalDateTime expenseDate, UUID vendorContractId, String paymentMethod, String status) {
+        this.category = category;
+        this.description = description;
+        this.amount = amount;
+        this.expenseDate = expenseDate;
+        this.vendorContractId = vendorContractId;
+        this.paymentMethod = paymentMethod;
+        this.status = status != null ? status : "PAID";
+    }
 
     @NotNull(message = "Category is required")
     private BudgetCategory category;
@@ -35,6 +47,6 @@ public class CreateExpenseDto {
 
     private String paymentMethod;
 
-    @lombok.Builder.Default
+    @Builder.Default
     private String status = "PAID";
 }

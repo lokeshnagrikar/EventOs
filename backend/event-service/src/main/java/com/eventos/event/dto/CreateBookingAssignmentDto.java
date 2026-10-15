@@ -7,10 +7,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateBookingAssignmentDto {
+
+    public CreateBookingAssignmentDto() {
+    }
+
+    public CreateBookingAssignmentDto(String resourceName, String resourceType) {
+        this.resourceName = resourceName;
+        this.resourceType = resourceType;
+    }
 
     @NotBlank(message = "Resource name is required")
     private String resourceName;

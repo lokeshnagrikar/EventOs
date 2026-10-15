@@ -14,6 +14,19 @@ import java.util.UUID;
 @Builder
 public class ApiKey {
 
+    public ApiKey(UUID tenantId, String name, String prefix, String keyHash, String scopes, LocalDateTime lastUsedAt,
+            LocalDateTime createdAt, LocalDateTime expiresAt, boolean isRevoked) {
+        this.tenantId = tenantId;
+        this.name = name;
+        this.prefix = prefix;
+        this.keyHash = keyHash;
+        this.scopes = scopes;
+        this.lastUsedAt = lastUsedAt;
+        this.createdAt = createdAt;
+        this.expiresAt = expiresAt;
+        this.isRevoked = isRevoked;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

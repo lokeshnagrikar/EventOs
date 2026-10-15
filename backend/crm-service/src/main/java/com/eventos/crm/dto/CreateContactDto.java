@@ -7,10 +7,19 @@ import lombok.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateContactDto {
+
+    public CreateContactDto() {
+    }
+
+    public CreateContactDto(String firstName, String lastName, String email, String phone, String companyName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
+        this.companyName = companyName;
+    }
 
     @NotBlank(message = "First name is required")
     @Size(max = 100, message = "First name must not exceed 100 characters")

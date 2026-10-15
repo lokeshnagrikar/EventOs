@@ -2,7 +2,6 @@ package com.eventos.auth.service;
 
 import com.eventos.auth.entity.DatabaseBackupRecord;
 import com.eventos.auth.repository.DatabaseBackupRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
@@ -25,12 +24,16 @@ import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class BackupService {
 
     private final DatabaseBackupRepository databaseBackupRepository;
     private final DataSource dataSource;
+
+    public BackupService(DatabaseBackupRepository databaseBackupRepository, DataSource dataSource) {
+        this.databaseBackupRepository = databaseBackupRepository;
+        this.dataSource = dataSource;
+    }
 
     private static final String DEFAULT_DATABASES = "auth_db,crm_db,event_db,gallery_db";
 

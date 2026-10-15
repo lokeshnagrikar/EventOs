@@ -10,10 +10,17 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class EventDayDto {
+
+    public EventDayDto() {
+    }
+
+    public EventDayDto(LocalDate dayDate, String title, String description) {
+        this.dayDate = dayDate;
+        this.title = title;
+        this.description = description;
+    }
 
     @NotNull(message = "Event day date is required")
     private LocalDate dayDate;

@@ -10,10 +10,18 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateTimelineItemDto {
+
+    public CreateTimelineItemDto() {
+    }
+
+    public CreateTimelineItemDto(String title, String description, LocalDateTime scheduledTime, com.eventos.event.entity.MilestoneType milestone) {
+        this.title = title;
+        this.description = description;
+        this.scheduledTime = scheduledTime;
+        this.milestone = milestone;
+    }
 
     @NotBlank(message = "Milestone title is required")
     private String title;

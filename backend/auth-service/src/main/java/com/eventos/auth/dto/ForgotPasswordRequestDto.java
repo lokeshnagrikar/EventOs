@@ -7,8 +7,13 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class ForgotPasswordRequestDto {
+
+    public ForgotPasswordRequestDto() {
+    }
+
+    public ForgotPasswordRequestDto(String email) {
+        this.email = email;
+    }
     private String email;
 }

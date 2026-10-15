@@ -10,10 +10,17 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class AssignTeamMemberDto {
+
+    public AssignTeamMemberDto() {
+    }
+
+    public AssignTeamMemberDto(UUID userId, String userName, String role) {
+        this.userId = userId;
+        this.userName = userName;
+        this.role = role;
+    }
 
     @NotNull(message = "User ID is required")
     private UUID userId;

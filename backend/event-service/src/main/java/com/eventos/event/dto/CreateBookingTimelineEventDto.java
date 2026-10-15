@@ -10,10 +10,18 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateBookingTimelineEventDto {
+
+    public CreateBookingTimelineEventDto() {
+    }
+
+    public CreateBookingTimelineEventDto(String title, String description, LocalDateTime eventDate, String status) {
+        this.title = title;
+        this.description = description;
+        this.eventDate = eventDate;
+        this.status = status;
+    }
 
     @NotBlank(message = "Milestone title is required")
     private String title;

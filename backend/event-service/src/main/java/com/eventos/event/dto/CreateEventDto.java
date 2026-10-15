@@ -12,10 +12,32 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateEventDto {
+
+    public CreateEventDto() {
+    }
+
+    public CreateEventDto(String name, String title, EventType type, LocalDateTime startDate, LocalDateTime endDate,
+                          String location, String venueName, String venueAddress, Integer guestCount, String guestList,
+                          BigDecimal budget, String notes, java.util.UUID bookingId,
+                          java.util.List<EventDayDto> eventDays, java.util.List<EventVenueDto> eventVenues) {
+        this.name = name;
+        this.title = title;
+        this.type = type;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.location = location;
+        this.venueName = venueName;
+        this.venueAddress = venueAddress;
+        this.guestCount = guestCount;
+        this.guestList = guestList;
+        this.budget = budget;
+        this.notes = notes;
+        this.bookingId = bookingId;
+        this.eventDays = eventDays;
+        this.eventVenues = eventVenues;
+    }
 
     private String name;
 

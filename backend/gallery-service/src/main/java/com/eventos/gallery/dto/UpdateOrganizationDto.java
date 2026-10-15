@@ -9,9 +9,15 @@ import java.util.Set;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class UpdateOrganizationDto {
+
+    public UpdateOrganizationDto() {
+    }
+
+    public UpdateOrganizationDto(String category, Set<String> tags) {
+        this.category = category;
+        this.tags = tags;
+    }
     private String category;
     private Set<String> tags;
 }

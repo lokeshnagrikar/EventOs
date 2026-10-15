@@ -13,10 +13,18 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class PricingRuleRequest {
+
+    public PricingRuleRequest() {
+    }
+
+    public PricingRuleRequest(PricingCategory category, String ruleKey, BigDecimal basePrice, PricingType priceType) {
+        this.category = category;
+        this.ruleKey = ruleKey;
+        this.basePrice = basePrice;
+        this.priceType = priceType;
+    }
 
     @NotNull(message = "Category is required")
     private PricingCategory category;

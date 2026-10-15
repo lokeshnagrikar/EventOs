@@ -8,9 +8,16 @@ import java.util.UUID;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class GoogleLoginRequestDto {
+
+    public GoogleLoginRequestDto() {
+    }
+
+    public GoogleLoginRequestDto(String idToken, String accessToken, UUID selectTenantId) {
+        this.idToken = idToken;
+        this.accessToken = accessToken;
+        this.selectTenantId = selectTenantId;
+    }
     private String idToken;
     private String accessToken;
     private UUID selectTenantId;

@@ -8,10 +8,19 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class BookingBudgetDto {
+
+    public BookingBudgetDto() {
+    }
+
+    public BookingBudgetDto(BigDecimal revenue, BigDecimal estimatedCost, BigDecimal actualCost, BigDecimal profitMargin, BigDecimal profitMarginPercentage) {
+        this.revenue = revenue;
+        this.estimatedCost = estimatedCost;
+        this.actualCost = actualCost;
+        this.profitMargin = profitMargin;
+        this.profitMarginPercentage = profitMarginPercentage;
+    }
     private BigDecimal revenue;
     private BigDecimal estimatedCost;
     private BigDecimal actualCost;

@@ -11,10 +11,19 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateBookingDto {
+
+    public CreateBookingDto() {
+    }
+
+    public CreateBookingDto(UUID eventId, UUID leadId, BigDecimal totalAmount, BigDecimal paidAmount, String contractUrl) {
+        this.eventId = eventId;
+        this.leadId = leadId;
+        this.totalAmount = totalAmount;
+        this.paidAmount = paidAmount;
+        this.contractUrl = contractUrl;
+    }
 
     @NotNull(message = "Event ID is required")
     private UUID eventId;

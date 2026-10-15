@@ -7,10 +7,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class EventVenueDto {
+
+    public EventVenueDto() {
+    }
+
+    public EventVenueDto(String name, String address, String notes) {
+        this.name = name;
+        this.address = address;
+        this.notes = notes;
+    }
 
     @NotBlank(message = "Venue name is required")
     private String name;

@@ -7,9 +7,15 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class AcceptInviteRequestDto {
+
+    public AcceptInviteRequestDto() {
+    }
+
+    public AcceptInviteRequestDto(String token, String password) {
+        this.token = token;
+        this.password = password;
+    }
     private String token;
     private String password;
 }

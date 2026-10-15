@@ -13,10 +13,34 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class PatchEventDto {
+
+    public PatchEventDto() {
+    }
+
+    public PatchEventDto(String name, String title, EventType type, EventStatus status,
+                         LocalDateTime startDate, LocalDateTime endDate, String location,
+                         String venueName, String venueAddress, Integer guestCount,
+                         String guestList, BigDecimal budget, String notes, UUID bookingId,
+                         List<EventDayDto> eventDays, List<EventVenueDto> eventVenues) {
+        this.name = name;
+        this.title = title;
+        this.type = type;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.location = location;
+        this.venueName = venueName;
+        this.venueAddress = venueAddress;
+        this.guestCount = guestCount;
+        this.guestList = guestList;
+        this.budget = budget;
+        this.notes = notes;
+        this.bookingId = bookingId;
+        this.eventDays = eventDays;
+        this.eventVenues = eventVenues;
+    }
     private String name;
     private String title;
     private EventType type;

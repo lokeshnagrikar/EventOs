@@ -7,9 +7,16 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class AdminBootstrapDto {
+
+    public AdminBootstrapDto() {
+    }
+
+    public AdminBootstrapDto(String email, String newPassword, String bootstrapSecret) {
+        this.email = email;
+        this.newPassword = newPassword;
+        this.bootstrapSecret = bootstrapSecret;
+    }
     private String email;
     private String newPassword;
     private String bootstrapSecret;

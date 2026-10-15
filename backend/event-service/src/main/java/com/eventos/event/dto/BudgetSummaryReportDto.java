@@ -11,10 +11,28 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class BudgetSummaryReportDto {
+
+    public BudgetSummaryReportDto() {
+    }
+
+    public BudgetSummaryReportDto(BigDecimal revenue, BigDecimal totalBudgetLimit, BigDecimal alertThresholdPercentage,
+                                  BigDecimal totalEstimatedCost, BigDecimal totalActualCost, BigDecimal totalRemainingBudget,
+                                  BigDecimal profitMargin, BigDecimal profitMarginPercentage,
+                                  List<CategoryBreakdown> categoryBreakdowns, List<BudgetAlert> activeAlerts) {
+        this.revenue = revenue;
+        this.totalBudgetLimit = totalBudgetLimit;
+        this.alertThresholdPercentage = alertThresholdPercentage;
+        this.totalEstimatedCost = totalEstimatedCost;
+        this.totalActualCost = totalActualCost;
+        this.totalRemainingBudget = totalRemainingBudget;
+        this.profitMargin = profitMargin;
+        this.profitMarginPercentage = profitMarginPercentage;
+        this.categoryBreakdowns = categoryBreakdowns;
+        this.activeAlerts = activeAlerts;
+    }
+
     private BigDecimal revenue;
     private BigDecimal totalBudgetLimit;
     private BigDecimal alertThresholdPercentage;
@@ -27,10 +45,26 @@ public class BudgetSummaryReportDto {
     private List<BudgetAlert> activeAlerts;
 
     @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
     @Builder
     public static class CategoryBreakdown {
+
+        public CategoryBreakdown() {
+        }
+
+        public CategoryBreakdown(BudgetCategory category, BigDecimal allocationLimit, BigDecimal contractEstimatedCost,
+                                 BigDecimal contractActualCost, BigDecimal directExpensesCost, BigDecimal totalEstimatedCost,
+                                 BigDecimal totalActualCost, BigDecimal remainingBudget, BigDecimal vendorPayouts) {
+            this.category = category;
+            this.allocationLimit = allocationLimit;
+            this.contractEstimatedCost = contractEstimatedCost;
+            this.contractActualCost = contractActualCost;
+            this.directExpensesCost = directExpensesCost;
+            this.totalEstimatedCost = totalEstimatedCost;
+            this.totalActualCost = totalActualCost;
+            this.remainingBudget = remainingBudget;
+            this.vendorPayouts = vendorPayouts;
+        }
+
         private BudgetCategory category;
         private BigDecimal allocationLimit; // Manually allocated estimate
         private BigDecimal contractEstimatedCost; // Sum of contract total costs

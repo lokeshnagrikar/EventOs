@@ -10,10 +10,16 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class UpdateBookingBudgetLimitDto {
+
+    public UpdateBookingBudgetLimitDto() {
+    }
+
+    public UpdateBookingBudgetLimitDto(BigDecimal totalBudgetLimit, BigDecimal alertThresholdPercentage) {
+        this.totalBudgetLimit = totalBudgetLimit;
+        this.alertThresholdPercentage = alertThresholdPercentage;
+    }
 
     @NotNull(message = "Total budget limit is required")
     @DecimalMin(value = "0.00", message = "Total budget limit must be non-negative")

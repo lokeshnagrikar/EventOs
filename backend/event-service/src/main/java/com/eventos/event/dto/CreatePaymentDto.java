@@ -13,10 +13,23 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreatePaymentDto {
+
+    public CreatePaymentDto() {
+    }
+
+    public CreatePaymentDto(UUID bookingId, UUID invoiceId, String status, BigDecimal amount,
+                            String paymentMethod, String transactionReference, String notes, LocalDateTime paymentDate) {
+        this.bookingId = bookingId;
+        this.invoiceId = invoiceId;
+        this.status = status;
+        this.amount = amount;
+        this.paymentMethod = paymentMethod;
+        this.transactionReference = transactionReference;
+        this.notes = notes;
+        this.paymentDate = paymentDate;
+    }
 
     @NotNull(message = "Booking ID is required")
     private UUID bookingId;

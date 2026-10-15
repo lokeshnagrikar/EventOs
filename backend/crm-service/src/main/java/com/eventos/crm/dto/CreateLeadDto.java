@@ -12,9 +12,23 @@ import java.util.UUID;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class CreateLeadDto {
+
+    public CreateLeadDto() {
+    }
+
+    public CreateLeadDto(String name, String phone, String email, String eventType, LocalDate eventDate, BigDecimal budget, String leadSource, String notes, UUID assignedUserId, UUID contactId) {
+        this.name = name;
+        this.phone = phone;
+        this.email = email;
+        this.eventType = eventType;
+        this.eventDate = eventDate;
+        this.budget = budget;
+        this.leadSource = leadSource;
+        this.notes = notes;
+        this.assignedUserId = assignedUserId;
+        this.contactId = contactId;
+    }
 
     @NotBlank(message = "Lead name is required")
     @Size(max = 255, message = "Lead name must be less than 255 characters")

@@ -8,10 +8,22 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class UpdateVendorContractDto {
+
+    public UpdateVendorContractDto() {
+    }
+
+    public UpdateVendorContractDto(String details, BigDecimal totalCost, BigDecimal actualCost, String contractUrl,
+                                   String status, BigDecimal paidAmount, com.eventos.event.entity.VendorPaymentStatus paymentStatus) {
+        this.details = details;
+        this.totalCost = totalCost;
+        this.actualCost = actualCost;
+        this.contractUrl = contractUrl;
+        this.status = status;
+        this.paidAmount = paidAmount;
+        this.paymentStatus = paymentStatus;
+    }
 
     private String details;
     private BigDecimal totalCost;

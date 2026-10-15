@@ -11,10 +11,18 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateRoleDto {
+
+    public CreateRoleDto() {
+    }
+
+    public CreateRoleDto(String name, String description, List<String> permissions, String permissionsJson) {
+        this.name = name;
+        this.description = description;
+        this.permissions = permissions;
+        this.permissionsJson = permissionsJson;
+    }
 
     @NotBlank(message = "Role name is required")
     @Size(min = 2, max = 50, message = "Role name must be between 2 and 50 characters")

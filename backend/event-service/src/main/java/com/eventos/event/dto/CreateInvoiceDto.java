@@ -13,10 +13,26 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CreateInvoiceDto {
+
+    public CreateInvoiceDto() {
+    }
+
+    public CreateInvoiceDto(UUID bookingId, BigDecimal subtotal, BigDecimal tax, BigDecimal discount,
+                            LocalDateTime dueDate, String clientName, String clientEmail, String billingAddress,
+                            String notes, BigDecimal taxRate) {
+        this.bookingId = bookingId;
+        this.subtotal = subtotal;
+        this.tax = tax;
+        this.discount = discount;
+        this.dueDate = dueDate;
+        this.clientName = clientName;
+        this.clientEmail = clientEmail;
+        this.billingAddress = billingAddress;
+        this.notes = notes;
+        this.taxRate = taxRate;
+    }
 
     private UUID bookingId;
 

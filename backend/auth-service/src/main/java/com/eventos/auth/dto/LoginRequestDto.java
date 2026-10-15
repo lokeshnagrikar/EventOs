@@ -8,9 +8,18 @@ import java.util.UUID;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class LoginRequestDto {
+
+    public LoginRequestDto() {
+    }
+
+    public LoginRequestDto(String email, String password, UUID tenantId, String captchaId, String captchaValue) {
+        this.email = email;
+        this.password = password;
+        this.tenantId = tenantId;
+        this.captchaId = captchaId;
+        this.captchaValue = captchaValue;
+    }
     private String email;
     private String password;
     private UUID tenantId;
