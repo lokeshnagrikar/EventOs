@@ -9,13 +9,15 @@ import java.util.UUID;
 @Table(name = "api_keys")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class ApiKey {
 
-    public ApiKey(UUID tenantId, String name, String prefix, String keyHash, String scopes, LocalDateTime lastUsedAt,
-            LocalDateTime createdAt, LocalDateTime expiresAt, boolean isRevoked) {
+    public ApiKey() {
+    }
+
+    public ApiKey(UUID id, UUID tenantId, String name, String prefix, String keyHash, String scopes,
+                  LocalDateTime lastUsedAt, LocalDateTime createdAt, LocalDateTime expiresAt, boolean isRevoked) {
+        this.id = id;
         this.tenantId = tenantId;
         this.name = name;
         this.prefix = prefix;
