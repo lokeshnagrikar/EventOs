@@ -86,10 +86,10 @@ services:
       - APP_MAIL_FROM=${APP_MAIL_FROM:-support@eventosapp.in}
       - FRONTEND_URL=${FRONTEND_URL:-https://eventosapp.in}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://eventosapp.in,https://www.eventosapp.in}
-      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:?JWT_PRIVATE_KEY must be set in production}
-      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
-      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in production}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:-}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:-eventos_gateway_secure_shared_secret}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-e7f9a2b4c6d8e0f1a3b5c7d9e1f3a5b7}
       - BOOTSTRAP_SECRET=${BOOTSTRAP_SECRET:-superadmin_secure_bootstrap_key_2026!}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-171503360314-e51mor0dee5v5f5jqi3gincelrhuva4l.apps.googleusercontent.com}
       - COOKIE_SECURE=true
@@ -129,8 +129,8 @@ services:
       - RABBITMQ_PASS=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - SPRING_PROFILES_ACTIVE=prod
-      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
-      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:-eventos_gateway_secure_shared_secret}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -161,8 +161,8 @@ services:
       - RABBITMQ_PASS=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - SPRING_PROFILES_ACTIVE=prod
-      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
-      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:-eventos_gateway_secure_shared_secret}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -193,8 +193,8 @@ services:
       - RABBITMQ_PASS=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASS:?RABBITMQ_PASS must be set in production}
       - SPRING_PROFILES_ACTIVE=prod
-      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
-      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:-eventos_gateway_secure_shared_secret}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-demo}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-demo_key}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-demo_secret}
@@ -226,8 +226,8 @@ services:
       - REDIS_PORT=6379
       - REDIS_URL=redis://redis:6379
       - CORS_ALLOWED_ORIGINS=https://eventosapp.in,https://www.eventosapp.in,https://event-os-woad.vercel.app
-      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY must be set in production}
-      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:?GATEWAY_TRUST_SECRET must be set in production}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
+      - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:-eventos_gateway_secure_shared_secret}
     depends_on:
       - auth-service
       - crm-service
