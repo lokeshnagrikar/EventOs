@@ -64,7 +64,7 @@ export default function BookingCard({ booking, eventName, index }: BookingCardPr
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, delay: Math.min(index * 0.03, 0.15), ease: [0.215, 0.61, 0.355, 1] }}
       whileHover={{ y: -4, scale: 1.008 }}
-      className="group relative rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#141416]/50 hover:border-purple-500/40 p-5 flex flex-col justify-between h-[235px] shadow-sm hover:shadow-xl hover:shadow-purple-500/5 overflow-hidden select-none transition-all cursor-pointer backdrop-blur-md"
+      className="group relative rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121319] hover:border-purple-500/50 p-5 flex flex-col justify-between h-[235px] shadow-sm hover:shadow-xl hover:shadow-purple-500/5 overflow-hidden select-none transition-all cursor-pointer backdrop-blur-md"
       onClick={() => router.push(`/bookings/${booking.id}`)}
     >
       {/* Decorative Glow accent */}
@@ -74,7 +74,7 @@ export default function BookingCard({ booking, eventName, index }: BookingCardPr
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] font-mono bg-slate-100 dark:bg-zinc-850 text-slate-700 dark:text-zinc-300 px-2 py-0.5 rounded font-black border border-slate-200 dark:border-zinc-800">
+            <span className="text-[9px] font-mono bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 px-2 py-0.5 rounded font-black border border-slate-200 dark:border-zinc-700">
               {booking.bookingNumber}
             </span>
             {booking.contractUrl && (
@@ -96,15 +96,15 @@ export default function BookingCard({ booking, eventName, index }: BookingCardPr
           </div>
         </div>
 
-        <h3 className="font-extrabold text-sm text-slate-900 dark:text-zinc-150 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-snug line-clamp-1">
+        <h3 className="font-extrabold text-sm text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors leading-snug line-clamp-1">
           {eventName}
         </h3>
 
-        <div className="flex items-center justify-between text-[9.5px] text-slate-500 dark:text-zinc-400">
+        <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-zinc-300">
           <span className="flex items-center gap-1">
-            <MapPin size={10} className="text-purple-500/70" /> {venueName}
+            <MapPin size={11} className="text-purple-500" /> {venueName}
           </span>
-          <span className="font-medium">Planner: {plannerName}</span>
+          <span className="font-semibold text-slate-500 dark:text-zinc-400">Planner: {plannerName}</span>
         </div>
       </div>
 
@@ -112,9 +112,9 @@ export default function BookingCard({ booking, eventName, index }: BookingCardPr
       <div className="space-y-1.5 text-[10px]">
         <div className="flex justify-between items-center text-[9px] text-slate-500 dark:text-zinc-400">
           <span className="uppercase font-bold tracking-wider">Payment Ledger</span>
-          <span className="font-bold font-mono text-slate-800 dark:text-zinc-300">{percentPaid}% Paid</span>
+          <span className="font-bold font-mono text-slate-900 dark:text-zinc-200">{percentPaid}% Paid</span>
         </div>
-        <div className="h-1.5 w-full bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full bg-slate-100 dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-700/60 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
             style={{ width: `${percentPaid}%` }}
@@ -123,8 +123,8 @@ export default function BookingCard({ booking, eventName, index }: BookingCardPr
       </div>
 
       {/* Footer details */}
-      <div className="border-t border-slate-200/90 dark:border-white/[0.08] pt-3 flex items-center justify-between text-[10px] text-slate-600 dark:text-zinc-400">
-        <div className="flex items-center gap-1">
+      <div className="border-t border-slate-200/90 dark:border-white/[0.08] pt-3 flex items-center justify-between text-[10px] text-slate-600 dark:text-zinc-300">
+        <div className="flex items-center gap-1 text-slate-500 dark:text-zinc-400 font-medium">
           <Calendar size={12} className="text-slate-400 dark:text-zinc-500" />
           <span>{new Date(booking.createdAt).toLocaleDateString()}</span>
         </div>

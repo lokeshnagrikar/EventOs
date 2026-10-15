@@ -142,17 +142,17 @@ export default function KanbanBoard({
           return (
             <div 
               key={col.id} 
-              className="flex-1 min-w-[280px] max-w-[340px] rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50/70 dark:bg-zinc-950/20 flex flex-col max-h-full overflow-hidden backdrop-blur-md shadow-sm"
+              className="flex-1 min-w-[280px] max-w-[340px] rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-100/60 dark:bg-[#0c0d12]/80 flex flex-col max-h-full overflow-hidden shadow-sm"
             >
               {/* Column Header */}
-              <div className="p-4 border-b border-slate-200/90 dark:border-zinc-900/60 bg-slate-100/70 dark:bg-zinc-900/20 flex justify-between items-center shrink-0">
+              <div className="p-4 border-b border-slate-200/90 dark:border-white/[0.06] bg-slate-200/60 dark:bg-[#121319] flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-2">
                   <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full border tracking-wide uppercase", col.color)}>
                     {col.label}
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold">{colLeads.length}</span>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-slate-600 dark:text-zinc-400">
+                <span className="text-[10px] font-mono font-extrabold text-slate-700 dark:text-zinc-300">
                   ₹{(colTotalBudget / 100000).toFixed(1)} L
                 </span>
               </div>
@@ -193,25 +193,25 @@ export default function KanbanBoard({
                               style={provided.draggableProps.style as React.CSSProperties}
                               onClick={() => onLeadClick(lead.id)}
                               className={cn(
-                                "p-4 border rounded-xl bg-white dark:bg-[#161618]/50 hover:border-purple-500/40 transition-all cursor-pointer space-y-3.5 select-none relative group backdrop-blur-sm shadow-sm",
+                                "p-4 border rounded-xl bg-white dark:bg-[#13141a] hover:border-purple-500/50 transition-all cursor-pointer space-y-3.5 select-none relative group shadow-sm hover:shadow-lg",
                                 snapshot.isDragging
-                                  ? "border-purple-600 bg-white dark:bg-zinc-900/90 shadow-2xl scale-[1.02]"
-                                  : "border-slate-200/90 dark:border-zinc-850/60"
+                                  ? "border-purple-600 bg-white dark:bg-[#1a1b24] shadow-2xl scale-[1.02]"
+                                  : "border-slate-200/90 dark:border-white/[0.08]"
                               )}
                             >
                               {/* Client Info row */}
                               <div className="flex justify-between items-start gap-3">
                                 <div className="space-y-1">
-                                  <span className="font-extrabold text-xs text-slate-900 dark:text-zinc-150 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-tight block">
+                                  <span className="font-extrabold text-xs text-slate-900 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-tight block">
                                     {lead.name}
                                   </span>
-                                  <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider block">
+                                  <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-semibold uppercase tracking-wider block">
                                     {lead.leadSource} {meta.referral ? `• ${meta.referral}` : ""}
                                   </span>
                                 </div>
 
                                 {/* Avatar Badge */}
-                                <div className="h-7 w-7 rounded-full bg-slate-100 dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-zinc-400 shrink-0 select-none">
+                                <div className="h-7 w-7 rounded-full bg-slate-100 dark:bg-purple-500/15 border border-slate-200 dark:border-purple-500/30 flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-purple-300 shrink-0 select-none">
                                   {getInitials(lead.name)}
                                 </div>
                               </div>
@@ -220,7 +220,7 @@ export default function KanbanBoard({
                               {meta.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 pt-0.5">
                                   {meta.tags.slice(0, 3).map(t => (
-                                    <span key={t} className="px-1.5 py-0.5 bg-slate-100 dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-850 rounded text-[8px] font-bold text-slate-600 dark:text-zinc-400">
+                                    <span key={t} className="px-1.5 py-0.5 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded text-[8px] font-bold text-slate-600 dark:text-zinc-300">
                                       {t}
                                     </span>
                                   ))}
@@ -228,17 +228,17 @@ export default function KanbanBoard({
                               )}
 
                               {/* Specs row */}
-                              <div className="flex justify-between items-center text-[10px] font-bold border-t border-slate-100 dark:border-zinc-900/40 pt-2.5">
-                                <span className="px-2 py-0.5 bg-slate-100 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-850 text-slate-700 dark:text-zinc-400 rounded-md">
+                              <div className="flex justify-between items-center text-[10px] font-bold border-t border-slate-100 dark:border-white/[0.06] pt-2.5">
+                                <span className="px-2 py-0.5 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 rounded-md font-bold">
                                   {lead.eventType}
                                 </span>
-                                <span className="font-mono tabular-nums font-bold text-emerald-600 dark:text-emerald-450">
+                                <span className="font-mono tabular-nums font-extrabold text-emerald-600 dark:text-emerald-400">
                                   ₹{lead.budget ? lead.budget.toLocaleString("en-IN") : "0"}
                                 </span>
                               </div>
 
                               {/* Footer details (Lead Score & Priority indicators) */}
-                              <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 dark:text-zinc-500 pt-1">
+                              <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 dark:text-zinc-400 pt-1">
                                 <div className="flex items-center gap-1.5">
                                   <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-extrabold border uppercase", priorityColor)}>
                                     {meta.priority}
@@ -248,7 +248,7 @@ export default function KanbanBoard({
                                     {meta.score}
                                   </span>
                                 </div>
-                                <span className="text-slate-500 dark:text-zinc-400 font-semibold max-w-[85px] truncate">
+                                <span className="text-slate-600 dark:text-zinc-300 font-semibold max-w-[85px] truncate">
                                   {assigneeName}
                                 </span>
                               </div>

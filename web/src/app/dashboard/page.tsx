@@ -1574,19 +1574,19 @@ export default function DashboardPage() {
                             <div
                               key={op.id}
                               onClick={() => router.push(`/events`)}
-                              className="group relative p-4 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-gradient-to-b dark:from-white/[0.04] dark:to-white/[0.015] hover:border-purple-400/50 dark:hover:border-purple-500/40 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(139,92,246,0.12)] transition-all duration-300 cursor-pointer flex flex-col justify-between gap-3 overflow-hidden select-none"
+                              className="group relative p-4 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121319] hover:border-purple-400/50 dark:hover:border-purple-500/40 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(139,92,246,0.12)] transition-all duration-300 cursor-pointer flex flex-col justify-between gap-3 overflow-hidden select-none"
                             >
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                   <span className="text-[9.5px] font-mono font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 px-2 py-0.5 rounded-md uppercase tracking-wider">
                                     {op.eventType || "WEDDING"}
                                   </span>
-                                  <span className="inline-flex items-center gap-1.5 text-[9.5px] font-mono font-extrabold text-slate-700 dark:text-zinc-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] px-2 py-0.5 rounded-md">
+                                  <span className="inline-flex items-center gap-1.5 text-[9.5px] font-mono font-extrabold text-slate-700 dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 px-2 py-0.5 rounded-md">
                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                     {op.daysAway <= 0 ? "Today" : op.daysAway === 1 ? "Tomorrow" : `In ${op.daysAway} days`}
                                   </span>
                                 </div>
-                                <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors truncate">
+                                <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors truncate">
                                   {op.title}
                                 </h4>
                                 <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-zinc-400">
@@ -1599,7 +1599,7 @@ export default function DashboardPage() {
                                 <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-zinc-300">
                                   <span className="flex items-center gap-1.5">
                                     <Users size={12} className="text-purple-500" />
-                                    <strong className="text-slate-900 dark:text-white font-bold">{op.headcount ? `${op.headcount}` : "250"}</strong> Guests
+                                    <strong className="text-slate-900 dark:text-zinc-100 font-bold">{op.headcount ? `${op.headcount}` : "250"}</strong> Guests
                                   </span>
                                   <span className="font-mono font-extrabold text-slate-900 dark:text-white">
                                     {op.budget ? `₹${Number(op.budget).toLocaleString("en-IN")}` : "₹14,75,000"}
@@ -1612,7 +1612,7 @@ export default function DashboardPage() {
                                     <span>Ingress Readiness</span>
                                     <span className="text-purple-600 dark:text-purple-400 font-extrabold">{op.runOfShowProgress ?? 65}%</span>
                                   </div>
-                                  <div className="h-1.5 w-full bg-slate-200 dark:bg-white/[0.08] rounded-full overflow-hidden">
+                                  <div className="h-1.5 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                                     <div
                                       className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-400 rounded-full transition-all duration-700"
                                       style={{ width: `${op.runOfShowProgress ?? 65}%` }}
@@ -1854,22 +1854,22 @@ export default function DashboardPage() {
                         {priorityTasks.map((task) => (
                           <div
                             key={task.id}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-slate-200 dark:border-zinc-850 bg-slate-50 dark:bg-zinc-955/25 hover:bg-slate-100/80 dark:hover:bg-zinc-900/20 hover:border-slate-300 dark:hover:border-zinc-800 rounded-xl transition duration-200 gap-2 sm:gap-4 shadow-xs dark:shadow-none"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 border border-slate-200/90 dark:border-white/[0.08] bg-slate-50/80 dark:bg-[#12131a] hover:bg-slate-100/90 dark:hover:bg-[#181922] hover:border-slate-300 dark:hover:border-white/[0.15] rounded-xl transition duration-200 gap-2 sm:gap-4 shadow-xs"
                           >
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <button
                                 onClick={() => handleTogglePriority(task.id)}
-                                className="h-5 w-5 rounded border border-slate-300 dark:border-zinc-800 hover:border-purple-500 hover:bg-purple-500/10 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                                className="h-5 w-5 rounded border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900/60 hover:border-purple-500 hover:bg-purple-500/10 flex items-center justify-center shrink-0 transition-all cursor-pointer"
                               >
                                 <Check size={11} className="text-transparent hover:text-purple-600 dark:hover:text-purple-400" />
                               </button>
-                              <div className="space-y-0.5 min-w-0 flex-1">
-                                <p className="text-xs font-semibold text-slate-900 dark:text-zinc-200 leading-snug truncate">{task.text}</p>
+                              <div className="space-y-1 min-w-0 flex-1">
+                                <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 leading-snug truncate">{task.text}</p>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded border bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-855 font-mono text-slate-600 dark:text-zinc-500">
+                                  <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded border bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 font-mono text-slate-700 dark:text-zinc-300">
                                     {task.type}
                                   </span>
-                                  <span className="text-[8px] text-red-500 dark:text-red-400/90 font-bold">Risk Index: {task.weight}%</span>
+                                  <span className="text-[8.5px] text-rose-600 dark:text-rose-400 font-extrabold">Risk Index: {task.weight}%</span>
                                 </div>
                               </div>
                             </div>
@@ -1880,9 +1880,9 @@ export default function DashboardPage() {
                                 else if (task.type === "EVENT" || task.type === "STAFF") setIsQuickActionOpen("booking");
                                 else if (task.type === "LEADS") setIsQuickActionOpen("lead");
                               }}
-                              className="text-[9.5px] font-extrabold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-white uppercase tracking-wider flex items-center gap-0.5 shrink-0 cursor-pointer pl-8 sm:pl-2 self-end sm:self-center"
+                              className="text-[10px] font-extrabold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 uppercase tracking-wider flex items-center gap-1 shrink-0 cursor-pointer pl-8 sm:pl-2 self-end sm:self-center"
                             >
-                              {task.actionText} <ChevronRight size={10} />
+                              {task.actionText} <ChevronRight size={11} />
                             </button>
                           </div>
                         ))}

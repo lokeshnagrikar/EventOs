@@ -85,46 +85,46 @@ export default function KpiCard({
       transition={{ duration: 0.18, ease: "easeOut" }}
       onClick={onClick}
       className={cn(
-        "relative rounded-2xl border border-zinc-800 bg-[#161618]/30 hover:border-zinc-700/80 p-3.5 sm:p-5 flex flex-col justify-between min-h-[125px] sm:min-h-[140px] hover:shadow-[0_0_30px_rgba(139,92,246,0.03)] group overflow-hidden select-none transition-colors",
+        "relative rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121319] hover:border-purple-500/40 p-4 sm:p-5 flex flex-col justify-between min-h-[135px] sm:min-h-[145px] hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(139,92,246,0.08)] group overflow-hidden select-none transition-all shadow-sm",
         onClick && "cursor-pointer"
       )}
     >
       {/* Decorative Glow accent */}
-      <div className={cn("absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br opacity-5 blur-[40px] rounded-full group-hover:opacity-10 transition-opacity", gradientAccent)} />
+      <div className={cn("absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br opacity-10 dark:opacity-20 blur-[40px] rounded-full group-hover:opacity-30 transition-opacity", gradientAccent)} />
 
-      <div className="flex justify-between items-start gap-2 sm:gap-4">
+      <div className="flex justify-between items-start gap-2">
         <div className="space-y-1 min-w-0 flex-1">
-          <span className="text-[9px] sm:text-[10px] font-bold text-zinc-550 uppercase tracking-widest block leading-none truncate">{title}</span>
-          <p className="text-xl sm:text-2xl font-black tracking-tight text-zinc-100 group-hover:text-white transition-colors font-mono tabular-nums truncate mt-1">
+          <span className="text-[9.5px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-wider block leading-tight">{title}</span>
+          <p className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors font-mono tabular-nums mt-1">
             {typeof displayValue === "number" ? displayValue.toLocaleString("en-IN") : displayValue}
           </p>
         </div>
         
         {/* Glow Badge Icon */}
-        <div className={cn("h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/40 shrink-0", gradientAccent)}>
-          <Icon size={13} className="text-zinc-100" />
+        <div className={cn("h-8 w-8 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-md shadow-black/20 shrink-0", gradientAccent)}>
+          <Icon size={14} className="text-white" />
         </div>
       </div>
 
-      <div className="flex justify-between items-end pt-3 sm:pt-4 border-t border-zinc-900 mt-2">
+      <div className="flex justify-between items-end pt-3 border-t border-slate-100 dark:border-white/[0.06] mt-2">
         <div className="space-y-1 min-w-0">
           {trend && (
-            <div className={cn("flex items-center gap-1 text-[10px] sm:text-[11px] font-bold", trend.isPositive ? "text-emerald-500" : "text-red-500")}>
+            <div className={cn("flex items-center gap-1 text-[10px] sm:text-[11px] font-bold", trend.isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
               {trend.isPositive ? <ArrowUpRight size={12} className="shrink-0" /> : <ArrowDownRight size={12} className="shrink-0" />}
               <span>{trend.value}%</span>
-              <span className="text-zinc-550 font-normal text-[9px] lowercase hidden xs:inline">vs past month</span>
+              <span className="text-slate-400 dark:text-zinc-500 font-normal text-[9px] lowercase hidden xs:inline">vs past month</span>
             </div>
           )}
-          <span className="text-[9px] sm:text-[10px] text-zinc-500 font-semibold block leading-none truncate">{subtitle}</span>
+          <span className="text-[10px] text-slate-600 dark:text-zinc-300 font-semibold block leading-tight">{subtitle}</span>
         </div>
 
         {/* Sparkline chart */}
-        <div className="h-7 sm:h-8 w-16 sm:w-24 opacity-60 group-hover:opacity-100 transition-opacity shrink-0">
+        <div className="h-7 sm:h-8 w-16 sm:w-20 opacity-70 group-hover:opacity-100 transition-opacity shrink-0">
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
             <polyline
               fill="none"
-              stroke={trend?.isPositive ? "#10b981" : "#ef4444"}
-              strokeWidth="1.8"
+              stroke={trend?.isPositive ? "#10b981" : "#8b5cf6"}
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
               points={points}

@@ -382,6 +382,66 @@
   }
 }
 
+/* ─── Intermediate Zinc & Dark Mode High-Contrast Utility Bridges ─── */
+.text-zinc-150 {
+  color: #f4f4f5;
+}
+.text-zinc-250 {
+  color: #e4e4e7;
+}
+.text-zinc-350 {
+  color: #d4d4d8;
+}
+.text-zinc-450 {
+  color: #a1a1aa;
+}
+.text-zinc-550 {
+  color: #94a3b8;
+}
+.text-zinc-650 {
+  color: #64748b;
+}
+
+.dark .text-zinc-150,
+.dark .dark\:text-zinc-150 {
+  color: #f8fafc !important;
+}
+.dark .text-zinc-250,
+.dark .dark\:text-zinc-250 {
+  color: #e2e8f0 !important;
+}
+.dark .text-zinc-350,
+.dark .dark\:text-zinc-350 {
+  color: #cbd5e1 !important;
+}
+.dark .text-zinc-450,
+.dark .dark\:text-zinc-450 {
+  color: #94a3b8 !important;
+}
+.dark .text-zinc-550,
+.dark .dark\:text-zinc-550 {
+  color: #94a3b8 !important;
+}
+.dark .text-zinc-650,
+.dark .dark\:text-zinc-650 {
+  color: #64748b !important;
+}
+
+.dark .dark\:bg-zinc-850 {
+  background-color: #1e1f26 !important;
+}
+.dark .dark\:bg-zinc-855 {
+  background-color: #16171e !important;
+}
+.dark .dark\:bg-zinc-955\/25,
+.dark .dark\:bg-zinc-955 {
+  background-color: #121319 !important;
+}
+.dark .dark\:border-zinc-850,
+.dark .dark\:border-zinc-855 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 /* ─── Light Mode Override Layer for Hardcoded Dark Classes (Scoped to Console & Portal Layouts) ─── */
 html:not(.dark) .theme-dynamic {
 

@@ -107,17 +107,35 @@ function isMarketingRoute(pathname: string): boolean {
   return PUBLIC_MARKETING_ROUTES.some((route) => route !== "/" && (path === route || path.startsWith(route + "/")));
 }
 
-function parseBoldText(text: string) {
-  const parts = text.split(/(\*\*.*?\*\*)/g);
+function parseRichText(text: string): React.ReactNode[] {
+  // Matches markdown links [label](url) and bold **text**
+  const regex = /(\[.*?\]\(.*?\)|\*\*.*?\*\*)/g;
+  const parts = text.split(regex);
+
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <strong
           key={i}
-          className="font-bold text-blue-300 drop-shadow-[0_0_8px_rgba(96,165,250,0.3)]"
+          className="font-extrabold text-white"
         >
           {part.slice(2, -2)}
         </strong>
+      );
+    }
+    const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+    if (linkMatch) {
+      const [, label, url] = linkMatch;
+      return (
+        <a
+          key={i}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-pink-400 hover:text-pink-300 font-bold underline underline-offset-2 decoration-pink-500/60 hover:decoration-pink-400 transition-colors inline-flex items-center gap-0.5"
+        >
+          {label}
+        </a>
       );
     }
     return part;
@@ -131,18 +149,18 @@ function renderFormattedText(text: string) {
     const lines = para.split("\n");
     if (lines.length > 1 || lines[0].trim().startsWith("•") || lines[0].trim().startsWith("- ")) {
       return (
-        <div key={pIdx} className="space-y-1.5 my-2">
+        <div key={pIdx} className="space-y-2 my-2">
           {lines.map((line, lIdx) => {
             const trimmed = line.trim();
             const isBullet = trimmed.startsWith("•") || trimmed.startsWith("- ");
             const content = isBullet ? trimmed.replace(/^[•\-]\s*/, "") : line;
             return (
-              <div key={lIdx} className={isBullet ? "flex items-start gap-2 pl-0.5" : ""}>
+              <div key={lIdx} className={isBullet ? "flex items-start gap-2.5 pl-0.5" : ""}>
                 {isBullet && (
                   <span className="h-1.5 w-1.5 rounded-full bg-purple-400 mt-2 shrink-0 shadow-[0_0_8px_rgba(192,132,252,0.8)]" />
                 )}
-                <span className="leading-relaxed text-slate-100 text-[12.5px]">
-                  {parseBoldText(content)}
+                <span className="leading-relaxed text-zinc-200 text-[12.5px]">
+                  {parseRichText(content)}
                 </span>
               </div>
             );
@@ -151,8 +169,8 @@ function renderFormattedText(text: string) {
       );
     }
     return (
-      <p key={pIdx} className="mb-2 last:mb-0 leading-relaxed text-slate-100 text-[12.5px]">
-        {parseBoldText(para)}
+      <p key={pIdx} className="mb-2 last:mb-0 leading-relaxed text-zinc-200 text-[12.5px]">
+        {parseRichText(para)}
       </p>
     );
   });
@@ -497,7 +515,7 @@ export default function AiAssistant() {
             "**Meet the Founder of EventOS:**\n\n" +
             "• **Solo Founder & Architect**: **Lokesh Nagrikar**, building out of Nagpur, Maharashtra, India.\n" +
             "• **Mission**: Replacing the chaotic mess of 15 WhatsApp groups, manual Word quotes, and unpaid 30% advances with a high-performance, GST-compliant event operating system.\n" +
-            "• **Instagram**: Follow and DM him directly at **[@solo.founder.ai](https://www.instagram.com/solo.founder.ai/)**.\n" +
+            "• **Instagram**: Follow and DM him directly at [@solo.founder.ai](https://www.instagram.com/solo.founder.ai/).\n" +
             "• **Founding Beta Cohort**: We are onboarding our first 25 agency partners with direct 1-on-1 founder support.";
           actionBtn = { label: "DM @solo.founder.ai on Instagram", href: "https://www.instagram.com/solo.founder.ai/" };
           nextSuggestions = [

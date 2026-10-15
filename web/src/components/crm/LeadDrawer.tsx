@@ -399,7 +399,7 @@ export default function LeadDrawer({
       {/* Drawer Header */}
       <div className="h-16 border-b border-slate-200/90 dark:border-zinc-850 px-6 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-transparent">
         <div className="flex items-center gap-3">
-          <span className="font-extrabold text-sm text-slate-900 dark:text-zinc-150 truncate max-w-[200px]">{lead.name}</span>
+          <span className="font-extrabold text-sm text-slate-900 dark:text-zinc-100 truncate max-w-[200px]">{lead.name}</span>
           <span className={cn(
             "text-[9px] font-bold px-2 py-0.5 rounded-full border tracking-wide uppercase",
             lead.status === "WON" || lead.status === "BOOKED" ? "border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" :

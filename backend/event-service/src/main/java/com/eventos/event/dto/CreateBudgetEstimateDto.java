@@ -6,10 +6,7 @@ import com.fasterxml.jackson.annotation.Nulls;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -18,11 +15,11 @@ import java.util.List;
 import java.util.Objects;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateBudgetEstimateDto {
+
+    public CreateBudgetEstimateDto() {
+    }
 
     @NotBlank(message = "Event name is required")
     private String eventName;
@@ -43,7 +40,6 @@ public class CreateBudgetEstimateDto {
     private String clientEmail;
     private String clientPhone;
 
-    @Builder.Default
     private List<String> effectsList = new ArrayList<>(); // COLD_PYRO, DRY_ICE, LASER_SHOW, LED_WALL
 
     // Optional frontend preview calculations passed in payload
@@ -60,8 +56,7 @@ public class CreateBudgetEstimateDto {
         } else if (effects instanceof List<?> list) {
             this.effectsList = list.stream()
                     .filter(Objects::nonNull)
-                    .map(Object::toString)
-                    .map(String::trim)
+                    .map(e -> String.valueOf(e).trim())
                     .filter(s -> !s.isEmpty())
                     .toList();
         } else if (effects instanceof String str) {
@@ -69,7 +64,7 @@ public class CreateBudgetEstimateDto {
                 this.effectsList = new ArrayList<>();
             } else {
                 this.effectsList = Arrays.stream(str.split(","))
-                        .map(String::trim)
+                        .map(s -> s.trim())
                         .filter(s -> !s.isEmpty())
                         .toList();
             }
