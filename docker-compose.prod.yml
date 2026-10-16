@@ -131,6 +131,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:-eventos_gateway_secure_shared_secret}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
+      - AUTH_SERVICE_URL=http://auth-service:8081/api/v1/auth
+      - EVENT_SERVICE_URL=http://event-service:8083/api/v1/events
     depends_on:
       postgres:
         condition: service_healthy
@@ -163,6 +165,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:-eventos_gateway_secure_shared_secret}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
+      - AUTH_SERVICE_URL=http://auth-service:8081/api/v1/auth
+      - CRM_SERVICE_URL=http://crm-service:8082/api/v1/crm
     depends_on:
       postgres:
         condition: service_healthy
@@ -195,6 +199,7 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - GATEWAY_TRUST_SECRET=${GATEWAY_TRUST_SECRET:-eventos_gateway_secure_shared_secret}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
+      - EVENT_SERVICE_URL=http://event-service:8083/api/v1/events
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-demo}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-demo_key}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-demo_secret}

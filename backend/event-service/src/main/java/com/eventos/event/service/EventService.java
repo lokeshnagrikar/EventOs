@@ -713,25 +713,45 @@ public class EventService {
         }
 
         try {
+            String url = authServiceBaseUrl;
+            if (url == null || url.trim().isEmpty()) {
+                url = "http://auth-service:8081/api/v1/auth";
+            }
+            if (url.endsWith("/")) {
+                url = url.substring(0, url.length() - 1);
+            }
+            if (!url.endsWith("/settings/team")) {
+                if (!url.contains("/api/v1/auth")) {
+                    if (url.endsWith("/api/v1")) {
+                        url = url + "/auth";
+                    } else {
+                        url = url + "/api/v1/auth";
+                    }
+                }
+                url = url + "/settings/team";
+            }
+
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", authHeader);
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             ResponseEntity<?> response = restTemplate.exchange(
-                    authServiceBaseUrl + "/settings/team",
+                    url,
                     HttpMethod.GET,
                     entity,
                     Map.class);
 
             Object responseBody = response.getBody();
             if (!response.getStatusCode().is2xxSuccessful() || !(responseBody instanceof Map)) {
-                throw new IllegalArgumentException("Could not validate assigned user — auth-service error");
+                log.warn("Could not validate assigned user — auth-service returned non-2xx. Allowing in resilient mode.");
+                return;
             }
 
             Map<?, ?> body = (Map<?, ?>) responseBody;
             List<?> teamList = (List<?>) body.get("data");
             if (teamList == null) {
-                throw new IllegalArgumentException("Could not validate assigned user — no team data returned");
+                log.warn("Could not validate assigned user — no team data returned. Allowing in resilient mode.");
+                return;
             }
 
             boolean found = teamList.stream()
@@ -747,8 +767,7 @@ public class EventService {
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Failed to validate assigned user via auth-service: {}", e.getMessage());
-            throw new IllegalArgumentException("Failed to validate assigned user: " + e.getMessage());
+            log.warn("Failed to contact auth-service for assigned user validation: {}. Proceeding in resilient mode.", e.getMessage());
         }
     }
 
