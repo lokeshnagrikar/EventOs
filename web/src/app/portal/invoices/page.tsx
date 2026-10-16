@@ -73,11 +73,11 @@ export default function PortalInvoicesPage() {
 
   // Real Owner Payment Destination from Workspace Settings
   const [ownerPaymentConfig, setOwnerPaymentConfig] = useState({
-    upiId: "eventos@okhdfcbank",
-    accountHolder: "EventOS Workspace",
-    bankName: "HDFC Bank",
-    accountNumber: "50100293847192",
-    ifsc: "HDFC0001092"
+    upiId: "billing@eventosapp.in",
+    accountHolder: "Workspace Settlement Account",
+    bankName: "Bank Settlement Desk",
+    accountNumber: "Shared on formal proforma",
+    ifsc: "Settlement Desk"
   });
 
   useEffect(() => {
@@ -114,6 +114,18 @@ export default function PortalInvoicesPage() {
           }
         } catch (e) {}
       }
+
+      api.get("/auth/settings/workspace")
+        .then((res) => {
+          const d = res.data?.data;
+          if (d?.name) {
+            setOwnerPaymentConfig((prev) => ({
+              ...prev,
+              accountHolder: prev.accountHolder === "Workspace Settlement Account" ? d.name : prev.accountHolder
+            }));
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 

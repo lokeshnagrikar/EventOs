@@ -1,8 +1,8 @@
 export const ADMIN_ROLES = [
-  { id: "super_admin", name: "Super Admin", desc: "Full root access to all management operations", color: "from-red-500 to-rose-600" },
-  { id: "operations", name: "Operations", desc: "Manage tenants, feature rollouts, and backups", color: "from-orange-500 to-amber-600" },
-  { id: "support_agent", name: "Support Agent", desc: "Answer customer tickets, bug reports, and chat", color: "from-emerald-500 to-teal-600" },
-  { id: "finance_admin", name: "Finance Admin", desc: "Manage payments, invoices, refunds, and coupons", color: "from-blue-500 to-cyan-600" },
-  { id: "developer", name: "Developer", desc: "Monitor system health, view server logs, and flags", color: "from-purple-500 to-indigo-600" },
-  { id: "auditor", name: "Read Only Auditor", desc: "Read-only access to audit logs and metrics", color: "from-zinc-500 to-zinc-600" }
+  { id: "super_admin", name: "Super Admin (Root God Mode)", desc: "Full root clearance across all platform operations and tenants", color: "from-red-500 to-rose-600" },
+  { id: "operations", name: "Operations Lead", desc: "Manage tenant provisioning, life cycles, and announcements", color: "from-orange-500 to-amber-600" },
+  { id: "support_agent", name: "Support Lead", desc: "Handle agency tickets, user accounts, and credentials assistance", color: "from-emerald-500 to-teal-600" },
+  { id: "finance_admin", name: "Finance Officer", desc: "SaaS revenue, subscription plans, tenant invoices, and billing overrides", color: "from-blue-500 to-cyan-600" },
+  { id: "developer", name: "DevOps & SaaS Developer", desc: "Microservices telemetry, system diagnostics, WAF security, and feature flags", color: "from-purple-500 to-indigo-600" },
+  { id: "auditor", name: "Compliance Auditor (Read-Only)", desc: "Strict read-only forensic audit trail and compliance verification", color: "from-zinc-500 to-zinc-600" }
 ];

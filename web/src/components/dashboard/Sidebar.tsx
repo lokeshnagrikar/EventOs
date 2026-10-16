@@ -59,19 +59,19 @@ const MENU_SECTIONS = [
     label: "Operations",
     items: [
       { href: "/crm", label: "CRM / Leads", icon: Users, permission: "VIEW_CRM", roles: ["OWNER", "ADMIN", "MANAGER"] },
-      { href: "/events", label: "Events / Calendar", icon: Calendar, permission: "VIEW_EVENTS", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"] },
-      { href: "/bookings", label: "Bookings", icon: Layers, permission: "VIEW_BOOKINGS", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"] },
-      { href: "/gallery", label: "Media Gallery", icon: Image, permission: "VIEW_GALLERY", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "CLIENT"] },
+      { href: "/events", label: "Events / Calendar", icon: Calendar, permission: "VIEW_EVENTS", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF"] },
+      { href: "/bookings", label: "Bookings", icon: Layers, permission: "VIEW_BOOKINGS", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF"] },
+      { href: "/gallery", label: "Media Gallery", icon: Image, permission: "VIEW_GALLERY", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF", "CLIENT"] },
     ],
   },
   {
     label: "Finance",
     items: [
-      { href: "/quotes", label: "Quotes", icon: FileText, permission: "VIEW_QUOTES", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE"] },
+      { href: "/quotes", label: "Quotes", icon: FileText, permission: "VIEW_QUOTES", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF", "FINANCE"] },
       { href: "/finance", label: "Finance Hub", icon: Coins, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "FINANCE"] },
       { href: "/payments", label: "Payments", icon: DollarSign, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "FINANCE"] },
       { href: "/invoices", label: "Invoices", icon: FileSpreadsheet, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "FINANCE"] },
-      { href: "/calculator", label: "Budget Calculator", icon: Calculator, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE"] },
+      { href: "/calculator", label: "Budget Calculator", icon: Calculator, permission: "VIEW_FINANCE", roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF", "FINANCE"] },
     ],
   },
   {
@@ -116,15 +116,22 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, onLogout, userNam
   ];
 
   const isItemVisible = (item: any) => {
+    const normalizedRole = (activeRole || "").replace(/^ROLE_/, "").toUpperCase();
+    const isStaffOrCoord = normalizedRole === "STAFF" || normalizedRole === "COORDINATOR";
+
     // SuperAdmin link is accessible to SUPER_ADMIN and platform administrative sub-roles
     if (item.href === "/superadmin") {
-      return PLATFORM_ROLES.includes(activeRole);
+      return PLATFORM_ROLES.includes(activeRole) || PLATFORM_ROLES.includes(normalizedRole);
     }
     // SuperAdmin, platform roles and Workspace Owner have unrestricted clearance across workspace tools
-    if (PLATFORM_ROLES.includes(activeRole) || activeRole === "OWNER") return true;
+    if (PLATFORM_ROLES.includes(activeRole) || PLATFORM_ROLES.includes(normalizedRole) || activeRole === "OWNER" || normalizedRole === "OWNER") return true;
 
     if (!item.permission && !item.roles) return true;
-    if (item.roles && item.roles.includes(activeRole)) return true;
+    if (item.roles && (
+      item.roles.includes(activeRole) || 
+      item.roles.includes(normalizedRole) || 
+      (isStaffOrCoord && (item.roles.includes("STAFF") || item.roles.includes("COORDINATOR")))
+    )) return true;
     if (item.permission && activePermissions.includes(item.permission)) return true;
     return false;
   };

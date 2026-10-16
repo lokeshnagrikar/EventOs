@@ -48,7 +48,7 @@ const GUIDES = [
 
 export default function PortalSupportPage() {
   const { user, memberships } = useAuthStore();
-  const workspaceName = memberships[0]?.companyName || "Event Operations";
+  const workspaceName = memberships?.[0]?.companyName || "Event Operations";
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   

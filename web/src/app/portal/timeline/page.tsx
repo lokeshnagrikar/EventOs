@@ -96,7 +96,7 @@ export default function PortalTimelinePage() {
         <div>
           <h3 className="text-base font-extrabold text-zinc-150 uppercase tracking-wider flex items-center gap-2">
             <Calendar size={18} className="text-purple-500" />
-            Apple-style Journey Timeline
+            Event Journey & Production Timeline
           </h3>
           <p className="text-xs text-zinc-400 mt-1 font-bold">
             Interactive scroll milestone timeline detailing contract execution, venue set up, and photo releases.

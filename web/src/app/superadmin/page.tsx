@@ -177,8 +177,10 @@ export default function SuperAdminDashboard() {
 
   // Get active admin sub-role (strict RBAC control check)
   const effectiveUserRole = (user?.role || (typeof window !== "undefined" ? localStorage.getItem("user_role") : "") || "").replace(/^ROLE_/, "").toUpperCase();
-  const adminSubRole = ROLE_TO_SUBROLE[effectiveUserRole]
+  const naturalAdminSubRole = ROLE_TO_SUBROLE[effectiveUserRole]
     || (user?.permissions?.[0] === "all" ? "super_admin" : (user?.permissions?.[0] || "super_admin"));
+  const [simulatedSubRole, setSimulatedSubRole] = useState<string | null>(null);
+  const adminSubRole = simulatedSubRole || naturalAdminSubRole;
 
   useEffect(() => {
     setMounted(true);
@@ -588,7 +590,7 @@ export default function SuperAdminDashboard() {
   const hasAccessToTab = (tab: typeof activeSubTab) => {
     if (adminSubRole === "super_admin" || adminSubRole === "operations") return true;
     if (adminSubRole === "support_agent") {
-      return ["tickets", "logs", "metrics"].includes(tab);
+      return ["tickets", "users", "logs", "metrics", "announcements"].includes(tab);
     }
     if (adminSubRole === "finance_admin") {
       return ["subscriptions", "tenants", "analytics", "metrics"].includes(tab);
@@ -601,6 +603,17 @@ export default function SuperAdminDashboard() {
     }
     return false;
   };
+
+  // Automatically fall back to first permitted tab when active clearance changes
+  useEffect(() => {
+    if (!hasAccessToTab(activeSubTab)) {
+      const allTabs: Array<typeof activeSubTab> = [
+        "metrics", "tenants", "users", "subscriptions", "analytics", "tickets", "health", "logs", "flags", "announcements", "security", "backups"
+      ];
+      const nextAllowed = allTabs.find((t) => hasAccessToTab(t)) || "metrics";
+      setActiveSubTab(nextAllowed);
+    }
+  }, [adminSubRole]);
 
   const executeAdminAction = (actionLabel: string, actionFn: () => void) => {
     if (isReadOnly) {
@@ -1079,9 +1092,41 @@ export default function SuperAdminDashboard() {
             <span className="text-[8px] sm:text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider font-mono shrink-0">
               SaaS Administration
             </span>
-            <span className="text-[8px] sm:text-[9px] text-zinc-400 font-bold tracking-wide font-mono flex items-center gap-1 bg-white/[0.02] border border-white/[0.05] px-2 py-0.5 rounded-full shrink-0">
-              🛡️ Clearance: {ADMIN_ROLES.find(r => r.id === adminSubRole)?.name || "Default Operator"}
-            </span>
+            {/* Interactive Clearance Role Simulator for SuperAdmin testing */}
+            <div className="flex items-center gap-1.5 shrink-0 bg-white/[0.03] border border-purple-500/20 px-2 py-0.5 rounded-full hover:border-purple-500/40 transition">
+              <span className="text-[8px] sm:text-[9px] text-zinc-400 font-bold tracking-wide font-mono flex items-center gap-1">
+                🛡️ Clearance:
+              </span>
+              <select
+                value={adminSubRole}
+                onChange={(e) => {
+                  const newRole = e.target.value;
+                  setSimulatedSubRole(newRole === naturalAdminSubRole ? null : newRole);
+                  const roleName = ADMIN_ROLES.find(r => r.id === newRole)?.name || newRole;
+                  addToast(`Active clearance switched to: ${roleName}`, "info");
+                }}
+                className="bg-transparent text-purple-300 font-bold font-mono text-[9px] sm:text-[10px] focus:outline-none cursor-pointer pr-1"
+                title="Switch platform sub-role view"
+              >
+                {ADMIN_ROLES.map((r) => (
+                  <option key={r.id} value={r.id} className="bg-zinc-900 text-white font-sans text-xs">
+                    {r.name} {r.id === naturalAdminSubRole ? "(Real)" : ""}
+                  </option>
+                ))}
+              </select>
+              {simulatedSubRole && (
+                <button
+                  onClick={() => {
+                    setSimulatedSubRole(null);
+                    addToast("Reset to real clearance role", "info");
+                  }}
+                  className="text-[8px] text-amber-400 hover:text-amber-300 underline font-mono ml-0.5 cursor-pointer"
+                  title="Reset simulator"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
             <span className="text-[8px] sm:text-[9px] text-zinc-400 font-bold tracking-wide font-mono flex items-center gap-1 bg-white/[0.02] border border-white/[0.05] px-2 py-0.5 rounded-full shrink-0 max-w-[220px] sm:max-w-none truncate">
               👤 Operator: {user?.firstName || "Admin"} ({user?.email || "admin@eventosapp.in"})
             </span>

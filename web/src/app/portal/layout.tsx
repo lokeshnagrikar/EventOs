@@ -184,8 +184,13 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       setAuthChecked(true);
 
       const cookieTheme = getCookieValue("theme");
-      const isDark = cookieTheme ? cookieTheme === "dark" : true;
+      const localTheme = localStorage.getItem("theme");
+      const isDark = localTheme ? localTheme === "dark" : (cookieTheme ? cookieTheme === "dark" : true);
       setDarkMode(isDark);
+      if (!isDark && typeof document !== "undefined") {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+      }
     }
   }, [router]);
 
@@ -258,10 +263,14 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     if (typeof window !== "undefined") {
       if (nextTheme === "dark") {
         document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
       } else {
         document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
       }
-      document.cookie = `theme=${nextTheme}; path=/; max-age=31536000; SameSite=Strict`;
+      localStorage.setItem("theme", nextTheme);
+      document.cookie = `theme=${nextTheme}; path=/; max-age=31536000; SameSite=Lax`;
+      window.dispatchEvent(new CustomEvent("theme-changed", { detail: nextTheme }));
     }
   };
 

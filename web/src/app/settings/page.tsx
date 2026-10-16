@@ -89,31 +89,31 @@ const SECTION_CATEGORIES = [
 
 const SECTIONS: SettingSection[] = [
   // 1. Core Workspace
-  { id: "workspace", label: "Workspace Home", icon: Settings, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"], category: "workspace" },
-  { id: "profile", label: "My Profile", icon: UserCheck, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE", "CLIENT"], category: "workspace" },
+  { id: "workspace", label: "Workspace Home", icon: Settings, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF"], category: "workspace" },
+  { id: "profile", label: "My Profile", icon: UserCheck, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF", "FINANCE", "CLIENT"], category: "workspace" },
   { id: "company", label: "Company Profile", icon: Building2, roles: ["OWNER", "ADMIN"], category: "workspace" },
-  { id: "branding", label: "Company Branding", icon: Palette, roles: ["OWNER", "ADMIN", "COORDINATOR"], category: "workspace" },
+  { id: "branding", label: "Company Branding", icon: Palette, roles: ["OWNER", "ADMIN", "COORDINATOR", "STAFF"], category: "workspace" },
 
   // 2. Cloud & Integrations
   { id: "whitelabel", label: "White-Label & Domain", icon: Globe, roles: ["OWNER", "ADMIN"], category: "cloud" },
   { id: "whatsapp", label: "WhatsApp Meta Cloud API", icon: MessageSquare, roles: ["OWNER", "ADMIN"], category: "cloud" },
   { id: "payment_engine", label: "Enterprise Payment Engine", icon: CreditCard, roles: ["OWNER", "ADMIN", "FINANCE"], category: "cloud" },
-  { id: "integrations", label: "Integrations Desk", icon: Layers, roles: ["OWNER", "ADMIN", "COORDINATOR"], category: "cloud" },
+  { id: "integrations", label: "Integrations Desk", icon: Layers, roles: ["OWNER", "ADMIN", "COORDINATOR", "STAFF"], category: "cloud" },
   { id: "apikeys", label: "API Access Keys", icon: Key, roles: ["OWNER", "ADMIN"], category: "cloud" },
 
   // 3. Teams & Organization
   { id: "team", label: "Users & Teams", icon: Users, roles: ["OWNER", "ADMIN", "MANAGER"], category: "team" },
   { id: "rbac", label: "Roles & Permissions", icon: UserCheck, roles: ["OWNER", "ADMIN"], category: "team" },
   { id: "orgchart", label: "Org Chart Hierarchy", icon: Network, roles: ["OWNER", "ADMIN", "MANAGER"], category: "team" },
-  { id: "workload", label: "Workload Management", icon: ActivitySquare, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"], category: "team" },
+  { id: "workload", label: "Workload Management", icon: ActivitySquare, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF"], category: "team" },
 
   // 4. Finance & Governance
   { id: "billing", label: "Billing & Subscription", icon: CreditCard, roles: ["OWNER", "ADMIN", "FINANCE"], category: "governance" },
   { id: "tax", label: "Tax & Finance (GST)", icon: Percent, roles: ["OWNER", "ADMIN", "FINANCE"], category: "governance" },
   { id: "automations", label: "Workspace Automations", icon: Zap, roles: ["OWNER", "ADMIN"], category: "governance" },
-  { id: "templates", label: "Email & PDF Templates", icon: Mail, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR"], category: "governance" },
-  { id: "notifications", label: "Notification Settings", icon: Bell, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE", "CLIENT"], category: "governance" },
-  { id: "security", label: "Security & 2FA", icon: Shield, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "FINANCE", "CLIENT"], category: "governance" },
+  { id: "templates", label: "Email & PDF Templates", icon: Mail, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF"], category: "governance" },
+  { id: "notifications", label: "Notification Settings", icon: Bell, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF", "FINANCE", "CLIENT"], category: "governance" },
+  { id: "security", label: "Security & 2FA", icon: Shield, roles: ["OWNER", "ADMIN", "MANAGER", "COORDINATOR", "STAFF", "FINANCE", "CLIENT"], category: "governance" },
   { id: "audit", label: "Audit & Compliance Logs", icon: FileText, roles: ["OWNER", "ADMIN"], category: "governance" }
 ];
 
@@ -287,7 +287,13 @@ export default function SettingsPage() {
     return SECTIONS.filter((s) => {
       const anySec = s as any;
       if (userRole === "SUPER_ADMIN" || userRole === "OWNER") return true;
-      return anySec.roles && anySec.roles.includes(userRole);
+      const normalizedRole = (userRole || "").replace(/^ROLE_/, "").toUpperCase();
+      const isStaffOrCoord = normalizedRole === "STAFF" || normalizedRole === "COORDINATOR";
+      return anySec.roles && (
+        anySec.roles.includes(userRole) ||
+        anySec.roles.includes(normalizedRole) ||
+        (isStaffOrCoord && (anySec.roles.includes("STAFF") || anySec.roles.includes("COORDINATOR")))
+      );
     });
   }, [userRole]);
 
