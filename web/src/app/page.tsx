@@ -84,6 +84,11 @@ const AmbientCursorGlow = dynamic(
   { ssr: false }
 );
 
+const EdgeRadar = dynamic(
+  () => import("@/components/landing/EdgeRadar").then((m) => ({ default: m.EdgeRadar })),
+  { ssr: false }
+);
+
 const WhatsAppNotificationSimulator = dynamic(
   () => import("@/components/notifications/WhatsAppNotificationSimulator").then((m) => ({ default: m.WhatsAppNotificationSimulator })),
   { ssr: false }
@@ -183,6 +188,9 @@ function HomeContent({ preloaderActive }: { preloaderActive: boolean }) {
 
         {/* Ambient Cursor Glow */}
         <AmbientCursorGlow />
+
+        {/* Linear-Style Vertical Edge Radar */}
+        <EdgeRadar activeSection={activeSection} />
 
         {/* Main 16-Section Content Flow */}
         <main id="main-content" role="main">
