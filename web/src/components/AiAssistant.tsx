@@ -753,35 +753,27 @@ export default function AiAssistant() {
         )}
       >
         <motion.button
-          whileHover={{ scale: 1.08, y: -2 }}
-          whileTap={{ scale: 0.94 }}
+          whileHover={{ scale: 1.15, y: -4 }}
+          whileTap={{ scale: 0.92 }}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="ai-trigger-btn relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#0c1024]/90 hover:bg-[#121634]/95 border border-purple-500/40 hover:border-purple-400/80 shadow-[0_10px_35px_rgba(88,28,135,0.4),0_0_20px_rgba(59,130,246,0.25)] backdrop-blur-2xl group cursor-pointer transition-all duration-300"
+          className="ai-trigger-btn relative flex items-center justify-center p-0 bg-transparent border-0 outline-none shadow-none group cursor-pointer transition-transform duration-300 select-none focus:outline-none"
           title="EventOS AI Copilot (Cmd + Space)"
           aria-label="Open EventOS AI Copilot"
         >
-          {/* Ambient Glow Aura */}
-          <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-purple-600/40 via-indigo-600/30 to-cyan-400/20 blur-md opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 -z-10" />
-
-          {/* Animated Mascot Bot */}
-          <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-full p-0.5 lottie-theme-bot pointer-events-none">
+          {/* Pure Mascot Bot Only - No round border, no background circle, no badges */}
+          <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center pointer-events-none filter drop-shadow-[0_10px_25px_rgba(168,85,247,0.5)]">
             <DotLottieReact
               src={CHATBOT_LOTTIE_URL}
               loop
               autoplay
-              className="w-full h-full object-contain filter drop-shadow-md"
+              className="w-full h-full object-contain"
             />
           </div>
 
-          {/* Live Status Indicator Dot */}
-          <span className="absolute bottom-0.5 right-0.5 sm:bottom-1 sm:right-1 h-3 w-3 rounded-full bg-emerald-400 border-2 border-[#0c1024] shadow-[0_0_8px_rgba(52,211,153,0.95)]">
-            <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
-          </span>
-
-          {/* Professional Hover Tooltip (Appears smoothly to the left on hover) */}
-          <div className="absolute right-full mr-3.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0c1024]/95 border border-purple-500/30 text-white shadow-2xl backdrop-blur-xl whitespace-nowrap">
+          {/* Professional Hover Tooltip */}
+          <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#080b18]/95 text-white shadow-2xl backdrop-blur-xl whitespace-nowrap border border-white/[0.08]">
             <span className="text-xs font-bold tracking-tight">AI Copilot</span>
-            <span className="text-[10px] text-purple-300 font-mono px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-400/30">⌘ Space</span>
+            <span className="text-[10px] text-purple-300 font-mono px-1.5 py-0.5 rounded bg-purple-500/20">⌘ Space</span>
           </div>
         </motion.button>
       </div>
@@ -808,50 +800,52 @@ export default function AiAssistant() {
             <div className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-purple-600/20 blur-[75px] -z-10" />
             <div className="pointer-events-none absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-blue-600/20 blur-[75px] -z-10" />
 
-            {/* Glassmorphic Header Bar */}
-            <div className="px-5 py-3.5 border-b border-white/[0.08] dark:border-purple-500/20 bg-white/[0.03] dark:bg-black/30 backdrop-blur-xl flex items-center justify-between z-10 shrink-0">
-              <div className="h-9 w-9 flex items-center justify-center shrink-0 rounded-xl bg-purple-600/20 border border-purple-500/30 p-0.5 lottie-theme-bot">
-                <DotLottieReact
-                  src={CHATBOT_LOTTIE_URL}
-                  loop
-                  autoplay
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-extrabold text-xs text-white tracking-tight">
-                    {isPublicMode ? (isAuthRoute ? pageContext.name : "EventOS Concierge") : "EventOS Co-pilot"}
-                  </h3>
-                  <span className="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/40 text-[9px] font-black text-purple-300 font-mono tracking-wider uppercase">
-                    {pageContext.role}
-                  </span>
+            {/* Glassmorphic Header Bar - Properly Structured with Actions inside */}
+            <div className="px-4 py-3 border-b border-white/[0.08] dark:border-white/[0.06] bg-white/[0.02] dark:bg-zinc-950/40 backdrop-blur-xl flex items-center justify-between z-10 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-9 w-9 flex items-center justify-center shrink-0 rounded-full bg-gradient-to-tr from-purple-500/20 to-indigo-500/20 p-0.5 shadow-sm lottie-theme-bot">
+                  <DotLottieReact
+                    src={CHATBOT_LOTTIE_URL}
+                    loop
+                    autoplay
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-                <p className="text-[10px] text-zinc-400 font-medium flex items-center gap-1.5 mt-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
-                  <span>{isPublicMode ? (isAuthRoute ? "Authentication & Access" : "Product & Onboarding") : `${pageContext.name} • Online`}</span>
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-extrabold text-xs text-white tracking-tight truncate">
+                      {isPublicMode ? (isAuthRoute ? pageContext.name : "EventOS Concierge") : "EventOS Co-pilot"}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-[9px] font-black text-purple-300 font-mono tracking-wider uppercase shrink-0">
+                      {pageContext.role}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 font-medium flex items-center gap-1.5 mt-0.5 truncate">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span>{isPublicMode ? (isAuthRoute ? "Authentication & Access" : "Product & Onboarding") : `${pageContext.name} • Online`}</span>
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={initializeChat}
-                className="h-7 w-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer"
-                title="Reset conversation"
-                aria-label="Reset conversation"
-              >
-                <RotateCcw size={13} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="h-7 w-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer"
-                aria-label="Close Assistant"
-              >
-                <X size={14} />
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={initializeChat}
+                  className="h-7 w-7 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+                  title="Reset conversation"
+                  aria-label="Reset conversation"
+                >
+                  <RotateCcw size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="h-7 w-7 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+                  aria-label="Close Assistant"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
 
 
@@ -893,7 +887,7 @@ export default function AiAssistant() {
                       <User size={12} />
                     </div>
                   ) : (
-                    <div className="h-7 w-7 flex items-center justify-center shrink-0 mt-0.5 rounded-full bg-purple-600/20 border border-purple-500/30 p-0.5 overflow-hidden lottie-theme-bot">
+                    <div className="h-7 w-7 flex items-center justify-center shrink-0 mt-0.5 rounded-full bg-purple-600/20 p-0.5 overflow-hidden shadow-sm lottie-theme-bot">
                       <DotLottieReact
                         src={CHATBOT_LOTTIE_URL}
                         loop
@@ -909,8 +903,8 @@ export default function AiAssistant() {
                       className={cn(
                         "p-3.5 text-[12.5px] leading-relaxed relative overflow-hidden font-sans transition-all",
                         msg.sender === "user"
-                          ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white rounded-[20px] rounded-tr-sm shadow-[0_6px_20px_rgba(147,51,234,0.35)] border border-purple-400/30"
-                          : "bg-white/[0.05] dark:bg-white/[0.04] border border-white/[0.1] dark:border-purple-500/25 text-white rounded-[20px] rounded-tl-sm shadow-[0_6px_25px_rgba(0,0,0,0.3)] backdrop-blur-2xl relative overflow-hidden"
+                          ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white rounded-[20px] rounded-tr-sm shadow-[0_6px_20px_rgba(147,51,234,0.35)]"
+                          : "bg-white/[0.05] dark:bg-white/[0.04] border border-white/[0.08] dark:border-purple-500/20 text-white rounded-[20px] rounded-tl-sm shadow-[0_6px_25px_rgba(0,0,0,0.3)] backdrop-blur-2xl relative overflow-hidden"
                       )}
                     >
                       {msg.sender !== "user" && (
@@ -921,7 +915,7 @@ export default function AiAssistant() {
 
                       {/* Direct Navigation Action Button */}
                       {msg.actionBtn && (
-                        <div className="mt-3 pt-2.5 border-t border-white/[0.1] dark:border-purple-500/20">
+                        <div className="mt-3 pt-2.5 border-t border-white/[0.08] dark:border-purple-500/20">
                           <button
                             type="button"
                             onClick={() => {
@@ -932,7 +926,7 @@ export default function AiAssistant() {
                                 setIsOpen(false);
                               }
                             }}
-                            className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-xs shadow-md border border-purple-400/30 transition-all cursor-pointer active:scale-95"
+                            className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-xs shadow-md shadow-purple-600/25 transition-all cursor-pointer active:scale-95"
                           >
                             {msg.actionBtn.icon ? (
                               <msg.actionBtn.icon size={13} />
@@ -973,7 +967,7 @@ export default function AiAssistant() {
               {/* Typing animation */}
               {isTyping && (
                 <div className="flex gap-2.5 max-w-[80%] mr-auto">
-                  <div className="h-7 w-7 flex items-center justify-center shrink-0 rounded-full bg-purple-600/20 border border-purple-500/30 p-0.5 overflow-hidden lottie-theme-bot">
+                  <div className="h-7 w-7 flex items-center justify-center shrink-0 rounded-full bg-purple-600/20 p-0.5 overflow-hidden shadow-sm lottie-theme-bot">
                     <DotLottieReact
                       src={CHATBOT_LOTTIE_URL}
                       loop
@@ -1014,7 +1008,7 @@ export default function AiAssistant() {
                 <button
                   type="button"
                   onClick={() => handleSendText(input)}
-                  className="h-7 w-7 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-105 active:scale-95 text-white flex items-center justify-center shrink-0 transition cursor-pointer shadow-md border border-purple-400/30"
+                  className="h-7 w-7 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-105 active:scale-95 text-white flex items-center justify-center shrink-0 transition cursor-pointer shadow-md shadow-purple-600/30"
                   aria-label="Send message"
                 >
                   <Send size={12} />

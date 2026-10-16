@@ -201,8 +201,7 @@ export const generateAIResponse = async (
             `• Generated Tags: #Backdrop, #Marigold, #FloralRing, #BrideSuite\n` +
             `• Duplicate Detection: Identified 4 similar images in album (Recycled recommendations generated).`;
     } else {
-      reply = `[Generated via ${config.provider} Abstraction Layer]\n\n` +
-              `Here is the executive summary response for your request. Based on EventOS workspace coordinates, we suggest updating CRM notes and securing invoice references to maximize conversion rates.`;
+      reply = `Here is the executive summary response for your request. Based on your EventOS workspace data, we suggest updating CRM notes and securing invoice references to maximize conversion rates.`;
     }
   }
 
