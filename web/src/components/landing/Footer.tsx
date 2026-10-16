@@ -9,11 +9,11 @@ export function Footer() {
 
   const links = {
     product: [
-      { name: "CRM & Leads", href: "#features" },
-      { name: "Smart Quotes", href: "#features" },
-      { name: "Task Timelines", href: "#workflow" },
-      { name: "Modules Suite", href: "#modules" },
-      { name: "Gallery Delivery", href: "#features" },
+      { name: "CRM & Leads", href: "/crm" },
+      { name: "Smart Quotes", href: "/quotes" },
+      { name: "Task Timelines", href: "/events" },
+      { name: "Modules Suite", href: "/features" },
+      { name: "Gallery Delivery", href: "/gallery" },
     ],
     company: [
       { name: "Pricing Plans", href: "/pricing" },
