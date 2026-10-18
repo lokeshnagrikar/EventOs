@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import {
@@ -87,6 +88,10 @@ export default function QuoteDetailPage() {
   const router = useRouter();
   const quoteId = params.id as string;
   const queryClient = useQueryClient();
+  
+  useEffect(() => {
+    router.prefetch("/quotes");
+  }, [router]);
   
   const [errorText, setErrorText] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
@@ -354,13 +359,14 @@ export default function QuoteDetailPage() {
         <AlertCircle className="text-red-500 h-12 w-12" />
         <h2 className="text-lg font-bold">Quote not found</h2>
         <p className="text-zinc-500 text-xs">Verify that the quote exists and the backend microservices are running.</p>
-        <button
-          onClick={() => router.push("/quotes")}
-          className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-semibold"
+        <Link
+          href="/quotes"
+          prefetch={true}
+          className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 active:scale-95 rounded-lg text-xs font-semibold cursor-pointer transition-all duration-150"
         >
           <ArrowLeft size={14} />
           Back to Quotes
-        </button>
+        </Link>
       </div>
     );
   }
@@ -410,13 +416,14 @@ export default function QuoteDetailPage() {
       <nav className="h-16 border-b border-slate-200/90 dark:border-white/[0.08] bg-white/80 dark:bg-card/80 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0 print:hidden">
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push("/quotes")}
-            className="h-8 w-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 flex items-center justify-center text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all border border-slate-200 dark:border-zinc-700/50 cursor-pointer"
+          <Link
+            href="/quotes"
+            prefetch={true}
+            className="h-8 w-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 active:scale-90 active:bg-purple-600/30 flex items-center justify-center text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border border-slate-200 dark:border-zinc-700/50 cursor-pointer shadow-sm group"
             aria-label="Back to quotes"
           >
-            <ArrowLeft size={16} />
-          </button>
+            <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
+          </Link>
           <div className="flex items-center gap-2">
             <span className="font-bold text-base text-slate-900 dark:text-white">Quotation Sheet</span>
             <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-zinc-800 rounded-lg text-slate-600 dark:text-zinc-400 font-semibold">{quote.quoteNumber}</span>

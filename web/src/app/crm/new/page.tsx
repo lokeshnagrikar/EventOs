@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -37,6 +38,11 @@ type LeadInputs = z.infer<typeof leadSchema>;
 
 export default function NewLeadPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    router.prefetch("/crm");
+  }, [router]);
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -88,13 +94,14 @@ export default function NewLeadPage() {
       
       {/* Top Navbar */}
       <nav className="h-16 border-b border-zinc-800 bg-[#111113]/80 backdrop-blur px-6 flex items-center gap-3 z-20 shrink-0">
-        <button 
-          onClick={() => router.push("/crm")}
-          className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
+        <Link 
+          href="/crm"
+          prefetch={true}
+          className="h-8 w-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 active:scale-90 active:bg-purple-600/30 flex items-center justify-center text-zinc-400 hover:text-white transition-all duration-150 border border-zinc-700/50 cursor-pointer shadow-sm group"
           aria-label="Back to CRM"
         >
-          <ArrowLeft size={16} />
-        </button>
+          <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
+        </Link>
         <span className="font-bold text-base">CRM</span>
         <span className="text-zinc-500">/</span>
         <span className="text-sm text-zinc-400">Log New Lead</span>

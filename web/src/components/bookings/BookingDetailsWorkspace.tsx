@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -111,6 +112,10 @@ const STATUS_LABELS: Record<string, string> = {
 export default function BookingDetailsWorkspace({ bookingId }: { bookingId: string }) {
   const queryClient = useQueryClient();
   const router = useRouter();
+
+  useEffect(() => {
+    router.prefetch("/bookings");
+  }, [router]);
 
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -368,9 +373,13 @@ export default function BookingDetailsWorkspace({ bookingId }: { bookingId: stri
       <div className="min-h-[400px] flex flex-col items-center justify-center space-y-4">
         <AlertCircle className="text-red-500 h-10 w-10 animate-bounce" />
         <h3 className="font-extrabold text-sm text-slate-900 dark:text-zinc-200">Booking File Load Error</h3>
-        <button onClick={() => router.push("/bookings")} className="px-3.5 py-1.5 bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-700 dark:text-zinc-300 font-bold hover:bg-slate-200 dark:hover:bg-zinc-700 cursor-pointer">
+        <Link
+          href="/bookings"
+          prefetch={true}
+          className="px-3.5 py-1.5 bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-700 dark:text-zinc-300 font-bold hover:bg-slate-200 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer transition-all duration-150 shadow-sm"
+        >
           Back to Bookings
-        </button>
+        </Link>
       </div>
     );
   }

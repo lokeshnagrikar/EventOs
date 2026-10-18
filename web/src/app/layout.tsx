@@ -6,6 +6,7 @@ import Providers from "./providers";
 import ToastContainer from "@/components/ToastContainer";
 import { FloatingDock } from "@/components/landing/FloatingDock";
 import { CookieConsentBanner } from "@/components/shared/CookieConsentBanner";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -208,6 +209,7 @@ export default async function RootLayout({
           <ToastContainer />
           <CookieConsentBanner />
         </Providers>
+        <SpeedInsights />
       </body>
     </html>
   );

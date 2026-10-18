@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -289,6 +290,10 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       setActiveTab(urlTab);
     }
   }, [urlTab]);
+
+  useEffect(() => {
+    router.prefetch("/events");
+  }, [router]);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -1322,13 +1327,14 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       {/* Workspace Header */}
       <div className="border-b border-slate-200/90 dark:border-zinc-800 bg-white/90 dark:bg-[#111113]/90 backdrop-blur-md p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none shrink-0 relative z-10 shadow-sm">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push("/events")}
-            className="px-3 py-1.5 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl text-slate-700 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+          <Link
+            href="/events"
+            prefetch={true}
+            className="px-3 py-1.5 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-800 active:scale-90 active:bg-purple-600/20 rounded-xl text-slate-700 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all duration-150 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm group"
           >
-            <ArrowRight size={13} className="rotate-180" />
+            <ArrowRight size={13} className="rotate-180 transition-transform group-hover:-translate-x-0.5" />
             Back
-          </button>
+          </Link>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-zinc-100">{event.name}</h1>

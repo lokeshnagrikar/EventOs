@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -100,6 +101,11 @@ interface Comment {
 export default function AlbumDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+
+  useEffect(() => {
+    router.prefetch("/gallery");
+  }, [router]);
+
   const queryClient = useQueryClient();
   const { user, memberships, activeTenantId } = useAuthStore();
   const addToast = useToastStore((state) => state.addToast);
@@ -507,13 +513,14 @@ export default function AlbumDetailPage() {
       {/* Top Navbar */}
       <nav className="h-14 sm:h-16 border-b border-zinc-800 bg-[#111113]/90 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <button
-            onClick={() => router.push("/gallery")}
-            className="h-8 w-8 shrink-0 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-700/50 cursor-pointer"
+          <Link
+            href="/gallery"
+            prefetch={true}
+            className="h-8 w-8 shrink-0 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 active:scale-90 active:bg-purple-600/30 flex items-center justify-center text-zinc-400 hover:text-white transition-all duration-150 border border-zinc-700/50 cursor-pointer shadow-sm group"
             aria-label="Back to galleries"
           >
-            <ArrowLeft size={16} />
-          </button>
+            <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
+          </Link>
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <span className="font-bold text-xs sm:text-sm max-w-[100px] xs:max-w-[140px] sm:max-w-[220px] truncate">
               {album?.name || "Album Assets"}
