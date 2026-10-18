@@ -82,18 +82,23 @@ export function AuthModal() {
               "w-full relative text-white selection:bg-purple-800 selection:text-white overflow-hidden",
               isMobile
                 ? "min-h-screen rounded-none border-none justify-start bg-[#0B0F19] p-5"
-                : "bg-[#0B0F19]/95 border border-purple-500/25 shadow-[0_25px_70px_rgba(0,0,0,0.85),0_0_40px_rgba(139,92,246,0.15)] backdrop-blur-2xl rounded-3xl p-6 sm:p-7"
+                : "bg-[#090d18]/95 border border-purple-500/30 shadow-[0_30px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(139,92,246,0.2)] backdrop-blur-2xl rounded-3xl p-6 sm:p-7"
             )}>
+              {/* Ambient Background Glows */}
+              <div className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-purple-600/20 blur-[75px] -z-10" />
+              <div className="pointer-events-none absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-pink-600/15 blur-[75px] -z-10" />
+
               {/* Top Accent Gradient Line & Specular Rim */}
               <div className="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] z-20" />
               <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-purple-400/60 to-transparent pointer-events-none z-20" />
+              
               {/* Minimalist Close Button */}
               <button
                 onClick={closeModal}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-1.5 rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-purple-500 z-40 cursor-pointer"
+                className="group absolute top-4 right-4 text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08] hover:border-white/20 p-2 rounded-full transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-purple-500 z-40 cursor-pointer active:scale-95"
                 aria-label="Close modal"
               >
-                <X size={16} />
+                <X size={15} className="group-hover:rotate-90 transition-transform duration-200" />
               </button>
 
               <Suspense fallback={<div className="text-xs text-zinc-500 text-center py-10 font-mono">Loading authentication...</div>}>

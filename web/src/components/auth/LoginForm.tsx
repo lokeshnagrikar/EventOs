@@ -10,7 +10,8 @@ import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/authStore";
 import { setClientCookie } from "@/lib/clientCookies";
 import { useToastStore } from "@/lib/toastStore";
-import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, X, Wand2, MessageSquare, Phone, Briefcase } from "lucide-react";
+import { KeyRound, Mail, AlertCircle, Eye, EyeOff, Check, Loader2, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, X, Wand2, MessageSquare, Phone, Briefcase, Lock, ShieldCheck } from "lucide-react";
+import { EventOsLogo } from "@/components/ui/EventOsLogo";
 import { Button } from "@/components/ui/button";
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -717,14 +718,28 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       animate="show"
       className={cn("space-y-3 sm:space-y-4", shouldShake ? "animate-shake" : "")}
     >
-      {/* Modern Sleek Header - Vercel / Apple Minimalist Style */}
-      <motion.div variants={itemVariants} className="text-left space-y-1 select-none pb-2">
-        <h2 className="text-2xl font-bold tracking-tight text-white">
-          Sign in to EventOS
-        </h2>
-        <p className="text-xs text-zinc-400">
-          Welcome back! Please enter your account details.
-        </p>
+      {/* Modern Sleek Header with EventOS Branding */}
+      <motion.div variants={itemVariants} className="text-left space-y-2 select-none pb-1">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-600 p-[1.5px] shadow-[0_4px_16px_rgba(168,85,247,0.35)] shrink-0">
+            <div className="w-full h-full bg-[#080c18] rounded-[14px] flex items-center justify-center">
+              <EventOsLogo size={22} interactive={false} showGlow={false} />
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-sans">
+                Sign in to EventOS
+              </h2>
+              <span className="px-2 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-[9px] font-mono font-bold text-purple-300 uppercase tracking-wider">
+                Cloud
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Welcome back! Access your event workspace.
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       {/* Session Expired Banner */}
@@ -815,7 +830,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
 
       {/* Auth Mode Toggle Tabs (Password vs Magic Link vs Forgot Password) */}
       {authMode === "forgot-password" ? (
-        <motion.div variants={itemVariants} className="flex items-center justify-between bg-purple-950/20 px-3 py-2 rounded-xl border border-purple-500/20 text-xs">
+        <motion.div variants={itemVariants} className="flex items-center justify-between bg-purple-950/20 px-3.5 py-2 rounded-xl border border-purple-500/25 text-xs">
           <div className="flex items-center gap-1.5 text-purple-300 font-bold">
             <KeyRound size={13} className="text-purple-400" />
             <span>Password Recovery</span>
@@ -835,7 +850,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
           </button>
         </motion.div>
       ) : (
-        <motion.div variants={itemVariants} className="flex bg-[#070B16] p-1 rounded-xl border border-white/10 text-xs font-medium">
+        <motion.div variants={itemVariants} className="relative flex bg-[#070b16] p-1 rounded-2xl border border-white/[0.08] text-xs font-semibold select-none">
           <button
             type="button"
             onClick={() => {
@@ -844,11 +859,18 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               setMagicLinkSent(false);
             }}
             className={cn(
-              "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer font-semibold",
-              authMode === "password" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30" : "text-slate-400 hover:text-white"
+              "relative z-10 flex-1 py-2 rounded-xl transition-colors text-center flex items-center justify-center gap-1.5 cursor-pointer font-bold text-xs",
+              authMode === "password" ? "text-white" : "text-zinc-400 hover:text-zinc-200"
             )}
           >
-            <KeyRound size={13} />
+            {authMode === "password" && (
+              <motion.div
+                layoutId="activeAuthTab"
+                transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 rounded-xl shadow-[0_2px_12px_rgba(168,85,247,0.45)] -z-10"
+              />
+            )}
+            <KeyRound size={13} className={authMode === "password" ? "text-white" : "text-zinc-400"} />
             <span>Password</span>
           </button>
           <button
@@ -858,11 +880,18 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               setError(null);
             }}
             className={cn(
-              "flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer font-semibold",
-              authMode === "magic-link" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30" : "text-slate-400 hover:text-white"
+              "relative z-10 flex-1 py-2 rounded-xl transition-colors text-center flex items-center justify-center gap-1.5 cursor-pointer font-bold text-xs",
+              authMode === "magic-link" ? "text-white" : "text-zinc-400 hover:text-zinc-200"
             )}
           >
-            <Sparkles size={13} className="text-purple-300" />
+            {authMode === "magic-link" && (
+              <motion.div
+                layoutId="activeAuthTab"
+                transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 rounded-xl shadow-[0_2px_12px_rgba(168,85,247,0.45)] -z-10"
+              />
+            )}
+            <Sparkles size={13} className={authMode === "magic-link" ? "text-white" : "text-purple-400"} />
             <span>Magic Link</span>
           </button>
         </motion.div>
@@ -876,18 +905,16 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
             Email Address
           </label>
           <div className="relative">
-            <Mail className={`absolute left-3.5 top-3 h-4 w-4 transition-colors duration-250 ${focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-slate-400"
-              }`} />
+            <Mail className={`absolute left-3.5 top-3.5 h-4 w-4 transition-colors duration-200 ${focusedField === "email" ? "text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]" : "text-zinc-400"}`} />
             <input
               id="email"
               type="email"
               placeholder="you@company.com"
               autoFocus
               autoComplete="email"
-              className={`w-full pl-10 pr-3.5 py-2.5 bg-[#101524] border rounded-xl text-xs placeholder:text-slate-500 text-white focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${errors.email
-                  ? "border-rose-500/60"
-                  : "border-white/10 hover:border-white/25"
-                }`}
+              className={`w-full h-11 pl-10 pr-3.5 bg-[#0c101d]/90 hover:bg-[#0e1424] focus:bg-[#0e1424] border rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 transition-all ${
+                errors.email ? "border-rose-500/60" : "border-white/[0.08] hover:border-white/[0.18]"
+              }`}
               {...register("email")}
               onChange={(e) => handleEmailInputChange(e.target.value)}
               onFocus={() => setFocusedField("email")}
@@ -1087,17 +1114,15 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 </button>
               </div>
               <div className="relative">
-                <KeyRound className={`absolute left-3.5 top-3 h-4 w-4 transition-colors duration-250 ${focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_6px_rgba(139,92,246,0.5)]" : "text-slate-400"
-                  }`} />
+                <KeyRound className={`absolute left-3.5 top-3.5 h-4 w-4 transition-colors duration-200 ${focusedField === "password" ? "text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]" : "text-zinc-400"}`} />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-xs placeholder:text-slate-500 text-white focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${errors.password
-                      ? "border-rose-500/60"
-                      : "border-white/10 hover:border-white/25"
-                    }`}
+                  className={`w-full h-11 pl-10 pr-10 bg-[#0c101d]/90 hover:bg-[#0e1424] focus:bg-[#0e1424] border rounded-xl text-xs placeholder:text-zinc-500 text-white focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 transition-all ${
+                    errors.password ? "border-rose-500/60" : "border-white/[0.08] hover:border-white/[0.18]"
+                  }`}
                   {...register("password")}
                   onFocus={() => setFocusedField("password")}
                   onBlur={(e) => {
@@ -1108,7 +1133,7 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="absolute right-3.5 top-3 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
@@ -1124,14 +1149,14 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
                 aria-checked={rememberMeValue}
                 onClick={() => setValue("rememberMe", !rememberMeValue)}
                 className={`h-4 w-4 rounded-md border flex items-center justify-center transition-all cursor-pointer ${rememberMeValue
-                    ? "bg-purple-600 border-purple-500 text-white"
-                    : "bg-[#101524] border-white/20 hover:border-white/40 text-transparent"
+                    ? "bg-purple-600 border-purple-500 text-white shadow-sm shadow-purple-600/30"
+                    : "bg-[#0c101d] border-white/20 hover:border-white/40 text-transparent"
                   }`}
               >
                 {rememberMeValue && <Check size={10} className="stroke-[3]" />}
               </button>
               <span className="text-xs text-slate-300 font-medium cursor-pointer" onClick={() => setValue("rememberMe", !rememberMeValue)}>
-                Remember me
+                Remember this device for 30 days
               </span>
             </motion.div>
 
@@ -1140,15 +1165,19 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 h-11 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:via-indigo-500 hover:to-purple-500 shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:shadow-[0_6px_26px_rgba(139,92,246,0.55)] active:scale-[0.98] transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="group relative w-full h-11 rounded-xl font-black text-sm text-white bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-500 hover:via-pink-500 hover:to-indigo-500 shadow-[0_8px_25px_rgba(168,85,247,0.45)] hover:shadow-[0_12px_32px_rgba(236,72,153,0.55)] active:scale-[0.98] transition-all duration-200 flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 overflow-hidden"
               >
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
                 {loading ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" />
+                    <Loader2 size={15} className="animate-spin" />
                     <span>Signing in...</span>
                   </>
                 ) : (
-                  "Sign In"
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </>
                 )}
               </button>
             </motion.div>
@@ -1158,34 +1187,34 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
 
       {/* Social login separator */}
       <motion.div variants={itemVariants} className="relative flex py-1 items-center">
-        <div className="flex-grow border-t border-white/10"></div>
-        <span className="flex-shrink mx-3 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Or continue with</span>
-        <div className="flex-grow border-t border-white/10"></div>
+        <div className="flex-grow border-t border-white/[0.08]"></div>
+        <span className="flex-shrink mx-3 text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Or continue with</span>
+        <div className="flex-grow border-t border-white/[0.08]"></div>
       </motion.div>
 
-      {/* Social buttons */}
+      {/* Social buttons with official 4-Color Google G */}
       <motion.div variants={itemVariants} className="w-full flex justify-center py-0.5">
         <button
           type="button"
           disabled={loading || googleAuthenticating}
           onClick={() => loginWithGoogle()}
-          className="relative flex items-center justify-center w-full h-11 px-3 bg-[#101524] hover:bg-[#171F34] border border-white/10 hover:border-white/25 rounded-xl text-xs font-bold text-slate-200 hover:text-white transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 shadow-sm"
+          className="relative flex items-center justify-center w-full h-11 px-4 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] hover:border-white/20 rounded-xl text-xs font-bold text-slate-100 hover:text-white transition-all shadow-sm active:scale-[0.99] cursor-pointer disabled:opacity-50 group"
         >
-          <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
+          <svg className="h-4 w-4 mr-2.5 shrink-0" viewBox="0 0 24 24">
             <path
-              fill="currentColor"
+              fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             />
             <path
-              fill="currentColor"
+              fill="#34A853"
               d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
             />
             <path
-              fill="currentColor"
+              fill="#FBBC05"
               d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
             />
             <path
-              fill="currentColor"
+              fill="#EA4335"
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
             />
           </svg>
@@ -1194,23 +1223,33 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       </motion.div>
 
       {/* Footer sign up redirection */}
-      <motion.div variants={itemVariants} className="text-center pt-3 border-t border-white/10">
+      <motion.div variants={itemVariants} className="text-center pt-2.5 border-t border-white/[0.08] space-y-2">
         <p className="text-xs text-slate-400">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           {isModal ? (
             <button
               type="button"
               onClick={() => onSwitchMode?.("register")}
-              className="text-purple-400 hover:text-purple-300 hover:underline font-bold transition-colors focus:outline-none cursor-pointer"
+              className="text-purple-400 hover:text-purple-300 hover:underline font-extrabold transition-colors focus:outline-none cursor-pointer"
             >
               Create a workspace
             </button>
           ) : (
-            <a href="/register" className="text-purple-400 hover:text-purple-300 hover:underline font-bold transition-colors">
+            <Link href="/register" className="text-purple-400 hover:text-purple-300 hover:underline font-extrabold transition-colors">
               Create a workspace
-            </a>
+            </Link>
           )}
         </p>
+
+        {/* Security Trust Badges */}
+        <div className="flex items-center justify-center gap-2 text-[10px] text-zinc-500 select-none">
+          <span className="flex items-center gap-1 font-medium">
+            <Lock size={10} className="text-purple-400" />
+            <span>256-Bit SSL Encrypted</span>
+          </span>
+          <span>•</span>
+          <span className="font-medium">SOC-2 Type II Ready</span>
+        </div>
       </motion.div>
 
       <AuthLoader isOpen={googleAuthenticating} type="login" />
