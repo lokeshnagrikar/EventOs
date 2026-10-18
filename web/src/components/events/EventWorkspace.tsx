@@ -647,6 +647,7 @@ export default function EventWorkspace({ eventId }: { eventId: string }) {
       if (updatedEvent && updatedEvent.id) {
         queryClient.setQueryData(["event", eventId], { data: updatedEvent });
       }
+      queryClient.invalidateQueries({ queryKey: ["events"] });
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 1500);
     },
