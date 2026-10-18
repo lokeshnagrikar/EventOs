@@ -371,6 +371,106 @@ export default function EventsDashboard() {
     localStorage.setItem("eventos_allocations_db", JSON.stringify(assignments));
   }, [resources, localVendors, inventory, vehicles, assignments]);
 
+  // Dynamic staff resolver: checks event.notes staffAllocations AND cross-module allocations
+  const getEventStaff = (event: Event): { id: string; name: string; role?: string }[] => {
+    const list: { id: string; name: string; role?: string }[] = [];
+    const seenNames = new Set<string>();
+
+    // 1. From event.notes (Workspace Staff Allocation)
+    if (event.notes && event.notes.startsWith("{")) {
+      try {
+        const meta = JSON.parse(event.notes);
+        if (Array.isArray(meta.staffAllocations)) {
+          meta.staffAllocations.forEach((s: any, idx: number) => {
+            if (s && s.name && !seenNames.has(s.name.toLowerCase())) {
+              seenNames.add(s.name.toLowerCase());
+              list.push({
+                id: s.id || `staff-${idx}`,
+                name: s.name,
+                role: s.role || "Staff"
+              });
+            }
+          });
+        }
+      } catch { }
+    }
+
+    // 2. From cross-module Resource Center assignments
+    const eventAssignedIds = assignments[event.id]?.resources || [];
+    eventAssignedIds.forEach((resId) => {
+      const found = resources.find(r => r.id === resId);
+      if (found && !seenNames.has(found.name.toLowerCase())) {
+        seenNames.add(found.name.toLowerCase());
+        list.push({
+          id: found.id,
+          name: found.name,
+          role: found.role
+        });
+      }
+    });
+
+    return list;
+  };
+
+  const getStaffInitials = (name: string): string => {
+    if (!name) return "CR";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const CREW_AVATAR_COLORS = [
+    "bg-purple-600",
+    "bg-indigo-600",
+    "bg-cyan-600",
+    "bg-emerald-600",
+    "bg-amber-600",
+    "bg-pink-600"
+  ];
+
+  // Real crew deployments telemetry calculated from actual active execution pipelines
+  const realCrewStats = useMemo(() => {
+    let totalAssigned = 0;
+    let onSite = 0;
+
+    events.forEach(ev => {
+      const staff = getEventStaff(ev);
+      totalAssigned += staff.length;
+      if (ev.status === "IN_PROGRESS" || ev.status === "CONFIRMED") {
+        onSite += staff.length;
+      }
+    });
+
+    const activeTeamMembers = resources.length;
+    const standby = Math.max(0, activeTeamMembers - totalAssigned);
+
+    return { totalAssigned, onSite, standby, activeTeamMembers };
+  }, [events, resources, assignments]);
+
+  // Next real live milestone cue from active non-cancelled events
+  const nextMilestoneCue = useMemo(() => {
+    const activeEvents = events.filter(e => e.status !== "CANCELLED");
+    for (const ev of activeEvents) {
+      if (ev.notes && ev.notes.startsWith("{")) {
+        try {
+          const meta = JSON.parse(ev.notes);
+          if (Array.isArray(meta.timelineCues) && meta.timelineCues.length > 0) {
+            const firstCue = meta.timelineCues[0];
+            return {
+              eventName: ev.name,
+              eventId: ev.id,
+              time: firstCue.time || "TBD",
+              title: firstCue.title || "Live Execution Cue",
+              department: firstCue.department || "Stage & Production",
+              status: firstCue.status || "Pending"
+            };
+          }
+        } catch { }
+      }
+    }
+    return null;
+  }, [events]);
+
   // Conflict warning flags calculation
   const conflictWarnings = useMemo(() => {
     const warnings: string[] = [];
@@ -1297,22 +1397,60 @@ export default function EventsDashboard() {
 
                                         {/* Card Footer: Crew Avatars + 1-Click Action Shortcuts */}
                                         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800/60 text-xs">
-                                          <div className="flex items-center gap-2">
-                                            <div className="flex -space-x-1.5 overflow-hidden">
-                                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-[9px] font-black text-white ring-2 ring-white dark:ring-zinc-900">
-                                                LP
-                                              </span>
-                                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-black text-white ring-2 ring-white dark:ring-zinc-900">
-                                                SM
-                                              </span>
-                                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-600 text-[9px] font-black text-white ring-2 ring-white dark:ring-zinc-900">
-                                                AV
-                                              </span>
-                                            </div>
-                                            <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold hidden sm:inline">
-                                              Crew Assigned
-                                            </span>
-                                          </div>
+                                          {(() => {
+                                            const assignedCrew = getEventStaff(e);
+                                            if (assignedCrew.length > 0) {
+                                              return (
+                                                <div
+                                                  onClick={(ev) => {
+                                                    ev.stopPropagation();
+                                                    router.push(`/events/${e.id}?tab=staff`);
+                                                  }}
+                                                  className="flex items-center gap-2 cursor-pointer group/crew"
+                                                  title={`Allocated Crew: ${assignedCrew.map(c => `${c.name} (${c.role || "Staff"})`).join(", ")}`}
+                                                >
+                                                  <div className="flex -space-x-1.5 overflow-hidden">
+                                                    {assignedCrew.slice(0, 3).map((member, idx) => (
+                                                      <span
+                                                        key={member.id}
+                                                        title={`${member.name} (${member.role || "Staff"})`}
+                                                        className={cn(
+                                                          "inline-flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-black text-white ring-2 ring-white dark:ring-zinc-900 transition-transform group-hover/crew:scale-105",
+                                                          CREW_AVATAR_COLORS[idx % CREW_AVATAR_COLORS.length]
+                                                        )}
+                                                      >
+                                                        {getStaffInitials(member.name)}
+                                                      </span>
+                                                    ))}
+                                                    {assignedCrew.length > 3 && (
+                                                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-zinc-700 text-[8.5px] font-bold text-white ring-2 ring-white dark:ring-zinc-900">
+                                                        +{assignedCrew.length - 3}
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                  <span className="text-[10px] text-slate-600 dark:text-zinc-300 font-semibold group-hover/crew:text-purple-600 dark:group-hover/crew:text-purple-400 transition hidden sm:inline">
+                                                    {assignedCrew.length} Crew Assigned
+                                                  </span>
+                                                </div>
+                                              );
+                                            }
+
+                                            return (
+                                              <button
+                                                onClick={(ev) => {
+                                                  ev.stopPropagation();
+                                                  router.push(`/events/${e.id}?tab=staff`);
+                                                }}
+                                                className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400 transition cursor-pointer text-[10px] font-semibold group/crew"
+                                                title="Assign crew in event workspace"
+                                              >
+                                                <span className="h-5 w-5 rounded-full border border-dashed border-slate-300 dark:border-zinc-700 group-hover/crew:border-purple-500 flex items-center justify-center text-[10px] text-slate-400 dark:text-zinc-500 group-hover/crew:text-purple-500 transition">
+                                                  +
+                                                </span>
+                                                <span>No crew assigned</span>
+                                              </button>
+                                            );
+                                          })()}
 
                                           {/* Direct Shortcuts */}
                                           <div className="flex items-center gap-1.5 ml-auto">
@@ -1373,39 +1511,64 @@ export default function EventsDashboard() {
                                     <UserCheck size={13} className="text-purple-500" /> Crew Deployments
                                   </span>
                                   <span className="font-mono text-xs font-extrabold text-slate-900 dark:text-zinc-100">
-                                    {resources.length > 0 ? `${resources.filter(r => r.status === "AVAILABLE" || r.status === "BOOKED").length} Active` : "6 Allocated"}
+                                    {realCrewStats.totalAssigned > 0 ? `${realCrewStats.totalAssigned} Allocated` : `${realCrewStats.activeTeamMembers} Team Members`}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
                                   <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/60 dark:border-zinc-850">
-                                    <span className="text-slate-400 dark:text-zinc-500 block">Lead Planners</span>
-                                    <span className="text-purple-600 dark:text-purple-400 font-extrabold mt-0.5 block">2 On-Site</span>
+                                    <span className="text-slate-400 dark:text-zinc-500 block">Lead / On-Site</span>
+                                    <span className="text-purple-600 dark:text-purple-400 font-extrabold mt-0.5 block">
+                                      {realCrewStats.onSite > 0 ? `${realCrewStats.onSite} Active` : "0 Active"}
+                                    </span>
                                   </div>
                                   <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/60 dark:border-zinc-850">
-                                    <span className="text-slate-400 dark:text-zinc-500 block">AV &amp; Stage Tech</span>
-                                    <span className="text-cyan-600 dark:text-cyan-400 font-extrabold mt-0.5 block">4 Standby</span>
+                                    <span className="text-slate-400 dark:text-zinc-500 block">Available Standby</span>
+                                    <span className="text-cyan-600 dark:text-cyan-400 font-extrabold mt-0.5 block">
+                                      {realCrewStats.standby > 0 ? `${realCrewStats.standby} Standby` : `${realCrewStats.activeTeamMembers} Available`}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
 
                               {/* Telemetry 2: Next Live Milestone Cue */}
-                              <div className="p-3.5 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/5 border border-purple-500/20 space-y-2">
-                                <div className="flex items-center justify-between text-[10px] font-bold">
-                                  <span className="text-purple-600 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1">
-                                    <Clock size={11} /> Next Milestone Cue
-                                  </span>
-                                  <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-extrabold">
-                                    04:00 PM
-                                  </span>
+                              {nextMilestoneCue ? (
+                                <div
+                                  onClick={() => router.push(`/events/${nextMilestoneCue.eventId}?tab=timeline`)}
+                                  className="p-3.5 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/5 border border-purple-500/20 space-y-2 cursor-pointer hover:border-purple-500/40 transition group"
+                                  title={`Open Timeline for ${nextMilestoneCue.eventName}`}
+                                >
+                                  <div className="flex items-center justify-between text-[10px] font-bold">
+                                    <span className="text-purple-600 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1">
+                                      <Clock size={11} /> Next Milestone Cue
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-extrabold">
+                                      {nextMilestoneCue.time}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs font-extrabold text-slate-900 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">
+                                    {nextMilestoneCue.title}
+                                  </p>
+                                  <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 pt-0.5">
+                                    <span>{nextMilestoneCue.department} · {nextMilestoneCue.eventName}</span>
+                                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">{nextMilestoneCue.status}</span>
+                                  </div>
                                 </div>
-                                <p className="text-xs font-extrabold text-slate-900 dark:text-zinc-100">
-                                  Baraat Assembly &amp; Vintage Car Entry
-                                </p>
-                                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 pt-0.5">
-                                  <span>Hospitality &amp; Hostess</span>
-                                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Driver Ready ✓</span>
+                              ) : (
+                                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-200/70 dark:border-zinc-850 space-y-1.5">
+                                  <div className="flex items-center justify-between text-[10px] font-bold">
+                                    <span className="text-slate-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+                                      <Clock size={11} /> Next Milestone Cue
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 font-mono">Run-of-Show</span>
+                                  </div>
+                                  <p className="text-xs font-medium text-slate-500 dark:text-zinc-400 italic">
+                                    No live cues scheduled
+                                  </p>
+                                  <p className="text-[10px] text-slate-400 dark:text-zinc-500">
+                                    Cues logged in workspace timeline will appear here live.
+                                  </p>
                                 </div>
-                              </div>
+                              )}
 
                               {/* Telemetry 3: Gate Check-in & PWA */}
                               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-200/70 dark:border-zinc-850 space-y-2.5">
