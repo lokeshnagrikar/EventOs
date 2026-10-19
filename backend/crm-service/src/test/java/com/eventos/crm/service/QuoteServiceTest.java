@@ -180,12 +180,32 @@ public class QuoteServiceTest {
     }
 
     @Test
+    void testApproveQuote_DirectFromDraft_Success() {
+        UUID quoteId = mockQuote.getId();
+        UUID userId = UUID.randomUUID();
+
+        // Direct approval from DRAFT is valid (on-spot agency and client agreement)
+        mockQuote.setStatus(QuoteStatus.DRAFT);
+
+        when(quoteRepository.findByIdAndTenantId(quoteId, tenantId))
+                .thenReturn(Optional.of(mockQuote));
+        when(quoteRepository.save(any(Quote.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Quote result = quoteService.approveQuote(quoteId, tenantId, userId, "Shreya Sen", "Client Sponsor");
+
+        assertNotNull(result);
+        assertEquals(QuoteStatus.ACCEPTED, result.getStatus());
+        assertNotNull(result.getApprovedAt());
+        verify(leadService, times(1)).updateLeadStatus(leadId, LeadStatus.WON, tenantId, userId);
+    }
+
+    @Test
     void testApproveQuote_InvalidTransitionThrowsException() {
         UUID quoteId = mockQuote.getId();
         UUID userId = UUID.randomUUID();
 
-        // Approve is invalid from DRAFT directly (must go DRAFT -> SENT -> VIEWED -> ACCEPTED)
-        mockQuote.setStatus(QuoteStatus.DRAFT);
+        // Approve is invalid from EXPIRED terminal state
+        mockQuote.setStatus(QuoteStatus.EXPIRED);
 
         when(quoteRepository.findByIdAndTenantId(quoteId, tenantId))
                 .thenReturn(Optional.of(mockQuote));

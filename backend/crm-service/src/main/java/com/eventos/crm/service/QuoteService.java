@@ -42,8 +42,8 @@ public class QuoteService {
         VALID_TRANSITIONS.put(QuoteStatus.SENT,        EnumSet.of(QuoteStatus.VIEWED, QuoteStatus.ACCEPTED, QuoteStatus.REJECTED));
         VALID_TRANSITIONS.put(QuoteStatus.VIEWED,      EnumSet.of(QuoteStatus.ACCEPTED, QuoteStatus.REJECTED, QuoteStatus.SENT));
         VALID_TRANSITIONS.put(QuoteStatus.ACCEPTED,    Collections.emptySet()); // Terminal state
-        VALID_TRANSITIONS.put(QuoteStatus.REJECTED,    EnumSet.of(QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.ACCEPTED)); // Allow revision / reactivation
-        VALID_TRANSITIONS.put(QuoteStatus.EXPIRED,     EnumSet.of(QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.ACCEPTED)); // Allow re-opening
+        VALID_TRANSITIONS.put(QuoteStatus.REJECTED,    EnumSet.of(QuoteStatus.DRAFT, QuoteStatus.SENT)); // Allow revision
+        VALID_TRANSITIONS.put(QuoteStatus.EXPIRED,     Collections.emptySet()); // Terminal state (expired cannot be directly approved)
     }
 
     private final QuoteRepository quoteRepository;
@@ -407,9 +407,12 @@ public class QuoteService {
         quote.setStatus(newStatus);
         Quote saved = quoteRepository.save(quote);
 
-        // Dispatch asynchronous PDF generation event
-        eventPublisher.publishEvent(new QuotePdfGenerationEvent(this, saved.getId(), tenantId));
-        return saved;
+        if (saved != null) {
+            // Dispatch asynchronous PDF generation event
+            eventPublisher.publishEvent(new QuotePdfGenerationEvent(this, saved.getId(), tenantId));
+            return saved;
+        }
+        return quote;
     }
 
     public Quote markAsViewed(UUID id, UUID tenantId) {
