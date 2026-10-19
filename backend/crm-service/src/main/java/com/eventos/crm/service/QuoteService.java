@@ -38,12 +38,12 @@ public class QuoteService {
     private static final Map<QuoteStatus, Set<QuoteStatus>> VALID_TRANSITIONS = new EnumMap<>(QuoteStatus.class);
 
     static {
-        VALID_TRANSITIONS.put(QuoteStatus.DRAFT,       EnumSet.of(QuoteStatus.SENT));
+        VALID_TRANSITIONS.put(QuoteStatus.DRAFT,       EnumSet.of(QuoteStatus.SENT, QuoteStatus.VIEWED, QuoteStatus.ACCEPTED, QuoteStatus.REJECTED));
         VALID_TRANSITIONS.put(QuoteStatus.SENT,        EnumSet.of(QuoteStatus.VIEWED, QuoteStatus.ACCEPTED, QuoteStatus.REJECTED));
-        VALID_TRANSITIONS.put(QuoteStatus.VIEWED,      EnumSet.of(QuoteStatus.ACCEPTED, QuoteStatus.REJECTED));
+        VALID_TRANSITIONS.put(QuoteStatus.VIEWED,      EnumSet.of(QuoteStatus.ACCEPTED, QuoteStatus.REJECTED, QuoteStatus.SENT));
         VALID_TRANSITIONS.put(QuoteStatus.ACCEPTED,    Collections.emptySet()); // Terminal state
-        VALID_TRANSITIONS.put(QuoteStatus.REJECTED,    Collections.emptySet()); // Terminal state
-        VALID_TRANSITIONS.put(QuoteStatus.EXPIRED,     Collections.emptySet()); // Terminal state
+        VALID_TRANSITIONS.put(QuoteStatus.REJECTED,    EnumSet.of(QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.ACCEPTED)); // Allow revision / reactivation
+        VALID_TRANSITIONS.put(QuoteStatus.EXPIRED,     EnumSet.of(QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.ACCEPTED)); // Allow re-opening
     }
 
     private final QuoteRepository quoteRepository;
@@ -420,7 +420,7 @@ public class QuoteService {
         return quote;
     }
 
-    public Quote approveQuote(UUID id, UUID tenantId, UUID userId) {
+    public Quote approveQuote(UUID id, UUID tenantId, UUID userId, String signerName, String signerTitle) {
         Quote quote = getQuoteById(id, tenantId);
 
         if (quote.getStatus() == QuoteStatus.ACCEPTED) {
@@ -436,10 +436,24 @@ public class QuoteService {
         // Promote Lead Status in CRM to WON
         leadService.updateLeadStatus(saved.getLeadId(), LeadStatus.WON, tenantId, userId);
 
+        String signee = (signerName != null && !signerName.isBlank()) ? signerName.trim() : "Client";
+        String title = (signerTitle != null && !signerTitle.isBlank()) ? (" (" + signerTitle.trim() + ")") : "";
+        try {
+            leadService.addActivity(saved.getLeadId(), "PROPOSAL_ACCEPTED",
+                    "Proposal digitally approved & signed by " + signee + title,
+                    tenantId, userId);
+        } catch (Exception e) {
+            log.warn("Could not log approval activity: {}", e.getMessage());
+        }
+
         // Trigger booking creation asynchronously via RabbitMQ
         triggerBookingCreation(saved.getId(), tenantId);
 
         return saved;
+    }
+
+    public Quote approveQuote(UUID id, UUID tenantId, UUID userId) {
+        return approveQuote(id, tenantId, userId, null, null);
     }
 
     public Quote rejectQuote(UUID id, UUID tenantId) {

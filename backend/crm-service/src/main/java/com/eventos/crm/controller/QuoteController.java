@@ -207,11 +207,16 @@ public class QuoteController {
     @Operation(summary = "Approve quote (client action)", description = "Client approves the quote. Sets status to ACCEPTED and triggers booking-ready notification. Accessible by CLIENT role.")
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('CLIENT', 'OWNER', 'ADMIN', 'MANAGER')")
-    public ResponseEntity<?> approveQuote(@PathVariable UUID id) {
+    public ResponseEntity<?> approveQuote(
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, String> body) {
         UUID tenantId = getTenantId();
         UUID userId = getUserId();
 
-        Quote quote = quoteService.approveQuote(id, tenantId, userId);
+        String signerName = body != null ? body.get("signerName") : null;
+        String signerTitle = body != null ? body.get("signerTitle") : null;
+
+        Quote quote = quoteService.approveQuote(id, tenantId, userId, signerName, signerTitle);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

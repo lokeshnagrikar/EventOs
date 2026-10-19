@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -88,6 +89,12 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
   const triggerToast = (msg: string, type: "success" | "info" = "success") => {
     addToast(msg, type === "success" ? "success" : "info");
   };
+
+  // Eagerly prefetch routes for instant back navigation
+  useEffect(() => {
+    router.prefetch("/invoices");
+    router.prefetch("/finance");
+  }, [router]);
 
   // 1. Fetch Invoice Details
   const { data: invoiceResponse, isLoading: invoiceLoading, error: invoiceError } = useQuery<{ data: Invoice }>({
@@ -281,12 +288,14 @@ export default function InvoiceWorkspace({ invoiceId }: { invoiceId: string }) {
       {/* ─── WORKSPACE ACTIONS HEADER ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-4 print:hidden select-none">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push("/finance")}
-            className="h-8 w-8 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-800/80 cursor-pointer"
+          <Link
+            href="/invoices"
+            prefetch={true}
+            className="h-8 w-8 rounded-xl bg-zinc-900 hover:bg-zinc-800 active:scale-90 active:bg-purple-600/30 flex items-center justify-center text-zinc-400 hover:text-white transition-all duration-150 border border-zinc-800/80 cursor-pointer shadow-sm group"
+            aria-label="Back to invoices"
           >
-            <ArrowLeft size={16} />
-          </button>
+            <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
+          </Link>
           <div>
             <h1 className="text-sm font-extrabold text-zinc-200">Invoice Workspace Details</h1>
             <p className="text-[10px] text-zinc-550 font-mono mt-0.5">Reference ID: {invoice.id}</p>

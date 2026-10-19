@@ -200,7 +200,10 @@ export default function QuoteDetailPage() {
   // Mutations
   const approveQuoteMutation = useMutation({
     mutationFn: async () => {
-      const response = await api.post(`/crm/quotes/${quoteId}/approve`);
+      const response = await api.post(`/crm/quotes/${quoteId}/approve`, {
+        signerName,
+        signerTitle,
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -220,7 +223,7 @@ export default function QuoteDetailPage() {
       useOnboardingStore.getState().completeStep("convert_booking");
     },
     onError: (err: any) => {
-      setErrorText(err.response?.data?.error?.message || "Failed to approve quote.");
+      setErrorText(err.response?.data?.error?.message || err.response?.data?.message || "Failed to approve quote.");
     }
   });
 
@@ -765,6 +768,12 @@ export default function QuoteDetailPage() {
             <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed">
               By typing your name, you acknowledge this is a binding contract sign-off for Quote number {quote.quoteNumber}.
             </p>
+            {errorText && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center gap-2">
+                <AlertCircle size={14} className="shrink-0" />
+                <span>{errorText}</span>
+              </div>
+            )}
             <form
               onSubmit={(e) => {
                 e.preventDefault();

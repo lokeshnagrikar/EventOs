@@ -1,12 +1,19 @@
 "use client";
 
-import React from "react";
-import { useParams } from "next/navigation";
+import React, { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import InvoiceWorkspace from "@/components/finance/InvoiceWorkspace";
 
 export default function InvoiceDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const invoiceId = params.id as string;
+
+  // Eagerly prefetch route bundle as soon as invoice detail mounts
+  useEffect(() => {
+    router.prefetch("/invoices");
+    router.prefetch("/finance");
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-background text-zinc-100 flex flex-col relative overflow-hidden transition-all duration-200">
