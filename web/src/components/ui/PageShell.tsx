@@ -9,7 +9,6 @@ import Sidebar from "@/components/dashboard/Sidebar";
 import Navbar from "@/components/dashboard/Navbar";
 import TrialBanner from "@/components/dashboard/TrialBanner";
 import TrialExpiredModal from "@/components/dashboard/TrialExpiredModal";
-import CommandPalette from "@/components/CommandPalette";
 import { LucideIcon, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -48,7 +47,6 @@ export default function PageShell({
   const [mounted, setMounted] = useState(false);
   const { isCollapsed, setIsCollapsed } = useSidebarStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [userName, setUserName] = useState("Admin Workspace");
 
   useEffect(() => {
@@ -95,9 +93,6 @@ export default function PageShell({
   return (
     <div className="min-h-screen min-h-dvh h-dvh flex bg-background text-foreground font-sans relative overflow-x-hidden transition-all duration-200 theme-dynamic">
       {/* Clean workspace background — no decorative blurs */}
-
-      {/* Command Palette */}
-      <CommandPalette isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />
 
       {/* 14-Day Free Trial Concluded Paywall Modal */}
       <TrialExpiredModal />
@@ -150,7 +145,6 @@ export default function PageShell({
 
         <Navbar
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          onSearchClick={() => setIsPaletteOpen(true)}
         />
 
         <main

@@ -47,7 +47,7 @@ import {
 
 interface NavbarProps {
   onMenuToggle: () => void;
-  onSearchClick: () => void;
+  onSearchClick?: () => void;
 }
 
 export interface NotificationItem {
@@ -714,8 +714,8 @@ export default function Navbar({ onMenuToggle, onSearchClick }: NavbarProps) {
         {/* 1. Global Search Shortcut */}
         <button
           onClick={() => {
-            if (onSearchClick) onSearchClick();
             window.dispatchEvent(new CustomEvent("open-global-search"));
+            if (onSearchClick) onSearchClick();
           }}
           className="hidden md:flex items-center justify-between gap-3 px-3.5 py-1.5 border border-border rounded-full bg-muted/40 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-all w-52 cursor-pointer group"
         >
