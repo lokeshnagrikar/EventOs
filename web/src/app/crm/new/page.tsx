@@ -20,6 +20,7 @@ import {
   AlertCircle,
   CheckCircle2
 } from "lucide-react";
+import { EVENT_TYPES_GROUPED, LEAD_SOURCES } from "@/config/eventTypes";
 
 const leadSchema = z.object({
   name: z.string().min(2, { message: "Client name must be at least 2 characters." }),
@@ -203,10 +204,15 @@ export default function NewLeadPage() {
                       {...register("eventType")}
                     >
                       <option value="">Choose type</option>
-                      <option value="WEDDING">Wedding Ceremony</option>
-                      <option value="BIRTHDAY">Birthday Party</option>
-                      <option value="ENGAGEMENT">Engagement Decor</option>
-                      <option value="CORPORATE">Corporate Summit</option>
+                      {EVENT_TYPES_GROUPED.map((group) => (
+                        <optgroup key={group.category} label={group.category} className="bg-[#18181B] text-zinc-500 font-bold">
+                          {group.options.map((opt) => (
+                            <option key={opt.key} value={opt.key} className="text-white font-medium">
+                              {opt.label}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
                     </select>
                     {errors.eventType && <p className="text-[10px] text-red-400 font-medium">{errors.eventType.message}</p>}
                   </div>
@@ -257,10 +263,11 @@ export default function NewLeadPage() {
                       {...register("leadSource")}
                     >
                       <option value="">Select source</option>
-                      <option value="WedMeGood">WedMeGood</option>
-                      <option value="Instagram">Instagram</option>
-                      <option value="Referral">Word of Mouth Referral</option>
-                      <option value="Website">Agency Website</option>
+                      {LEAD_SOURCES.map((src) => (
+                        <option key={src.key} value={src.key}>
+                          {src.label}
+                        </option>
+                      ))}
                     </select>
                     {errors.leadSource && <p className="text-[10px] text-red-400 font-medium">{errors.leadSource.message}</p>}
                   </div>

@@ -2,11 +2,25 @@ package com.eventos.event.entity;
 
 public enum EventType {
     WEDDING,
-    BIRTHDAY,
+    RECEPTION,
+    SANGEET,
     ENGAGEMENT,
-    CORPORATE,
+    DESTINATION_WEDDING,
     ANNIVERSARY,
-    OTHER,
-    SOCIAL
+    CORPORATE,
+    PRODUCT_LAUNCH,
+    GALA,
+    EXHIBITION,
+    RETREAT,
+    BIRTHDAY,
+    BABY_SHOWER,
+    COCKTAIL,
+    HOUSEWARMING,
+    SOCIAL,
+    CONCERT,
+    FASHION_SHOW,
+    COLLEGE_FEST,
+    SPORTS,
+    OTHER
 }
 

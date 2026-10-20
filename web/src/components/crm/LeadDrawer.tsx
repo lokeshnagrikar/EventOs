@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { EVENT_TYPES_GROUPED, LEAD_SOURCES } from "@/config/eventTypes";
 
 interface LeadDrawerProps {
   leadId: string | null;
@@ -505,10 +506,15 @@ export default function LeadDrawer({
                     }}
                     className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-lg text-slate-800 dark:text-zinc-300 focus:outline-none focus:border-purple-600 shadow-sm"
                   >
-                    <option value="WEDDING">Wedding</option>
-                    <option value="BIRTHDAY">Birthday</option>
-                    <option value="ENGAGEMENT">Engagement</option>
-                    <option value="CORPORATE">Corporate</option>
+                    {EVENT_TYPES_GROUPED.map((group) => (
+                      <optgroup key={group.category} label={group.category} className="bg-slate-100 dark:bg-zinc-900 text-slate-500 font-bold">
+                        {group.options.map((opt) => (
+                          <option key={opt.key} value={opt.key} className="text-slate-900 dark:text-white font-medium">
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
                 <div className="space-y-1.5">
@@ -548,11 +554,11 @@ export default function LeadDrawer({
                     }}
                     className="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-850 rounded-lg text-slate-800 dark:text-zinc-300 focus:outline-none focus:border-purple-600 shadow-sm"
                   >
-                    <option value="Website">Website</option>
-                    <option value="WhatsApp">WhatsApp</option>
-                    <option value="Instagram">Instagram</option>
-                    <option value="Referral">Referral</option>
-                    <option value="Manual">Manual</option>
+                    {LEAD_SOURCES.map((src) => (
+                      <option key={src.key} value={src.key}>
+                        {src.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

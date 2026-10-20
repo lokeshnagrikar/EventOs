@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { EVENT_TYPES_GROUPED, LEAD_SOURCES } from "@/config/eventTypes";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -252,6 +253,7 @@ export default function DashboardPage() {
   const { user, memberships, activeTenantId } = useAuthStore();
   const currentCompanyName = memberships?.find((m) => m.tenantId === activeTenantId)?.companyName || "Dream Weddings Studio";
   const router = useRouter();
+  const queryClient = useQueryClient();
   const addToast = useToastStore((state) => state.addToast);
 
   // Control Center States
@@ -1041,25 +1043,58 @@ export default function DashboardPage() {
 
 
 
-  // Quick Action Submissions
-  const handleQuickActionSubmit = (type: string, data: any) => {
-    setIsQuickActionOpen(null);
-    if (type === "lead") {
+  // Dynamic Mutations for Dashboard Quick Actions
+  const createDashboardLeadMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const response = await api.post("/crm/leads", payload);
+      return response.data;
+    },
+    onSuccess: (res, vars: any) => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardMetrics"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardPipeline"] });
       setKpiMetrics((prev) => ({ ...prev, leads: prev.leads + 1 }));
       setSalesFunnel((prev) => ({ ...prev, leads: prev.leads + 1 }));
       setTimelineActivity((prev) => [
-        { id: `act-${Date.now()}`, message: `New manual lead created: ${data.name} (${data.event})`, time: "Just Now", tag: "CRM" },
+        { id: `act-${Date.now()}`, message: `New lead created: ${vars.name} (${vars.eventType})`, time: "Just Now", tag: "CRM" },
         ...prev,
       ]);
-      addToast(`Lead for ${data.name} initialized successfully.`, "success");
-    } else if (type === "booking") {
+      setIsQuickActionOpen(null);
+      addToast(`Lead proposal for ${vars.name} created successfully ✓`, "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to create lead";
+      addToast(msg, "error");
+    }
+  });
+
+  const createDashboardEventMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const response = await api.post("/events", payload);
+      return response.data;
+    },
+    onSuccess: (res, vars: any) => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardMetrics"] });
       setKpiMetrics((prev) => ({ ...prev, bookings: prev.bookings + 1 }));
       setTimelineActivity((prev) => [
-        { id: `act-${Date.now()}`, message: `Confirmed Booking recorded: ${data.client} - ${data.type}`, time: "Just Now", tag: "EVENT" },
+        { id: `act-${Date.now()}`, message: `Confirmed Event workspace: ${vars.name} (${vars.type})`, time: "Just Now", tag: "EVENT" },
         ...prev,
       ]);
-      addToast(`Booking for ${data.client} created successfully.`, "success");
-    } else if (type === "invoice") {
+      setIsQuickActionOpen(null);
+      addToast(`Event & Booking for ${vars.name} recorded successfully ✓`, "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to record booking";
+      addToast(msg, "error");
+    }
+  });
+
+  // Quick Action Submissions
+  const handleQuickActionSubmit = (type: string, data: any) => {
+    setIsQuickActionOpen(null);
+    if (type === "invoice") {
       setKpiMetrics((prev) => ({ ...prev, invoices: prev.invoices + 1, outstanding: prev.outstanding + Number(data.amount) }));
       setTimelineActivity((prev) => [
         { id: `act-${Date.now()}`, message: `New invoice ${data.id} generated for ${data.client} (₹${data.amount})`, time: "Just Now", tag: "FINANCE" },
@@ -2839,28 +2874,101 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c0c0e]/95 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-slate-700 dark:text-zinc-300 shadow-2xl"
+                className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c0c0e]/95 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-slate-700 dark:text-zinc-300 shadow-2xl"
               >
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Create New Lead Inbound</h3>
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Create New Lead Inbound</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">Quickly register client proposal into CRM pipeline</p>
+                  </div>
+                  <button type="button" onClick={() => setIsQuickActionOpen(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 cursor-pointer">
+                    <X size={16} />
+                  </button>
+                </div>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
-                    handleQuickActionSubmit("lead", { name: formData.get("name"), event: formData.get("event") });
+                    const name = formData.get("name")?.toString().trim() || "";
+                    const phone = formData.get("phone")?.toString().trim() || "";
+                    if (!name) {
+                      addToast("Client name is required", "error");
+                      return;
+                    }
+                    if (!phone) {
+                      addToast("Phone number is required", "error");
+                      return;
+                    }
+                    createDashboardLeadMutation.mutate({
+                      name,
+                      phone,
+                      email: formData.get("email")?.toString().trim() || null,
+                      eventType: formData.get("eventType")?.toString() || "WEDDING",
+                      eventDate: formData.get("eventDate")?.toString() || new Date().toISOString().split("T")[0],
+                      budget: Number(formData.get("budget")) || 100000,
+                      leadSource: formData.get("leadSource")?.toString() || "WhatsApp",
+                      notes: formData.get("notes")?.toString() || ""
+                    });
                   }}
                   className="space-y-3.5"
                 >
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400">Client Name</label>
-                    <input required name="name" type="text" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white" />
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Client Name *</label>
+                    <input required name="name" type="text" placeholder="e.g. Rahul Sharma" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Phone Number *</label>
+                      <input required name="phone" type="text" placeholder="e.g. 9876543210" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Email Address</label>
+                      <input name="email" type="email" placeholder="e.g. rahul@example.com" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Event Class</label>
+                      <select name="eventType" defaultValue="WEDDING" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:border-purple-600">
+                        {EVENT_TYPES_GROUPED.map((group) => (
+                          <optgroup key={group.category} label={group.category} className="bg-slate-100 dark:bg-zinc-900 text-slate-500 font-bold">
+                            {group.options.map((opt) => (
+                              <option key={opt.key} value={opt.key} className="text-slate-900 dark:text-white font-medium">
+                                {opt.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Estimated Budget (INR)</label>
+                      <input name="budget" type="number" defaultValue="250000" min={0} className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:border-purple-600" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Lead Source</label>
+                      <select name="leadSource" defaultValue="WhatsApp" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600">
+                        {LEAD_SOURCES.map((src) => (
+                          <option key={src.key} value={src.key}>{src.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Tentative Date</label>
+                      <input name="eventDate" type="date" defaultValue={new Date().toISOString().split("T")[0]} className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                    </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400">Event Roster Category</label>
-                    <input required name="event" type="text" placeholder="e.g. Grand Taj Wedding" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white" />
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Event Brief / Notes</label>
+                    <textarea name="notes" rows={2} placeholder="Optional client requirements or preferences..." className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="flex gap-2 justify-end pt-2">
-                    <button type="button" onClick={() => setIsQuickActionOpen(null)} className="px-4 py-2 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-700 dark:text-zinc-300">Cancel</button>
-                    <button type="submit" className="px-4 py-2 bg-purple-650 text-white rounded-xl font-bold cursor-pointer">Add Lead</button>
+                    <button type="button" onClick={() => setIsQuickActionOpen(null)} className="px-4 py-2 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-700 dark:text-zinc-300 cursor-pointer">Cancel</button>
+                    <button type="submit" disabled={createDashboardLeadMutation.isPending} className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl font-bold cursor-pointer disabled:opacity-50">
+                      {createDashboardLeadMutation.isPending ? "Creating Lead..." : "Add Lead"}
+                    </button>
                   </div>
                 </form>
               </motion.div>
@@ -2872,32 +2980,96 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c0c0e]/95 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-slate-700 dark:text-zinc-300 shadow-2xl"
+                className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c0c0e]/95 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-slate-700 dark:text-zinc-300 shadow-2xl"
               >
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Confirm Booking Order</h3>
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Confirm Booking Order</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">Provision an active event workspace & contract pipeline</p>
+                  </div>
+                  <button type="button" onClick={() => setIsQuickActionOpen(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 cursor-pointer">
+                    <X size={16} />
+                  </button>
+                </div>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
-                    handleQuickActionSubmit("booking", { client: formData.get("client"), type: formData.get("type") });
+                    const name = formData.get("name")?.toString().trim() || "";
+                    if (!name) {
+                      addToast("Event / Client title is required", "error");
+                      return;
+                    }
+                    const eventDate = formData.get("startDate")?.toString() || new Date().toISOString().split("T")[0];
+                    const venue = formData.get("venueName")?.toString() || "Main Venue";
+                    createDashboardEventMutation.mutate({
+                      name,
+                      type: formData.get("type")?.toString() || "WEDDING",
+                      status: "PLANNING",
+                      startDate: `${eventDate}T09:00:00`,
+                      endDate: `${eventDate}T23:00:00`,
+                      location: venue,
+                      venueName: venue,
+                      venueAddress: venue,
+                      guestCount: Number(formData.get("guestCount")) || 100,
+                      budget: Number(formData.get("budget")) || 250000,
+                      notes: JSON.stringify({
+                        notesText: formData.get("notes")?.toString() || "",
+                        checklist: [],
+                        tasks: [],
+                        resources: []
+                      })
+                    });
                   }}
                   className="space-y-3.5"
                 >
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400">Client Partner</label>
-                    <input required name="client" type="text" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-855 px-3 py-2 rounded-xl text-slate-900 dark:text-white" />
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Event / Client Partner *</label>
+                    <input required name="name" type="text" placeholder="e.g. Verma Royal Wedding or Tech Summit 2026" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-855 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Event Type</label>
+                      <select required name="type" defaultValue="WEDDING" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-800 dark:text-zinc-350 text-xs font-bold focus:outline-none focus:border-purple-600">
+                        {EVENT_TYPES_GROUPED.map((group) => (
+                          <optgroup key={group.category} label={group.category} className="bg-slate-100 dark:bg-zinc-900 text-slate-500 font-bold">
+                            {group.options.map((opt) => (
+                              <option key={opt.key} value={opt.key} className="text-slate-900 dark:text-white font-medium">
+                                {opt.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Event Date *</label>
+                      <input required name="startDate" type="date" defaultValue={new Date().toISOString().split("T")[0]} className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Venue / Destination</label>
+                      <input name="venueName" type="text" placeholder="e.g. Taj Lake Palace, Udaipur" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Total Budget (INR)</label>
+                      <input name="budget" type="number" defaultValue="500000" min={0} className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:border-purple-600" />
+                    </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400">Event Type</label>
-                    <select required name="type" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-800 dark:text-zinc-350">
-                      <option value="Wedding">Wedding Celebration</option>
-                      <option value="Corporate">Corporate Summit</option>
-                      <option value="Social">Social Private</option>
-                    </select>
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Expected Guests</label>
+                    <input name="guestCount" type="number" defaultValue="250" min={1} className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Key Requirements / Notes</label>
+                    <textarea name="notes" rows={2} placeholder="Optional production notes, theme, or sound & decor requirements..." className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="flex gap-2 justify-end pt-2">
-                    <button type="button" onClick={() => setIsQuickActionOpen(null)} className="px-4 py-2 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-700 dark:text-zinc-300">Cancel</button>
-                    <button type="submit" className="px-4 py-2 bg-purple-650 text-white rounded-xl font-bold cursor-pointer">Record Booking</button>
+                    <button type="button" onClick={() => setIsQuickActionOpen(null)} className="px-4 py-2 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-700 dark:text-zinc-300 cursor-pointer">Cancel</button>
+                    <button type="submit" disabled={createDashboardEventMutation.isPending} className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl font-bold cursor-pointer disabled:opacity-50">
+                      {createDashboardEventMutation.isPending ? "Recording Booking..." : "Record Booking"}
+                    </button>
                   </div>
                 </form>
               </motion.div>

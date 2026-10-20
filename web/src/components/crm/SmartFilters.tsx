@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { X, Filter, Trash2, Bookmark, Star, Plus } from "lucide-react";
+import { EVENT_TYPES_GROUPED, LEAD_SOURCES } from "@/config/eventTypes";
 
 interface SmartFiltersProps {
   sourceFilter: string;
@@ -124,12 +125,11 @@ export default function SmartFilters({
             className="w-full px-3 py-2 bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 rounded-xl text-xs focus:outline-none focus:border-purple-600 transition-all font-semibold shadow-sm"
           >
             <option value="ALL">All Sources</option>
-            <option value="Website">Website</option>
-            <option value="WhatsApp">WhatsApp</option>
-            <option value="Instagram">Instagram</option>
-            <option value="Facebook">Facebook</option>
-            <option value="Referral">Referral</option>
-            <option value="Manual">Manual</option>
+            {LEAD_SOURCES.map((src) => (
+              <option key={src.key} value={src.key}>
+                {src.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -175,10 +175,15 @@ export default function SmartFilters({
             className="w-full px-3 py-2 bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 rounded-xl text-xs focus:outline-none focus:border-purple-600 transition-all font-semibold shadow-sm"
           >
             <option value="ALL">All Categories</option>
-            <option value="WEDDING">Wedding</option>
-            <option value="BIRTHDAY">Birthday</option>
-            <option value="ENGAGEMENT">Engagement</option>
-            <option value="CORPORATE">Corporate</option>
+            {EVENT_TYPES_GROUPED.map((group) => (
+              <optgroup key={group.category} label={group.category} className="bg-slate-100 dark:bg-zinc-900 text-slate-500 font-bold">
+                {group.options.map((opt) => (
+                  <option key={opt.key} value={opt.key} className="text-slate-900 dark:text-white font-medium">
+                    {opt.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
           </select>
         </div>
 

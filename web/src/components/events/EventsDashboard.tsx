@@ -45,6 +45,7 @@ import OfflineCheckInWidget from "./OfflineCheckInWidget";
 import { CalendarSkeleton } from "../ui/skeletons";
 import { useToastStore } from "@/lib/toastStore";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { EVENT_TYPES as CONFIG_EVENT_TYPES, EVENT_TYPES_GROUPED } from "@/config/eventTypes";
 
 export interface Event {
   id: string;
@@ -120,12 +121,11 @@ interface Vehicle {
   status: "AVAILABLE" | "IN_TRANSIT" | "MAINTENANCE";
 }
 
-const EVENT_TYPES = [
-  { key: "WEDDING", label: "Wedding", color: "border-pink-500/20 bg-pink-500/5 text-pink-400" },
-  { key: "BIRTHDAY", label: "Birthday", color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-455" },
-  { key: "ENGAGEMENT", label: "Engagement", color: "border-purple-500/20 bg-purple-500/5 text-purple-400" },
-  { key: "CORPORATE", label: "Corporate", color: "border-blue-500/20 bg-blue-500/5 text-blue-400" }
-];
+const EVENT_TYPES = CONFIG_EVENT_TYPES.map(t => ({
+  key: t.key,
+  label: t.label,
+  color: t.badgeColor
+}));
 
 const COLUMNS = [
   { id: "PLANNING", label: "Planning", color: "border-zinc-700/50 bg-zinc-950/20 text-zinc-450" },
@@ -2292,7 +2292,15 @@ export default function EventsDashboard() {
                       <label className="text-[9px] text-slate-500 dark:text-zinc-400 uppercase font-black tracking-wider">Event Type</label>
                       <select value={formType} onChange={(e) => setFormType(e.target.value)}
                         className="w-full px-3 py-2 bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none">
-                        {EVENT_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                        {EVENT_TYPES_GROUPED.map((group) => (
+                          <optgroup key={group.category} label={group.category} className="bg-slate-100 dark:bg-zinc-900 text-slate-500 font-bold">
+                            {group.options.map((opt) => (
+                              <option key={opt.key} value={opt.key} className="text-slate-900 dark:text-white font-medium">
+                                {opt.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
                       </select>
                     </div>
                   </div>
