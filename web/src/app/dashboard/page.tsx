@@ -524,6 +524,22 @@ export default function DashboardPage() {
     });
   }, [eventsResponse]);
 
+  // Dynamic Radar Pulse Indicators derived from real queries
+  const pendingQuotesCount = useMemo(() => {
+    if (!Array.isArray(quotesResponse)) return 0;
+    return quotesResponse.filter((q: any) => {
+      const s = (q.status || "").toUpperCase();
+      return s === "SENT" || s === "DRAFT" || s === "PENDING" || s === "ISSUED";
+    }).length;
+  }, [quotesResponse]);
+
+  const nextUpcomingEventTitle = useMemo(() => {
+    if (upcomingOperationsList && upcomingOperationsList.length > 0) {
+      return upcomingOperationsList[0].title;
+    }
+    return null;
+  }, [upcomingOperationsList]);
+
   // simulated WebSockets status
   const [latency, setLatency] = useState(14);
   const [wsPulse, setWsPulse] = useState(true);
@@ -539,6 +555,66 @@ export default function DashboardPage() {
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Global Keyboard Shortcuts for Dashboard Quick Actions (+L, +B, +I, +T, +G, +E, Esc)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isInput =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+
+      // Escape always closes any open modal or customizer dock
+      if (e.key === "Escape") {
+        setIsQuickActionOpen(null);
+        setIsCustomizeMode(false);
+        setIsReportModalOpen(false);
+        setIsShareModalOpen(false);
+        setIsHealthDetailOpen(false);
+        return;
+      }
+
+      // If user is currently typing in an input field, do not hijack keystrokes
+      if (isInput) return;
+
+      const key = e.key.toUpperCase();
+
+      // Check Alt+Key or single key shortcut
+      if ((e.altKey && key === "L") || key === "L") {
+        e.preventDefault();
+        setIsQuickActionOpen("lead");
+        addToast("Executive Shortcut (+L): Create New Lead", "info");
+      } else if ((e.altKey && key === "B") || key === "B") {
+        e.preventDefault();
+        setIsQuickActionOpen("booking");
+        addToast("Executive Shortcut (+B): Confirm Booking Order", "info");
+      } else if ((e.altKey && key === "I") || key === "I") {
+        e.preventDefault();
+        setIsQuickActionOpen("invoice");
+        addToast("Executive Shortcut (+I): Generate Ledger Invoice", "info");
+      } else if ((e.altKey && key === "T") || key === "T") {
+        e.preventDefault();
+        setIsQuickActionOpen("invite");
+        addToast("Executive Shortcut (+T): Invite Roster Crew", "info");
+      } else if ((e.altKey && key === "G") || key === "G") {
+        e.preventDefault();
+        router.push("/gallery");
+        addToast("Executive Shortcut (+G): Opening Client Vault", "info");
+      } else if ((e.altKey && key === "E") || key === "E") {
+        e.preventDefault();
+        router.push("/events");
+        addToast("Executive Shortcut (+E): Opening Smart Events Calendar", "info");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [router, addToast]);
 
   // Dynamic Workspace Health Factors
   const [healthScores, setHealthScores] = useState({
@@ -1091,6 +1167,54 @@ export default function DashboardPage() {
     }
   });
 
+  const createDashboardInvoiceMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const response = await api.post("/events/invoices", payload);
+      return response.data;
+    },
+    onSuccess: (res, vars: any) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardMetrics"] });
+      queryClient.invalidateQueries({ queryKey: ["financeOverview"] });
+      setKpiMetrics((prev) => ({ ...prev, invoices: prev.invoices + 1, outstanding: prev.outstanding + Number(vars.subtotal || 0) }));
+      setTimelineActivity((prev) => [
+        { id: `act-${Date.now()}`, message: `New invoice generated for ${vars.clientName} (₹${Number(vars.subtotal || 0).toLocaleString("en-IN")})`, time: "Just Now", tag: "FINANCE" },
+        ...prev,
+      ]);
+      setIsQuickActionOpen(null);
+      addToast(`Invoice generated for ${vars.clientName} (₹${Number(vars.subtotal || 0).toLocaleString("en-IN")}) ✓`, "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to issue invoice";
+      addToast(msg, "error");
+    }
+  });
+
+  const inviteDashboardCrewMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const response = await api.post("/auth/settings/team", payload);
+      return response.data;
+    },
+    onSuccess: (res, vars: any) => {
+      queryClient.invalidateQueries({ queryKey: ["teamMembersDashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardMetrics"] });
+      setTeamPerformance((prev) => [
+        ...prev,
+        { name: `${vars.firstName} ${vars.lastName}`.trim(), workload: 0, completed: 0, pending: 0, events: 0, csat: 100, responseTime: 0, status: "OFFLINE" },
+      ]);
+      setTimelineActivity((prev) => [
+        { id: `act-${Date.now()}`, message: `Crew member invited to Roster: ${vars.email} (${vars.role || "STAFF"})`, time: "Just Now", tag: "OPERATIONS" },
+        ...prev,
+      ]);
+      setIsQuickActionOpen(null);
+      addToast(`Invitation dispatched to ${vars.email} ✓`, "success");
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to invite crew member";
+      addToast(msg, "error");
+    }
+  });
+
   // Quick Action Submissions
   const handleQuickActionSubmit = (type: string, data: any) => {
     setIsQuickActionOpen(null);
@@ -1362,15 +1486,28 @@ export default function DashboardPage() {
           </div>
 
           <div
-            className="flex items-center justify-between sm:justify-start gap-2.5 px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/25 text-rose-700 dark:text-rose-300 text-xs font-bold cursor-pointer transition shadow-xs group min-w-0 active:scale-98"
+            className={cn(
+              "flex items-center justify-between sm:justify-start gap-2.5 px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer transition shadow-xs group min-w-0 active:scale-98",
+              pendingQuotesCount > 0
+                ? "bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/25 text-rose-700 dark:text-rose-300"
+                : "bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 text-emerald-800 dark:text-emerald-300"
+            )}
             onClick={() => router.push("/quotes")}
           >
             <span className="flex items-center gap-2 min-w-0 truncate">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+              {pendingQuotesCount > 0 ? (
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                </span>
+              ) : (
+                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+              )}
+              <span className="truncate">
+                {pendingQuotesCount > 0
+                  ? `${pendingQuotesCount} Proposal${pendingQuotesCount > 1 ? "s" : ""} Awaiting Sign-off`
+                  : "All Proposals Signed & Cleared"}
               </span>
-              <span className="truncate">2 Proposals Awaiting Sign-off</span>
             </span>
             <ChevronRight size={13} className="opacity-60 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </div>
@@ -1381,7 +1518,9 @@ export default function DashboardPage() {
           >
             <span className="flex items-center gap-2 min-w-0 truncate">
               <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
-              <span className="font-mono tabular-nums font-black">₹3,50,000</span>
+              <span className="font-mono tabular-nums font-black">
+                ₹{Number(kpiMetrics.outstanding || 0).toLocaleString("en-IN")}
+              </span>
               <span className="truncate">Milestone Due</span>
             </span>
             <ChevronRight size={13} className="opacity-60 group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -1393,7 +1532,9 @@ export default function DashboardPage() {
           >
             <span className="flex items-center gap-2 min-w-0 truncate">
               <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-              <span className="truncate">Next: Sharma Wedding Gala</span>
+              <span className="truncate">
+                {nextUpcomingEventTitle ? `Next: ${nextUpcomingEventTitle}` : "Next: Schedule First Event"}
+              </span>
             </span>
             <ChevronRight size={13} className="opacity-60 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </div>
@@ -3076,33 +3217,77 @@ export default function DashboardPage() {
             )}
 
             {/* Invoice Modal */}
+            {/* Invoice Modal */}
             {isQuickActionOpen === "invoice" && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c0c0e]/95 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-slate-700 dark:text-zinc-300 shadow-2xl"
+                className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c0c0e]/95 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-slate-700 dark:text-zinc-300 shadow-2xl"
               >
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Generate Ledger Invoice</h3>
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Generate Ledger Invoice</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">Issue an official invoice directly into finance flow</p>
+                  </div>
+                  <button type="button" onClick={() => setIsQuickActionOpen(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 cursor-pointer">
+                    <X size={16} />
+                  </button>
+                </div>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
-                    handleQuickActionSubmit("invoice", { id: `#INV-2026-${Math.floor(Math.random() * 800) + 100}`, client: formData.get("client"), amount: formData.get("amount") });
+                    const clientName = formData.get("client")?.toString().trim() || "";
+                    const amount = Number(formData.get("amount")) || 0;
+                    if (!clientName) {
+                      addToast("Client / Company name is required", "error");
+                      return;
+                    }
+                    if (amount <= 0) {
+                      addToast("Please specify a valid invoice amount", "error");
+                      return;
+                    }
+                    const dueDate = formData.get("dueDate")?.toString() || new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
+                    createDashboardInvoiceMutation.mutate({
+                      clientName,
+                      clientEmail: formData.get("email")?.toString().trim() || null,
+                      subtotal: amount,
+                      tax: 0,
+                      discount: 0,
+                      dueDate: `${dueDate}T23:59:59`,
+                      notes: formData.get("notes")?.toString() || "Generated from Executive Dashboard Quick Actions"
+                    });
                   }}
                   className="space-y-3.5"
                 >
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400">Recipient Client</label>
-                    <input required name="client" type="text" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white" />
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Recipient Client / Org *</label>
+                    <input required name="client" type="text" placeholder="e.g. Aditi Kapoor or Infosys Tech" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Client Email</label>
+                      <input name="email" type="email" placeholder="client@example.com" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Billed Amount (INR) *</label>
+                      <input required name="amount" type="number" defaultValue="75000" min={1} className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:border-purple-600" />
+                    </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400">Total Billed Amount (INR)</label>
-                    <input required name="amount" type="number" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white" />
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Due Date</label>
+                    <input name="dueDate" type="date" defaultValue={new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0]} className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Payment Terms / Notes</label>
+                    <textarea name="notes" rows={2} placeholder="Optional billing notes, milestone reference, or bank payment terms..." className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="flex gap-2 justify-end pt-2">
-                    <button type="button" onClick={() => setIsQuickActionOpen(null)} className="px-4 py-2 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-700 dark:text-zinc-300">Cancel</button>
-                    <button type="submit" className="px-4 py-2 bg-purple-650 text-white rounded-xl font-bold cursor-pointer">Issue Invoice</button>
+                    <button type="button" onClick={() => setIsQuickActionOpen(null)} className="px-4 py-2 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-700 dark:text-zinc-300 cursor-pointer">Cancel</button>
+                    <button type="submit" disabled={createDashboardInvoiceMutation.isPending} className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl font-bold cursor-pointer disabled:opacity-50">
+                      {createDashboardInvoiceMutation.isPending ? "Generating Invoice..." : "Issue Invoice"}
+                    </button>
                   </div>
                 </form>
               </motion.div>
@@ -3114,28 +3299,72 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c0c0e]/95 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-slate-700 dark:text-zinc-300 shadow-2xl"
+                className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c0c0e]/95 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 z-50 text-xs text-slate-700 dark:text-zinc-300 shadow-2xl"
               >
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Invite Roster Team Member</h3>
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Invite Roster Crew Member</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">Send official invitation link to onboard crew or coordinators</p>
+                  </div>
+                  <button type="button" onClick={() => setIsQuickActionOpen(null)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 cursor-pointer">
+                    <X size={16} />
+                  </button>
+                </div>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
-                    handleQuickActionSubmit("invite", { name: formData.get("name"), email: formData.get("email") });
+                    const name = formData.get("name")?.toString().trim() || "";
+                    const email = formData.get("email")?.toString().trim() || "";
+                    if (!name) {
+                      addToast("Full name is required", "error");
+                      return;
+                    }
+                    if (!email) {
+                      addToast("Email address is required", "error");
+                      return;
+                    }
+                    const parts = name.split(" ");
+                    const firstName = parts[0] || name;
+                    const lastName = parts.slice(1).join(" ") || "";
+                    inviteDashboardCrewMutation.mutate({
+                      email,
+                      firstName,
+                      lastName,
+                      role: formData.get("role")?.toString() || "STAFF",
+                      phone: formData.get("phone")?.toString().trim() || null
+                    });
                   }}
                   className="space-y-3.5"
                 >
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400">Full Name</label>
-                    <input required name="name" type="text" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white" />
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Full Name *</label>
+                    <input required name="name" type="text" placeholder="e.g. Vikram Singhania" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Email Address *</label>
+                      <input required name="email" type="email" placeholder="vikram@crew.co" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-855 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Role Assignment</label>
+                      <select name="role" defaultValue="STAFF" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:border-purple-600">
+                        <option value="STAFF">Crew / Field Staff</option>
+                        <option value="COORDINATOR">Lead Coordinator</option>
+                        <option value="MANAGER">Operations Manager</option>
+                        <option value="ADMIN">Workspace Administrator</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400">Email Address</label>
-                    <input required name="email" type="email" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-855 px-3 py-2 rounded-xl text-slate-900 dark:text-white" />
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Mobile / WhatsApp Number</label>
+                    <input name="phone" type="text" placeholder="e.g. 9811223344" className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 px-3 py-2 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-600" />
                   </div>
                   <div className="flex gap-2 justify-end pt-2">
-                    <button type="button" onClick={() => setIsQuickActionOpen(null)} className="px-4 py-2 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-700 dark:text-zinc-300">Cancel</button>
-                    <button type="submit" className="px-4 py-2 bg-purple-650 text-white rounded-xl font-bold cursor-pointer">Send Roster Invitation</button>
+                    <button type="button" onClick={() => setIsQuickActionOpen(null)} className="px-4 py-2 border border-slate-200 dark:border-zinc-850 rounded-xl text-slate-700 dark:text-zinc-300 cursor-pointer">Cancel</button>
+                    <button type="submit" disabled={inviteDashboardCrewMutation.isPending} className="px-4 py-2 bg-purple-650 hover:bg-purple-700 text-white rounded-xl font-bold cursor-pointer disabled:opacity-50">
+                      {inviteDashboardCrewMutation.isPending ? "Sending Invitation..." : "Send Roster Invitation"}
+                    </button>
                   </div>
                 </form>
               </motion.div>
