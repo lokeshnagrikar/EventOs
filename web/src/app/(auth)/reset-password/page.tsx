@@ -269,11 +269,10 @@ function ResetPasswordForm() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs">
                       <div
-                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                          isLengthValid
+                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${isLengthValid
                             ? "bg-emerald-500 text-black shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                             : "bg-zinc-800 text-zinc-600 border border-zinc-700"
-                        }`}
+                          }`}
                       >
                         <Check size={10} className="stroke-[3]" />
                       </div>
@@ -284,11 +283,10 @@ function ResetPasswordForm() {
 
                     <div className="flex items-center gap-2 text-xs">
                       <div
-                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                          hasUpperLower
+                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${hasUpperLower
                             ? "bg-emerald-500 text-black shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                             : "bg-zinc-800 text-zinc-600 border border-zinc-700"
-                        }`}
+                          }`}
                       >
                         <Check size={10} className="stroke-[3]" />
                       </div>
@@ -299,11 +297,10 @@ function ResetPasswordForm() {
 
                     <div className="flex items-center gap-2 text-xs">
                       <div
-                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                          hasNumber
+                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${hasNumber
                             ? "bg-emerald-500 text-black shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                             : "bg-zinc-800 text-zinc-600 border border-zinc-700"
-                        }`}
+                          }`}
                       >
                         <Check size={10} className="stroke-[3]" />
                       </div>
@@ -314,11 +311,10 @@ function ResetPasswordForm() {
 
                     <div className="flex items-center gap-2 text-xs">
                       <div
-                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                          hasSpecial
+                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${hasSpecial
                             ? "bg-emerald-500 text-black shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                             : "bg-zinc-800 text-zinc-600 border border-zinc-700"
-                        }`}
+                          }`}
                       >
                         <Check size={10} className="stroke-[3]" />
                       </div>
@@ -329,11 +325,10 @@ function ResetPasswordForm() {
 
                     <div className="flex items-center gap-2 text-xs">
                       <div
-                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                          passwordsMatch
+                        className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${passwordsMatch
                             ? "bg-emerald-500 text-black shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                             : "bg-zinc-800 text-zinc-600 border border-zinc-700"
-                        }`}
+                          }`}
                       >
                         <Check size={10} className="stroke-[3]" />
                       </div>
@@ -388,9 +383,8 @@ function ResetPasswordForm() {
                         placeholder="••••••••"
                         autoComplete="new-password"
                         autoFocus
-                        className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
-                          errors.password ? "border-rose-500/50" : "border-white/10 hover:border-white/25"
-                        }`}
+                        className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${errors.password ? "border-rose-500/50" : "border-white/10 hover:border-white/25"
+                          }`}
                         {...register("password")}
                       />
                       <button
@@ -410,15 +404,14 @@ function ResetPasswordForm() {
                         <div className="flex justify-between items-center text-[10px] select-none">
                           <span className="text-slate-400 font-bold uppercase tracking-wider">Strength</span>
                           <span
-                            className={`font-black uppercase tracking-wider transition-colors duration-300 ${
-                              strength.score === 1
+                            className={`font-black uppercase tracking-wider transition-colors duration-300 ${strength.score === 1
                                 ? "text-rose-400"
                                 : strength.score === 2
-                                ? "text-amber-400"
-                                : strength.score === 3
-                                ? "text-emerald-400"
-                                : "text-cyan-400"
-                            }`}
+                                  ? "text-amber-400"
+                                  : strength.score === 3
+                                    ? "text-emerald-400"
+                                    : "text-cyan-400"
+                              }`}
                           >
                             {strength.label}
                           </span>
@@ -445,13 +438,12 @@ function ResetPasswordForm() {
                         type={showConfirmPassword ? "text" : "password"}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
-                          errors.confirmPassword
+                        className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${errors.confirmPassword
                             ? "border-rose-500/50"
                             : confirmPasswordValue && passwordsMatch
-                            ? "border-emerald-500/50"
-                            : "border-white/10 hover:border-white/25"
-                        }`}
+                              ? "border-emerald-500/50"
+                              : "border-white/10 hover:border-white/25"
+                          }`}
                         {...register("confirmPassword")}
                       />
                       <button
@@ -468,9 +460,8 @@ function ResetPasswordForm() {
                     )}
                     {confirmPasswordValue && !errors.confirmPassword && (
                       <p
-                        className={`text-[10px] font-medium pl-1 flex items-center gap-1 ${
-                          passwordsMatch ? "text-emerald-400" : "text-amber-400"
-                        }`}
+                        className={`text-[10px] font-medium pl-1 flex items-center gap-1 ${passwordsMatch ? "text-emerald-400" : "text-amber-400"
+                          }`}
                       >
                         {passwordsMatch ? (
                           <>
