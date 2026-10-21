@@ -49,6 +49,13 @@ public class ShareLink {
     @Column(name = "watermark_text")
     private String watermarkText;
 
+    @Column(name = "is_revoked", nullable = false)
+    @Builder.Default
+    private boolean isRevoked = false;
+
+    @Column(name = "revoked_at")
+    private java.time.Instant revokedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -59,5 +66,9 @@ public class ShareLink {
 
     public boolean isExpired() {
         return expiresAt != null && expiresAt.isBefore(java.time.Instant.now());
+    }
+
+    public boolean isRevoked() {
+        return isRevoked;
     }
 }

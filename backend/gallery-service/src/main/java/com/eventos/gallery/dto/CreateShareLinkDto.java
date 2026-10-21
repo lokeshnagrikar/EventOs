@@ -17,6 +17,10 @@ public class CreateShareLinkDto {
 
     private String password; // Optional passcode protecting the link
 
+    private Integer passcodeLength; // Optional length for auto-generated PIN (default 6, min 4, max 16)
+
+    private Boolean generatePasscode; // Whether to auto-generate a secure PIN
+
     private Boolean allowDownload; // Whether downloading is allowed (defaults to true)
 
     private Boolean watermark; // Whether watermark is applied to photos

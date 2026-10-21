@@ -10,23 +10,9 @@ import java.util.UUID;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SharedAlbumResponseDto {
-
-    public SharedAlbumResponseDto() {
-    }
-
-    public SharedAlbumResponseDto(UUID albumId, String name, String description, UUID eventId,
-                                  boolean allowDownload, boolean watermark, String watermarkText,
-                                  List<GalleryItemResponseDto> items) {
-        this.albumId = albumId;
-        this.name = name;
-        this.description = description;
-        this.eventId = eventId;
-        this.allowDownload = allowDownload;
-        this.watermark = watermark;
-        this.watermarkText = watermarkText;
-        this.items = items;
-    }
     private UUID albumId;
     private String name;
     private String description;
@@ -35,4 +21,5 @@ public class SharedAlbumResponseDto {
     private boolean watermark;
     private String watermarkText;
     private List<GalleryItemResponseDto> items;
+    private String shareSessionToken; // Short-lived HMAC-signed token for accessing media/ZIP/favorite without passing passcode repeatedly
 }

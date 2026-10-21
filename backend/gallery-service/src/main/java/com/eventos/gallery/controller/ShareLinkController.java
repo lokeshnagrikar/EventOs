@@ -4,8 +4,14 @@ import com.eventos.gallery.dto.CreateShareLinkDto;
 import com.eventos.gallery.dto.GalleryItemResponseDto;
 import com.eventos.gallery.dto.ShareLinkResponseDto;
 import com.eventos.gallery.dto.SharedAlbumResponseDto;
+import com.eventos.gallery.exception.RateLimitExceededException;
+import com.eventos.gallery.exception.ShareLinkExpiredException;
+import com.eventos.gallery.exception.ShareLinkRevokedException;
+import com.eventos.gallery.security.ClientIpResolver;
 import com.eventos.gallery.service.ShareLinkService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,9 +30,16 @@ public class ShareLinkController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShareLinkController.class);
 
     private final ShareLinkService shareLinkService;
+    private final ClientIpResolver clientIpResolver;
+
+    @Autowired
+    public ShareLinkController(ShareLinkService shareLinkService, ClientIpResolver clientIpResolver) {
+        this.shareLinkService = shareLinkService;
+        this.clientIpResolver = clientIpResolver != null ? clientIpResolver : new ClientIpResolver(null);
+    }
 
     public ShareLinkController(ShareLinkService shareLinkService) {
-        this.shareLinkService = shareLinkService;
+        this(shareLinkService, new ClientIpResolver(null));
     }
 
     @PostMapping
@@ -92,37 +105,47 @@ public class ShareLinkController {
         }
     }
 
-    // Public Endpoint: Retrieve shared album with optional passcode protection
-    @GetMapping("/public/view/{token}")
+    // Public Endpoint: Retrieve shared album with optional passcode or session token
+    @GetMapping({"/public/view/{token}", "/public/{token}/view"})
     @PreAuthorize("permitAll()")
     public ResponseEntity<?> getSharedAlbum(
             @PathVariable String token,
             @RequestParam(value = "passcode", required = false) String passcode,
             @RequestHeader(value = "X-Gallery-Passcode", required = false) String passcodeHeader,
-            jakarta.servlet.http.HttpServletRequest request) {
+            @RequestHeader(value = "X-Share-Session-Token", required = false) String sessionTokenHeader,
+            @RequestParam(value = "sessionToken", required = false) String sessionTokenParam,
+            HttpServletRequest request) {
         try {
-            String activePasscode = (passcode != null && !passcode.trim().isEmpty())
-                    ? passcode
-                    : passcodeHeader;
+            String activePasscode = (passcode != null && !passcode.trim().isEmpty()) ? passcode : passcodeHeader;
+            String activeSessionToken = (sessionTokenHeader != null && !sessionTokenHeader.trim().isEmpty())
+                    ? sessionTokenHeader : sessionTokenParam;
 
-            String ipAddress = request.getHeader("X-Forwarded-For");
-            if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-                ipAddress = request.getRemoteAddr();
-            }
+            String ipAddress = clientIpResolver.resolveClientIp(request);
             String userAgent = request.getHeader("User-Agent");
 
-            SharedAlbumResponseDto album = shareLinkService.getSharedAlbum(token, activePasscode, ipAddress, userAgent);
+            SharedAlbumResponseDto album = shareLinkService.getSharedAlbum(
+                    token, activePasscode, activeSessionToken, ipAddress, userAgent);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("data", album);
 
             return ResponseEntity.ok(response);
+        } catch (RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("TOO_MANY_REQUESTS", e.getMessage()));
+        } catch (ShareLinkRevokedException e) {
+            return ResponseEntity.status(HttpStatus.GONE)
+                    .body(createErrorResponse("LINK_REVOKED", e.getMessage()));
+        } catch (ShareLinkExpiredException e) {
+            return ResponseEntity.status(HttpStatus.GONE)
+                    .body(createErrorResponse("LINK_EXPIRED", e.getMessage()));
         } catch (BadCredentialsException e) {
             String code = "passcode".equalsIgnoreCase(e.getMessage())
                     || "Passcode required".equalsIgnoreCase(e.getMessage())
-                            ? "PASSCODE_REQUIRED"
-                            : "INVALID_PASSCODE";
+                    ? "PASSCODE_REQUIRED"
+                    : "INVALID_PASSCODE";
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(createErrorResponse(code, e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -130,43 +153,45 @@ public class ShareLinkController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(createErrorResponse("ALBUM_NOT_PUBLISHED", e.getMessage()));
             }
-            String code = e.getMessage().contains("expired") ? "LINK_EXPIRED" : "NOT_FOUND";
-            return ResponseEntity.status(HttpStatus.GONE)
-                    .body(createErrorResponse(code, e.getMessage()));
+            String code = e.getMessage().contains("expired") ? "LINK_EXPIRED"
+                    : (e.getMessage().contains("revoked") ? "LINK_REVOKED" : "NOT_FOUND");
+            HttpStatus status = (e.getMessage().contains("expired") || e.getMessage().contains("revoked"))
+                    ? HttpStatus.GONE
+                    : HttpStatus.NOT_FOUND;
+            return ResponseEntity.status(status).body(createErrorResponse(code, e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse("FETCH_FAILED", e.getMessage()));
         }
     }
 
-    @GetMapping("/public/download/{token}")
+    // Public Endpoint: Streaming ZIP bulk download (requires verified session or passcode)
+    @GetMapping({"/public/download/{token}", "/public/{token}/download"})
     @PreAuthorize("permitAll()")
     public ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> downloadSharedAlbum(
             @PathVariable String token,
             @RequestParam(required = false) String passcode,
             @RequestHeader(value = "X-Gallery-Passcode", required = false) String passcodeHeader,
-            jakarta.servlet.http.HttpServletRequest request) {
+            @RequestHeader(value = "X-Share-Session-Token", required = false) String sessionTokenHeader,
+            @RequestParam(value = "sessionToken", required = false) String sessionTokenParam,
+            HttpServletRequest request) {
         try {
-            String activePasscode = (passcode != null && !passcode.trim().isEmpty())
-                    ? passcode
-                    : passcodeHeader;
+            String activePasscode = (passcode != null && !passcode.trim().isEmpty()) ? passcode : passcodeHeader;
+            String activeSessionToken = (sessionTokenHeader != null && !sessionTokenHeader.trim().isEmpty())
+                    ? sessionTokenHeader : sessionTokenParam;
 
-            String ipAddress = request.getHeader("X-Forwarded-For");
-            if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-                ipAddress = request.getRemoteAddr();
-            }
+            String ipAddress = clientIpResolver.resolveClientIp(request);
             String userAgent = request.getHeader("User-Agent");
 
-            // Validate and get album details (enforces token validation, expiration, and
-            // passcode)
-            SharedAlbumResponseDto album = shareLinkService.getSharedAlbum(token, activePasscode, ipAddress, userAgent);
+            // Validate credentials (enforces token validation, expiration, revocation, and passcode/session token)
+            SharedAlbumResponseDto album = shareLinkService.getSharedAlbum(
+                    token, activePasscode, activeSessionToken, ipAddress, userAgent);
 
             if (!album.isAllowDownload()) {
                 throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN,
                         "Downloading is not allowed for this share link");
             }
 
-            // Fetch the gallery items from the shared album
             List<GalleryItemResponseDto> items = album.getItems();
 
             org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody stream = outputStream -> {
@@ -176,10 +201,8 @@ public class ShareLinkController {
                         String name = item.getName();
                         if (name == null || name.trim().isEmpty()) {
                             name = item.getId().toString()
-                                    + (com.eventos.gallery.entity.GalleryItemType.VIDEO.equals(item.getType()) ? ".mp4"
-                                            : ".jpg");
+                                    + (com.eventos.gallery.entity.GalleryItemType.VIDEO.equals(item.getType()) ? ".mp4" : ".jpg");
                         }
-                        // Deduplicate
                         String baseName = name;
                         int extIndex = baseName.lastIndexOf('.');
                         String nameWithoutExt = extIndex > 0 ? baseName.substring(0, extIndex) : baseName;
@@ -212,13 +235,120 @@ public class ShareLinkController {
                             "attachment; filename=\"" + album.getName() + ".zip\"")
                     .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/zip")
                     .body(stream);
+        } catch (RateLimitExceededException e) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, e.getMessage());
+        } catch (ShareLinkRevokedException | ShareLinkExpiredException e) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.GONE, e.getMessage());
         } catch (BadCredentialsException e) {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
         } catch (IllegalArgumentException e) {
             HttpStatus status = e.getMessage().contains("not published")
                     ? HttpStatus.FORBIDDEN
-                    : (e.getMessage().contains("expired") ? HttpStatus.GONE : HttpStatus.NOT_FOUND);
+                    : (e.getMessage().contains("expired") || e.getMessage().contains("revoked")
+                    ? HttpStatus.GONE
+                    : HttpStatus.NOT_FOUND);
             throw new org.springframework.web.server.ResponseStatusException(status, e.getMessage());
+        }
+    }
+
+    // Public Endpoint: Retrieve single media item (requires verified session or passcode if protected)
+    @GetMapping({"/public/media/{token}/{itemId}", "/public/{token}/media/{itemId}"})
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<?> getSharedMediaItem(
+            @PathVariable String token,
+            @PathVariable UUID itemId,
+            @RequestParam(required = false) String passcode,
+            @RequestHeader(value = "X-Gallery-Passcode", required = false) String passcodeHeader,
+            @RequestHeader(value = "X-Share-Session-Token", required = false) String sessionTokenHeader,
+            @RequestParam(value = "sessionToken", required = false) String sessionTokenParam,
+            HttpServletRequest request) {
+        try {
+            String activePasscode = (passcode != null && !passcode.trim().isEmpty()) ? passcode : passcodeHeader;
+            String activeSessionToken = (sessionTokenHeader != null && !sessionTokenHeader.trim().isEmpty())
+                    ? sessionTokenHeader : sessionTokenParam;
+
+            String ipAddress = clientIpResolver.resolveClientIp(request);
+            String userAgent = request.getHeader("User-Agent");
+
+            GalleryItemResponseDto item = shareLinkService.getSharedMediaItem(
+                    token, itemId, activePasscode, activeSessionToken, ipAddress, userAgent);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", item);
+
+            return ResponseEntity.ok(response);
+        } catch (RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("TOO_MANY_REQUESTS", e.getMessage()));
+        } catch (ShareLinkRevokedException e) {
+            return ResponseEntity.status(HttpStatus.GONE)
+                    .body(createErrorResponse("LINK_REVOKED", e.getMessage()));
+        } catch (ShareLinkExpiredException e) {
+            return ResponseEntity.status(HttpStatus.GONE)
+                    .body(createErrorResponse("LINK_EXPIRED", e.getMessage()));
+        } catch (BadCredentialsException e) {
+            String code = "passcode".equalsIgnoreCase(e.getMessage())
+                    || "Passcode required".equalsIgnoreCase(e.getMessage())
+                    ? "PASSCODE_REQUIRED"
+                    : "INVALID_PASSCODE";
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(createErrorResponse(code, e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            HttpStatus status = e.getMessage().contains("not published") ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND;
+            return ResponseEntity.status(status).body(createErrorResponse("NOT_FOUND", e.getMessage()));
+        }
+    }
+
+    // Public Endpoint: Toggle item favorite by shared link viewer (requires verified session or passcode if protected)
+    @PostMapping({"/public/favorite/{token}/{itemId}", "/public/{token}/favorite/{itemId}"})
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<?> toggleSharedFavorite(
+            @PathVariable String token,
+            @PathVariable UUID itemId,
+            @RequestParam(required = false) Boolean favorite,
+            @RequestParam(required = false) String passcode,
+            @RequestHeader(value = "X-Gallery-Passcode", required = false) String passcodeHeader,
+            @RequestHeader(value = "X-Share-Session-Token", required = false) String sessionTokenHeader,
+            @RequestParam(value = "sessionToken", required = false) String sessionTokenParam,
+            HttpServletRequest request) {
+        try {
+            String activePasscode = (passcode != null && !passcode.trim().isEmpty()) ? passcode : passcodeHeader;
+            String activeSessionToken = (sessionTokenHeader != null && !sessionTokenHeader.trim().isEmpty())
+                    ? sessionTokenHeader : sessionTokenParam;
+
+            String ipAddress = clientIpResolver.resolveClientIp(request);
+            String userAgent = request.getHeader("User-Agent");
+
+            GalleryItemResponseDto item = shareLinkService.toggleSharedFavorite(
+                    token, itemId, favorite, activePasscode, activeSessionToken, ipAddress, userAgent);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", item);
+
+            return ResponseEntity.ok(response);
+        } catch (RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(e.getRetryAfterSeconds()))
+                    .body(createErrorResponse("TOO_MANY_REQUESTS", e.getMessage()));
+        } catch (ShareLinkRevokedException e) {
+            return ResponseEntity.status(HttpStatus.GONE)
+                    .body(createErrorResponse("LINK_REVOKED", e.getMessage()));
+        } catch (ShareLinkExpiredException e) {
+            return ResponseEntity.status(HttpStatus.GONE)
+                    .body(createErrorResponse("LINK_EXPIRED", e.getMessage()));
+        } catch (BadCredentialsException e) {
+            String code = "passcode".equalsIgnoreCase(e.getMessage())
+                    || "Passcode required".equalsIgnoreCase(e.getMessage())
+                    ? "PASSCODE_REQUIRED"
+                    : "INVALID_PASSCODE";
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(createErrorResponse(code, e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            HttpStatus status = e.getMessage().contains("not published") ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND;
+            return ResponseEntity.status(status).body(createErrorResponse("NOT_FOUND", e.getMessage()));
         }
     }
 

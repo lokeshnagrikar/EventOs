@@ -39,6 +39,27 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.FORBIDDEN, code, ex.getMessage());
     }
 
+    @ExceptionHandler(com.eventos.gallery.exception.RateLimitExceededException.class)
+    public ResponseEntity<?> handleRateLimitExceeded(com.eventos.gallery.exception.RateLimitExceededException ex) {
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
+        detail.setTitle("TOO_MANY_REQUESTS");
+        detail.setProperty("success", false);
+        detail.setProperty("retryAfter", ex.getRetryAfterSeconds());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(detail);
+    }
+
+    @ExceptionHandler(com.eventos.gallery.exception.ShareLinkExpiredException.class)
+    public ResponseEntity<?> handleShareLinkExpired(com.eventos.gallery.exception.ShareLinkExpiredException ex) {
+        return error(HttpStatus.GONE, "LINK_EXPIRED", ex.getMessage());
+    }
+
+    @ExceptionHandler(com.eventos.gallery.exception.ShareLinkRevokedException.class)
+    public ResponseEntity<?> handleShareLinkRevoked(com.eventos.gallery.exception.ShareLinkRevokedException ex) {
+        return error(HttpStatus.GONE, "LINK_REVOKED", ex.getMessage());
+    }
+
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<?> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
         return error(HttpStatus.PAYLOAD_TOO_LARGE, "FILE_TOO_LARGE", "Uploaded file exceeds maximum allowed limit (50MB)");

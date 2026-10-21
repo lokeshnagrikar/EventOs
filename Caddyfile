@@ -57,8 +57,10 @@ api.eventosapp.in {
             -Server
         }
 
-        # Exactly one layer responsible for CORS: Strip any upstream CORS headers from api-gateway
         reverse_proxy api-gateway:8080 {
+            # Anti-spoofing: Overwrite any client-injected forwarded headers with real peer IP
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Real-IP {remote_host}
             header_down -Access-Control-Allow-Origin
             header_down -Access-Control-Allow-Credentials
             header_down -Access-Control-Allow-Methods
