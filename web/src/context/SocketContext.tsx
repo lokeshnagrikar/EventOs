@@ -101,11 +101,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setStatus("CONNECTED");
         reconnectAttemptsRef.current = 0;
 
-        // Send STOMP CONNECT frame with no server heartbeat requirements to prevent drops
+        // Send STOMP CONNECT frame with user JWT token
         sendFrame("CONNECT", {
           acceptVersion: "1.1,1.2",
           heartbeat: "0,0",
-          Authorization: accessToken ? `Bearer ${accessToken}` : "Bearer guest-token"
+          Authorization: `Bearer ${accessToken}`
         });
 
         // Start ping keep-alive interval to prevent intermediate proxy timeouts

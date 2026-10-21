@@ -18,6 +18,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,47 +56,118 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+                if (accessor == null) {
+                    return message;
+                }
+
+                StompCommand command = accessor.getCommand();
+
+                // 1. Strict Authentication on CONNECT: No "guest-token" or anonymous bypasses permitted
+                if (StompCommand.CONNECT.equals(command)) {
                     List<String> authorization = accessor.getNativeHeader("Authorization");
-                    if (authorization != null && !authorization.isEmpty()) {
-                        String rawHeader = authorization.get(0);
-                        String token = rawHeader.startsWith("Bearer ") ? rawHeader.substring(7).trim() : rawHeader.trim();
+                    if (authorization == null || authorization.isEmpty()) {
+                        log.warn("[STOMP WS] Connection rejected: Missing Authorization header");
+                        throw new AccessDeniedException("Missing Authorization header for WebSocket connection");
+                    }
 
-                        if (!token.isEmpty() && !"guest-token".equalsIgnoreCase(token)) {
-                            if (!jwtService.validateToken(token)) {
-                                log.warn("[STOMP WS] Rejecting connection: Invalid or expired JWT token");
-                                throw new AccessDeniedException("Invalid or expired JWT token for WebSocket connection");
-                            }
+                    String rawHeader = authorization.get(0);
+                    String token = rawHeader.startsWith("Bearer ") ? rawHeader.substring(7).trim() : rawHeader.trim();
 
-                            try {
-                                Claims claims = jwtService.getClaims(token);
-                                String userIdStr = claims.get("userId", String.class);
-                                String tenantIdStr = claims.get("tenantId", String.class);
-                                String email = claims.getSubject();
-                                String roles = claims.get("roles", String.class);
+                    if (token.isEmpty() || "guest-token".equalsIgnoreCase(token)) {
+                        log.warn("[STOMP WS] Connection rejected: Unauthorized guest token or blank credential");
+                        throw new AccessDeniedException("Unauthorized: Valid user JWT token required");
+                    }
 
-                                UUID userId = (userIdStr != null && !userIdStr.isEmpty()) ? UUID.fromString(userIdStr) : null;
-                                UUID tenantId = (tenantIdStr != null && !tenantIdStr.isEmpty()) ? UUID.fromString(tenantIdStr) : null;
+                    if (!jwtService.validateToken(token)) {
+                        log.warn("[STOMP WS] Connection rejected: Invalid or expired JWT token");
+                        throw new AccessDeniedException("Invalid or expired JWT token for WebSocket connection");
+                    }
 
-                                UserPrincipal principal = new UserPrincipal(userId, tenantId, email, roles != null ? roles : "USER");
-                                accessor.setUser(principal);
-                                log.info("[STOMP WS] Authenticated STOMP user: {} (tenant: {})", email, tenantId);
-                            } catch (Exception e) {
-                                log.error("[STOMP WS] Failed to parse claims from JWT token: {}", e.getMessage());
-                                throw new AccessDeniedException("Failed to extract principal from token: " + e.getMessage());
-                            }
-                        } else {
-                            // Guest connection for public broadcasts
-                            UserPrincipal guestPrincipal = new UserPrincipal(null, null, "guest@eventos.com", "ROLE_GUEST");
-                            accessor.setUser(guestPrincipal);
+                    try {
+                        Claims claims = jwtService.getClaims(token);
+                        String userIdStr = claims.get("userId", String.class);
+                        String tenantIdStr = claims.get("tenantId", String.class);
+                        String email = claims.getSubject();
+                        String roles = claims.get("roles", String.class);
+
+                        UUID userId = (userIdStr != null && !userIdStr.isEmpty()) ? UUID.fromString(userIdStr) : null;
+                        UUID tenantId = (tenantIdStr != null && !tenantIdStr.isEmpty()) ? UUID.fromString(tenantIdStr) : null;
+
+                        if (userId == null) {
+                            throw new AccessDeniedException("Token missing required user identity claim");
                         }
-                    } else {
-                        // Unauthenticated fallback
-                        UserPrincipal guestPrincipal = new UserPrincipal(null, null, "guest@eventos.com", "ROLE_GUEST");
-                        accessor.setUser(guestPrincipal);
+
+                        UserPrincipal principal = new UserPrincipal(userId, tenantId, email, roles != null ? roles : "USER");
+                        if (accessor.isMutable()) {
+                            accessor.setUser(principal);
+                        } else {
+                            StompHeaderAccessor mutableAccessor = StompHeaderAccessor.create(StompCommand.CONNECT);
+                            mutableAccessor.copyHeaders(accessor.toMap());
+                            mutableAccessor.setUser(principal);
+                            return org.springframework.messaging.support.MessageBuilder.createMessage(message.getPayload(), mutableAccessor.getMessageHeaders());
+                        }
+                        log.info("[STOMP WS] Authenticated STOMP session for user: {} (tenant: {})", email, tenantId);
+                    } catch (AccessDeniedException ade) {
+                        throw ade;
+                    } catch (Exception e) {
+                        log.error("[STOMP WS] Failed to parse claims from JWT token: {}", e.getMessage());
+                        throw new AccessDeniedException("Failed to extract principal from token: " + e.getMessage());
                     }
                 }
+
+                // 2. Multi-Tenant Authorization on SUBSCRIBE: Block cross-tenant topic eavesdropping
+                else if (StompCommand.SUBSCRIBE.equals(command)) {
+                    Principal principal = accessor.getUser();
+                    if (!(principal instanceof UserPrincipal user)) {
+                        log.warn("[STOMP WS] Subscription rejected: Unauthenticated session");
+                        throw new AccessDeniedException("Unauthenticated STOMP subscription attempted");
+                    }
+
+                    String destination = accessor.getDestination();
+                    authorizeDestination(user, destination, "SUBSCRIBE");
+                }
+
+                // 3. Multi-Tenant Authorization on SEND: Block cross-tenant message injection
+                else if (StompCommand.SEND.equals(command)) {
+                    Principal principal = accessor.getUser();
+                    if (!(principal instanceof UserPrincipal user)) {
+                        log.warn("[STOMP WS] Message send rejected: Unauthenticated session");
+                        throw new AccessDeniedException("Unauthenticated STOMP message send attempted");
+                    }
+
+                    String destination = accessor.getDestination();
+                    authorizeDestination(user, destination, "SEND");
+                }
+
                 return message;
+            }
+
+            private void authorizeDestination(UserPrincipal user, String destination, String action) {
+                if (destination == null || destination.trim().isEmpty()) {
+                    return;
+                }
+
+                // SuperAdmin has global visibility across all broadcast topics
+                if (user.getRoles() != null && (user.getRoles().contains("SUPER_ADMIN") || user.getRoles().contains("ROLE_SUPER_ADMIN"))) {
+                    return;
+                }
+
+                // Tenant-scoped topic validation: e.g., /topic/tenant/{tenantId}/** or /queue/tenant/{tenantId}/**
+                if (destination.contains("/tenant/")) {
+                    String afterTenant = destination.substring(destination.indexOf("/tenant/") + 8);
+                    String targetTenantStr = afterTenant.split("/")[0].trim();
+                    try {
+                        UUID targetTenantId = UUID.fromString(targetTenantStr);
+                        if (user.getTenantId() == null || !user.getTenantId().equals(targetTenantId)) {
+                            log.warn("[STOMP WS] Cross-tenant {} rejected: User tenant {} tried to access {}",
+                                    action, user.getTenantId(), destination);
+                            throw new AccessDeniedException("Access denied: Cross-tenant destination unauthorized");
+                        }
+                    } catch (IllegalArgumentException e) {
+                        log.warn("[STOMP WS] Malformed tenant UUID in destination: {}", destination);
+                        throw new AccessDeniedException("Invalid tenant identifier in destination path");
+                    }
+                }
             }
         });
     }

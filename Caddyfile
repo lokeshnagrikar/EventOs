@@ -1,22 +1,69 @@
 api.eventosapp.in {
-    @cors_preflight method OPTIONS
+    # --------------------------------------------------------------------------
+    # Explicit Origin Allowlist: Non-matching origins get NO CORS headers
+    # --------------------------------------------------------------------------
+    @allowed_origin header Origin https://eventosapp.in https://www.eventosapp.in https://admin.eventosapp.in
+
+    # --------------------------------------------------------------------------
+    # OPTIONS Preflight Handling
+    # --------------------------------------------------------------------------
+    @cors_preflight {
+        method OPTIONS
+        header Origin https://eventosapp.in https://www.eventosapp.in https://admin.eventosapp.in
+    }
     handle @cors_preflight {
         header Access-Control-Allow-Origin "{header.Origin}"
         header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin, X-Gateway-Trust, x-founder-key, traceparent, baggage, X-Tenant-ID, X-Tenant-Id, x-tenant-id, X-Company-ID, X-Company-Id, x-company-id, X-Workspace-ID, X-Workspace-Id, x-workspace-id, X-User-ID, X-User-Id, x-user-id, X-CSRF-Token, x-csrf-token, {header.Access-Control-Request-Headers}"
+        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin, X-Gateway-Trust, x-founder-key, traceparent, baggage, X-Tenant-ID, X-Company-ID, X-Workspace-ID, X-User-ID, X-CSRF-Token"
         header Access-Control-Allow-Credentials "true"
         header Access-Control-Max-Age "86400"
+        header Vary "Origin"
         respond "" 204
     }
 
+    # Non-matching OPTIONS preflight requests receive 403 Forbidden with NO CORS headers
+    @forbidden_preflight {
+        method OPTIONS
+        not header Origin https://eventosapp.in https://www.eventosapp.in https://admin.eventosapp.in
+    }
+    handle @forbidden_preflight {
+        respond "" 403
+    }
+
+    # --------------------------------------------------------------------------
+    # Standard Request Handling & Security Headers
+    # --------------------------------------------------------------------------
     handle {
-        header Access-Control-Allow-Origin "{header.Origin}"
-        header Access-Control-Allow-Credentials "true"
+        # Only inject CORS headers if the request Origin matches the allowlist
+        header @allowed_origin Access-Control-Allow-Origin "{header.Origin}"
+        header @allowed_origin Access-Control-Allow-Credentials "true"
+        header @allowed_origin Vary "Origin"
+
+        # Production Security Headers
+        header {
+            # HSTS (Strict-Transport-Security): 1 year + subdomains + preload
+            Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+            # Prevent MIME-type sniffing
+            X-Content-Type-Options "nosniff"
+            # Clickjacking defense (disallow embedding in iframes)
+            X-Frame-Options "DENY"
+            # Referrer Policy
+            Referrer-Policy "strict-origin-when-cross-origin"
+            # Disable unneeded browser APIs
+            Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self)"
+            # CSP in Report-Only mode: Safe validation baseline before enforcement to avoid breaking payment/auth widgets
+            Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://res.cloudinary.com https://*.razorpay.com https://www.eventosapp.in; connect-src 'self' https://api.eventosapp.in wss://api.eventosapp.in https://*.razorpay.com; frame-src https://api.razorpay.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+            # Strip server version header
+            -Server
+        }
+
+        # Exactly one layer responsible for CORS: Strip any upstream CORS headers from api-gateway
         reverse_proxy api-gateway:8080 {
-            header_up Origin "http://localhost:3000"
             header_down -Access-Control-Allow-Origin
             header_down -Access-Control-Allow-Credentials
+            header_down -Access-Control-Allow-Methods
+            header_down -Access-Control-Allow-Headers
+            header_down -Access-Control-Max-Age
         }
     }
 }
-

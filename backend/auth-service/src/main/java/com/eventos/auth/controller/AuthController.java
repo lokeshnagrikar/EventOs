@@ -151,7 +151,7 @@ public class AuthController {
 
             // Extract client metadata
             String ipAddress = extractClientIp(httpRequest);
-            String userAgent = httpRequest.getHeader("User-Agent");
+            String userAgent = extractSanitizedUserAgent(httpRequest);
             String deviceModel = "Browser";
             String osName = "Web Client";
             String browser = "Unknown Browser";
@@ -243,7 +243,7 @@ public class AuthController {
         }
 
         String ipAddress = extractClientIp(httpRequest);
-        String userAgent = httpRequest.getHeader("User-Agent");
+        String userAgent = extractSanitizedUserAgent(httpRequest);
         String deviceModel = "Browser";
         String osName = "Web Client";
         String browser = "Unknown Browser";
@@ -292,7 +292,7 @@ public class AuthController {
             if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
                 ipAddress = xForwardedFor.split(",")[0].trim();
             }
-            String userAgent = httpRequest.getHeader("User-Agent");
+            String userAgent = extractSanitizedUserAgent(httpRequest);
             String deviceModel = "Browser";
             String osName = "Web Client";
             String browser = "Unknown Browser";
@@ -427,7 +427,7 @@ public class AuthController {
             if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
                 ipAddress = xForwardedFor.split(",")[0].trim();
             }
-            String userAgent = httpRequest.getHeader("User-Agent");
+            String userAgent = extractSanitizedUserAgent(httpRequest);
             String deviceModel = "Browser";
             String osName = "Web Client";
             String browser = "Unknown Browser";
@@ -572,7 +572,7 @@ public class AuthController {
                     ? request.getBootstrapSecret()
                     : headerSecret;
             String ipAddress = extractClientIp(httpRequest);
-            String userAgent = httpRequest.getHeader("User-Agent");
+            String userAgent = extractSanitizedUserAgent(httpRequest);
 
             Map<String, Object> result = authService.bootstrapSuperAdmin(
                     request.getEmail(),
@@ -795,7 +795,7 @@ public class AuthController {
             if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
                 ipAddress = xForwardedFor.split(",")[0].trim();
             }
-            String userAgent = httpRequest.getHeader("User-Agent");
+            String userAgent = extractSanitizedUserAgent(httpRequest);
             String deviceModel = "Browser";
             String osName = "Web Client";
             String browser = "Unknown Browser";
@@ -1018,6 +1018,18 @@ public class AuthController {
             }
         }
         return remoteIp;
+    }
+
+    private String extractSanitizedUserAgent(HttpServletRequest request) {
+        if (request == null) return null;
+        String raw = request.getHeader("User-Agent");
+        if (raw == null) return null;
+        String sanitized = raw.trim();
+        if (sanitized.length() > 255) {
+            sanitized = sanitized.substring(0, 255);
+        }
+        sanitized = sanitized.replaceAll("[<>\r\n\t]", "");
+        return sanitized.isEmpty() ? null : sanitized;
     }
 
     private Map<String, Object> createErrorResponse(String code, String message) {

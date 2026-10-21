@@ -383,7 +383,7 @@ export default function PortalSettingsPage() {
                         {s.device.toLowerCase().includes("mac") ? <Laptop size={14} className="text-zinc-500" /> : <Smartphone size={14} className="text-zinc-500" />}
                         <div>
                           <span className="font-bold text-zinc-250 block">{s.device}</span>
-                          <span className="text-[9px] text-zinc-555 block font-mono" dangerouslySetInnerHTML={{ __html: s.browser }} />
+                          <span className="text-[9px] text-zinc-555 block font-mono">{s.browser}</span>
                         </div>
                       </div>
                       {s.active ? (

@@ -744,13 +744,13 @@ public class AuthService {
         if (session != null) {
             session.setLastActiveAt(LocalDateTime.now());
             if (ipAddress != null)
-                session.setIpAddress(ipAddress);
+                session.setIpAddress(sanitizeSessionMetadata(ipAddress, 45, "0.0.0.0"));
             if (deviceModel != null)
-                session.setDeviceModel(deviceModel);
+                session.setDeviceModel(sanitizeSessionMetadata(deviceModel, 100, "Unknown Device"));
             if (osName != null)
-                session.setOsName(osName);
+                session.setOsName(sanitizeSessionMetadata(osName, 100, "Unknown OS"));
             if (browser != null)
-                session.setBrowser(browser);
+                session.setBrowser(sanitizeSessionMetadata(browser, 100, "Unknown Browser"));
             sessionRepository.save(session);
         }
 
@@ -1311,13 +1311,24 @@ public class AuthService {
                 .user(user)
                 .tenantId(tenantId)
                 .refreshToken(activeToken)
-                .ipAddress(ipAddress != null ? ipAddress : "0.0.0.0")
-                .deviceModel(deviceModel != null ? deviceModel : "Unknown Device")
-                .osName(osName != null ? osName : "Unknown OS")
-                .browser(browser != null ? browser : "Unknown Browser")
+                .ipAddress(sanitizeSessionMetadata(ipAddress, 45, "0.0.0.0"))
+                .deviceModel(sanitizeSessionMetadata(deviceModel, 100, "Unknown Device"))
+                .osName(sanitizeSessionMetadata(osName, 100, "Unknown OS"))
+                .browser(sanitizeSessionMetadata(browser, 100, "Unknown Browser"))
                 .lastActiveAt(LocalDateTime.now())
                 .build();
         sessionRepository.save(session);
+    }
+
+    private String sanitizeSessionMetadata(String val, int maxLen, String defaultVal) {
+        if (val == null || val.trim().isEmpty()) {
+            return defaultVal;
+        }
+        String clean = val.trim().replaceAll("[<>\r\n\t]", "");
+        if (clean.length() > maxLen) {
+            clean = clean.substring(0, maxLen);
+        }
+        return clean.isEmpty() ? defaultVal : clean;
     }
 
     public List<Map<String, Object>> getActiveSessions(UUID userId, UUID tenantId, String currentRefreshTokenHash) {
@@ -1439,10 +1450,10 @@ public class AuthService {
                 .user(user)
                 .tenantId(targetTenantId)
                 .refreshToken(newToken)
-                .ipAddress(ipAddress != null ? ipAddress : "0.0.0.0")
-                .deviceModel(deviceModel != null ? deviceModel : "Unknown Device")
-                .osName(osName != null ? osName : "Unknown OS")
-                .browser(browser != null ? browser : "Unknown Browser")
+                .ipAddress(sanitizeSessionMetadata(ipAddress, 45, "0.0.0.0"))
+                .deviceModel(sanitizeSessionMetadata(deviceModel, 100, "Unknown Device"))
+                .osName(sanitizeSessionMetadata(osName, 100, "Unknown OS"))
+                .browser(sanitizeSessionMetadata(browser, 100, "Unknown Browser"))
                 .lastActiveAt(LocalDateTime.now())
                 .build();
         sessionRepository.save(newSession);
