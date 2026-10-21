@@ -182,9 +182,11 @@ public class AuthController {
                 }
             }
 
+            boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
+
             Map<String, Object> authData = authService.login(
                     email, password, selectTenantId, ipAddress, deviceModel, osName, browser, userAgent,
-                    request.getCaptchaId(), request.getCaptchaValue());
+                    request.getCaptchaId(), request.getCaptchaValue(), rememberMe);
 
             if (Boolean.TRUE.equals(authData.get("requires2fa"))) {
                 Map<String, Object> challengeResponse = new HashMap<>();
@@ -196,8 +198,9 @@ public class AuthController {
             }
 
             String refreshToken = (String) authData.remove("refreshToken");
+            long maxAge = rememberMe ? (30L * 24 * 60 * 60) : (24L * 60 * 60);
 
-            ResponseCookie cookie = createRefreshTokenCookie(refreshToken, 7 * 24 * 60 * 60);
+            ResponseCookie cookie = createRefreshTokenCookie(refreshToken, maxAge);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
@@ -459,7 +462,8 @@ public class AuthController {
             String newRefreshToken = (String) result.remove("refreshToken");
 
             // Set rotated refresh token cookie
-            ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, 7 * 24 * 60 * 60);
+            long refreshMaxAge = result.containsKey("maxAge") ? ((Number) result.remove("maxAge")).longValue() : (30L * 24 * 60 * 60);
+            ResponseCookie cookie = createRefreshTokenCookie(newRefreshToken, refreshMaxAge);
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 

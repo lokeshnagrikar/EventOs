@@ -289,6 +289,13 @@ public class AuthService {
     public Map<String, Object> login(String email, String password, UUID selectTenantId,
             String ipAddress, String deviceModel, String osName, String browser, String userAgent,
             String captchaId, String captchaValue) {
+        return login(email, password, selectTenantId, ipAddress, deviceModel, osName, browser, userAgent, captchaId, captchaValue, false);
+    }
+
+    @Transactional
+    public Map<String, Object> login(String email, String password, UUID selectTenantId,
+            String ipAddress, String deviceModel, String osName, String browser, String userAgent,
+            String captchaId, String captchaValue, boolean rememberMe) {
         boolean isSuperAdmin = false;
         if (email != null && !email.trim().isEmpty()) {
             Optional<User> userCandidate = userRepository.findByEmail(email.trim().toLowerCase());
@@ -439,12 +446,18 @@ public class AuthService {
             }
         }
 
-        return createAuthoritativeSession(user, selectedMembership, memberships, ipAddress, deviceModel, osName, browser, userAgent);
+        return createAuthoritativeSession(user, selectedMembership, memberships, ipAddress, deviceModel, osName, browser, userAgent, rememberMe);
     }
 
     public Map<String, Object> createAuthoritativeSession(User user, Membership selectedMembership,
             List<Membership> memberships, String ipAddress, String deviceModel, String osName,
             String browser, String userAgent) {
+        return createAuthoritativeSession(user, selectedMembership, memberships, ipAddress, deviceModel, osName, browser, userAgent, false);
+    }
+
+    public Map<String, Object> createAuthoritativeSession(User user, Membership selectedMembership,
+            List<Membership> memberships, String ipAddress, String deviceModel, String osName,
+            String browser, String userAgent, boolean rememberMe) {
         // Extract permissions
         List<String> permissions = extractPermissionsFromRole(selectedMembership.getRole());
 
@@ -471,11 +484,15 @@ public class AuthService {
         String rawToken = generateSecureRefreshToken();
         String tokenHash = sha256(rawToken);
 
+        LocalDateTime expiryDate = rememberMe 
+                ? LocalDateTime.now().plusDays(30) 
+                : LocalDateTime.now().plusDays(1);
+
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .token(tokenHash)
                 .tenantId(selectedMembership.getTenantId())
-                .expiryDate(LocalDateTime.now().plusNanos(refreshExpirationMs * 1_000_000))
+                .expiryDate(expiryDate)
                 .build();
         refreshToken = refreshTokenRepository.save(refreshToken);
 
@@ -504,6 +521,8 @@ public class AuthService {
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", accessToken);
         response.put("refreshToken", rawToken);
+        response.put("rememberMe", rememberMe);
+        response.put("maxAge", rememberMe ? (30L * 24 * 60 * 60) : (24L * 60 * 60));
         response.put("userId", user.getId().toString());
         response.put("tenantId", selectedMembership.getTenantId().toString());
         response.put("role", selectedMembership.getRole().getName());
@@ -716,8 +735,10 @@ public class AuthService {
             }
         }
 
+        boolean wasRememberMe = refreshToken.getExpiryDate().isAfter(LocalDateTime.now().plusDays(2));
+        LocalDateTime newExpiry = wasRememberMe ? LocalDateTime.now().plusDays(30) : LocalDateTime.now().plusDays(1);
         refreshToken.setToken(newHash);
-        refreshToken.setExpiryDate(LocalDateTime.now().plusNanos(refreshExpirationMs * 1_000_000));
+        refreshToken.setExpiryDate(newExpiry);
         refreshTokenRepository.save(refreshToken);
 
         if (session != null) {
@@ -736,6 +757,7 @@ public class AuthService {
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", accessToken);
         response.put("refreshToken", newRawToken);
+        response.put("maxAge", wasRememberMe ? (30L * 24 * 60 * 60) : (24L * 60 * 60));
         return response;
     }
 

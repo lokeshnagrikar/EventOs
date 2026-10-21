@@ -475,9 +475,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
     }
 
     try {
+      const rememberMe = Boolean(data.rememberMe);
       const response = await apiClient.post("/auth/login", {
         email: data.email,
         password: data.password,
+        rememberMe,
         captchaId: captchaId,
         captchaValue: realRecaptchaEnabled ? captchaToken : captchaInput,
       });
@@ -485,9 +487,11 @@ export function LoginForm({ isModal = false, onSwitchMode }: LoginFormProps) {
       const { accessToken, firstName, lastName, role, userId, tenantId, memberships, permissions } = response.data.data;
 
       // Store lightweight session flag cookie for edge middleware redirection checks
-      setClientCookie("hasSession", "true", 604800);
-      setClientCookie("user_name", firstName, 604800);
-      setClientCookie("user_role", role, 604800);
+      // 30 days if rememberMe is enabled, otherwise 1 day (24 hours)
+      const sessionSeconds = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
+      setClientCookie("hasSession", "true", sessionSeconds);
+      setClientCookie("user_name", firstName, sessionSeconds);
+      setClientCookie("user_role", role, sessionSeconds);
       localStorage.setItem("user_name", firstName);
       localStorage.setItem("user_role", role);
       localStorage.setItem("eventos_last_user", JSON.stringify({
