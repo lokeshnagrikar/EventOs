@@ -64,13 +64,13 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
 
+  const [mounted, setMounted] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isEditingToken, setIsEditingToken] = useState(false);
-  const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
   const [shouldShake, setShouldShake] = useState(false);
 
   const triggerShake = () => {
@@ -95,7 +95,6 @@ function ResetPasswordForm() {
 
   const passwordValue = watch("password", "");
   const confirmPasswordValue = watch("confirmPassword", "");
-  const tokenValue = watch("token", "");
   const strength = checkPasswordStrength(passwordValue);
 
   // Live checklist criteria
@@ -106,17 +105,21 @@ function ResetPasswordForm() {
   const passwordsMatch = Boolean(passwordValue && confirmPasswordValue && passwordValue === confirmPasswordValue);
 
   useEffect(() => {
+    setMounted(true);
     const rawToken = searchParams.get("token");
-    if (rawToken) {
+    if (rawToken && rawToken.trim() !== "") {
       let clean = rawToken.trim();
       if (clean.includes("token=")) {
         const match = clean.match(/token=([A-Za-z0-9_-]+)/);
         if (match && match[1]) clean = match[1];
+      } else if (clean.includes("/")) {
+        const parts = clean.split("/");
+        clean = parts[parts.length - 1].split("?")[0];
       }
-      setTokenFromUrl(clean);
+      setToken(clean);
       setValue("token", clean);
     } else {
-      setIsEditingToken(true);
+      setToken(null);
     }
   }, [searchParams, setValue]);
 
@@ -124,27 +127,16 @@ function ResetPasswordForm() {
     setError(null);
     setLoading(true);
 
-    let cleanToken = data.token.trim();
-    if (cleanToken.includes("token=")) {
-      const match = cleanToken.match(/token=([A-Za-z0-9_-]+)/);
-      if (match && match[1]) {
-        cleanToken = match[1];
-      }
-    } else if (cleanToken.includes("/")) {
-      const parts = cleanToken.split("/");
-      cleanToken = parts[parts.length - 1].split("?")[0];
-    }
-
     try {
       await apiClient.post("/auth/reset-password", {
-        token: cleanToken,
+        token: data.token.trim(),
         password: data.password,
       });
 
       addToast("Password reset successfully!", "success");
       setSuccess(true);
     } catch (err: any) {
-      const errMsg = err.response?.data?.error?.message || "Password reset failed. Invalid or expired token.";
+      const errMsg = err.response?.data?.error?.message || "Password reset failed. Invalid or expired link.";
       setError(errMsg);
       addToast(errMsg, "error");
       triggerShake();
@@ -153,10 +145,14 @@ function ResetPasswordForm() {
     }
   };
 
-  const getMaskedToken = (tok: string) => {
-    if (!tok || tok.length <= 10) return tok;
-    return `${tok.slice(0, 6)}••••••••${tok.slice(-4)}`;
-  };
+  if (!mounted) {
+    return (
+      <div className="w-full max-w-md mx-auto p-8 text-center text-xs text-zinc-500 font-mono flex items-center justify-center gap-2">
+        <Loader2 size={16} className="animate-spin text-purple-400" />
+        <span>Initializing security channel...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto z-10 relative animate-in fade-in zoom-in-95 duration-300">
@@ -165,8 +161,43 @@ function ResetPasswordForm() {
         <div className="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] z-20" />
         <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-20" />
 
-        {success ? (
-          <div className="p-8 sm:p-12 text-center space-y-6 max-w-md mx-auto animate-slide-in">
+        {/* 1. Missing Token State (Invalid or Direct Visit) */}
+        {!token ? (
+          <div className="p-8 sm:p-12 text-center space-y-6 max-w-md mx-auto animate-slide-in select-none">
+            <div className="mx-auto h-16 w-16 rounded-3xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+              <ShieldAlert size={34} />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-sans">
+                Invalid or Expired Link
+              </h2>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                This password recovery link is missing, incomplete, or has expired for security reasons. Please request a fresh reset link from your registered email.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <Link
+                href="/forgot-password"
+                className="w-full h-12 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-500 hover:via-pink-500 hover:to-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-purple-600/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Request New Reset Link</span>
+                <ArrowRight size={15} />
+              </Link>
+
+              <Link
+                href="/?login=true"
+                className="inline-flex items-center justify-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors pt-1"
+              >
+                <ArrowLeft size={13} />
+                <span>Return to Sign In</span>
+              </Link>
+            </div>
+          </div>
+        ) : success ? (
+          /* 2. Success State */
+          <div className="p-8 sm:p-12 text-center space-y-6 max-w-md mx-auto animate-slide-in select-none">
             <div className="relative mx-auto h-20 w-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.25)]">
               <CheckCircle2 size={42} className="animate-scale-in" />
               <div className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-300">
@@ -192,8 +223,9 @@ function ResetPasswordForm() {
             </Button>
           </div>
         ) : (
+          /* 3. Main Two-Column Layout (Token is 100% invisible) */
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[500px]">
-            {/* Left Column: Brand & Security Overview */}
+            {/* Left Column: Brand & Security Trust Panel */}
             <div className="lg:col-span-5 bg-gradient-to-b from-purple-950/25 via-[#080c18] to-[#050811] p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-white/[0.08] flex flex-col justify-between select-none">
               <div className="space-y-6">
                 {/* Brand Header */}
@@ -316,18 +348,18 @@ function ResetPasswordForm() {
               {/* Bottom Assurance */}
               <div className="pt-4 mt-4 border-t border-white/[0.06] text-[11px] text-zinc-500 flex items-center gap-2">
                 <ShieldCheck size={14} className="text-purple-400 shrink-0" />
-                <span>Single-use cryptographic token verified</span>
+                <span>Zero-knowledge hashing & verified token session</span>
               </div>
             </div>
 
-            {/* Right Column: Password Reset Form */}
+            {/* Right Column: Clean Professional Password Form */}
             <div className={`lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between bg-[#080c18]/85 ${shouldShake ? "animate-shake" : ""}`}>
               <div className="space-y-5">
                 {/* Form Header */}
                 <div>
                   <h2 className="text-xl font-black text-white tracking-tight">Create New Password</h2>
                   <p className="text-xs text-zinc-400 mt-1">
-                    Enter your security credentials to regain access to your account.
+                    Choose a strong, unique password to secure your EventOS workspace.
                   </p>
                 </div>
 
@@ -340,62 +372,8 @@ function ResetPasswordForm() {
                 )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  {/* Security Token Display / Input */}
-                  {tokenFromUrl && !isEditingToken ? (
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="h-7 w-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                          <ShieldCheck size={16} />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                            <span>Security Token Verified</span>
-                            <CheckCircle2 size={12} className="text-emerald-400" />
-                          </div>
-                          <div className="text-[10px] font-mono text-emerald-300/80 truncate">
-                            {getMaskedToken(tokenValue || tokenFromUrl)}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingToken(true)}
-                        className="text-[10px] font-semibold text-zinc-400 hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-all cursor-pointer shrink-0"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-slate-300" htmlFor="token">
-                          Security Token
-                        </label>
-                        {tokenFromUrl && (
-                          <button
-                            type="button"
-                            onClick={() => setIsEditingToken(false)}
-                            className="text-[10px] text-purple-400 hover:text-purple-300 cursor-pointer"
-                          >
-                            Use verified link token
-                          </button>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <ShieldCheck className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
-                        <input
-                          id="token"
-                          type="text"
-                          placeholder="Paste security token from email"
-                          className={`w-full pl-10 pr-4 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
-                            errors.token ? "border-rose-500/50" : "border-white/10 hover:border-white/25"
-                          }`}
-                          {...register("token")}
-                        />
-                      </div>
-                      {errors.token && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.token.message}</p>}
-                    </div>
-                  )}
+                  {/* Hidden Token Input - transparent to the user */}
+                  <input type="hidden" {...register("token")} />
 
                   {/* New Password Input */}
                   <div className="space-y-1.5">
@@ -403,12 +381,13 @@ function ResetPasswordForm() {
                       New Password
                     </label>
                     <div className="relative">
-                      <KeyRound className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+                      <KeyRound className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                       <input
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
                         autoComplete="new-password"
+                        autoFocus
                         className={`w-full pl-10 pr-10 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
                           errors.password ? "border-rose-500/50" : "border-white/10 hover:border-white/25"
                         }`}
