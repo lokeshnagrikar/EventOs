@@ -89,7 +89,7 @@ docker compose up -d auth-service
                │                               │
                ▼                               ▼
       [ Vercel Edge Server ]         [ Ubuntu VPS Host ]
-       (Next.js 15 SSR/PWA)           (200.234.47.154)
+       (Next.js 15 SSR/PWA)           (<YOUR_VPS_IP>)
                                                │
                                       ┌────────┴────────┐
                                       ▼                 ▼
@@ -117,7 +117,7 @@ docker compose up -d auth-service
 ### 4.2 Production VPS Deployment Runbook
 1. **Pull Latest Main Branch**:
    ```bash
-   ssh root@200.234.47.154
+   ssh root@<YOUR_VPS_IP>
    cd /root/EventOs # or deployment directory
    git pull --rebase origin main
    ```

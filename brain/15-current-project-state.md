@@ -9,7 +9,7 @@
 - Backend: `eventos-parent` v1.0.0 (Spring Boot 3.3.0, Java 17/21 compatible, Lombok 1.18.36)
 - Microservices: `api-gateway` (:8080), `auth-service` (:8081), `crm-service` (:8082), `event-service` (:8083), `gallery-service` (:8084)
 - Production Domain: `https://eventosapp.in`
-- Backend API Host: `https://api.eventosapp.in` (VPS 200.234.47.154)
+- Backend API Host: `https://api.eventosapp.in` (VPS <YOUR_VPS_IP>)
 - Database: PostgreSQL 17 (Docker) with Flyway migrations (`auth_db` V1–V41, `crm_db` V1–V11)
 
 ## Implemented Modules
@@ -38,7 +38,7 @@
 | Component | Target / Provider | State | Configuration |
 |---|---|---|---|
 | Frontend Web | Vercel | ✅ Live | Next.js 15, edge routing, auto-deploy from `main`, ESLint clean |
-| Microservices Backend | Ubuntu VPS (`200.234.47.154`) | ✅ Live | Docker Compose, Spring Boot 3.3, Lombok 1.18.36 |
+| Microservices Backend | Ubuntu VPS (`<YOUR_VPS_IP>`) | ✅ Live | Docker Compose, Spring Boot 3.3, Lombok 1.18.36 |
 | Database | PostgreSQL 17 (Docker) | ✅ Healthy | Container `eventos-postgres`, Flyway migrations |
 | Cache & Session | Redis 7.2 (Docker) | ✅ Healthy | Container `eventos-redis`, token blacklist & metrics |
 | Message Bus | RabbitMQ 3.13 (Docker) | ✅ Healthy | Container `eventos-rabbitmq`, async event topics |

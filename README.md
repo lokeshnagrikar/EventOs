@@ -127,7 +127,7 @@ EventOS maintains an authoritative, persistent knowledge base in the [`brain/`](
                                 │
                ┌────────────────┴────────────────┐
                ▼ (Web Traffic)                   ▼ (API Traffic)
-      [ Vercel Edge Server ]            [ Ubuntu VPS Host (200.234.47.154) ]
+      [ Vercel Edge Server ]            [ Ubuntu VPS Host (<YOUR_VPS_IP>) ]
       (Next.js 15 SSR / PWA)             (api.eventosapp.in / DNS-Only)
       - Edge Auth Middleware                     │
       - Zustand State Stores                     ▼

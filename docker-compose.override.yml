@@ -1,0 +1,26 @@
+version: '3.8'
+
+# ==============================================================================
+# EventOS Local Development Port Override (docker-compose.override.yml)
+# Binds database, cache, message broker, and gateway ports to 127.0.0.1 (localhost only).
+# Used when local diagnostic or debugging access is required without exposing
+# ports to external network interfaces.
+# ==============================================================================
+
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  redis:
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  rabbitmq:
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+
+  api-gateway:
+    ports:
+      - "127.0.0.1:8080:8080"

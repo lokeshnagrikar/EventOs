@@ -27,7 +27,7 @@
 
 ### 1.3 Production Cloudflare DNS & Email Routing Architecture
 - **Cloudflare Anycast DNS:** Migrated nameservers from GoDaddy (`domaincontrol.com`) to Cloudflare.
-- **Backend Routing:** Set `api.eventosapp.in` -> VPS `200.234.47.154` with DNS-Only (Grey Cloud) to maintain direct TLS termination without WebSocket/API proxy disruption.
+- **Backend Routing:** Set `api.eventosapp.in` -> VPS `<YOUR_VPS_IP>` with DNS-Only (Grey Cloud) to maintain direct TLS termination without WebSocket/API proxy disruption.
 - **Inbound Cloudflare Email Routing:** Configured custom addresses (`admin@eventosapp.in`, `support@eventosapp.in`) to forward seamlessly to founder's Gmail (`nagrikarlokesh24468@gmail.com`).
 - **Outbound Resend SMTP:** Maintained dedicated sending subdomain `send.eventosapp.in` with Amazon SES DKIM/SPF verification.
 
@@ -41,6 +41,6 @@
 ---
 
 ## 2. Verification & Validation
-- Verified production build and container status on VPS `200.234.47.154`.
+- Verified production build and container status on VPS `<YOUR_VPS_IP>`.
 - Validated Cloudflare active status and Email Routing synchronization.
 - Confirmed zero TypeScript compilation regressions in web workspace.

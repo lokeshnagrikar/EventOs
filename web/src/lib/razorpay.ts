@@ -59,7 +59,10 @@ export async function openRazorpayCheckout(options: RazorpayPaymentOptions): Pro
     throw new Error("Unable to load Razorpay payment modal. Please check your internet connection.");
   }
 
-  const key = options.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_TjIIttn39f18sO";
+  const key = options.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+  if (!key) {
+    throw new Error("Razorpay Key ID is not configured. Please set NEXT_PUBLIC_RAZORPAY_KEY_ID.");
+  }
 
   const rzpOptions = {
     key: key,

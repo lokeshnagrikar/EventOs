@@ -100,7 +100,7 @@ STOMP live presence     PostgreSQL 17 alignment       100svh mobile drawer fix
 
 ### Phase 12: Production Cloudflare & VPS DNS/Email Architecture
 * Migrated `eventosapp.in` nameservers to Cloudflare for global DDoS mitigation, fast Anycast DNS, and universal SSL.
-* Routed backend traffic `api.eventosapp.in` directly to VPS `200.234.47.154` with DNS-Only (Grey Cloud) configuration.
+* Routed backend traffic `api.eventosapp.in` directly to VPS `<YOUR_VPS_IP>` with DNS-Only (Grey Cloud) configuration.
 * Configured Cloudflare Email Routing for inbound mailboxes (`admin@eventosapp.in`, `support@eventosapp.in`) forwarding directly into founder's personal Gmail inbox.
 * Preserved Resend SMTP outbound sending architecture (`send.eventosapp.in` MX/DKIM records) with zero conflict.
 

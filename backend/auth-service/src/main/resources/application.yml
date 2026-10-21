@@ -99,7 +99,7 @@ app:
   gateway:
     secret: ${GATEWAY_TRUST_SECRET:eventos_gateway_secure_shared_secret}
   bootstrap:
-    secret: ${BOOTSTRAP_SECRET:${APP_BOOTSTRAP_SECRET:superadmin_secure_bootstrap_key_2026!}}
+    secret: ${BOOTSTRAP_SECRET:${APP_BOOTSTRAP_SECRET:}}
   security:
     encryption:
       key: ${ENCRYPTION_KEY:${APP_SECURITY_ENCRYPTION_KEY:}}
@@ -117,8 +117,8 @@ app:
     api-key: ${STRIPE_API_KEY:}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
   razorpay:
-    key-id: ${RAZORPAY_KEY_ID:rzp_live_TjIIttn39f18sO}
-    key-secret: ${RAZORPAY_KEY_SECRET:c1B76Np8hv3Ckj8y2WxiZIIT}
+    key-id: ${RAZORPAY_KEY_ID:}
+    key-secret: ${RAZORPAY_KEY_SECRET:}
     webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
   rate-limiting:
     enabled: ${RATE_LIMIT_ENABLED:true}

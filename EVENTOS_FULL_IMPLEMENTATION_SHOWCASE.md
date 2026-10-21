@@ -73,7 +73,7 @@ Traditional event management agencies, Indian wedding planners, and corporate pr
 - **Caching & Real-Time**: Redis 7.2 (token revocation, distributed cache, dashboard performance).
 - **Messaging**: RabbitMQ 3.13 (AMQP event exchange).
 - **Media Engine**: Cloudinary API (dynamic transformations, tiered quality, watermarked proofing, client ZIP packaging).
-- **DevOps & Production**: Docker, Docker Compose, Linux VPS (`200.234.47.154`), Caddy reverse proxy with automatic Let's Encrypt SSL/TLS.
+- **DevOps & Production**: Docker, Docker Compose, Linux VPS (`<YOUR_VPS_IP>`), Caddy reverse proxy with automatic Let's Encrypt SSL/TLS.
 
 ---
 
@@ -231,5 +231,5 @@ docker compose up -d --build
 
 - **Repository**: [https://github.com/lokeshnagrikar/EventOs](https://github.com/lokeshnagrikar/EventOs)
 - **Architect & Full Stack Developer**: Lokesh Nagrikar
-- **Production Server**: Ubuntu VPS (`200.234.47.154`)
+- **Production Server**: Ubuntu VPS (`<YOUR_VPS_IP>`)
 - **Domain**: [https://www.eventosapp.in](https://www.eventosapp.in)

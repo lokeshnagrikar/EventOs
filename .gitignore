@@ -21,12 +21,12 @@ META-INF/
 
 # Secrets and configuration
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+*.env
 web/.env
-web/.env.local
+web/.env.*
+!web/.env.example
 
 # Logs and temporary files
 *.log
