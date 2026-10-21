@@ -9,6 +9,8 @@ import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useToastStore } from "@/lib/toastStore";
 import { Button } from "@/components/ui/button";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { EventOsLogo } from "@/components/ui/EventOsLogo";
 import { Mail, AlertCircle, ArrowLeft, CheckCircle2, Copy, Check, Loader2 } from "lucide-react";
 
 const forgotSchema = z.object({
@@ -74,143 +76,152 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  if (resetToken) {
-    return (
-      <div className="space-y-6 animate-slide-in text-center">
-        <div className="mx-auto h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-          <CheckCircle2 size={24} />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
-            Recovery Token Issued
-          </h2>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            For development convenience and verification, we have generated your security reset token below:
-          </p>
-        </div>
-
-        <div className="relative group p-3 bg-zinc-950/80 border border-zinc-800 rounded-xl flex items-center justify-between gap-2">
-          <code className="text-xs font-mono text-purple-400 select-all font-bold overflow-x-auto block text-left w-full pr-8 py-1">
-            {resetToken}
-          </code>
-          <button
-            onClick={handleCopy}
-            className="absolute right-3 top-3 text-zinc-400 hover:text-white transition-colors"
-            title="Copy to clipboard"
-          >
-            {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-          </button>
-        </div>
-
-        <Button
-          onClick={() => router.push(`/reset-password?token=${resetToken}`)}
-          className="w-full py-5 bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all"
-        >
-          Proceed to Reset Password
-        </Button>
-      </div>
-    );
-  }
-
-  if (emailSent) {
-    return (
-      <div className="space-y-6 animate-slide-in text-center">
-        <div className="mx-auto h-12 w-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-          <Mail size={22} />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
-            Check Your Inbox
-          </h2>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            We have dispatched a password reset link to <span className="text-white font-semibold">{submittedEmail}</span>. Please check your inbox and spam folder.
-          </p>
-          <p className="text-[11px] text-zinc-500">
-            The security recovery link will expire in <span className="text-purple-400 font-medium">15 minutes</span>.
-          </p>
-        </div>
-
-        <div className="space-y-3 pt-2">
-          <Link
-            href="/?login=true"
-            className="w-full py-3 inline-flex items-center justify-center bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-purple-500/10"
-          >
-            Return to Sign In
-          </Link>
-          <button
-            onClick={() => setEmailSent(false)}
-            className="text-xs text-zinc-400 hover:text-white transition-colors"
-          >
-            Didn&apos;t receive it? Try another email
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="space-y-2 text-center select-none">
-        <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
-          Recover Password
-        </h2>
-        <p className="text-xs text-zinc-400">Enter your email and we'll supply a security verification token.</p>
-      </div>
+    <div className="w-full max-w-[440px] mx-auto z-10 relative animate-in fade-in zoom-in-95 duration-300">
+      <SpotlightCard className="bg-[#0B0F19]/95 border border-purple-500/25 rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.85),0_0_40px_rgba(139,92,246,0.15)] backdrop-blur-2xl relative overflow-hidden transition-all duration-300 p-6 sm:p-7">
+        {/* Top Accent Gradient Line */}
+        <div className="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] z-20" />
+        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-20" />
 
-      {error && (
-        <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-300 animate-slide-in">
-          <AlertCircle size={16} className="shrink-0 mt-0.5" />
-          <span>{error}</span>
-        </div>
-      )}
+        {resetToken ? (
+          <div className="space-y-6 animate-slide-in text-center">
+            <div className="mx-auto h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <CheckCircle2 size={24} />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
+                Recovery Token Issued
+              </h2>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                For development convenience and verification, we have generated your security reset token below:
+              </p>
+            </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-300" htmlFor="email">
-            Email Address
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
-            <input
-              id="email"
-              type="email"
-              placeholder="you@company.com"
-              autoFocus
-              autoComplete="email"
-              className={`w-full pl-10 pr-4 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
-                errors.email ? "border-rose-500/50" : "border-white/10 hover:border-white/25"
-              }`}
-              {...register("email")}
-            />
+            <div className="relative group p-3 bg-zinc-950/80 border border-zinc-800 rounded-xl flex items-center justify-between gap-2">
+              <code className="text-xs font-mono text-purple-400 select-all font-bold overflow-x-auto block text-left w-full pr-8 py-1">
+                {resetToken}
+              </code>
+              <button
+                onClick={handleCopy}
+                className="absolute right-3 top-3 text-zinc-400 hover:text-white transition-colors"
+                title="Copy to clipboard"
+              >
+                {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+              </button>
+            </div>
+
+            <Button
+              onClick={() => router.push(`/reset-password?token=${resetToken}`)}
+              className="w-full py-5 bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all"
+            >
+              Proceed to Reset Password
+            </Button>
           </div>
-          {errors.email && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.email.message}</p>}
-        </div>
+        ) : emailSent ? (
+          <div className="space-y-6 animate-slide-in text-center">
+            <div className="mx-auto h-12 w-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <Mail size={22} />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
+                Check Your Inbox
+              </h2>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                We have dispatched a password reset link to <span className="text-white font-semibold">{submittedEmail}</span>. Please check your inbox and spam folder.
+              </p>
+              <p className="text-[11px] text-zinc-500">
+                The security recovery link will expire in <span className="text-purple-400 font-medium">15 minutes</span>.
+              </p>
+            </div>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full py-5 bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-2"
-        >
-          {loading ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              <span>Generating Token...</span>
-            </>
-          ) : (
-            "Get Reset Token"
-          )}
-        </Button>
-      </form>
+            <div className="space-y-3 pt-2">
+              <Link
+                href="/?login=true"
+                className="w-full py-3 inline-flex items-center justify-center bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-purple-500/10"
+              >
+                Return to Sign In
+              </Link>
+              <button
+                onClick={() => setEmailSent(false)}
+                className="text-xs text-zinc-400 hover:text-white transition-colors"
+              >
+                Didn&apos;t receive it? Try another email
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex flex-col items-center gap-3 text-center select-none">
+              <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-600 p-[1.5px] shadow-[0_4px_16px_rgba(168,85,247,0.35)] shrink-0">
+                <div className="w-full h-full bg-[#080c18] rounded-[14px] flex items-center justify-center">
+                  <EventOsLogo size={22} interactive={false} showGlow={false} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-100 to-zinc-400">
+                  Recover Password
+                </h2>
+                <p className="text-xs text-zinc-400">Enter your email and we'll send a security reset link.</p>
+              </div>
+            </div>
 
-      <div className="text-center pt-4 border-t border-zinc-850">
-        <Link
-          href="/?login=true"
-          className="text-xs text-zinc-400 hover:text-white flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded"
-        >
-          <ArrowLeft size={14} />
-          Back to Sign In
-        </Link>
-      </div>
+            {error && (
+              <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-300 animate-slide-in">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300" htmlFor="email">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="you@company.com"
+                    autoFocus
+                    autoComplete="email"
+                    className={`w-full pl-10 pr-4 py-2.5 bg-[#101524] border rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:bg-[#141B2D] focus:ring-2 focus:ring-purple-500/20 transition-all ${
+                      errors.email ? "border-rose-500/50" : "border-white/10 hover:border-white/25"
+                    }`}
+                    {...register("email")}
+                  />
+                </div>
+                {errors.email && <p className="text-[10px] text-rose-400 font-medium pl-1">{errors.email.message}</p>}
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full py-5 bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex justify-center items-center gap-2 cursor-pointer"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Generating Link...</span>
+                  </>
+                ) : (
+                  "Send Reset Link"
+                )}
+              </Button>
+            </form>
+
+            <div className="text-center pt-4 border-t border-zinc-850">
+              <Link
+                href="/?login=true"
+                className="text-xs text-zinc-400 hover:text-white flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded"
+              >
+                <ArrowLeft size={14} />
+                Back to Sign In
+              </Link>
+            </div>
+          </div>
+        )}
+      </SpotlightCard>
     </div>
   );
 }

@@ -128,7 +128,7 @@ export function AuroraBackground({
         />
       </div>
 
-      <div className="relative z-10 w-full">
+      <div className="relative z-10 w-full flex items-center justify-center min-h-screen">
         {children}
       </div>
     </div>

@@ -2,7 +2,6 @@
 
 import React from "react";
 import { SparklesCore } from "@/components/ui/sparkles";
-import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -29,17 +28,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         />
       </div>
 
-      {/* Centered Single Card Container */}
-      <div className="w-full max-w-[440px] z-10 relative my-auto animate-in fade-in zoom-in-95 duration-300">
-        <SpotlightCard className="bg-[#0B0F19]/95 border border-purple-500/25 rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.85),0_0_40px_rgba(139,92,246,0.15)] backdrop-blur-2xl relative overflow-hidden transition-all duration-300">
-          {/* Top Accent Gradient Line */}
-          <div className="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-[#7C3AED] via-[#9333EA] to-[#EC4899] z-20" />
-          <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-20" />
-          
-          <div className="p-6 sm:p-7">
-            {children}
-          </div>
-        </SpotlightCard>
+      {/* Centered Children Container */}
+      <div className="w-full flex items-center justify-center z-10 relative my-auto py-4 sm:py-8">
+        {children}
       </div>
     </AuroraBackground>
   );
